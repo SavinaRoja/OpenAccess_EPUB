@@ -1,0 +1,35 @@
+# Ancillary Files #
+############
+*.pyc
+*.csv
+*.ods
+*~
+*.orig
+.hg*
+*.hg
+
+# Test Output #
+############
+test_output/*
+
+# Resources #
+############
+resources/*
+
+# Eclipse Files #
+############
+.project
+.pydevproject
+
+# Packages #
+############
+# it's better to unpack these files and commit the raw source
+# git has its own built in compression methods
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
