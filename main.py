@@ -3,17 +3,17 @@
 import argparse
 import sys
 import os.path
+import xml.dom.minidom as minidom
 
 import gofetch, metadata, bibliography, output, tocncx, parsebody
 from utils import OUT_DIR
-
-
 
 def main():
     '''main script'''
     
     parser = argparse.ArgumentParser(description = 'OpenAccess_EPUP Parser')
     parser.add_argument('-q', '--quiet', action = 'store_true', default = False)
+    parser.add_argument('-i', '--input', action = 'store', default = 'test_data/article.xml')
     
     args = parser.parse_args()
     
@@ -23,11 +23,8 @@ def main():
     dooutput = False
     dobiblio = False
     dotoc = False
-
-    import xml.dom.minidom as minidom
-
-    ARTICLE = 'test_data/article.xml'
-    doc = minidom.parse(ARTICLE)
+    
+    doc = minidom.parse(args.input)
     
     # The <article> may have 4 parts defined parts
     front = doc.getElementsByTagName('front')[0]
@@ -50,8 +47,8 @@ def main():
         biblio.output()
     
     if dooutput:
-    output.generateHierarchy(filename)
-    output.epubZip(filename)
+        output.generateHierarchy(filename)
+        output.epubZip(filename)
     if dofetch:
         gofetch.getimages(frontmatter, filename)
     

@@ -1,6 +1,6 @@
 """Handles metadata related tasks for the article"""
 import logging
-from article import ArticleMeta
+from articlemeta import ArticleMeta
 from journal import JournalMeta
 from utils import getTagData
 
