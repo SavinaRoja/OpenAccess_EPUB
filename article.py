@@ -2,7 +2,8 @@ import front, body, back
 
 
 class Article(object):
-    '''A journal article; the top-level element (document element) of the 
+    '''
+    A journal article; the top-level element (document element) of the 
     Journal Publishing DTD, which contains all the metadata and content for 
     the article
     
@@ -28,7 +29,7 @@ class Article(object):
             print('ERROR: The XLink Namespace Declaration attribute value may not be changed from \'http://www.w3.org/1999/xlink\'')
         
         #Mandatory
-        frontnode = self.root_tag.getElementsByTagName(u'front')[0]
+        frontnode = self.root_tag.getElementsByTagName('front')[0]
         
         #Technically optional, but assume for now that they will be present
         bodynode = self.root_tag.getElementsByTagName('body')[0]
