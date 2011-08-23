@@ -1,4 +1,4 @@
-
+import metadata
 
 class Front(object):
     
@@ -13,8 +13,9 @@ class Front(object):
         
         #It must have a <journal-meta>
         journalmetanode = self.root_tag.getElementsByTagName('journal-meta')[0]
+        self.journal_meta = metadata.JournalMeta(journalmetanode)
         
         #It must have a <article-meta>
         articlemetanode = self.root_tag.getElementsByTagName('article-meta')[0]
-        
+        self.article_meta = metadata.ArticleMeta(articlemetanode)
         

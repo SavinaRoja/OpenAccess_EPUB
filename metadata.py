@@ -1,7 +1,5 @@
 """Handles metadata related tasks for the article"""
 import logging
-from articlemeta import ArticleMeta
-from journal import JournalMeta
 from utils import getTagData
 
 class FrontMatter(object):
