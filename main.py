@@ -13,12 +13,13 @@ def main():
     
     parser = argparse.ArgumentParser(description = 'OpenAccess_EPUB Parser')
     parser.add_argument('-q', '--quiet', action = 'store_true', default = False)
-    parser.add_argument('-i', '--input', action = 'store', default = 'test_data/article.xml')
-    parser.add_argument('-o','--output', action = 'store', default = 'test_output/')
+    parser.add_argument('-i', '--input', action = 'store', 
+                        default = 'test_data/article.xml')
+    parser.add_argument('-o', '--output', action = 'store', 
+                        default = 'test_output/')
     
     args = parser.parse_args()
     
-    isQuiet = args.quiet
     
     dofetch = False
     dooutput = False
@@ -28,7 +29,7 @@ def main():
     document = Article(minidom.parse(args.input))
     
     
-    # The <article> may have 4 parts defined parts
+    # The <article> may have 4 parts defined
     #front = doc.getElementsByTagName('front')[0]
     #body = doc.getElementsByTagName('body')[0]
     #back = doc.getElementsByTagName('back')[0]
