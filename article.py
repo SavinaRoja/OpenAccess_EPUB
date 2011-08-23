@@ -12,20 +12,19 @@ class Article(object):
         
         attr_strings = [u'article-type', u'dtd-version', u'xml:lang', u'xmlns:mml', u'xmlns:xlink']
         
-        attributes = {}
-        
-        if self.root_tag.attributes.length != 5:
-            raise ValueError('The <article> tag has an inappropriate number of attributes')
+        self.attributes = {}
         
         for attr in attr_strings:
             value = self.root_tag.getAttribute(attr)
-            attributes[attr] = value
+            self.attributes[attr] = value
             
-        if attributes[u'xmlns:mml'] != u'http://www.w3.org/1998/Math/MathML':
+        print(self.attributes)
+            
+        if self.attributes[u'xmlns:mml'] != u'http://www.w3.org/1998/Math/MathML':
             raise ValueError('The MathML attribute value may not be changed from \'http://www.w3.org/1998/Math/MathML\'')
         
-        if attributes[u'xmlns:xlink'] != u'http://www.w3.org/1999/xlink':
+        if self.attributes[u'xmlns:xlink'] != u'http://www.w3.org/1999/xlink':
             raise ValueError('The XLink Namespace Declaration attribute value may not be changed from \'http://www.w3.org/1999/xlink\'')
         
-        if attributes[u'dtd-version'] != u'2.0':
+        if self.attributes[u'dtd-version'] != u'2.0':
             raise ValueError('Version 2.0 of the Journal Publishing DTD must be used')
