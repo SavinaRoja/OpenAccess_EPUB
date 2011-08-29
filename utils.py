@@ -1,5 +1,6 @@
 """utility/common stuff"""
 import logging
+import os.path
 from collections import namedtuple
 
 OUT_DIR = 'test_output'
@@ -18,6 +19,14 @@ def getTagData(node_list):
         if node.firstChild.nodeType == node.TEXT_NODE:
             data = node.firstChild.data
     return data
+
+def recursive_zip(zipf, directory, folder = ""):
+    for item in os.listdir(directory):
+        if os.path.isfile(os.path.join(directory, item)):
+            zipf.write(os.path.join(directory, item), os.path.join(directory, item))
+        elif os.path.isdir(os.path.join(directory, item)):
+            recursive_zip(zipf, os.path.join(directory, item), os.path.join(folder, item))
+    
 
 def initiateDocument(titlestring,
                      _publicId = '-//W3C//DTD XHTML 1.1//EN',
