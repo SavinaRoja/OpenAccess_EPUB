@@ -11,6 +11,7 @@
 # Test Output #
 ############
 test_output/*
+*.epub
 
 # Resources #
 ############
