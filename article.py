@@ -46,3 +46,9 @@ class Article(object):
         self.front = front.Front(frontnode)
         self.body = body.Body(bodynode)
         self.back = back.Back(backnode)
+        
+    def output_epub(self, directory):
+        import output
+        
+        output.generateHierarchy(directory)
+        

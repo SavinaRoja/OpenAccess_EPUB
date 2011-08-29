@@ -20,14 +20,10 @@ def main():
     
     args = parser.parse_args()
     
-    
-    dofetch = False
-    dooutput = False
-    dobiblio = False
-    dotoc = False
-    
     document = Article(minidom.parse(args.input))
     
+    if args.output:
+        document.output_epub(args.output)
     
     # The <article> may have 4 parts defined
     #front = doc.getElementsByTagName('front')[0]
