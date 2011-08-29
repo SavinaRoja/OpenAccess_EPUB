@@ -24,6 +24,7 @@ def main():
     
     if args.output:
         document.output_epub(args.output)
+        output.epubZip(args.output, document.titlestring())
     
     # The <article> may have 4 parts defined
     #front = doc.getElementsByTagName('front')[0]

@@ -1,12 +1,5 @@
 import os, os.path, zipfile, utils
 
-def getTitle_str(fm):
-    '''Creates a string for the title of the file and ebook'''
-    titlestring = u'{0}_{1}{2}'.format(fm.journal_meta.identifier['pmc'],
-                                       fm.article_meta.art_auths[0].surname,
-                                       fm.article_meta.art_dates['collection'][2])
-    return titlestring
-    
 def generateHierarchy(dirname):
     os.mkdir(dirname)
     os.mkdir(os.path.join(dirname, 'META-INF'))
@@ -27,20 +20,18 @@ def generateHierarchy(dirname):
     
     # Create mimetype file in root directory
     mimepath = os.path.join(dirname, 'mimetype')
-    mimetype = open(mimepath, 'w')
-    mimetype.write('application/epub+zip')
-    mimetype.close()
+    with open(mimepath, 'w') as mimetype:
+        mimetype.write('application/epub+zip')
     
     # Create the container.xml file in META-INF
     meta_path = os.path.join(dirname, 'META-INF', 'container.xml')
-    container = open(meta_path, 'w')
-    container.write('''<?xml version="1.0" encoding="UTF-8" ?>
+    with open(meta_path, 'w') as container_xml:
+        container_xml.write('''<?xml version="1.0" encoding="UTF-8" ?>
 <container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
    <rootfiles>
-      <rootfile full-path="OPS/{0}.opf" media-type="application/oebps-package+xml"/>
+      <rootfile full-path="OPS/content.opf" media-type="application/oebps-package+xml"/>
    </rootfiles>
-</container>'''.format(dirname))
-    container.close()
+</container>''')
     
 def generateFrontpage(fm):
     
@@ -82,11 +73,13 @@ def generateFrontpage(fm):
     outdoc.write(doc.toprettyxml(encoding = 'UTF-8'))
     outdoc.close()
     
-def epubZip(titlestring):
-    """Zips up the output files into ePub package."""
-    filename = '{0}.epub'.format(titlestring)
+def epubZip(inputdirectory, name):
+    """Zips up the input file directory into an ePub file."""
+    filename = '{0}.epub'.format(name)
     epub = zipfile.ZipFile(filename, 'w')
-    mimetype = os.path.join(titlestring, 'mimetype')
-    epub.write(mimetype)
+    os.chdir(inputdirectory)
+    epub.write('mimetype')
+    utils.recursive_zip(epub, 'META-INF')
+    utils.recursive_zip(epub, 'OPS')
     epub.close()
-    #os.system('mv {0}.epub ..'.format(titlestring))
+    os.chdir('..')

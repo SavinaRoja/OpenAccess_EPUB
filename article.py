@@ -47,6 +47,15 @@ class Article(object):
         self.body = body.Body(bodynode)
         self.back = back.Back(backnode)
         
+    def titlestring(self):
+        '''Creates a titlestring for use as the epub filename'''
+        
+        titlestring = u'{0}_{1}{2}'.format(self.front.journal_meta.identifier['pmc'],
+                                           self.front.article_meta.art_auths[0].surname,
+                                           self.front.article_meta.art_dates['collection'][2])
+        
+        return titlestring
+        
     def output_epub(self, directory):
         import output
         
