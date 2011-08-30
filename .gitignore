@@ -8,6 +8,10 @@
 .hg*
 *.hg
 
+# Epubcheck #
+############
+epubcheck.sh
+
 # Test Output #
 ############
 test_output/*
