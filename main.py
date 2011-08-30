@@ -5,7 +5,7 @@ import sys
 import os.path
 import xml.dom.minidom as minidom
 
-import gofetch, metadata, bibliography, output, tocncx, parsebody
+import metadata, bibliography, output, tocncx, parsebody
 from article import Article
 
 def main():
