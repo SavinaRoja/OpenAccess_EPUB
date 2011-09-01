@@ -76,6 +76,7 @@ def generateFrontpage(fm):
 def generateOPF(article, dirname):
     '''Creates the content.opf document from an Article instance issued as input'''
     from xml.dom.minidom import getDOMImplementation
+    from utils import createDCElement
     
     #Initiate a DOMImplementation for the OPF
     impl = getDOMImplementation()
@@ -98,12 +99,16 @@ def generateOPF(article, dirname):
         package.appendChild(mydoc.createElement(node))
     metadata, manifest, spine, guide = package.childNodes
     
-    #Process article metadata information into DC metadata
+    #Create useful accession points to article data
     artmeta = article.front.article_meta
     jrnmeta = article.front.journal_meta
     
-    metadata.appendChild(mydoc.createElement('dc:title'))
-    metadata.getElementsByTagName('dc:title')[0].tagData = artmeta.title
+    metadata.appendChild(createDCElement(mydoc, 'title', artmeta.title))
+    
+    for auth in artmeta.art_auths:
+        metadata.appendChild(createDCElement(mydoc, 'creator', auth.get_name(), 
+                                             {'opf:role': 'aut', 'opf:file-as': auth.get_fileas_name()}))
+    
     
     contentpath = os.path.join(dirname,'OPS','content.opf')
     with open(contentpath, 'w') as output:
