@@ -127,4 +127,5 @@ class Article(object):
         import output
         
         output.generateHierarchy(directory)
+        output.generateOPF(article = self, dirname = directory)
         

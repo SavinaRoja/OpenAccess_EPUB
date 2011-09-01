@@ -73,6 +73,42 @@ def generateFrontpage(fm):
     outdoc.write(doc.toprettyxml(encoding = 'UTF-8'))
     outdoc.close()
     
+def generateOPF(article, dirname):
+    '''Creates the content.opf document from an Article instance issued as input'''
+    from xml.dom.minidom import getDOMImplementation
+    
+    #Initiate a DOMImplementation for the OPF
+    impl = getDOMImplementation()
+    mydoc = impl.createDocument(None, 'package', None)
+    
+    package = mydoc.lastChild #grab the root package node
+    package.setAttribute('version', '2.0')
+    
+    #Set attributes for this node, including namespace declarations
+    package.setAttribute('unique-identifier', 'PrimaryID')
+    package.setAttribute('xmlns:opf', 'http://www.idpf.org/2007/opf')
+    package.setAttribute('xmlns:dc', 'http://purl.org/dc/elements/1.1/')
+    package.setAttribute('xmlns:dcterms', 'http://purl.org/dc/terms/')
+    package.setAttribute('xmlns', 'http://www.idpf.org/2007/opf')
+    package.setAttribute('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance')
+    
+    #Create the metadata, manifest, spine, and guide nodes
+    nodes = ['metadata', 'manifest', 'spine', 'guide']
+    for node in nodes:
+        package.appendChild(mydoc.createElement(node))
+    metadata, manifest, spine, guide = package.childNodes
+    
+    #Process article metadata information into DC metadata
+    artmeta = article.front.article_meta
+    jrnmeta = article.front.journal_meta
+    
+    metadata.appendChild(mydoc.createElement('dc:title'))
+    metadata.getElementsByTagName('dc:title')[0].tagData = artmeta.title
+    
+    contentpath = os.path.join(dirname,'OPS','content.opf')
+    with open(contentpath, 'w') as output:
+        output.write(mydoc.toprettyxml(encoding = 'UTF-8'))
+    
 def epubZip(inputdirectory, name):
     """Zips up the input file directory into an ePub file."""
     filename = '{0}.epub'.format(name)
