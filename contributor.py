@@ -34,6 +34,14 @@ class Contributor:
     def get_name(self):
         """Get the name. Formatted as: Carl Sagan"""
         return('{0} {1}'.format(self.givenname, self.surname))
+    
+    def get_fileas_name(self):
+        '''Get the name. Formatted as: Sagan C'''
+        names = self.givenname.split(' ')
+        initials = ''
+        for name in names:
+            initials += name[0]
+        return('{0}, {1}'.format(self.surname, initials))
 
 class Author(Contributor):
     """Represents an author."""
