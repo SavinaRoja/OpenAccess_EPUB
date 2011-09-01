@@ -10,6 +10,17 @@ logging.basicConfig(level=logging.INFO,
 
 Identifier = namedtuple('Identifer', 'id, type')
 
+def createDCElement(document, name, data, attributes = None):
+    '''A convenience method for creating DC tag elements.
+    Used in content.opf'''
+    newnode = document.createElement(name)
+    newnode.appendChild(document.createTextNode(data))
+    if attributes:
+        for attr, attrval in attributes.iteritems():
+            newnode.setAttribute(attr, attrval)
+    
+    return newnode
+    
 def getTagData(node_list):
     """Grab the (string) data from text elements
     node_list -- NodeList returned by getElementsByTagName
