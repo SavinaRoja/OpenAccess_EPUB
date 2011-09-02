@@ -103,11 +103,13 @@ def generateOPF(article, dirname):
     artmeta = article.front.article_meta
     jrnmeta = article.front.journal_meta
     
-    metadata.appendChild(createDCElement(mydoc, 'title', artmeta.title))
+    metadata.appendChild(createDCElement(mydoc, 'dc:title', artmeta.title))
+    metadata.appendChild(createDCElement(mydoc, 'dc:rights', artmeta.art_copyright_statement))
     
     for auth in artmeta.art_auths:
-        metadata.appendChild(createDCElement(mydoc, 'creator', auth.get_name(), 
+        metadata.appendChild(createDCElement(mydoc, 'dc:creator', auth.get_name(), 
                                              {'opf:role': 'aut', 'opf:file-as': auth.get_fileas_name()}))
+    
     
     
     contentpath = os.path.join(dirname,'OPS','content.opf')
