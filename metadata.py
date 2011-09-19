@@ -56,7 +56,7 @@ class ArticleMeta(object):
         
         self.history = {}
         self.abstract = None
-        self.author_summary = None
+        self.summary = None
         self.art_auths = [] # A list of authors.
         self.art_edits = [] # A list of editors.
         self.art_other_contrib = [] # unclassified contributors
@@ -105,7 +105,7 @@ class ArticleMeta(object):
                 self.abstract = entry
             else:
                 if entry.getAttribute('abstract-type') == 'summary':
-                    self.author_summary = entry
+                    self.summary = entry
                 else:
                     print('unknown abstract type')
         

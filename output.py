@@ -130,6 +130,10 @@ def generateOPF(article, dirname):
                                              {'opf:event': 'modification'}))
     except KeyError:
         pass
+    
+    dc_desc = metadata.appendChild(artmeta.abstract.cloneNode('deep')) 
+    dc_desc.tagName = 'dc:description'
+    
     contentpath = os.path.join(dirname,'OPS','content.opf')
     with open(contentpath, 'w') as output:
         output.write(mydoc.toprettyxml(encoding = 'UTF-8'))
