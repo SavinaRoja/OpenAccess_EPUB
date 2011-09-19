@@ -123,8 +123,13 @@ def generateOPF(article, dirname):
     #metadata.appendChild(createDCElement(mydoc, 'dc:coverage', None))
     metadata.appendChild(createDCElement(mydoc, 'dc:date', artmeta.history['accepted'].dateString(), 
                                          {'opf:event': 'creation'}))
-    
-    
+    metadata.appendChild(createDCElement(mydoc, 'dc:date', artmeta.art_dates['epub'].dateString(), 
+                                         {'opf:event': 'publication'}))
+    try:
+        metadata.appendChild(createDCElement(mydoc, 'dc:date', artmeta.art_dates['ecorrected'].dateString(), 
+                                             {'opf:event': 'modification'}))
+    except KeyError:
+        pass
     contentpath = os.path.join(dirname,'OPS','content.opf')
     with open(contentpath, 'w') as output:
         output.write(mydoc.toprettyxml(encoding = 'UTF-8'))

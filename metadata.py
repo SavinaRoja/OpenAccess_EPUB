@@ -155,15 +155,9 @@ class ArticleMeta(object):
         self.art_eloc_id = elocation_id.firstChild.data
         
         pub_dates = node.getElementsByTagName('pub-date')
-        for pd in pub_dates:
-            day = 0
-            month = getTagData(pd.getElementsByTagName('month'))
-            year = getTagData(pd.getElementsByTagName('year'))
-            if pd.getAttribute('pub-type') == u'collection':
-                self.art_dates['collection'] = [day, month, year]
-            elif pd.getAttribute('pub-type') == u'epub':
-                day = getTagData(pd.getElementsByTagName('day'))
-                self.art_dates['epub'] = [day, month, year]
+        for entry in pub_dates:
+            entry_date = epub_date.DateInfo(entry)
+            self.art_dates[entry.getAttribute('pub-type')] = entry_date
         
 class ArticleCategories(object):
     """Article Categories information"""

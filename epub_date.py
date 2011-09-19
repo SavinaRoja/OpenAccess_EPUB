@@ -19,8 +19,13 @@ class DateInfo(object):
         self.day = 0
         
         self.parse(datenode)
-        self.date = datetime.date(self.year, self.month, self.day)
-    
+        try:
+            self.date = datetime.date(self.year, self.month, self.day)
+        except ValueError:
+            if self.day == 0:
+                pass
+            else:
+                raise ValueError('day is out of range for month')
     def parse(self, datenode):
         """Handle the node contents
         datenode -- the XML Element containing the date info
