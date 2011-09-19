@@ -110,7 +110,10 @@ def generateOPF(article, dirname):
         metadata.appendChild(createDCElement(mydoc, 'dc:creator', auth.get_name(), 
                                              {'opf:role': 'aut', 'opf:file-as': auth.get_fileas_name()}))
     
-    
+    for contr in artmeta.art_edits:
+        metadata.appendChild(createDCElement(mydoc, 'dc:contributor', 
+                                             contr.get_name(), 
+                                             {'opf:role': 'edt', 'opf:file-as': contr.get_fileas_name()}))
     
     contentpath = os.path.join(dirname,'OPS','content.opf')
     with open(contentpath, 'w') as output:
