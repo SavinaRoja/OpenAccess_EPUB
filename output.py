@@ -89,9 +89,9 @@ def generateOPF(article, dirname):
     package.setAttribute('unique-identifier', 'PrimaryID')
     package.setAttribute('xmlns:opf', 'http://www.idpf.org/2007/opf')
     package.setAttribute('xmlns:dc', 'http://purl.org/dc/elements/1.1/')
-    package.setAttribute('xmlns:dcterms', 'http://purl.org/dc/terms/')
-    package.setAttribute('xmlns', 'http://www.idpf.org/2007/opf')
-    package.setAttribute('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance')
+    
+    # Currently, the Dublin Core will only be extended by the OPF Spec
+    # See http://old.idpf.org/2007/opf/OPF_2.0_final_spec.html#Section2.2
     
     #Create the metadata, manifest, spine, and guide nodes
     nodes = ['metadata', 'manifest', 'spine', 'guide']
