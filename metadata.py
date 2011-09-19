@@ -67,6 +67,7 @@ class ArticleMeta(object):
         self.art_copyright_year = None
         self.art_copyright_statement = None
         self.art_eloc_id = None
+        self.related_articles = []
         
         self.identify(node)
         

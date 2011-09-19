@@ -133,6 +133,11 @@ def generateOPF(article, dirname):
     
     dc_desc = metadata.appendChild(artmeta.abstract.cloneNode('deep')) 
     dc_desc.tagName = 'dc:description'
+    if artmeta.related_articles:
+        for related in artmeta.related_articles:
+            print('Relation found in article-metadata!')
+            metadata.appendChild(createDCElement(mydoc, 'dc:relation', 'related article found'))
+    
     
     contentpath = os.path.join(dirname,'OPS','content.opf')
     with open(contentpath, 'w') as output:
