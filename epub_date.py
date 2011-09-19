@@ -14,9 +14,12 @@ class DateInfo(object):
         self.type = ''
         self.season = ''
         self.date = None
+        self.year = 0
+        self.month = 0
+        self.day = 0
         
-        year, month, day = self.parse(datenode)
-        self.date = datetime.date(year, month, day)
+        self.parse(datenode)
+        self.date = datetime.date(self.year, self.month, self.day)
     
     def parse(self, datenode):
         """Handle the node contents
@@ -33,14 +36,22 @@ class DateInfo(object):
             self.season = datenode.getElementsByTagName('season')[0].firstChild.data
         except IndexError:
             try:
-                day = int(datenode.getElementsByTagName('day')[0].firstChild.data)
+                self.day = int(datenode.getElementsByTagName('day')[0].firstChild.data)
             except IndexError:
-                day = 1
+                pass
             try:
-                month = int(datenode.getElementsByTagName('month')[0].firstChild.data)
+                self.month = int(datenode.getElementsByTagName('month')[0].firstChild.data)
             except IndexError:
-                month = 1
+                pass
         
-        year = int(datenode.getElementsByTagName('year')[0].firstChild.data)
-        
-        return (year, month, day)
+        self.year = int(datenode.getElementsByTagName('year')[0].firstChild.data)
+    
+    def dateString(self):
+        newstring = '{0}'.format(self.year)
+        if self.month:
+            monstr = str(self.month).zfill(2)
+            newstring += '-{0}'.format(monstr)
+        if self.day:
+            daystr = str(self.day).zfill(2)
+            newstring += '-{0}'.format(daystr)
+        return newstring

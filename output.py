@@ -105,7 +105,6 @@ def generateOPF(article, dirname):
     
     metadata.appendChild(createDCElement(mydoc, 'dc:title', artmeta.title))
     metadata.appendChild(createDCElement(mydoc, 'dc:rights', artmeta.art_copyright_statement))
-    
     for auth in artmeta.art_auths:
         metadata.appendChild(createDCElement(mydoc, 'dc:creator', auth.get_name(), 
                                              {'opf:role': 'aut', 'opf:file-as': auth.get_fileas_name()}))
@@ -114,6 +113,17 @@ def generateOPF(article, dirname):
         metadata.appendChild(createDCElement(mydoc, 'dc:contributor', 
                                              contr.get_name(), 
                                              {'opf:role': 'edt', 'opf:file-as': contr.get_fileas_name()}))
+    
+    for contr in artmeta.art_other_contrib:
+        metadata.appendChild(createDCElement(mydoc, 'dc:contributor', 
+                                             contr.get_name(), 
+                                             {'opf:file-as': contr.get_fileas_name()}))
+    
+    # A context-specific tag which will be ignored for now
+    #metadata.appendChild(createDCElement(mydoc, 'dc:coverage', None))
+    metadata.appendChild(createDCElement(mydoc, 'dc:date', artmeta.history['accepted'].dateString(), 
+                                         {'opf:event': 'creation'}))
+    
     
     contentpath = os.path.join(dirname,'OPS','content.opf')
     with open(contentpath, 'w') as output:
