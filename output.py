@@ -33,46 +33,6 @@ def generateHierarchy(dirname):
    </rootfiles>
 </container>''')
     
-def generateFrontpage(fm):
-    
-    doc, body = utils.initiateDocument('Frontpage')
-    title = doc.createElement('title')
-    title.appendChild(doc.createTextNode('Front'))
-    
-    abstract = fm.article_meta.abstract
-    abstractheader = doc.createElement('h4')
-    abstractheader.appendChild(doc.createTextNode('Abstract:'))
-    abstract.insertBefore(abstractheader, abstract.firstChild)
-    author_summary = fm.article_meta.author_summary
-    summaryheader = doc.createElement('h4')
-    summaryheader.appendChild(doc.createTextNode('Author Summary:'))
-    author_summary.insertBefore(summaryheader, author_summary.firstChild)
-    
-    titleheader = doc.createElement('h2')
-    titleheader.appendChild(doc.createTextNode(fm.article_meta.title))
-    
-    firstname = True
-    for entry in fm.article_meta.art_auths:
-        if firstname:
-            authstr = entry.get_name()
-            firstname = False
-        else:
-            authstr = authstr +', {0}'.format(entry.get_name())
-    
-    authors = doc.createElement('h3')
-    authors.appendChild(doc.createTextNode(authstr))
-    
-    nodelist = [titleheader, authors, abstract, author_summary]
-    
-    for entry in nodelist:
-        div = doc.createElement('div')
-        div.appendChild(entry)
-        body.appendChild(div)
-        
-    outdoc = open('{0}/frontpage.xml'.format(utils.OUT_DIR),'w')
-    outdoc.write(doc.toprettyxml(encoding = 'UTF-8'))
-    outdoc.close()
-    
 def generateOPF(article, dirname):
     '''Creates the content.opf document from an Article instance issued as input'''
     from xml.dom.minidom import getDOMImplementation
