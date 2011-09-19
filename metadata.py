@@ -165,7 +165,7 @@ class ArticleCategories(object):
     def __init__(self, node):
         self.series_text = u''
         self.series_title = []
-        self.subj_groups = None
+        self.subj_groups = {}
         self.identify(node)
 
     def identify(self, node):
@@ -175,7 +175,15 @@ class ArticleCategories(object):
         for item in tmp:
             title = item.firstChild.data
             self.series_title.append(title)
-        self.subj_groups = node.getElementsByTagName('subj-group')
+        subj_group_nodes = node.getElementsByTagName('subj-group')
+        for each in subj_group_nodes:
+            type = each.getAttribute('subj-group-type')
+            subj_list = []
+            subj_nodes = each.getElementsByTagName('subject')
+            for subj_node in subj_nodes:
+                subj_list.append(getTagData([subj_node]))
+            self.subj_groups[type] = subj_list
+            
         
 class JournalMeta(object):
     '''

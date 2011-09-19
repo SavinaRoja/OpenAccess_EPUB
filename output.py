@@ -137,7 +137,14 @@ def generateOPF(article, dirname):
         for related in artmeta.related_articles:
             print('Relation found in article-metadata!')
             metadata.appendChild(createDCElement(mydoc, 'dc:relation', 'related article found'))
-    
+    #dc:source is currently deemed unnecessary
+    #metadata.appendChild(createDCELement(mydoc, 'dc:source', None))
+    for subject in artmeta.article_categories.subj_groups['Discipline']:
+        metadata.appendChild(createDCElement(mydoc, 'dc:subject', subject))
+    metadata.appendChild(createDCElement(mydoc, 'dc:format', 'application/epub+zip'))
+    metadata.appendChild(createDCElement(mydoc, 'dc:type', 
+                                         artmeta.article_categories.subj_groups['heading'][0]))
+    metadata.appendChild(createDCElement(mydoc, 'dc:language', 'en-US'))
     
     contentpath = os.path.join(dirname,'OPS','content.opf')
     with open(contentpath, 'w') as output:
