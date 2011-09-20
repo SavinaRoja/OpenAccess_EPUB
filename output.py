@@ -68,8 +68,10 @@ def generateOPF(article, dirname):
     artmeta = article.front.article_meta
     jrnmeta = article.front.journal_meta
     
-    metadata.appendChild(createDCElement(mydoc, 'dc:identifier', '10.1371/journal.pgen.1001160',
-                                         {'id': 'PrimaryID', 'opf:scheme': 'DOI'}))
+    for (_data, _id) in artmeta.identifiers:
+            if _id == 'doi':
+                metadata.appendChild(createDCElement(mydoc, 'dc:identifier', _data,
+                                                     {'id': 'PrimaryID', 'opf:scheme': 'DOI'}))
     metadata.appendChild(createDCElement(mydoc, 'dc:title', artmeta.title))
     metadata.appendChild(createDCElement(mydoc, 'dc:rights', artmeta.art_copyright_statement))
     for auth in artmeta.art_auths:
