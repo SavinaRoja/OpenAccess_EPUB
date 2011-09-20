@@ -53,6 +53,7 @@ def generateOPF(article, dirname):
     package.setAttribute('unique-identifier', 'PrimaryID')
     package.setAttribute('xmlns:opf', 'http://www.idpf.org/2007/opf')
     package.setAttribute('xmlns:dc', 'http://purl.org/dc/elements/1.1/')
+    package.setAttribute('xmlns', 'http://www.idpf.org/2007/opf')
     
     # Currently, the Dublin Core will only be extended by the OPF Spec
     # See http://old.idpf.org/2007/opf/OPF_2.0_final_spec.html#Section2.2
@@ -67,6 +68,8 @@ def generateOPF(article, dirname):
     artmeta = article.front.article_meta
     jrnmeta = article.front.journal_meta
     
+    metadata.appendChild(createDCElement(mydoc, 'dc:identifier', '10.1371/journal.pgen.1001160',
+                                         {'id': 'PrimaryID', 'opf:scheme': 'DOI'}))
     metadata.appendChild(createDCElement(mydoc, 'dc:title', artmeta.title))
     metadata.appendChild(createDCElement(mydoc, 'dc:rights', artmeta.art_copyright_statement))
     for auth in artmeta.art_auths:
@@ -117,6 +120,7 @@ def generateOPF(article, dirname):
                  'text/css', 'ncx': 'application/x-dtbncx+xml'}
     os.chdir(dirname)
     for path, subname, filenames in os.walk('OPS'):
+        path = path[4:]
         if filenames:
             for filename in filenames:
                 name, ext = os.path.splitext(filename)
@@ -127,9 +131,16 @@ def generateOPF(article, dirname):
                 newitem.setAttribute('media-type', mimetypes[ext])
                 
     os.chdir('..')
+    
+    # Spine
+    spine.setAttribute('toc', 'ncx')
+    testref = spine.appendChild(mydoc.createElement('itemref'))
+    testref.setAttribute('idref', 'g005-png')
+    testref.setAttribute('linear', 'yes')
+    
     contentpath = os.path.join(dirname,'OPS','content.opf')
     with open(contentpath, 'w') as output:
-        output.write(mydoc.toprettyxml(encoding = 'UTF-8'))
+        output.write(mydoc.toxml(encoding = 'UTF-8'))
     
 def epubZip(inputdirectory, name):
     """Zips up the input file directory into an ePub file."""
