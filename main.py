@@ -23,8 +23,8 @@ def main():
     document = Article(minidom.parse(args.input))
     
     if args.output:
+        document.fetchImages()
         document.output_epub(args.output)
-        #document.fetchImages()
         output.epubZip(args.output, document.titlestring())
     
 if __name__ == '__main__':

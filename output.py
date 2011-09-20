@@ -7,6 +7,10 @@ def generateHierarchy(dirname):
     os.mkdir(ops)
     css = os.path.join(ops, 'css')
     os.mkdir(css)
+    #Import CSS from resources/
+    with open(os.path.join(css, 'article.css'), 'wb') as dest:
+        with open('./resources/text.css', 'rb') as src:
+            dest.write(src.read())
     images = os.path.join(ops, 'images')
     os.mkdir(images)
     figures = os.path.join(images, 'figures')
@@ -106,6 +110,23 @@ def generateOPF(article, dirname):
                                          artmeta.article_categories.subj_groups['heading'][0]))
     metadata.appendChild(createDCElement(mydoc, 'dc:language', 'en-US'))
     
+    #manifest
+    
+    mimetypes = {'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 'xml': 
+                 'application/xhtml+xml', 'png': 'image/png', 'css':
+                 'text/css', 'ncx': 'application/x-dtbncx+xml'}
+    os.chdir(dirname)
+    for path, subname, filenames in os.walk('OPS'):
+        if filenames:
+            for filename in filenames:
+                name, ext = os.path.splitext(filename)
+                ext = ext[1:]
+                newitem = manifest.appendChild(mydoc.createElement('item'))
+                newitem.setAttribute('id', '{0}-{1}'.format(name, ext))
+                newitem.setAttribute('href', os.path.join(path, filename))
+                newitem.setAttribute('media-type', mimetypes[ext])
+                
+    os.chdir('..')
     contentpath = os.path.join(dirname,'OPS','content.opf')
     with open(contentpath, 'w') as output:
         output.write(mydoc.toprettyxml(encoding = 'UTF-8'))

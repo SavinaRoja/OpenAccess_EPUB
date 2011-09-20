@@ -60,6 +60,9 @@ class Article(object):
         '''Fetch the images associated with the article.'''
         
         import urllib2, logging, os.path
+        import output
+        
+        output.generateHierarchy(dirname)
         
         for (_data, _id) in self.front.article_meta.identifiers:
             if _id == 'doi':
@@ -126,6 +129,5 @@ class Article(object):
     def output_epub(self, directory):
         import output
         
-        output.generateHierarchy(directory)
         output.generateOPF(article = self, dirname = directory)
         
