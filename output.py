@@ -100,8 +100,9 @@ def generateOPF(article, dirname):
     except KeyError:
         pass
     
-    dc_desc = metadata.appendChild(artmeta.abstract.cloneNode('deep')) 
-    dc_desc.tagName = 'dc:description'
+    dc_desc = metadata.appendChild(createDCElement(mydoc, 'dc:description', 
+                                                   utils.serializeText(artmeta.abstract), 
+                                                   ))
     if artmeta.related_articles:
         for related in artmeta.related_articles:
             print('Relation found in article-metadata!')
@@ -142,7 +143,7 @@ def generateOPF(article, dirname):
     
     contentpath = os.path.join(dirname,'OPS','content.opf')
     with open(contentpath, 'w') as output:
-        output.write(mydoc.toxml(encoding = 'UTF-8'))
+        output.write(mydoc.toprettyxml(encoding = 'UTF-8'))
     
 def epubZip(inputdirectory, name):
     """Zips up the input file directory into an ePub file."""
