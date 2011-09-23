@@ -39,6 +39,15 @@ def stripDOMLayer(oldnodelist, depth = 1):
         newnodelist = stripDOMLayer(newnodelist, depth)
         return newnodelist
     return oldnodelist
+
+def serializeText(fromnode, stringlist = []):
+    '''Recursively extract the text data from a node and it's children'''
+    for item in fromnode.childNodes:
+        if item.nodeType == item.TEXT_NODE and not item.data == u'\n':
+            stringlist.append(item.data)
+        else:
+            serializeText(item, stringlist)
+    return ''.join(stringlist)
     
 def getTagData(node_list):
     """Grab the (string) data from text elements
