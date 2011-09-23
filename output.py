@@ -56,9 +56,6 @@ def generateOPF(article, dirname):
     package.setAttribute('xmlns', 'http://www.idpf.org/2007/opf')
     package.setAttribute('xmlns:oebpackage', 'http://openebook.org/namespaces/oeb-package/1.0/')
     
-    # Currently, the Dublin Core will only be extended by the OPF Spec
-    # See http://old.idpf.org/2007/opf/OPF_2.0_final_spec.html#Section2.2
-    
     #Create the metadata, manifest, spine, and guide nodes
     nodes = ['metadata', 'manifest', 'spine', 'guide']
     for node in nodes:

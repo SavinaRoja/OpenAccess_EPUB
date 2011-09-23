@@ -1,3 +1,6 @@
+# Currently, the Dublin Core will only be extended by the OPF Spec
+# See http://old.idpf.org/2007/opf/OPF_2.0_final_spec.html#Section2.2
+
 def dc_identifier(mydoc, parent, artmeta):
     '''Create dc:identifer node for OPF'''
     for (_data, _id) in artmeta.identifiers:
