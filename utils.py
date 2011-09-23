@@ -47,7 +47,7 @@ def serializeText(fromnode, stringlist = []):
             stringlist.append(item.data)
         else:
             serializeText(item, stringlist)
-    return ''.join(stringlist)
+    return u''.join(stringlist)
     
 def getTagData(node_list):
     """Grab the (string) data from text elements
