@@ -59,7 +59,7 @@ def generateTOC(fm):
     metas.append(metatag('dtb:maxPageNumber', '0'))
     
     # Name and version of software that generated the NCX
-    metas.append(metatag('dtb:generator', 'openacces_epub, alpha'))
+    metas.append(metatag('dtb:generator', 'openaccess_epub, indev'))
     
     for meta in metas:
         head.appendChild(meta)

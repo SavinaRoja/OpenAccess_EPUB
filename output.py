@@ -138,9 +138,6 @@ def generateOPF(article, dirname):
     
     # Spine
     spine.setAttribute('toc', 'ncx')
-    testref = spine.appendChild(mydoc.createElement('itemref'))
-    testref.setAttribute('idref', 'g005-png')
-    testref.setAttribute('linear', 'yes')
     
     contentpath = os.path.join(dirname,'OPS','content.opf')
     with open(contentpath, 'w') as output:
