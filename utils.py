@@ -20,6 +20,25 @@ def createDCElement(document, name, data, attributes = None):
             newnode.setAttribute(attr, attrval)
     
     return newnode
+
+def stripDOMLayer(oldnodelist, depth = 1):
+    '''This method strips layers \"off the top\" from a specified NodeList or 
+    Node in the DOM. All child Nodes below the stripped layers are returned as
+    a NodeList, treating them as siblings irrespective of the original 
+    hierarchy. To be used with caution. '''
+    newnodelist = []
+    while depth:
+        try:
+            for child in oldnodelist:
+                newnodelist += child.childNodes
+                
+        except TypeError:
+            newnodelist = oldnodelist.childNodes
+            
+        depth -= 1
+        newnodelist = stripDOMLayer(newnodelist, depth)
+        return newnodelist
+    return oldnodelist
     
 def getTagData(node_list):
     """Grab the (string) data from text elements
@@ -32,16 +51,20 @@ def getTagData(node_list):
     return data
 
 def recursive_zip(zipf, directory, folder = ""):
+    '''Recursively traverses the output directory to construct the zipfile'''
     for item in os.listdir(directory):
         if os.path.isfile(os.path.join(directory, item)):
-            zipf.write(os.path.join(directory, item), os.path.join(directory, item))
+            zipf.write(os.path.join(directory, item), os.path.join(directory,
+                                                                   item))
         elif os.path.isdir(os.path.join(directory, item)):
-            recursive_zip(zipf, os.path.join(directory, item), os.path.join(folder, item))
+            recursive_zip(zipf, os.path.join(directory, item),
+                          os.path.join(folder, item))
     
 
 def initiateDocument(titlestring,
                      _publicId = '-//W3C//DTD XHTML 1.1//EN',
-                     _systemId = 'http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd',):
+                     _systemId = 'http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd'):
+    '''A method for conveniently initiating a new xml.DOM Document'''
     from xml.dom.minidom import getDOMImplementation
     
     impl = getDOMImplementation()
