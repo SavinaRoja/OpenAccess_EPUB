@@ -1,4 +1,4 @@
-import os, os.path, zipfile, utils
+import os, os.path, zipfile, utils, dublincore
 
 def generateHierarchy(dirname):
     os.mkdir(dirname)
@@ -69,53 +69,8 @@ def generateOPF(article, dirname):
     artmeta = article.front.article_meta
     jrnmeta = article.front.journal_meta
     
-    for (_data, _id) in artmeta.identifiers:
-            if _id == 'doi':
-                metadata.appendChild(createDCElement(mydoc, 'dc:identifier', _data,
-                                                     {'id': 'PrimaryID', 'opf:scheme': 'DOI'}))
-    metadata.appendChild(createDCElement(mydoc, 'dc:title', artmeta.title))
-    metadata.appendChild(createDCElement(mydoc, 'dc:rights', artmeta.art_copyright_statement))
-    for auth in artmeta.art_auths:
-        metadata.appendChild(createDCElement(mydoc, 'dc:creator', auth.get_name(), 
-                                             {'opf:role': 'aut', 'opf:file-as': auth.get_fileas_name()}))
-    
-    for contr in artmeta.art_edits:
-        metadata.appendChild(createDCElement(mydoc, 'dc:contributor', 
-                                             contr.get_name(), 
-                                             {'opf:role': 'edt', 'opf:file-as': contr.get_fileas_name()}))
-    
-    for contr in artmeta.art_other_contrib:
-        metadata.appendChild(createDCElement(mydoc, 'dc:contributor', 
-                                             contr.get_name(), 
-                                             {'opf:file-as': contr.get_fileas_name()}))
-    
-    # A context-specific tag which will be ignored for now
-    #metadata.appendChild(createDCElement(mydoc, 'dc:coverage', None))
-    metadata.appendChild(createDCElement(mydoc, 'dc:date', artmeta.history['accepted'].dateString(), 
-                                         {'opf:event': 'creation'}))
-    metadata.appendChild(createDCElement(mydoc, 'dc:date', artmeta.art_dates['epub'].dateString(), 
-                                         {'opf:event': 'publication'}))
-    try:
-        metadata.appendChild(createDCElement(mydoc, 'dc:date', artmeta.art_dates['ecorrected'].dateString(), 
-                                             {'opf:event': 'modification'}))
-    except KeyError:
-        pass
-    
-    dc_desc = metadata.appendChild(createDCElement(mydoc, 'dc:description', 
-                                                   utils.serializeText(artmeta.abstract), 
-                                                   ))
-    if artmeta.related_articles:
-        for related in artmeta.related_articles:
-            print('Relation found in article-metadata!')
-            metadata.appendChild(createDCElement(mydoc, 'dc:relation', 'related article found'))
-    #dc:source is currently deemed unnecessary
-    #metadata.appendChild(createDCELement(mydoc, 'dc:source', None))
-    for subject in artmeta.article_categories.subj_groups['Discipline']:
-        metadata.appendChild(createDCElement(mydoc, 'dc:subject', subject))
-    metadata.appendChild(createDCElement(mydoc, 'dc:format', 'application/epub+zip'))
-    metadata.appendChild(createDCElement(mydoc, 'dc:type', 
-                                         artmeta.article_categories.subj_groups['heading'][0]))
-    metadata.appendChild(createDCElement(mydoc, 'dc:language', 'en-US'))
+    #Use the dublincore module to initialize the dc metadata
+    dublincore.generateDCMetadata(mydoc, metadata, artmeta, jrnmeta)
     
     #manifest
     
