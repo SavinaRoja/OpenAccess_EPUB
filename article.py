@@ -15,6 +15,7 @@ class Article(object):
         attr_strings = [u'article-type', u'dtd-version', u'xml:lang', u'xmlns:mml', u'xmlns:xlink']
         
         self.attributes = {}
+        self.playorder = 1
         
         for attr in attr_strings:
             value = self.root_tag.getAttribute(attr)
@@ -47,6 +48,11 @@ class Article(object):
         self.body = body.Body(bodynode)
         self.back = back.Back(backnode)
         
+        #Create an attribute element to hold the document's features
+        self.features = doc.createElement('features')
+        #Run the featureParse method to get feature tree
+        self.featureParse(doc, bodynode, self.features)
+        
     def titlestring(self):
         '''Creates a titlestring for use as the epub filename'''
         
@@ -61,8 +67,6 @@ class Article(object):
         
         import urllib2, logging, os.path
         import output
-        
-        output.generateHierarchy(dirname)
         
         for (_data, _id) in self.front.article_meta.identifiers:
             if _id == 'doi':
@@ -125,9 +129,32 @@ class Article(object):
                         logging.debug('reached the end of that type')
                         break
                     refnum += 1
-            
+    
+    def featureParse(self, doc, fromnode, destnode):
+        '''A method that traverses the node, extracting a hierarchy of specific
+        tagNames'''
+        
+        tagnamestrs = [u'sec', u'fig', u'table', u'inline-formula', 
+                       u'disp-formula']
+        
+        for child in fromnode.childNodes:
+            try:
+                if child.tagName in tagnamestrs:
+                    clone = child.cloneNode(deep = False)
+                    title = child.getElementsByTagName('title')[0]
+                    clone.appendChild(title.cloneNode(deep = True))
+                    clone.setAttribute('playOrder', str(self.playorder))
+                    self.playorder += 1
+                    destnode.appendChild(clone)
+                    
+                    self.featureParse(doc, child, clone)
+            except AttributeError:
+                pass
+        
     def output_epub(self, directory):
         import output
+        output.generateHierarchy(directory)
+        self.fetchImages()
         
         output.generateOPF(article = self, dirname = directory)
         
