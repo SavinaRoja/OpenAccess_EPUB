@@ -77,6 +77,6 @@ def generateTOC(fm):
     navlist = doc.createElement('navList')
     root.appendChild(navlist)
     
-    outdoc = open('{0}/toc.ncx'.format(utils.OUT_DIR),'w')
+    outdoc = open('{0}/OPS/toc.ncx'.format(utils.OUT_DIR),'w')
     outdoc.write(doc.toprettyxml(encoding = 'UTF-8'))
     outdoc.close()
