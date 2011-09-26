@@ -36,11 +36,11 @@ def generateHierarchy(dirname):
       <rootfile full-path="OPS/content.opf" media-type="application/oebps-package+xml"/>
    </rootfiles>
 </container>''')
-    
+
 def generateOPF(article, dirname):
-    '''Creates the content.opf document from an Article instance issued as input'''
+    '''Creates the content.opf document from an Article instance issued as 
+    input'''
     from xml.dom.minidom import getDOMImplementation
-    from utils import createDCElement
     
     #Initiate a DOMImplementation for the OPF
     impl = getDOMImplementation()
