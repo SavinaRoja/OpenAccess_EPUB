@@ -152,9 +152,9 @@ class Article(object):
                 pass
         
     def output_epub(self, directory):
-        import output
+        import output, tocncx
         output.generateHierarchy(directory)
         self.fetchImages()
-        
+        tocncx.generateTOC(self.front, self.features)
         output.generateOPF(article = self, dirname = directory)
         

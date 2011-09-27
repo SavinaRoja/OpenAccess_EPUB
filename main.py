@@ -23,6 +23,7 @@ def main():
     document = Article(minidom.parse(args.input))
     
     if args.output:
+        
         document.output_epub(args.output)
         output.epubZip(args.output, document.titlestring())
     

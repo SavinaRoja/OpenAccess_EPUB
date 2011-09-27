@@ -79,21 +79,31 @@ def generateOPF(article, dirname):
         path = path[4:]
         if filenames:
             for filename in filenames:
-                name, ext = os.path.splitext(filename)
-                ext = ext[1:]
-                newitem = manifest.appendChild(mydoc.createElement('item'))
-                newitem.setAttribute('id', '{0}-{1}'.format(name, ext))
-                newitem.setAttribute('href', os.path.join(path, filename))
-                newitem.setAttribute('media-type', mimetypes[ext])
+                if filename == 'toc.ncx':
+                    newitem = manifest.appendChild(mydoc.createElement('item'))
+                    newitem.setAttribute('id', 'ncx')
+                    newitem.setAttribute('href', os.path.join(path, filename))
+                    newitem.setAttribute('media-type', mimetypes['ncx'])
+                else:
+                    name, ext = os.path.splitext(filename)
+                    ext = ext[1:]
+                    newitem = manifest.appendChild(mydoc.createElement('item'))
+                    newitem.setAttribute('id', '{0}-{1}'.format(name, ext))
+                    newitem.setAttribute('href', os.path.join(path, filename))
+                    newitem.setAttribute('media-type', mimetypes[ext])
                 
     os.chdir('..')
     
     # Spine
     spine.setAttribute('toc', 'ncx')
     
+    #<item id="ncx"
+    #  href="myantonia.ncx"
+    #  media-type="application/x-dtbncx+xml"/>
+    
     contentpath = os.path.join(dirname,'OPS','content.opf')
     with open(contentpath, 'w') as output:
-        output.write(mydoc.toprettyxml(encoding = 'UTF-8'))
+        output.write(mydoc.toxml(encoding = 'UTF-8'))
     
 def epubZip(inputdirectory, name):
     """Zips up the input file directory into an ePub file."""
