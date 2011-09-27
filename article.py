@@ -32,8 +32,8 @@ class Article(object):
         frontnode = self.root_tag.getElementsByTagName('front')[0]
         
         #Technically optional, but assume for now that they will be present
-        bodynode = self.root_tag.getElementsByTagName('body')[0]
-        backnode = self.root_tag.getElementsByTagName('back')[0]
+        self.bodynode = self.root_tag.getElementsByTagName('body')[0]
+        self.backnode = self.root_tag.getElementsByTagName('back')[0]
         
         #It can have a <sub-article> or a <response>, but let's ignore that for now
         #try:
@@ -45,13 +45,13 @@ class Article(object):
         #        pass
         
         self.front = front.Front(frontnode)
-        self.body = body.Body(bodynode)
-        self.back = back.Back(backnode)
+        self.body = body.Body(self.bodynode)
+        self.back = back.Back(self.backnode)
         
         #Create an attribute element to hold the document's features
         self.features = doc.createElement('features')
         #Run the featureParse method to get feature tree
-        self.featureParse(doc, bodynode, self.features)
+        self.featureParse(doc, self.bodynode, self.features)
         
     def titlestring(self):
         '''Creates a titlestring for use as the epub filename'''
@@ -133,6 +133,7 @@ class Article(object):
     def featureParse(self, doc, fromnode, destnode):
         '''A method that traverses the node, extracting a hierarchy of specific
         tagNames'''
+        import utils
         
         tagnamestrs = [u'sec', u'fig', u'table', u'inline-formula', 
                        u'disp-formula']
@@ -144,6 +145,10 @@ class Article(object):
                     title = child.getElementsByTagName('title')[0]
                     clone.appendChild(title.cloneNode(deep = True))
                     clone.setAttribute('playOrder', str(self.playorder))
+                    clone.setAttribute('title', 
+                                       utils.serializeText(title, 
+                                                           stringlist = []))
+                    
                     self.playorder += 1
                     destnode.appendChild(clone)
                     
@@ -154,6 +159,9 @@ class Article(object):
     def output_epub(self, directory):
         import output, tocncx
         output.generateHierarchy(directory)
+        with open('test_output/OPS/article.xml','wb') as outdoc:
+            with open('test_data/article.xml','rb') as indoc:
+                outdoc.write(indoc.read())
         self.fetchImages()
         tocncx.generateTOC(self.front, self.features)
         output.generateOPF(article = self, dirname = directory)
