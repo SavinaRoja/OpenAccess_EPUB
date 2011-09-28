@@ -96,14 +96,14 @@ def generateOPF(article, dirname):
     
     # Spine
     spine.setAttribute('toc', 'ncx')
-    
-    #<item id="ncx"
-    #  href="myantonia.ncx"
-    #  media-type="application/x-dtbncx+xml"/>
+    itemref_article = mydoc.createElement('itemref')
+    itemref_article.setAttribute('idref', 'article-xml')
+    itemref_article.setAttribute('linear', 'yes')
+    spine.appendChild(itemref_article)
     
     contentpath = os.path.join(dirname,'OPS','content.opf')
     with open(contentpath, 'w') as output:
-        output.write(mydoc.toxml(encoding = 'UTF-8'))
+        output.write(mydoc.toprettyxml(encoding = 'UTF-8'))
     
 def epubZip(inputdirectory, name):
     """Zips up the input file directory into an ePub file."""
