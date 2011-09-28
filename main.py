@@ -3,7 +3,6 @@
 import argparse
 import sys
 import os.path
-import xml.dom.minidom as minidom
 
 import metadata, bibliography, output, tocncx, parsebody
 from article import Article
@@ -20,7 +19,7 @@ def main():
     
     args = parser.parse_args()
     
-    document = Article(minidom.parse(args.input))
+    document = Article(args.input)
     
     if args.output:
         

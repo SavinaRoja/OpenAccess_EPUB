@@ -97,13 +97,56 @@ def generateOPF(article, dirname):
     # Spine
     spine.setAttribute('toc', 'ncx')
     itemref_article = mydoc.createElement('itemref')
-    itemref_article.setAttribute('idref', 'article-xml')
+    itemref_article.setAttribute('idref', 'main-xml')
     itemref_article.setAttribute('linear', 'yes')
     spine.appendChild(itemref_article)
     
     contentpath = os.path.join(dirname,'OPS','content.opf')
     with open(contentpath, 'w') as output:
-        output.write(mydoc.toprettyxml(encoding = 'UTF-8'))
+        output.write(mydoc.toxml(encoding = 'UTF-8'))
+        
+def generateMain(document, outdir):
+    '''Uses the xml archive document to produce main.xml in the OPS directory.'''
+    #Because OPS places additional constraints on the XML of our content files 
+    #we must take a few measures to present the data in a useful manner
+    
+    import xml.dom.minidom as minidom
+    
+    outpath = os.path.join(outdir, 'OPS', 'main.xml')
+    opsdir = os.path.join(outdir, 'OPS')
+    imagedir= os.path.join(opsdir, 'images')
+    
+    maindoc = minidom.parse(document)
+    
+    article = maindoc.getElementsByTagName('article')[0]
+    front = article.getElementsByTagName('front')[0]
+    article.removeChild(front)
+    
+    xrefs = maindoc.getElementsByTagName('xref')
+    for xref in xrefs:
+        xref.tagName = 'a'
+        href = xref.getAttribute('rid')
+        href = './main.xml#' + href
+        xref.removeAttribute('rid')
+        xref.setAttribute('href', href)
+        
+    figs = maindoc.getElementsByTagName('fig')
+    for fig in figs:
+        img = maindoc.createElement('img')
+        iid = fig.getAttribute('id')
+        imgname = iid.split('-')[-1]
+        os.chdir(opsdir)
+        for path, _subdir, filenames in os.walk('images'):
+            for filename in filenames:
+                if os.path.splitext(filename)[0] == imgname:
+                    src = os.path.join(path, filename)
+        os.chdir('../..')
+        img.setAttribute('src', src)
+        fig.insertBefore(img, fig.firstChild)
+        
+    
+    with open(outpath, 'wb') as out:
+        out.write(maindoc.toxml(encoding='utf-8'))
     
 def epubZip(inputdirectory, name):
     """Zips up the input file directory into an ePub file."""

@@ -40,7 +40,7 @@ def generateTOC(fm, features):
                 navnode.appendChild(navlabel)
                 navlabel.appendChild(makeText(titletext))
                 content = doc.createElement('content')
-                content.setAttribute('src', 'article.xml#{0}'.format(child.getAttribute('id')))
+                content.setAttribute('src', 'main.xml#{0}'.format(child.getAttribute('id')))
                 navnode.appendChild(content)
                 navmapper(child, navnode)
     
@@ -62,7 +62,7 @@ def generateTOC(fm, features):
             #    for filename in _filenames:
             #        if os.path.splitext(filename)[0] == fid.split('-')[-1]:
             #            src = os.path.join(_path, filename)
-            src = 'article.xml#{0}'.format(fid)
+            src = 'main.xml#{0}'.format(fid)
             os.chdir('../..')
             content.setAttribute('src', src)
             navtarget.appendChild(content)
@@ -81,7 +81,7 @@ def generateTOC(fm, features):
             navlabel.appendChild(makeText(titletext))
             navtarget.appendChild(navlabel)
             content = doc.createElement('content')
-            content.setAttribute('src', '')
+            src = 'main.xml#{0}'.format(tid)
             navtarget.appendChild(content)
             navpoint.appendChild(navtarget)
             
@@ -92,12 +92,13 @@ def generateTOC(fm, features):
             navtarget = doc.createElement('navTarget')
             navtarget.setAttribute('class', 'equation')
             navlabel = doc.createElement('navLabel')
+            eid = child.getAttribute('id')
             titlenode = child.getElementsByTagName('title')[0]
             titletext = utils.serializeText(titlenode, stringlist = [])
             navlabel.appendChild(makeText(titletext))
             navtarget.appendChild(navlabel)
             content = doc.createElement('content')
-            content.setAttribute('src', '')
+            src = 'main.xml#{0}'.format(eid)
             navtarget.appendChild(content)
             navpoint.appendChild(navtarget)
     
@@ -184,5 +185,5 @@ def generateTOC(fm, features):
     navmapper(features, navmap)
     
     outdoc = open('{0}/OPS/toc.ncx'.format(utils.OUT_DIR),'w')
-    outdoc.write(doc.toprettyxml(encoding = 'UTF-8'))
+    outdoc.write(doc.toxml(encoding = 'UTF-8'))
     outdoc.close()

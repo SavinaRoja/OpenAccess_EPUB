@@ -1,4 +1,5 @@
 import front, body, back
+import xml.dom.minidom as minidom
 
 class Article(object):
     '''
@@ -9,7 +10,11 @@ class Article(object):
     http://dtd.nlm.nih.gov/publishing/tag-library/2.0/index.html
     '''
     
-    def __init__(self, doc):
+    def __init__(self, document):
+        
+        self.inputstring = document
+        doc = minidom.parse(self.inputstring)
+        
         self.root_tag = doc.documentElement
         
         attr_strings = [u'article-type', u'dtd-version', u'xml:lang', u'xmlns:mml', u'xmlns:xlink']
@@ -161,10 +166,8 @@ class Article(object):
     def output_epub(self, directory):
         import output, tocncx
         output.generateHierarchy(directory)
-        with open('test_output/OPS/article.xml','wb') as outdoc:
-            with open('test_data/article.xml','rb') as indoc:
-                outdoc.write(indoc.read())
         self.fetchImages()
+        output.generateMain(self.inputstring, directory)
         tocncx.generateTOC(self.front, self.features)
         output.generateOPF(article = self, dirname = directory)
         
