@@ -1,4 +1,5 @@
 import utils
+import os, os.path
     
 def generateTOC(fm, features):
     '''Used to generate the table of contents for the article. Should be
@@ -48,14 +49,22 @@ def generateTOC(fm, features):
             navtarget = doc.createElement('navTarget')
             navtarget.setAttribute('class', 'figure')
             navtarget.setAttribute('playOrder',child.getAttribute('playOrder'))
-            navtarget.setAttribute('id', child.getAttribute('id'))
+            fid = child.getAttribute('id')
+            navtarget.setAttribute('id', fid)
             navlabel = doc.createElement('navLabel')
             titlenode = child.getElementsByTagName('title')[0]
             titletext = utils.serializeText(titlenode, stringlist = [])
             navlabel.appendChild(makeText(titletext))
             navtarget.appendChild(navlabel)
             content = doc.createElement('content')
-            content.setAttribute('src', '')
+            os.chdir('test_output/OPS')
+            #for _path, _subdirs, _filenames in os.walk('images'):
+            #    for filename in _filenames:
+            #        if os.path.splitext(filename)[0] == fid.split('-')[-1]:
+            #            src = os.path.join(_path, filename)
+            src = 'article.xml#{0}'.format(fid)
+            os.chdir('../..')
+            content.setAttribute('src', src)
             navtarget.appendChild(content)
             navpoint.appendChild(navtarget)
             
@@ -63,6 +72,9 @@ def generateTOC(fm, features):
         for child in featurenode.getElementsByTagName('table'):
             navtarget = doc.createElement('navTarget')
             navtarget.setAttribute('class', 'table')
+            navtarget.setAttribute('playOrder',child.getAttribute('playOrder'))
+            tid = child.getAttribute('id')
+            navtarget.setAttribute('id', tid)
             navlabel = doc.createElement('navLabel')
             titlenode = child.getElementsByTagName('title')[0]
             titletext = utils.serializeText(titlenode, stringlist = [])
