@@ -1,0 +1,634 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE article
+  PUBLIC "-//NLM//DTD Journal Publishing DTD v2.0 20040830//EN" "http://dtd.nlm.nih.gov/publishing/2.0/journalpublishing.dtd">
+<article xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:mml="http://www.w3.org/1998/Math/MathML" article-type="research-article" dtd-version="2.0" xml:lang="EN">
+  <front>
+    <journal-meta>
+      <journal-id journal-id-type="nlm-ta">PLoS ONE</journal-id>
+      <journal-id journal-id-type="publisher-id">plos</journal-id>
+      <journal-id journal-id-type="pmc">plosone</journal-id>
+      <journal-title>PLoS ONE</journal-title>
+      <issn pub-type="epub">1932-6203</issn>
+      <publisher>
+        <publisher-name>Public Library of Science</publisher-name>
+        <publisher-loc>San Francisco, USA</publisher-loc>
+      </publisher>
+    </journal-meta>
+    <article-meta>
+      <article-id pub-id-type="publisher-id">PONE-D-11-07135</article-id>
+      <article-id pub-id-type="doi">10.1371/journal.pone.0024702</article-id>
+      <article-categories>
+        <subj-group subj-group-type="heading">
+          <subject>Research Article</subject>
+        </subj-group>
+        <subj-group subj-group-type="Discipline-v2">
+          <subject>Biology</subject>
+          <subj-group>
+            <subject>Biochemistry</subject>
+            <subj-group>
+              <subject>Proteins</subject>
+              <subj-group>
+                <subject>Lipoproteins</subject>
+              </subj-group>
+            </subj-group>
+          </subj-group>
+        </subj-group>
+        <subj-group subj-group-type="Discipline-v2">
+          <subject>Mathematics</subject>
+          <subj-group>
+            <subject>Statistics</subject>
+            <subj-group>
+              <subject>Biostatistics</subject>
+            </subj-group>
+          </subj-group>
+        </subj-group>
+        <subj-group subj-group-type="Discipline-v2">
+          <subject>Medicine</subject>
+          <subj-group>
+            <subject>Epidemiology</subject>
+            <subj-group>
+              <subject>Epidemiological methods</subject>
+            </subj-group>
+          </subj-group>
+        </subj-group>
+        <subj-group subj-group-type="Discipline">
+          <subject>Public Health and Epidemiology</subject>
+          <subject>Biochemistry</subject>
+          <subject>Mathematics</subject>
+        </subj-group>
+      </article-categories>
+      <title-group>
+        <article-title>A Differential Network Approach to Exploring Differences between Biological States: An Application to Prediabetes</article-title>
+        <alt-title alt-title-type="running-head">Differential Network to Explore Biological States</alt-title>
+      </title-group>
+      <contrib-group>
+        <contrib contrib-type="author" xlink:type="simple">
+          <name name-style="western">
+            <surname>Valcárcel</surname>
+            <given-names>Beatriz</given-names>
+          </name>
+          <xref ref-type="aff" rid="aff1">
+            <sup>1</sup>
+          </xref>
+        </contrib>
+        <contrib contrib-type="author" xlink:type="simple">
+          <name name-style="western">
+            <surname>Würtz</surname>
+            <given-names>Peter</given-names>
+          </name>
+          <xref ref-type="aff" rid="aff1">
+            <sup>1</sup>
+          </xref>
+          <xref ref-type="aff" rid="aff2">
+            <sup>2</sup>
+          </xref>
+        </contrib>
+        <contrib contrib-type="author" xlink:type="simple">
+          <name name-style="western">
+            <surname>Seich al Basatena</surname>
+            <given-names>Nafisa-Katrin</given-names>
+          </name>
+          <xref ref-type="aff" rid="aff3">
+            <sup>3</sup>
+          </xref>
+        </contrib>
+        <contrib contrib-type="author" xlink:type="simple">
+          <name name-style="western">
+            <surname>Tukiainen</surname>
+            <given-names>Taru</given-names>
+          </name>
+          <xref ref-type="aff" rid="aff1">
+            <sup>1</sup>
+          </xref>
+          <xref ref-type="aff" rid="aff2">
+            <sup>2</sup>
+          </xref>
+        </contrib>
+        <contrib contrib-type="author" xlink:type="simple">
+          <name name-style="western">
+            <surname>Kangas</surname>
+            <given-names>Antti J.</given-names>
+          </name>
+          <xref ref-type="aff" rid="aff2">
+            <sup>2</sup>
+          </xref>
+        </contrib>
+        <contrib contrib-type="author" xlink:type="simple">
+          <name name-style="western">
+            <surname>Soininen</surname>
+            <given-names>Pasi</given-names>
+          </name>
+          <xref ref-type="aff" rid="aff2">
+            <sup>2</sup>
+          </xref>
+          <xref ref-type="aff" rid="aff4">
+            <sup>4</sup>
+          </xref>
+        </contrib>
+        <contrib contrib-type="author" xlink:type="simple">
+          <name name-style="western">
+            <surname>Järvelin</surname>
+            <given-names>Marjo-Riitta</given-names>
+          </name>
+          <xref ref-type="aff" rid="aff1">
+            <sup>1</sup>
+          </xref>
+          <xref ref-type="aff" rid="aff5">
+            <sup>5</sup>
+          </xref>
+          <xref ref-type="aff" rid="aff6">
+            <sup>6</sup>
+          </xref>
+        </contrib>
+        <contrib contrib-type="author" xlink:type="simple">
+          <name name-style="western">
+            <surname>Ala-Korpela</surname>
+            <given-names>Mika</given-names>
+          </name>
+          <xref ref-type="aff" rid="aff2">
+            <sup>2</sup>
+          </xref>
+          <xref ref-type="aff" rid="aff4">
+            <sup>4</sup>
+          </xref>
+          <xref ref-type="aff" rid="aff7">
+            <sup>7</sup>
+          </xref>
+        </contrib>
+        <contrib contrib-type="author" xlink:type="simple">
+          <name name-style="western">
+            <surname>Ebbels</surname>
+            <given-names>Timothy M.</given-names>
+          </name>
+          <xref ref-type="aff" rid="aff8">
+            <sup>8</sup>
+          </xref>
+          <xref ref-type="corresp" rid="cor1">
+            <sup>*</sup>
+          </xref>
+        </contrib>
+        <contrib contrib-type="author" xlink:type="simple">
+          <name name-style="western">
+            <surname>de Iorio</surname>
+            <given-names>Maria</given-names>
+          </name>
+          <xref ref-type="aff" rid="aff1">
+            <sup>1</sup>
+          </xref>
+          <xref ref-type="corresp" rid="cor1">
+            <sup>*</sup>
+          </xref>
+        </contrib>
+      </contrib-group>
+      <aff id="aff1"><label>1</label><addr-line>Epidemiology and Biostatistics, Imperial College London, London, United Kingdom</addr-line>       </aff>
+      <aff id="aff2"><label>2</label><addr-line>Computational Medicine, Institute of Clinical Medicine, University of Oulu and Biocenter Oulu, Oulu, Finland</addr-line>       </aff>
+      <aff id="aff3"><label>3</label><addr-line>Department of Immunology, Imperial College London, London, United Kingdom</addr-line>       </aff>
+      <aff id="aff4"><label>4</label><addr-line>NMR Metabonomics Laboratory, Department of Biosciences, University of Eastern Finland, Kuopio, Finland</addr-line>       </aff>
+      <aff id="aff5"><label>5</label><addr-line>Department of Child and Adolescent Health, National Institute of Health and Wellbeing, Oulu, Finland</addr-line>       </aff>
+      <aff id="aff6"><label>6</label><addr-line>Institute of Health Sciences and Biocenter Oulu, University of Oulu, Oulu, Finland</addr-line>       </aff>
+      <aff id="aff7"><label>7</label><addr-line>Department of Internal Medicine, Clinical Research Center, University of Oulu, Oulu, Finland</addr-line>       </aff>
+      <aff id="aff8"><label>8</label><addr-line>Biomolecular Medicine, Department of Surgery and Cancer, Imperial College London, London, United Kingdom</addr-line>       </aff>
+      <contrib-group>
+        <contrib contrib-type="editor" xlink:type="simple">
+          <name name-style="western">
+            <surname>Csermely</surname>
+            <given-names>Peter</given-names>
+          </name>
+          <role>Editor</role>
+          <xref ref-type="aff" rid="edit1"/>
+        </contrib>
+      </contrib-group>
+      <aff id="edit1">Semmelweis University, Hungary</aff>
+      <author-notes>
+        <corresp id="cor1">* E-mail: <email xlink:type="simple">m.deiorio@imperial.ac.uk</email> (MdI); <email xlink:type="simple">t.ebbels@imperial.ac.uk</email> (TME)</corresp>
+        <fn fn-type="con">
+          <p>Conceived and designed the experiments: MDI TME. Performed the experiments: BV MDI TME PW PS AJK. Analyzed the data: BV PW MDI TME. Contributed reagents/materials/analysis tools: NKSB MRJ. Wrote the paper: BV PW MDI TME MA. Helped with analysis of the metabolic data, read, commented and approved the manuscript: TT. Made available the NFBC data, read, commented and approved: MRJ.</p>
+        </fn>
+      </author-notes>
+      <pub-date pub-type="collection">
+        <year>2011</year>
+      </pub-date>
+      <pub-date pub-type="epub">
+        <day>27</day>
+        <month>9</month>
+        <year>2011</year>
+      </pub-date>
+      <volume>6</volume>
+      <issue>9</issue>
+      <elocation-id>e24702</elocation-id>
+      <history>
+        <date date-type="received">
+          <day>19</day>
+          <month>4</month>
+          <year>2011</year>
+        </date>
+        <date date-type="accepted">
+          <day>16</day>
+          <month>8</month>
+          <year>2011</year>
+        </date>
+      </history>
+      <copyright-statement>Valcárcel et al. This is an open-access article distributed under the terms of the Creative Commons Attribution License, which permits unrestricted use, distribution, and reproduction in any medium, provided the original author and source are credited.</copyright-statement>
+      <copyright-year>2011</copyright-year>
+      <abstract>
+        <sec>
+          <title>Background</title>
+          <p>Variations in the pattern of molecular associations are observed during disease development. The comprehensive analysis of molecular association patterns and their changes in relation to different physiological conditions can yield insight into the biological basis of disease-specific phenotype variation.</p>
+        </sec>
+        <sec>
+          <title>Methodology</title>
+          <p>Here, we introduce a formal statistical method for the differential analysis of molecular associations via network representation. We illustrate our approach with extensive data on lipoprotein subclasses measured by NMR spectroscopy in 4,406 individuals with normal fasting glucose, and 531 subjects with impaired fasting glucose (prediabetes). We estimate the pair-wise association between measures using shrinkage estimates of partial correlations and build the differential network based on this measure of association. We explore the topological properties of the inferred network to gain insight into important metabolic differences between individuals with normal fasting glucose and prediabetes.</p>
+        </sec>
+        <sec>
+          <title>Conclusions/Significance</title>
+          <p>Differential networks provide new insights characterizing differences in biological states. Based on conventional statistical methods, few differences in concentration levels of lipoprotein subclasses were found between individuals with normal fasting glucose and individuals with prediabetes. By performing the differential analysis of networks, several characteristic changes in lipoprotein metabolism known to be related to diabetic dyslipidemias were identified. The results demonstrate the applicability of the new approach to identify key molecular changes inaccessible to standard approaches.</p>
+        </sec>
+      </abstract>
+      <counts>
+        <page-count count="9"/>
+      </counts>
+    </article-meta>
+  </front>
+  <body>
+    <sec id="s1">
+      <title>Introduction</title>
+      <p>With advances in the theory of complex networks <xref ref-type="bibr" rid="pone.0024702-Barabasi1">[1]</xref> and its application to describe architectural features of molecular systems <xref ref-type="bibr" rid="pone.0024702-Barabasi2">[2]</xref>, network-based approaches have been increasingly used to capture underlying properties of biological systems. An appealing feature of this approach is the ability to create a visual simplification of the observed pattern of molecular associations. Network theory is also of interest to identify variations between different physiological states as well as biological systems. In the transition from health towards disease, variations in molecular associations are involved <xref ref-type="bibr" rid="pone.0024702-Steuer1">[3]</xref>; correspondingly, different physiological conditions may manifest as different patterns of observed correlations <xref ref-type="bibr" rid="pone.0024702-Camacho1">[4]</xref>. Hence comprehensive assessment of molecular associations can yield disease-specific signatures providing a complementary tool to unravel the biological basis of phenotype variation in the process of disease development, such as the pathogenesis of type 2 diabetes mellitus (T2DM) <xref ref-type="bibr" rid="pone.0024702-Bain1">[5]</xref>.</p>
+      <p>Several studies based on gene expression data have already explored this idea for a variety of purposes. Examples include the use of association networks to identify species-specific network connections <xref ref-type="bibr" rid="pone.0024702-Oldham1">[6]</xref>, gene expression associations to detect body weight-related genes <xref ref-type="bibr" rid="pone.0024702-Fuller1">[7]</xref> or the assessment of changes in association patterns in patients with chronic fatigue syndrome <xref ref-type="bibr" rid="pone.0024702-Fuite1">[8]</xref>. Recently a more formal statistical methodology for differential analysis of gene associations was presented <xref ref-type="bibr" rid="pone.0024702-Gill1">[9]</xref> where all the statistical tests were based on a set of scores that measure the strength of the genetic associations in two different networks.</p>
+      <p>In this study, we introduce a novel statistical approach for the differential analysis of molecular associations. We demonstrate the potential of the method to reveal molecular differences related to physiological states using the example of changes in lipoprotein metabolism in prediabetes. Specifically, we explore how metabolic associations differ between individuals with normal fasting glucose (NFG) and individuals with impaired fasting glucose (IFG), so-called prediabetes, a state that represents enhanced risk for developing T2DM <xref ref-type="bibr" rid="pone.0024702-Festa1">[10]</xref>. We use extensive data on lipoprotein subclasses, enabling the assessment of changes in lipoprotein metabolism, which are known to be strongly connected to the risk and development of T2DM <xref ref-type="bibr" rid="pone.0024702-Hegele1">[11]</xref>. We base our method on partial correlation coefficients quantifying the underlying interdependencies between lipoprotein measures. Using these measures of association we construct the differential networks and explore their features based on the networks' topological properties. To assess the potential of the differential networks to reveal key differences related to different physiological conditions, we compare our results with existing knowledge of metabolic disorders related to the development of T2DM.</p>
+      <p>The results illustrate the advantage of using the differential network approach to explore differences between physiological groups. Initial inspection based on standard statistical methods showed relatively few significant differences in concentration levels of lipoprotein subclasses between subjects with normal fasting glucose and those with impaired fasting glucose (prediabetes). By performing the differential analysis of networks, we were able to identify various changes in lipoprotein metabolism between the two groups. Many of the lipoprotein variations highlighted by the differential network analysis are known to be related to diabetic dyslipidemias. The results indicate the suitability of our method to investigate subtle molecular variation indicative of (patho)physiological status. Approaches such as those presented here are expected to be important in detecting and monitoring molecular disturbances such as those predisposing for diabetes or coronary heart disease.</p>
+    </sec>
+    <sec id="s2">
+      <title>Results</title>
+      <p>The performance of our approach to detect important molecular differences between physiological conditions is tested in the context of lipoprotein metabolism. Due to a predominance of males in the IFG group, we base our biological interpretation on the male data; the differential network for the female data is shown in the supplementary material. The initial inspection of the data using Mann-Whitney test showed no significant differences in concentration levels of the <italic>M = 60</italic> lipoprotein subclass components between individual with normal fasting glucose and impaired fasting glucose at the Bonferroni corrected threshold <inline-formula><inline-graphic xlink:href="info:doi/10.1371/journal.pone.0024702.e001" mimetype="image" xlink:type="simple"/></inline-formula>. When the significance the threshold is not corrected for multiple testing, <inline-formula><inline-graphic xlink:href="info:doi/10.1371/journal.pone.0024702.e002" mimetype="image" xlink:type="simple"/></inline-formula>, eleven measures, extremely large VLDL (phospholipids), very large VLDL (phospholipids and particle concentration), large LDL (phospholipids and particle concentration), medium LDL (cholesterol, phospholipids and particle concentration), small LDL (cholesterol and particle concentration) and Apolipoprotein B show significant differences in concentration levels between the two groups (NFG vs. IFG). The results for males are shown in <xref ref-type="supplementary-material" rid="pone.0024702.s008">Table S1</xref>.</p>
+      <p>The few significant differences in lipoprotein concentrations between the two groups may reflect a generally healthy status of the young population studied. Nevertheless, the prediabetic state represents increased risk for the development of T2DM and it has been suggested that lipid abnormalities are associated with the progression of T2DM <xref ref-type="bibr" rid="pone.0024702-Festa1">[10]</xref>. Despite there being only a few significant variations in the concentration levels of lipoprotein subclass components between the two groups, we hypothesize that the lipoprotein subclass dependencies could be affected and assess this by building association networks.</p>
+      <sec id="s2a">
+        <title>Individual Networks</title>
+        <p>We construct the individual networks to examine the specific pattern of associations exhibited under each condition (NFG and IFG). The aim is to explore variations in the observed pattern of associations between the two groups as well as to define some topological features of the networks. The construction of the individual networks is based on a binary representation of the underlying partial correlations (significant and non-significant partial correlation) and therefore the correlation strength is not represented.</p>
+        <p>The individual networks for NFG and IFG are presented in <xref ref-type="fig" rid="pone-0024702-g001">Figure 1</xref>. Using partial correlation and shrinkage methods for the network construction, the number of connections is decreased compared to full or standard partial correlation statistics. This implies a reduction in the network complexity and a correspondingly more parsimonious biological interpretation. To better illustrate this achievement, in supplementary material we show correlation maps where the pair-wise associations have been quantified using three measures of correlation: Pearson's full correlation (<xref ref-type="supplementary-material" rid="pone.0024702.s001">Figure S1</xref>), standard partial correlation (<xref ref-type="supplementary-material" rid="pone.0024702.s002">Figure S2</xref>) and shrinkage partial correlation (<xref ref-type="supplementary-material" rid="pone.0024702.s003">Figure S3</xref>). The individual networks obtained using these three measures of association are presented in <xref ref-type="supplementary-material" rid="pone.0024702.s004">Figures S4</xref>, <xref ref-type="supplementary-material" rid="pone.0024702.s005">S5</xref>, <xref ref-type="supplementary-material" rid="pone.0024702.s006">S6</xref>. The results show the advantage of using partial correlations in combination with shrinkage methods instead of other correlation measures, especially when the variables under study are highly interrelated, such as lipoprotein subclasses.</p>
+        <fig id="pone-0024702-g001" position="float">
+          <object-id pub-id-type="doi">10.1371/journal.pone.0024702.g001</object-id>
+          <label>Figure 1</label>
+          <caption>
+            <title>The individual networks inferred from male data.</title>
+            <p>Each of the connections indicates significant pair-wise association between two lipoprotein measures using the Bonferroni corrected threshold <inline-formula><inline-graphic xlink:href="info:doi/10.1371/journal.pone.0024702.e003" mimetype="image" xlink:type="simple"/></inline-formula>, where <inline-formula><inline-graphic xlink:href="info:doi/10.1371/journal.pone.0024702.e004" mimetype="image" xlink:type="simple"/></inline-formula> is the total number of possible interactions and <italic>M = 60</italic> is the total number of metabolites. The NFG network indicates the pattern of pair-wise association for the normal fasting glucose group. The IFG network reflects the pattern of association for the impaired fasting glucose group. The node size is proportional to the degree of connectivity (number of connections). Lipoprotein abbreviations are listed in <xref ref-type="supplementary-material" rid="pone.0024702.s008">Table S1</xref>.</p>
+          </caption>
+          <graphic xlink:href="info:doi/10.1371/journal.pone.0024702.g001" alt-version="no" mimetype="image" position="float" xlink:type="simple"/>
+        </fig>
+        <p>The connectivity, <italic>k</italic>, for each of the nodes can be used to define quantitative differences between the two individual networks. The global properties of the NFG and IFG networks are presented in <xref ref-type="table" rid="pone-0024702-t001">Table 1</xref>. In terms of the total number of connections, both individual networks represent similar information (134 and 126 connections for NFG and IFG, respectively). A large number of these links are in common between the two individual networks. For the IFG network, 83% of the connections overlap with connections in the NFG network. Six VLDL-related measures are isolated in both individual networks. Despite the large similarities between the two individual networks, some differences in the pattern of association between measures can be identified in <xref ref-type="fig" rid="pone-0024702-g001">Figure 1</xref>. Overall, LDL-related measures show a tendency to reduce their associations (light-blue nodes in <xref ref-type="fig" rid="pone-0024702-g001">Figure 1</xref>) from the NFG to the IFG state whereas measures in large to very large HDL show a relative increase in their associations in the IFG condition (cluster of very large HDL, left in <xref ref-type="fig" rid="pone-0024702-g001">Figure 1</xref>). In relation to VLDL-measures, a more heterogeneous pattern of changes in pair-wise association is observed. Several measures in medium VLDL (top and central-right in <xref ref-type="fig" rid="pone-0024702-g001">Figure 1</xref>) increased their number of associations in the IFG condition whereas very small VLDL (central in <xref ref-type="fig" rid="pone-0024702-g001">Figure 1</xref>) and free cholesterol in medium VLDL present a large reduction in their pair-wise associations from the NFG to the IFG state. Overall, the differences between the two networks represent a reduction in pair-wise association for IFG network. The reduced metabolic connectivity could indicate that the inverse correlation between small VLDL and large HDL subclasses is less tightly regulated in the prediabetic state.</p>
+        <table-wrap id="pone-0024702-t001" position="float">
+          <object-id pub-id-type="doi">10.1371/journal.pone.0024702.t001</object-id>
+          <label>Table 1</label>
+          <caption>
+            <title>Global properties of the individual networks.</title>
+          </caption>
+          <graphic id="pone-0024702-t001-1" xlink:href="info:doi/10.1371/journal.pone.0024702.t001" alt-version="no" mimetype="image" position="float" xlink:type="simple"/>
+          <table alternate-form-of="pone-0024702-t001-1">
+            <colgroup span="1">
+              <col align="left" span="1"/>
+              <col align="center" span="1"/>
+              <col align="center" span="1"/>
+            </colgroup>
+            <thead>
+              <tr>
+                <td align="left" rowspan="1" colspan="1"/>
+                <td align="left" rowspan="1" colspan="1">Normal fasting glucose</td>
+                <td align="left" rowspan="1" colspan="1">Impaired fasting glucose</td>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td align="left" rowspan="1" colspan="1">
+                  <bold>Connected nodes</bold>
+                </td>
+                <td align="left" rowspan="1" colspan="1">54</td>
+                <td align="left" rowspan="1" colspan="1">54</td>
+              </tr>
+              <tr>
+                <td align="left" rowspan="1" colspan="1">
+                  <bold>Isolated nodes</bold>
+                </td>
+                <td align="left" rowspan="1" colspan="1">6</td>
+                <td align="left" rowspan="1" colspan="1">6</td>
+              </tr>
+              <tr>
+                <td align="left" rowspan="1" colspan="1">
+                  <bold>Total number of edges</bold>
+                </td>
+                <td align="left" rowspan="1" colspan="1">134</td>
+                <td align="left" rowspan="1" colspan="1">126</td>
+              </tr>
+              <tr>
+                <td align="left" rowspan="1" colspan="1">
+                  <bold>Networks density</bold>
+                </td>
+                <td align="left" rowspan="1" colspan="1">0.075</td>
+                <td align="left" rowspan="1" colspan="1">0.071</td>
+              </tr>
+              <tr>
+                <td align="left" rowspan="1" colspan="1">
+                  <bold>Average degree</bold>
+                </td>
+                <td align="left" rowspan="1" colspan="1">4.41</td>
+                <td align="left" rowspan="1" colspan="1">4.20</td>
+              </tr>
+              <tr>
+                <td align="left" rowspan="1" colspan="1">
+                  <bold>Slope of degree distribution</bold>
+                </td>
+                <td align="left" rowspan="1" colspan="1">−0.12</td>
+                <td align="left" rowspan="1" colspan="1">−0.14</td>
+              </tr>
+              <tr>
+                <td align="left" rowspan="1" colspan="1">
+                  <bold>Clustering coefficient</bold>
+                </td>
+                <td align="left" rowspan="1" colspan="1">0.26</td>
+                <td align="left" rowspan="1" colspan="1">0.29</td>
+              </tr>
+            </tbody>
+          </table>
+        </table-wrap>
+        <p>Other measures that can be used to quantitatively define the network's features are the degree distributions, and the network centrality. The degree distributions of the individual networks are shown in <xref ref-type="fig" rid="pone-0024702-g002">Figure 2</xref>. It appears that both individual networks are similar to scale-free networks. This class of networks is characterized by a power-law distribution <xref ref-type="bibr" rid="pone.0024702-Barabasi1">[1]</xref> where the probability of a node having <italic>k</italic> links is <italic>P(k)</italic>∼<italic>k<sup>−γ</sup></italic>. An important property of scale-free networks is the existence of a relatively small number of highly correlated nodes, so-called hubs <xref ref-type="bibr" rid="pone.0024702-Barabasi2">[2]</xref>. Triglycerides in small HDL and particle concentration of small HDL represent the main hubs for both individual networks (central in <xref ref-type="fig" rid="pone-0024702-g001">Figure 1</xref>). These highly connected nodes are expected to be the central components of the networks which can reflect important points of the network organization <xref ref-type="bibr" rid="pone.0024702-deSilva1">[12]</xref>. This central property can be quantified by computing betweenness centrality in relation to the degree connectivity (<xref ref-type="fig" rid="pone-0024702-g002">Figure 2</xref>). For both individual networks, triglycerides in small HDL show the highest betweeness centrality. Small HDL particle concentration also has increased betweenness centrality in the IFG network, suggesting the central role of these measures in lipoproteins metabolism in prediabetes state. This is an interesting new finding since it has recently been noted that large and small HDL particles also behave differently in their effects on gene expression <xref ref-type="bibr" rid="pone.0024702-Inouye1">[13]</xref>.</p>
+        <fig id="pone-0024702-g002" position="float">
+          <object-id pub-id-type="doi">10.1371/journal.pone.0024702.g002</object-id>
+          <label>Figure 2</label>
+          <caption>
+            <title>Topological properties of the individual networks.</title>
+            <p>The degree distribution shows the probability that a node <italic>i</italic> has <italic>k</italic> connections in the network. For both individual networks the degree distribution is well approximated by a power-law. The betweenness indicates how central a node is in the network. For both individual networks, the nodes with higher degree connectivity are also the most central nodes. Lipoprotein abbreviations are listed in <xref ref-type="supplementary-material" rid="pone.0024702.s008">Table S1</xref>.</p>
+          </caption>
+          <graphic xlink:href="info:doi/10.1371/journal.pone.0024702.g002" alt-version="no" mimetype="image" position="float" xlink:type="simple"/>
+        </fig>
+        <p>The clustering coefficient is another measure used to describe the organization of complex networks. It has been suggested that high value of this measure can be an indicative of the modular organization of the network <xref ref-type="bibr" rid="pone.0024702-Wagner1">[14]</xref>. The mean clustering values for the NFG network and IFG network are 0.26 and 0.29, respectively. For both individual networks, metabolites involved in the same clusters (<xref ref-type="fig" rid="pone-0024702-g001">Figures 1</xref>) are mainly components belonging to the same lipoprotein subclass. This tendency to form clusters among metabolites participating in the same metabolic pathways is in line with previous studies on metabolic networks <xref ref-type="bibr" rid="pone.0024702-Ursem1">[15]</xref>.</p>
+        <p>Based on the theory of complex networks, the organization of metabolic systems has been described as large sets of densely interconnected modules that combine into larger and less interconnected units, with both degree of clustering and degree distribution following power laws <xref ref-type="bibr" rid="pone.0024702-Ravasz1">[16]</xref>. Thus, exploring the network's topological properties certain features of metabolic systems can be determined. However, individual networks do not enable clear identification of key differences in associations between the two groups. To address this we proceed by constructing differential networks.</p>
+      </sec>
+      <sec id="s2b">
+        <title>Differential Network</title>
+        <p>The differential networks can be used to discover important differences between the NFG and the IFG states. Each of the connections in the differential network indicates a significant change in the partial correlation between two lipoprotein measures across the two physiological conditions (see Methods).</p>
+        <p>The differential network inferred from the male data is presented in <xref ref-type="fig" rid="pone-0024702-g003">Figure 3</xref>. One is immediately struck by its sparse nature compared to the individual networks. A set of 22 connected variables are observed, organized in 16 pair-wise interactions. The remaining 38 metabolites show no differential connections. The differential network indicates that the differential connections occur through either a significant increase or decrease in the pair-wise partial correlation between the lipoprotein measures, or a significant alteration in the partial correlations sign (changes described with respect to NFG state). For instance, the largest cluster in the differential network (upper most in <xref ref-type="fig" rid="pone-0024702-g003">Figure 3</xref>) indicates that large and very large HDL (phospholipids and triglycerides, respectively) are differentially connected to very small VLDL through an increase in their pair-wise associations (red edges). In the same way, this connected component reflects the decrease in partial correlation between measures of small VLDL (phospholipids and free cholesterol) and phospholipids in very small VLDL (blue edges). We can also observe an interesting change in pair-wise association between medium VLDL (cholesterol esters) and two measures of very small VLDL. The central connections in the largest cluster reflect the shift from positive to negative partial correlation between medium VLDL and phospholipids in very small VLDL as well as the change from negative to positive pair-wise association between medium VLDL and particle concentration in VLDL. These variations points to a change in the underlying regulation of the system.</p>
+        <fig id="pone-0024702-g003" position="float">
+          <object-id pub-id-type="doi">10.1371/journal.pone.0024702.g003</object-id>
+          <label>Figure 3</label>
+          <caption>
+            <title>The differential network inferred from males with normal fasting glucose (NFG) and impaired fasting glucose (IFG).</title>
+            <p>Each of the connections indicates a significant change in partial correlation between two lipoprotein measures across the physiological conditions. Edge colours represent how the partial correlation has changed across the two groups. Lipoprotein abbreviations are listed in <xref ref-type="supplementary-material" rid="pone.0024702.s008">Table S1</xref>.</p>
+          </caption>
+          <graphic xlink:href="info:doi/10.1371/journal.pone.0024702.g003" alt-version="no" mimetype="image" position="float" xlink:type="simple"/>
+        </fig>
+        <p>As with the individual networks, topological properties can be used to characterize the differential networks. Three VLDL-related measures present the highest connectivity scores. These highly connected lipoprotein measures are the central components of the main cluster in the differential network (<xref ref-type="fig" rid="pone-0024702-g003">Figure 3</xref>). The first of these measures, very small VLDL (phospholipids) is differentially connected to large HDL (phospholipids), small VLDL (free cholesterol), small VLDL (phospholipids) and very small VLDL (particle concentration). The second measure, medium VLDL (cholesterol esters) is connected to medium VLDL (particle concentration) and very small VLDL (particle concentration). The last measure, very small VLDL (particle concentration) is connected to very large HDL (triglycerides) and very small VLDL (triglycerides). The differential network indicates that a change in association has occurred throughout the size range of lipoprotein subclasses, except the smallest HDL. For instance, both extremely large and small VLDL particles decrease their partial correlation with medium LDL cholesterol (cholesterol ester), possibly reflecting decreased regulation and increased heterogeneity of the lipoprotein cascade, as observed for the individual networks. The most prominent cluster in the differential network reflects differential changes in the correlation pattern between very small to medium VLDL subclasses with large and very large HDL subclasses. For instance, an increase is seen in partial correlation of phospholipids in very small VLDL with phospholipids in large HDL. Phospholipids are key metabolites in shaping HDL <xref ref-type="bibr" rid="pone.0024702-Kumpula1">[17]</xref>. In addition, we find that large VLDL and very large HDL change in partial correlation (right most cluster), and that cluster also involves LDL subclasses. While high levels of large VLDL particles are known to cause increased risk for diabetes <xref ref-type="bibr" rid="pone.0024702-delaFuente1">[18]</xref>, <xref ref-type="bibr" rid="pone.0024702-Mora1">[19]</xref>, the role of small VLDL is less recognized. The finding of decreased metabolic regulation between small VLDL and large HDL emphasizes the continuous nature of the lipoprotein cascade from VLDL. In addition, the lack of differential associations for composite measures such as apolipoprotein B and A-1 illustrates the benefit of analysing the metabolic data on the lipoproteins subclass levels. Overall, our results show that lipoprotein association patterns are significantly different from NFG even in the prediabetic state. The observed differences, with less metabolic regulation, reflect the gradual disease progression towards diabetes, associated with increased insulin resistance for prediabetics and interconnected changes in lipoprotein metabolism.</p>
+      </sec>
+    </sec>
+    <sec id="s3">
+      <title>Discussion</title>
+      <p>Due to the lack of symptoms during early stages of the disease, a large number of individuals suffering from T2DM are undiagnosed <xref ref-type="bibr" rid="pone.0024702-World1">[20]</xref>. The identification of metabolic disorders at an early stage is essential for risk assessment, diagnosis and effective treatment of T2DM. The results from the differential network analysis are consistent with existing knowledge on the development of T2DM. Studies based on lipoprotein profiles have resulted in the recognition of a complex pattern of change in size and particle concentration within the major lipoprotein classes in patients with diabetes <xref ref-type="bibr" rid="pone.0024702-Mora1">[19]</xref>, <xref ref-type="bibr" rid="pone.0024702-Hodge1">[21]</xref>. These disorders are related to increased levels of medium and large VLDL and small LDL and reduction in size of HDL. It has been suggested that elevated glucose can lead to an increase in the levels of triglycerides in liver, resulting in the shift from small VLDL particles to enlarged VLDL <xref ref-type="bibr" rid="pone.0024702-Adiels1">[22]</xref>. These variations in size range in lipoprotein subclasses, which relate to diabetic dyslipidemias are captured by the differential network. The pronounced presence of VLDL-related measures in the differential connections reflects the early variations in the lipoprotein metabolism at prediabetic state.</p>
+      <p>Molecular profiles are complex and information-rich, requiring effective tools to analyse, visualize and compare the underlying biological processes. A formal statistical approach for the differential analysis of associations via network representation has been presented with a demonstration of its biological application to assess changes in molecular associations between different physiological conditions. The potential of the differential network approach has been illustrated in the context of lipoprotein metabolism by identifying differences between individuals with normal fasting glucose and individuals with impaired fasting glucose (prediabetes), which are at increased risk of developing T2DM. By the construction of the differential networks we have demonstrated that alterations in the lipoproteins metabolism occur early in the progression towards disease onset, preceding the clinical diagnosis. Studies using network topological properties can be used as a complementary analytical technique for shedding light on the etiology of differences between different physiological states. In addition, the method proposed in this paper can easily be applied to the analysis of other molecular profiling techniques such as transcriptomics and proteomics. The approach introduced here can provide insight into the biological basis of phenotypic variation and aid the generation of new hypotheses about molecular control and regulation in the context of systems biology.</p>
+    </sec>
+    <sec id="s4" sec-type="materials|methods">
+      <title>Materials and Methods</title>
+      <sec id="s4a">
+        <title>Study population</title>
+        <p>Subjects are participants from the Northern Finland Birth Cohort consisting of children due to be born in the provinces of Oulu and Lapland in 1966. The methods and aims of this birth cohort study have been published previously <xref ref-type="bibr" rid="pone.0024702-Sabatti1">[23]</xref>. Blood samples were drawn after overnight fasting when individuals were 31 years old. Serum samples for blood glucose analysis were stored at +4°C until analyses later the same day were performed by glucose dehydrogenase (Granutest 250, Diagnostica Merck), and at −80°C until lipoprotein subclass, particle and lipid concentration analyses for the present study were performed. Non-fasting, diabetic and pregnant individuals were excluded from the study. Informed consent from all study subjects was obtained and the study was approved by the Ethical Committee of the Northern Ostrobothnia Hospital District.</p>
+        <p>The data set is classified into two groups according to the categorical criteria of the American Diabetes Society for prediabetes classification <xref ref-type="bibr" rid="pone.0024702-Expert1">[24]</xref>. The normal fasting glucose (NFG) group represents individuals with fasting glucose levels lower than 5.6 mmol/L. The impaired fasting glucose (IFG) group includes individuals with fasting glucose levels from 5.6 mmol/L to 6.9 mmol/L. Subjects with fasting glucose levels greater than 6.9 mmol/L, clinically considered as having T2DM, or missing data on lipoprotein subclass profile and/or glucose measures were excluded which left 4,937 subjects for the analysis. The sample size for each group is <italic>N<sub>NFG</sub></italic> = 4,406 (2,021 males and 2,385 females) and <italic>N<sub>IFG</sub></italic> = 531 (390 males and 141 females). Due to the well-known sex-specific difference in lipoprotein profiles we perform the analysis separately for men and women <xref ref-type="bibr" rid="pone.0024702-Bertram1">[25]</xref>. We focus on the male data to illustrate the biological rationale of the differential network approach; the analysis of females is given in supplementary material (see <xref ref-type="supplementary-material" rid="pone.0024702.s007">figure S7</xref>). The clinical characteristics of the study participants are presented in <xref ref-type="supplementary-material" rid="pone.0024702.s009">Table S2</xref>.</p>
+      </sec>
+      <sec id="s4b">
+        <title>NMR spectroscopy and lipoprotein subclass profiles</title>
+        <p>Lipoprotein subclass, particle and lipid concentrations were measured by <sup>1</sup>H NMR spectroscopy. The data were acquired from native serum samples at 37.0°C using a high-throughput NMR platform (Bruker AVANCE III spectrometer) operating at 500 MHz <xref ref-type="bibr" rid="pone.0024702-Soininen1">[26]</xref>, <xref ref-type="bibr" rid="pone.0024702-Inouye1">[13]</xref>. A standard NOESY-presat pulse sequence was used with mixing time of 10 ms and irradiation field of 25 Hz to suppress the water peak. The spectra were recorded with 80 k data points using 8 transients acquired with an automatically calibrated 90° pulse. The acquisition time was 2.7 s and the relaxation delay 3.0 s. The spectral data were processed and phase corrected in an automated fashion <xref ref-type="bibr" rid="pone.0024702-Soininen1">[26]</xref>. Quantification of particle concentrations and various lipid components in 14 lipoprotein subclasses were obtained using a computationally more efficient modification of the regression approach presented in Vehtari et al <xref ref-type="bibr" rid="pone.0024702-Vehtari1">[27]</xref>. The subclasses have been calibrated and cross-validated via high-performance liquid chromatography and are as follows: chylomicrons and extremely large VLDL particles (with particle diameters from approximately 75 nm upwards), five different VLDL subclasses: very large VLDL (average particle diameter of 64.0 nm), large VLDL (53.6 nm), medium VLDL (44.5 nm), small VLDL (36.8 nm), and very small VLDL (31.3 nm), IDL (28.6 nm), three LDL subclasses: large LDL (25.5 nm), medium LDL (23.0 nm), and small LDL (18.7), and four HDL subclasses: very large HDL (14.3 nm), large HDL (12.1 nm), medium HDL (10.9 nm), and small HDL (8.7 nm).</p>
+        <p>Apolipoprotein B and apolipoprotein A-1 were calculated using an extended Friedewald algorithm based on triglycerides, total cholesterol and HDL cholesterol measures quantified from the spectral data <xref ref-type="bibr" rid="pone.0024702-Niemi1">[28]</xref>. Abbreviations of all lipoproteins measures are listed in <xref ref-type="supplementary-material" rid="pone.0024702.s008">Table S1</xref>.</p>
+      </sec>
+      <sec id="s4c">
+        <title>Statistical Analysis</title>
+        <p>To explore differences in metabolite concentrations between the two defined groups (NFG and IFG) we perform a non-parametric two-sample Mann-Whitney test. We determine significant differences in the concentrations by setting a conservative Bonferroni corrected threshold, <inline-formula><inline-graphic xlink:href="info:doi/10.1371/journal.pone.0024702.e005" mimetype="image" xlink:type="simple"/></inline-formula>, where <italic>M = 60</italic> denotes the total number of measures.</p>
+        <p>The pattern of associations for each group is investigated by construction of individual networks. For this analysis, partial correlation is considered as a measure of the underlying interdependencies between variables. Partial correlation represents the correlation between two variables conditioning on the remaining variables <xref ref-type="bibr" rid="pone.0024702-delaFuente2">[29]</xref>. In this way, we can determine to what extent metabolite correlations are direct and do not originate via intermediate variables. To overcome the potential problem of over-fitting, we employ a linear shrinkage estimator <xref ref-type="bibr" rid="pone.0024702-Schfer1">[30]</xref> to calculate the covariance matrix and hence the partial correlations between lipoprotein measures. This method is based on the combination of the sample covariance matrix <italic>U</italic> and the shrinkage target matrix <italic>T</italic> to obtain a regularized estimate of the covariance matrix <italic>U<sup>*</sup></italic>, as follows:<disp-formula><graphic xlink:href="info:doi/10.1371/journal.pone.0024702.e006" alt-version="no" mimetype="image" position="float" xlink:type="simple"/></disp-formula>where λ is the shrinkage intensity. The optimal shrinkage intensity is estimated analytically using of the theorem of Ledoit and Wolf <xref ref-type="bibr" rid="pone.0024702-Ledoit1">[31]</xref>. Here, we use the shrinkage target <italic>T</italic> that provides diagonal unit variance and off-diagonal estimates which shrink to zero. In this way, partial correlations remaining significantly different from zero are indicators of strong dependence between the variables.</p>
+        <p>We define the edges in the individual networks by computing the p-value for the two-sided test with the null hypothesis: ‘The partial correlation is equal to zero’ versus the alternative hypothesis: ‘The partial correlation is not equal to zero’ <xref ref-type="bibr" rid="pone.0024702-Schfer1">[30]</xref>. The individual networks are built by drawing the edges between those pairs of measures whose partial correlation exceeds the chosen criteria for edge inclusion using a conservative Bonferroni corrected threshold, <inline-formula><inline-graphic xlink:href="info:doi/10.1371/journal.pone.0024702.e007" mimetype="image" xlink:type="simple"/></inline-formula>, where <inline-formula><inline-graphic xlink:href="info:doi/10.1371/journal.pone.0024702.e008" mimetype="image" xlink:type="simple"/></inline-formula> represents the total number of possible metabolite pairs.</p>
+        <p>We test the potential of association networks to reveal key differences between the two groups by performing a differential analysis of molecular associations. In this analysis we test the null hypothesis: ‘The partial correlations of two variables in the two groups are the same’ versus the alternative hypothesis: ‘The partial correlations of two measures in the two groups are different’ by performing a two-sample permutation test. Given <italic>N<sub>NFG</sub></italic> samples from the first state, and <italic>N<sub>IFG</sub></italic> samples from the second state, all the samples are pooled together in one set and their labels are permuted. At each iteration of the permutation test two new datasets are obtained, <italic>NFG<sub>i</sub><sup>*</sup></italic> and <italic>IFG<sub>i</sub><sup>*</sup></italic> of size <italic>N<sub>NFG</sub></italic> and <italic>N<sub>IFG</sub></italic>, respectively. For each of the new datasets we compute the partial correlation matrix, <inline-formula><inline-graphic xlink:href="info:doi/10.1371/journal.pone.0024702.e009" mimetype="image" xlink:type="simple"/></inline-formula> and <inline-formula><inline-graphic xlink:href="info:doi/10.1371/journal.pone.0024702.e010" mimetype="image" xlink:type="simple"/></inline-formula> , following the same approach described above for the estimation of the covariance matrix and hence the computation of the partial correlation matrix. Finally, we calculate the absolute difference between the partial correlations among the new groups, <inline-formula><inline-graphic xlink:href="info:doi/10.1371/journal.pone.0024702.e011" mimetype="image" xlink:type="simple"/></inline-formula>. We repeat this procedure 100,000 times.</p>
+        <p>In order to find those metabolite associations that significantly differ between the two physiological conditions we compute the absolute difference between the partial correlations among the two original groups, <inline-formula><inline-graphic xlink:href="info:doi/10.1371/journal.pone.0024702.e012" mimetype="image" xlink:type="simple"/></inline-formula>. The p-values that indicate which associations differ significantly between the two groups are obtained by:<disp-formula><graphic xlink:href="info:doi/10.1371/journal.pone.0024702.e013" alt-version="no" mimetype="image" position="float" xlink:type="simple"/></disp-formula>estimated using the distribution from the permutations. To define which edges are included in the differential networks we set a cut-off on the two-tailed p-value. For the same sample size, the power to estimate correlations is lower than that to estimate a change in a single variable. Therefore, we choose to set the cut-off for the inference of the differential network based on the uncorrected threshold, <inline-formula><inline-graphic xlink:href="info:doi/10.1371/journal.pone.0024702.e014" mimetype="image" xlink:type="simple"/></inline-formula>. An edge in the differential network is included if the partial correlations between two given metabolites are significantly different across the two groups. The association network inferred under this set-up is referred to as the differential network.</p>
+        <p>To quantitatively describe and explore features of both individual and differential networks, we examine the following topological properties <xref ref-type="bibr" rid="pone.0024702-deSilva2">[32]</xref>:</p>
+        <list list-type="bullet">
+          <list-item>
+            <p>The degree, <italic>k<sub>i</sub></italic>, is the network measure that indicates the number of connections that a node <italic>i</italic> has with the other nodes in the network.</p>
+          </list-item>
+          <list-item>
+            <p>The degree distribution <italic>P(k)</italic> represents the probability that a node <italic>i</italic> has <italic>k</italic> links. <italic>P(k)</italic> can be calculated by computing the total number of nodes with degree <italic>k = 1, 2,…</italic> and dividing by the total number of nodes <italic>N</italic>.</p>
+          </list-item>
+          <list-item>
+            <p>The betweenness centrality, <italic>b<sub>i</sub></italic>, is the measure that indicates how central a node <italic>v</italic> is in the network and can be calculated by:<disp-formula><graphic xlink:href="info:doi/10.1371/journal.pone.0024702.e015" alt-version="no" mimetype="image" position="float" xlink:type="simple"/></disp-formula>where σ denotes the total number of pairs of nodes and σ(v) denotes the number of shortest paths that pass through <italic>v</italic>.</p>
+          </list-item>
+          <list-item>
+            <p>The clustering coefficient, <italic>c<sub>i</sub></italic>, indicates to what extent the neighbors of a selected node <italic>i</italic> are connected to each other and can be obtained for each node <italic>i</italic> by:<disp-formula><graphic xlink:href="info:doi/10.1371/journal.pone.0024702.e016" alt-version="no" mimetype="image" position="float" xlink:type="simple"/></disp-formula>where <italic>K<sub>i</sub></italic> denotes the links observed among the neighbors of node <italic>i</italic> and <italic>k<sub>i</sub></italic> represents its degree. For <italic>k<sub>i</sub></italic>&lt;2, <italic>c<sub>i</sub></italic>, is defined to be zero.</p>
+          </list-item>
+        </list>
+        <p>Computation of the partial correlation matrix was performed using the R package GeneNet. The individual and differential networks were built and visualized using the R package igraph. All analyses were carried out using R version 2.10.0.</p>
+      </sec>
+    </sec>
+    <sec id="s5">
+      <title>Supporting Information</title>
+      <supplementary-material id="pone.0024702.s001" mimetype="application/postscript" xlink:href="info:doi/10.1371/journal.pone.0024702.s001" position="float" xlink:type="simple">
+        <label>Figure S1</label>
+        <caption>
+          <p><bold>Correlation maps using Pearson's correlation as measure of pair-wise association between the lipoprotein components.</bold> The colour key gives the R value for the correlation between the lipoproteins subclass components calculated for males with normal fasting glucose (NFG) and males with impaired fasting glucose (IFG). Lipoprotein abbreviations are listed in <xref ref-type="supplementary-material" rid="pone.0024702.s008">Table S1</xref>.</p>
+          <p>(EPS)</p>
+        </caption>
+      </supplementary-material>
+      <supplementary-material id="pone.0024702.s002" mimetype="application/postscript" xlink:href="info:doi/10.1371/journal.pone.0024702.s002" position="float" xlink:type="simple">
+        <label>Figure S2</label>
+        <caption>
+          <p><bold>Correlation maps using standard partial correlation as measure of pair-wise association between the lipoprotein components.</bold> The colour key gives the R value for the correlation between the lipoproteins subclass components calculated for males with normal fasting glucose (NFG) and males with impaired fasting glucose (IFG). Lipoprotein abbreviations are listed in <xref ref-type="supplementary-material" rid="pone.0024702.s008">Table S1</xref>.</p>
+          <p>(EPS)</p>
+        </caption>
+      </supplementary-material>
+      <supplementary-material id="pone.0024702.s003" mimetype="application/postscript" xlink:href="info:doi/10.1371/journal.pone.0024702.s003" position="float" xlink:type="simple">
+        <label>Figure S3</label>
+        <caption>
+          <p><bold>Correlation maps using shrinkage partial correlation as measure of pair-wise association between the lipoprotein components.</bold> The colour key gives the R value for the correlation between the lipoproteins subclass components calculated for males with normal fasting glucose (NFG) and males with impaired fasting glucose (IFG). Lipoprotein abbreviations are listed in <xref ref-type="supplementary-material" rid="pone.0024702.s008">Table S1</xref>.</p>
+          <p>(EPS)</p>
+        </caption>
+      </supplementary-material>
+      <supplementary-material id="pone.0024702.s004" mimetype="application/postscript" xlink:href="info:doi/10.1371/journal.pone.0024702.s004" position="float" xlink:type="simple">
+        <label>Figure S4</label>
+        <caption>
+          <p><bold>The individual networks obtained using Pearson's correlation as measure of pair-wise association between the lipoprotein components.</bold> Each of the connections indicates significant pair-wise association between two lipoprotein measures using the Bonferroni corrected threshold, <inline-formula><inline-graphic xlink:href="info:doi/10.1371/journal.pone.0024702.e017" mimetype="image" xlink:type="simple"/></inline-formula>, where <inline-formula><inline-graphic xlink:href="info:doi/10.1371/journal.pone.0024702.e018" mimetype="image" xlink:type="simple"/></inline-formula> is the total number of possible interactions and <italic>M = 60</italic> is the total number of metabolites. The NFG network indicates the pattern of pair-wise associations for the normal fasting glucose group. The IFG network reflects the pattern of association between for the impaired fasting glucose group. Lipoprotein abbreviations are listed in <xref ref-type="supplementary-material" rid="pone.0024702.s008">Table S1</xref>.</p>
+          <p>(EPS)</p>
+        </caption>
+      </supplementary-material>
+      <supplementary-material id="pone.0024702.s005" mimetype="application/postscript" xlink:href="info:doi/10.1371/journal.pone.0024702.s005" position="float" xlink:type="simple">
+        <label>Figure S5</label>
+        <caption>
+          <p><bold>The individual networks obtained using standard partial correlation as measure of pair-wise association between the lipoprotein components.</bold> Each of the connections indicates significant pair-wise association between two lipoprotein measures using the Bonferroni corrected threshold, <inline-formula><inline-graphic xlink:href="info:doi/10.1371/journal.pone.0024702.e019" mimetype="image" xlink:type="simple"/></inline-formula>, where <inline-formula><inline-graphic xlink:href="info:doi/10.1371/journal.pone.0024702.e020" mimetype="image" xlink:type="simple"/></inline-formula> is the total number of possible interactions and <italic>M = 60</italic> is the total number of metabolites. The NFG network indicates the pattern of pair-wise associations for the normal fasting glucose male group. The IFG network reflects the pattern of association between for the impaired fasting glucose group. Lipoprotein abbreviations are listed in <xref ref-type="supplementary-material" rid="pone.0024702.s008">Table S1</xref>.</p>
+          <p>(EPS)</p>
+        </caption>
+      </supplementary-material>
+      <supplementary-material id="pone.0024702.s006" mimetype="application/postscript" xlink:href="info:doi/10.1371/journal.pone.0024702.s006" position="float" xlink:type="simple">
+        <label>Figure S6</label>
+        <caption>
+          <p><bold>The individual networks obtained using shrinkage partial correlation as measure of pair-wise association between the lipoprotein components.</bold> Each of the connections indicates significant pair-wise association between two lipoprotein measures using the Bonferroni corrected threshold, <inline-formula><inline-graphic xlink:href="info:doi/10.1371/journal.pone.0024702.e021" mimetype="image" xlink:type="simple"/></inline-formula>, where <inline-formula><inline-graphic xlink:href="info:doi/10.1371/journal.pone.0024702.e022" mimetype="image" xlink:type="simple"/></inline-formula> is the total number of possible interactions and <italic>M = 60</italic> is the total number of metabolites. The NFG network indicates the pattern of pair-wise associations for the normal fasting glucose group. The IFG network reflects the pattern of association between for the impaired fasting glucose group. Lipoprotein abbreviations are listed in <xref ref-type="supplementary-material" rid="pone.0024702.s008">Table S1</xref>.</p>
+          <p>(EPS)</p>
+        </caption>
+      </supplementary-material>
+      <supplementary-material id="pone.0024702.s007" mimetype="application/postscript" xlink:href="info:doi/10.1371/journal.pone.0024702.s007" position="float" xlink:type="simple">
+        <label>Figure S7</label>
+        <caption>
+          <p><bold>The differential network inferred from females with normal fasting glucose (NFG) and impaired fasting glucose (IFG).</bold> Each of the connections indicates a significant change in partial correlation between two lipoprotein measures across the physiological conditions. Edge colours represent how the partial correlation between two measures has changed across the two groups. Lipoprotein abbreviations are listed in <xref ref-type="supplementary-material" rid="pone.0024702.s008">Table S1</xref>.</p>
+          <p>(EPS)</p>
+        </caption>
+      </supplementary-material>
+      <supplementary-material id="pone.0024702.s008" mimetype="application/msword" xlink:href="info:doi/10.1371/journal.pone.0024702.s008" position="float" xlink:type="simple">
+        <label>Table S1</label>
+        <caption>
+          <p>
+            <bold>Lipoprotein subclass measures and their mean concentrations for normal (NFG) and impaired fasting glucose (IFG).</bold>
+          </p>
+          <p>(DOC)</p>
+        </caption>
+      </supplementary-material>
+      <supplementary-material id="pone.0024702.s009" mimetype="application/msword" xlink:href="info:doi/10.1371/journal.pone.0024702.s009" position="float" xlink:type="simple">
+        <label>Table S2</label>
+        <caption>
+          <p>
+            <bold>Clinical characteristics of the NFBC1966 study participants.</bold>
+          </p>
+          <p>(DOC)</p>
+        </caption>
+      </supplementary-material>
+    </sec>
+  </body>
+  <back>
+    <ref-list>
+      <title>References</title>
+      <ref id="pone.0024702-Barabasi1">
+        <label>1</label>
+        <citation citation-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Barabasi</surname><given-names>AL</given-names></name><name name-style="western"><surname>Albert</surname><given-names>R</given-names></name></person-group>             <year>1999</year>             <article-title>Emergence of scaling in random networks.</article-title>             <source>Science</source>             <volume>286</volume>             <issue>5439</issue>             <fpage>509</fpage>             <lpage>512</lpage>          </citation>
+      </ref>
+      <ref id="pone.0024702-Barabasi2">
+        <label>2</label>
+        <citation citation-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Barabasi</surname><given-names>AL</given-names></name><name name-style="western"><surname>Oltvai</surname><given-names>ZN</given-names></name></person-group>             <year>2004</year>             <article-title>Network biology: Understanding the cell's functional organization.</article-title>             <source>Nat Rev Genet</source>             <volume>5</volume>             <issue>2</issue>             <fpage>101</fpage>             <lpage>113</lpage>          </citation>
+      </ref>
+      <ref id="pone.0024702-Steuer1">
+        <label>3</label>
+        <citation citation-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Steuer</surname><given-names>R</given-names></name></person-group>             <year>2006</year>             <article-title>Review: On the analysis and interpretation of correlations in metabolomic data.</article-title>             <source>Brief Bioinform</source>             <volume>7</volume>             <issue>2</issue>             <fpage>151</fpage>             <lpage>158</lpage>          </citation>
+      </ref>
+      <ref id="pone.0024702-Camacho1">
+        <label>4</label>
+        <citation citation-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Camacho</surname><given-names>D, de lF</given-names></name><name name-style="western"><surname>Mendes</surname><given-names>P</given-names></name></person-group>             <year>2005</year>             <article-title>The origin of correlations in metabolomics data.</article-title>             <source>Metabolomics</source>             <volume>1</volume>             <issue>1</issue>             <fpage>53</fpage>             <lpage>63</lpage>          </citation>
+      </ref>
+      <ref id="pone.0024702-Bain1">
+        <label>5</label>
+        <citation citation-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Bain</surname><given-names>JR</given-names></name><name name-style="western"><surname>Stevens</surname><given-names>RD</given-names></name><name name-style="western"><surname>Wenner</surname><given-names>BR</given-names></name><name name-style="western"><surname>Ilkayeva</surname><given-names>O</given-names></name><name name-style="western"><surname>Muoio</surname><given-names>DM</given-names></name><etal/></person-group>             <year>2009</year>             <article-title>Metabolomics applied to diabetes research: Moving from information to knowledge.</article-title>             <source>Diabetes</source>             <volume>58</volume>             <issue>11</issue>             <fpage>2429</fpage>             <lpage>2443</lpage>          </citation>
+      </ref>
+      <ref id="pone.0024702-Oldham1">
+        <label>6</label>
+        <citation citation-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Oldham</surname><given-names>MC</given-names></name><name name-style="western"><surname>Horvath</surname><given-names>S</given-names></name><name name-style="western"><surname>Geschwind</surname><given-names>DH</given-names></name></person-group>             <year>2006</year>             <article-title>Conservation and evolution of gene coexpression networks in human and chimpanzee brains.</article-title>             <source>Proc Natl Acad Sci U S A</source>             <volume>103</volume>             <issue>47</issue>             <fpage>17973</fpage>             <lpage>17978</lpage>          </citation>
+      </ref>
+      <ref id="pone.0024702-Fuller1">
+        <label>7</label>
+        <citation citation-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Fuller</surname><given-names>TF</given-names></name><name name-style="western"><surname>Ghazalpour</surname><given-names>A</given-names></name><name name-style="western"><surname>Aten</surname><given-names>JE</given-names></name><name name-style="western"><surname>Drake</surname><given-names>TA</given-names></name><name name-style="western"><surname>Lusis</surname><given-names>AJ</given-names></name><etal/></person-group>             <year>2007</year>             <article-title>Weighted gene coexpression network analysis strategies applied to mouse weight.</article-title>             <source>Mamm Genome</source>             <volume>18</volume>             <issue>6–7</issue>             <fpage>463</fpage>             <lpage>472</lpage>          </citation>
+      </ref>
+      <ref id="pone.0024702-Fuite1">
+        <label>8</label>
+        <citation citation-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Fuite</surname><given-names>J</given-names></name><name name-style="western"><surname>Vernon</surname><given-names>SD</given-names></name><name name-style="western"><surname>Broderick</surname><given-names>G</given-names></name></person-group>             <year>2008</year>             <article-title>Neuroendocrine and immune network re-modeling in chronic fatigue syndrome: An exploratory analysis.</article-title>             <source>Genomics</source>             <volume>92</volume>             <issue>6</issue>             <fpage>393</fpage>             <lpage>399</lpage>          </citation>
+      </ref>
+      <ref id="pone.0024702-Gill1">
+        <label>9</label>
+        <citation citation-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Gill</surname><given-names>R</given-names></name><name name-style="western"><surname>Datta</surname><given-names>S</given-names></name><name name-style="western"><surname>Datta</surname><given-names>S</given-names></name></person-group>             <year>2010</year>             <article-title>A statistical framework for differential network analysis from microarray data.</article-title>             <source>BMC Bioinformatics</source>             <volume>11</volume>             <issue>1</issue>             <fpage>95</fpage>          </citation>
+      </ref>
+      <ref id="pone.0024702-Festa1">
+        <label>10</label>
+        <citation citation-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Festa</surname><given-names>A</given-names></name><name name-style="western"><surname>Williams</surname><given-names>K</given-names></name><name name-style="western"><surname>Hanley</surname><given-names>AJ</given-names></name><name name-style="western"><surname>Otvos</surname><given-names>JD</given-names></name><name name-style="western"><surname>Goff</surname><given-names>DC</given-names></name><etal/></person-group>             <year>2005</year>             <article-title>Nuclear magnetic resonance lipoprotein abnormalities in prediabetic subjects in the insulin resistance atherosclerosis study.</article-title>             <source>Circulation</source>             <volume>111</volume>             <issue>25</issue>             <fpage>3465</fpage>             <lpage>3472</lpage>          </citation>
+      </ref>
+      <ref id="pone.0024702-Hegele1">
+        <label>11</label>
+        <citation citation-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Hegele</surname><given-names>RA</given-names></name></person-group>             <year>2009</year>             <article-title>Plasma lipoproteins: Genetic influences and clinical implications.</article-title>             <source>Nat Rev Genet</source>             <volume>10</volume>             <issue>2</issue>             <fpage>109</fpage>             <lpage>121</lpage>          </citation>
+      </ref>
+      <ref id="pone.0024702-deSilva1">
+        <label>12</label>
+        <citation citation-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>de Silva</surname><given-names>E</given-names></name><name name-style="western"><surname>Stumpf</surname><given-names>MP</given-names></name></person-group>             <year>2005</year>             <article-title>Complex networks and simple models in biology.</article-title>             <source>J R Soc Interface</source>             <volume>2</volume>             <issue>5</issue>             <fpage>419</fpage>             <lpage>430</lpage>          </citation>
+      </ref>
+      <ref id="pone.0024702-Inouye1">
+        <label>13</label>
+        <citation citation-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Inouye</surname><given-names>M</given-names></name><name name-style="western"><surname>Kettunen</surname><given-names>J</given-names></name><name name-style="western"><surname>Soininen</surname><given-names>P</given-names></name><name name-style="western"><surname>Silander</surname><given-names>K</given-names></name><name name-style="western"><surname>Ripatti</surname><given-names>S</given-names></name><etal/></person-group>             <year>2010</year>             <article-title>Metabonomic, transcriptomic, and genomic variation of a population cohort.</article-title>             <source>Mol Syst Biol</source>             <volume>6</volume>             <fpage>441</fpage>          </citation>
+      </ref>
+      <ref id="pone.0024702-Wagner1">
+        <label>14</label>
+        <citation citation-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Wagner</surname><given-names>A</given-names></name><name name-style="western"><surname>Fell</surname><given-names>DA</given-names></name></person-group>             <year>2001</year>             <article-title>The small world inside large metabolic networks.</article-title>             <source>Proc Biol Sci</source>             <volume>268</volume>             <issue>1478</issue>             <fpage>1803</fpage>             <lpage>1810</lpage>          </citation>
+      </ref>
+      <ref id="pone.0024702-Ursem1">
+        <label>15</label>
+        <citation citation-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Ursem</surname><given-names>R</given-names></name><name name-style="western"><surname>Tikunov</surname><given-names>Y</given-names></name><name name-style="western"><surname>Bovy</surname><given-names>A</given-names></name><name name-style="western"><surname>van Berloo</surname><given-names>R</given-names></name><name name-style="western"><surname>van Eeuwijk</surname><given-names>F</given-names></name></person-group>             <year>2008</year>             <article-title>A correlation network approach to metabolic data analysis for tomato fruits.</article-title>             <source>Euphytica</source>             <volume>161</volume>             <issue>1</issue>             <fpage>181</fpage>             <lpage>193</lpage>          </citation>
+      </ref>
+      <ref id="pone.0024702-Ravasz1">
+        <label>16</label>
+        <citation citation-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Ravasz</surname><given-names>E</given-names></name><name name-style="western"><surname>Somera</surname><given-names>AL</given-names></name><name name-style="western"><surname>Mongru</surname><given-names>DA</given-names></name><name name-style="western"><surname>Oltvai</surname><given-names>ZN</given-names></name><name name-style="western"><surname>Barabasi</surname><given-names>AL</given-names></name></person-group>             <year>2002</year>             <article-title>Hierarchical organization of modularity in metabolic networks.</article-title>             <source>Science</source>             <volume>297</volume>             <issue>5586</issue>             <fpage>1551</fpage>             <lpage>1555</lpage>          </citation>
+      </ref>
+      <ref id="pone.0024702-Kumpula1">
+        <label>17</label>
+        <citation citation-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Kumpula</surname><given-names>LS</given-names></name><name name-style="western"><surname>Kumpula</surname><given-names>JM</given-names></name><name name-style="western"><surname>Taskinen</surname><given-names>MR</given-names></name><name name-style="western"><surname>Jauhiainen</surname><given-names>M</given-names></name><name name-style="western"><surname>Kaski</surname><given-names>K</given-names></name><etal/></person-group>             <year>2008</year>             <article-title>Reconsideration of hydrophobic lipid distributions in lipoprotein particles.</article-title>             <source>Chem Phys Lipids</source>             <volume>155</volume>             <issue>1</issue>             <fpage>57</fpage>             <lpage>62</lpage>          </citation>
+      </ref>
+      <ref id="pone.0024702-delaFuente1">
+        <label>18</label>
+        <citation citation-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>de la Fuente</surname><given-names>A</given-names></name><name name-style="western"><surname>Bing</surname><given-names>N</given-names></name><name name-style="western"><surname>Hoeschele</surname><given-names>I</given-names></name><name name-style="western"><surname>Mendes</surname><given-names>P</given-names></name></person-group>             <year>2004</year>             <article-title>Discovery of meaningful associations in genomic data using partial correlation coefficients.</article-title>             <source>Bioinformatics</source>             <volume>20</volume>             <issue>18</issue>             <fpage>3565</fpage>             <lpage>3574</lpage>          </citation>
+      </ref>
+      <ref id="pone.0024702-Mora1">
+        <label>19</label>
+        <citation citation-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Mora</surname><given-names>S</given-names></name><name name-style="western"><surname>Otvos</surname><given-names>JD</given-names></name><name name-style="western"><surname>Rosenson</surname><given-names>RS</given-names></name><name name-style="western"><surname>Pradhan</surname><given-names>A</given-names></name><name name-style="western"><surname>Buring</surname><given-names>JE</given-names></name><etal/></person-group>             <year>2010</year>             <article-title>Lipoprotein particle size and concentration by nuclear magnetic resonance and incident type 2 diabetes in women.</article-title>             <source>Diabetes</source>             <volume>59</volume>             <issue>5</issue>             <fpage>1153</fpage>             <lpage>1160</lpage>          </citation>
+      </ref>
+      <ref id="pone.0024702-World1">
+        <label>20</label>
+        <citation citation-type="other" xlink:type="simple">             <collab xlink:type="simple">World Health Organization</collab>             <year>2003</year>             <article-title>Screening for type 2 diabetes: report of a WHO/IDF meeting.</article-title>             <source>Geneva. WHO/NMH/MN/03.1</source>          </citation>
+      </ref>
+      <ref id="pone.0024702-Hodge1">
+        <label>21</label>
+        <citation citation-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Hodge</surname><given-names>AM</given-names></name><name name-style="western"><surname>Jenkins</surname><given-names>AJ</given-names></name><name name-style="western"><surname>English</surname><given-names>DR</given-names></name><name name-style="western"><surname>O'Dea</surname><given-names>K</given-names></name><name name-style="western"><surname>Giles</surname><given-names>GG</given-names></name></person-group>             <year>2009</year>             <article-title>NMR-determined lipoprotein subclass profile predicts type 2 diabetes.</article-title>             <source>Diabetes Res Clin Pract</source>             <volume>83</volume>             <issue>1</issue>             <fpage>132</fpage>             <lpage>139</lpage>          </citation>
+      </ref>
+      <ref id="pone.0024702-Adiels1">
+        <label>22</label>
+        <citation citation-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Adiels</surname><given-names>M</given-names></name><name name-style="western"><surname>Taskinen</surname><given-names>MR</given-names></name><name name-style="western"><surname>Packard</surname><given-names>C</given-names></name><name name-style="western"><surname>Caslake</surname><given-names>MJ</given-names></name><name name-style="western"><surname>Soro-Paavonen</surname><given-names>A</given-names></name><etal/></person-group>             <year>2006</year>             <article-title>Overproduction of large VLDL particles is driven by increased liver fat content in man.</article-title>             <source>Diabetologia</source>             <volume>49</volume>             <issue>4</issue>             <fpage>755</fpage>             <lpage>765</lpage>          </citation>
+      </ref>
+      <ref id="pone.0024702-Sabatti1">
+        <label>23</label>
+        <citation citation-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Sabatti</surname><given-names>C</given-names></name><name name-style="western"><surname>Service</surname><given-names>SK</given-names></name><name name-style="western"><surname>Hartikainen</surname><given-names>AL</given-names></name><name name-style="western"><surname>Pouta</surname><given-names>A</given-names></name><name name-style="western"><surname>Ripatti</surname><given-names>S</given-names></name><etal/></person-group>             <year>2009</year>             <article-title>Genome-wide association analysis of metabolic traits in a birth cohort from a founder population.</article-title>             <source>Nat Genet</source>             <volume>41</volume>             <issue>1</issue>             <fpage>35</fpage>             <lpage>46</lpage>          </citation>
+      </ref>
+      <ref id="pone.0024702-Expert1">
+        <label>24</label>
+        <citation citation-type="journal" xlink:type="simple">             <collab xlink:type="simple">Expert Committee on the Diagnosis and Classification of Diabetes Mellitus</collab>             <year>2003</year>             <article-title>Report of the expert committee on the diagnosis and classification of diabetes mellitus.</article-title>             <source>Diabetes Care</source>             <volume>26</volume>             <supplement>Suppl 1</supplement>             <fpage>S5</fpage>             <lpage>20</lpage>          </citation>
+      </ref>
+      <ref id="pone.0024702-Bertram1">
+        <label>25</label>
+        <citation citation-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Bertram</surname><given-names>HC</given-names></name><name name-style="western"><surname>Duus</surname><given-names>JO</given-names></name><name name-style="western"><surname>Petersen</surname><given-names>BO</given-names></name><name name-style="western"><surname>Hoppe</surname><given-names>C</given-names></name><name name-style="western"><surname>Larnkjaer</surname><given-names>A</given-names></name><etal/></person-group>             <year>2009</year>             <article-title>Nuclear magnetic resonance-based metabonomics reveals strong sex effect on plasma metabolism in 17-year-old scandinavians and correlation to retrospective infant plasma parameters.</article-title>             <source>Metabolism</source>             <volume>58</volume>             <issue>7</issue>             <fpage>1039</fpage>             <lpage>1045</lpage>          </citation>
+      </ref>
+      <ref id="pone.0024702-Soininen1">
+        <label>26</label>
+        <citation citation-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Soininen</surname><given-names>P</given-names></name><name name-style="western"><surname>Kangas</surname><given-names>AJ</given-names></name><name name-style="western"><surname>Würtz</surname><given-names>P</given-names></name><name name-style="western"><surname>Tukiainen</surname><given-names>T</given-names></name><name name-style="western"><surname>Tynkkynen</surname><given-names>T</given-names></name><etal/></person-group>             <year>2009</year>             <article-title>High-throughput serum NMR metabonomics for cost-effective holistic studies on systemic metabolism.</article-title>             <source>Analyst</source>             <volume>134</volume>             <issue>9</issue>             <fpage>1781</fpage>             <lpage>1785</lpage>          </citation>
+      </ref>
+      <ref id="pone.0024702-Vehtari1">
+        <label>27</label>
+        <citation citation-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Vehtari</surname><given-names>A</given-names></name><name name-style="western"><surname>Mäkinen</surname><given-names>VP</given-names></name><name name-style="western"><surname>Soininen</surname><given-names>P</given-names></name><name name-style="western"><surname>Ingman</surname><given-names>P</given-names></name><name name-style="western"><surname>Mäkelä</surname><given-names>SM</given-names></name><etal/></person-group>             <year>2007</year>             <article-title>A novel bayesian approach to quantify clinical variables and to determine their spectroscopic counterparts in 1H NMR metabonomic data.</article-title>             <source>BMC Bioinformatics</source>             <volume>8</volume>             <supplement>Suppl 2</supplement>             <fpage>S8</fpage>          </citation>
+      </ref>
+      <ref id="pone.0024702-Niemi1">
+        <label>28</label>
+        <citation citation-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Niemi</surname><given-names>J</given-names></name><name name-style="western"><surname>Mäkinen</surname><given-names>VP</given-names></name><name name-style="western"><surname>Heikkonen</surname><given-names>J</given-names></name><name name-style="western"><surname>Tenkanen</surname><given-names>L</given-names></name><name name-style="western"><surname>Hiltunen</surname><given-names>Y</given-names></name><etal/></person-group>             <year>2009</year>             <article-title>Estimation of VLDL, IDL, LDL, HDL2, apoA-I, and apoB from the friedewald inputs–apoB and IDL, but not LDL, are associated with mortality in type 1 diabetes.</article-title>             <source>Ann Med</source>             <volume>41</volume>             <issue>6</issue>             <fpage>451</fpage>             <lpage>461</lpage>          </citation>
+      </ref>
+      <ref id="pone.0024702-delaFuente2">
+        <label>29</label>
+        <citation citation-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>de la Fuente</surname><given-names>A</given-names></name><name name-style="western"><surname>Bing</surname><given-names>N</given-names></name><name name-style="western"><surname>Hoeschele</surname><given-names>I</given-names></name><name name-style="western"><surname>Mendes</surname><given-names>P</given-names></name></person-group>             <year>2004</year>             <article-title>Discovery of meaningful associations in genomic data using partial correlation coefficients.</article-title>             <source>Bioinformatics</source>             <volume>20</volume>             <issue>18</issue>             <fpage>3565</fpage>             <lpage>3574</lpage>          </citation>
+      </ref>
+      <ref id="pone.0024702-Schfer1">
+        <label>30</label>
+        <citation citation-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Schäfer</surname><given-names>J</given-names></name><name name-style="western"><surname>Strimmer</surname><given-names>K</given-names></name></person-group>             <year>2005</year>             <article-title>A shrinkage approach to large-scale covariance matrix estimation and implications for functional genomics.</article-title>             <source>Statistical Applications in Genetics and Molecular Biology</source>             <volume>4</volume>          </citation>
+      </ref>
+      <ref id="pone.0024702-Ledoit1">
+        <label>31</label>
+        <citation citation-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Ledoit</surname><given-names>O</given-names></name><name name-style="western"><surname>Wolf</surname><given-names>M</given-names></name></person-group>             <year>2003</year>             <article-title>Improved estimation of the covariance matrix of stock returns with an application to portfolio selection.</article-title>             <source>Journal of Empirical Finance</source>             <volume>10</volume>             <issue>5</issue>             <fpage>603</fpage>             <lpage>621</lpage>          </citation>
+      </ref>
+      <ref id="pone.0024702-deSilva2">
+        <label>32</label>
+        <citation citation-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>de Silva</surname><given-names>E</given-names></name><name name-style="western"><surname>Stumpf</surname><given-names>MP</given-names></name></person-group>             <year>2005</year>             <article-title>Complex networks and simple models in biology.</article-title>             <source>J R Soc Interface</source>             <volume>2</volume>             <issue>5</issue>             <fpage>419</fpage>             <lpage>430</lpage>          </citation>
+      </ref>
+    </ref-list>
+    <fn-group>
+      <fn fn-type="conflict">
+        <p>The authors have declared that no competing interests exist.</p>
+      </fn>
+      <fn fn-type="financial-disclosure">
+        <p>This work was supported by: Biotechnology and Biological Sciences Research Council (Grant Ref.BB/E20372/1); Academy of Finland (grant number 137870); Responding to Public Health Challenges Research Programme of the Academy of Finland (grant number 129429); The Finnish Cardiovascular Research Foundation; The Jenny and Antti Wihuri Foundation; Academy of Finland and the Instrumentarium Science Foundation; The Academy of Finland (project grants 104781, 120315, 1114194, 129269 (SALVE), 139900S); University Hospital Oulu, Biocenter, University of Oulu, Finland; The Medical Research Council (PrevMetSyn), UK and the ENGAGE project and grant agreement HEALTH-F4-2007-201413. The funders had no role in study design, data collection and analysis, decision to publish, or preparation of the manuscript.</p>
+      </fn>
+    </fn-group>
+  </back>
+</article>
