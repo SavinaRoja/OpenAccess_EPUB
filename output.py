@@ -96,10 +96,18 @@ def generateOPF(article, dirname):
     
     # Spine
     spine.setAttribute('toc', 'ncx')
-    itemref_article = mydoc.createElement('itemref')
-    itemref_article.setAttribute('idref', 'main-xml')
-    itemref_article.setAttribute('linear', 'yes')
-    spine.appendChild(itemref_article)
+    itemref_synop = mydoc.createElement('itemref')
+    itemref_synop.setAttribute('idref', 'synop-xml')
+    itemref_synop.setAttribute('linear', 'yes')
+    itemref_main = mydoc.createElement('itemref')
+    itemref_main.setAttribute('idref', 'main-xml')
+    itemref_main.setAttribute('linear', 'yes')
+    itemref_biblio = mydoc.createElement('itemref')
+    itemref_biblio.setAttribute('idref', 'biblio-xml')
+    itemref_biblio.setAttribute('linear', 'yes')
+    spine.appendChild(itemref_synop)
+    spine.appendChild(itemref_main)
+    spine.appendChild(itemref_biblio)
     
     contentpath = os.path.join(dirname,'OPS','content.opf')
     with open(contentpath, 'w') as output:
