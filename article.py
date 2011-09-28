@@ -167,7 +167,7 @@ class Article(object):
         import output, tocncx
         output.generateHierarchy(directory)
         self.fetchImages()
-        output.generateMain(self.inputstring, directory)
+        
         tocncx.generateTOC(self.front, self.features)
         output.generateOPF(article = self, dirname = directory)
         
