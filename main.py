@@ -4,7 +4,7 @@ import argparse
 import sys
 import os.path
 
-import metadata, bibliography, output, tocncx, parsebody
+import metadata, bibliography, output, tocncx, content
 from article import Article
 
 def main():
@@ -24,6 +24,7 @@ def main():
     if args.output:
         
         document.output_epub(args.output)
+        content.OPSContent(args.input, args.output, document.front)
         output.epubZip(args.output, document.titlestring())
     
 if __name__ == '__main__':
