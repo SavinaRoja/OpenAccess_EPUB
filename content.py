@@ -126,6 +126,7 @@ class OPSContent(object):
         
         #Create a node for the dates
         datep = synop.createElement('p')
+        datep.setAttribute('id', 'dates')
         hist = meta.article_meta.history
         dates = meta.article_meta.art_dates
         datelist = [('Received', hist['received']), 
@@ -142,6 +143,7 @@ class OPSContent(object):
         
         #Create a node for the Copyright text:
         copp = synop.createElement('p')
+        copp.setAttribute('id', 'copyright')
         copybold = synop.createElement('b')
         copybold.appendChild(synop.createTextNode('Copyright: '))
         copp.appendChild(copybold)
@@ -153,6 +155,7 @@ class OPSContent(object):
         
         #Create a node for the Funding text
         fundp = synop.createElement('p')
+        fundp.setAttribute('id', 'funding')
         fundbold = synop.createElement('b')
         fundbold.appendChild(synop.createTextNode('Funding: '))
         fundp.appendChild(fundbold)
@@ -161,6 +164,7 @@ class OPSContent(object):
         
         #Create a node for the Competing Interests text
         compip = synop.createElement('p')
+        compip.setAttribute('id', 'competing-interests')
         compibold = synop.createElement('b')
         compibold.appendChild(synop.createTextNode('Competing Interests: '))
         compip.appendChild(compibold)
