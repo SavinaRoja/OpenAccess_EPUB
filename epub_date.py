@@ -51,6 +51,14 @@ class DateInfo(object):
         
         self.year = int(datenode.getElementsByTagName('year')[0].firstChild.data)
     
+    def niceString(self):
+        monthlist = ['January', 'February', 'March', 'April', 'May', 'June', 
+                  'July', 'August', 'September', 'October', 'November', 
+                  'December']
+        retstr = '{0} {1}, {2}'.format(monthlist[self.month], self.day,
+                                       self.year)
+        return retstr
+    
     def dateString(self):
         newstring = '{0}'.format(self.year)
         if self.month:

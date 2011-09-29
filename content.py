@@ -123,6 +123,22 @@ class OPSContent(object):
                             ped.appendChild(synop.createTextNode('; {0}'.format(address)))
         synbody.appendChild(ped)
         
+        #Create a node for the dates
+        datep = synop.createElement('p')
+        hist = meta.article_meta.history
+        dates = meta.article_meta.art_dates
+        datelist = [('Received', hist['received']), 
+                    ('Accepted', hist['accepted']), 
+                    ('Published', dates['epub'])]
+        
+        for _bold, _data in datelist:
+            bold = synop.createElement('b')
+            bold.appendChild(synop.createTextNode('{0} '.format(_bold)))
+            datep.appendChild(bold)
+            datestring = _data.niceString()
+            datep.appendChild(synop.createTextNode('{0} '.format(datestring)))
+        
+        synbody.appendChild(datep)
         
         #Create a node for the correspondence text
         
