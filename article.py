@@ -162,11 +162,3 @@ class Article(object):
                     self.featureParse(doc, child, clone)
             except AttributeError:
                 pass
-        
-    def output_epub(self, directory):
-        import output, tocncx
-        
-        self.fetchImages()
-        tocncx.generateTOC(self.front, self.features)
-        output.generateOPF(article = self, dirname = directory)
-        
