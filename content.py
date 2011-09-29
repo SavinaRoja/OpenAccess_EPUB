@@ -172,7 +172,6 @@ class OPSContent(object):
         compip.appendChild(synop.createTextNode(back.competing_interests))
         synbody.appendChild(compip)
         
-        
         #Create a node for the correspondence text
         corr_line = synop.createElement('p')
         art_corresps = meta.article_meta.art_corresps
@@ -212,7 +211,7 @@ class OPSContent(object):
         for sec in mainbody.getElementsByTagName('sec'):
             sec.tagName = 'div' #Universally convert <sec> to <div>
         for italic in mainbody.getElementsByTagName('italic'):
-            italic.tagName = 'i' #Universally convert <italice> to <i>
+            italic.tagName = 'i' #Universally convert <italic> to <i>
         
         #Need to intelligently handle conversion of <xref> elements
         xrefs = mainbody.getElementsByTagName('xref')
@@ -250,6 +249,10 @@ class OPSContent(object):
             imgnode.setAttribute('src', img)
             item.insertBefore(imgnode, item.firstChild)
         
+        #Scan through the Document converting the section title nodes to 
+        #proper format tags
+        self.divTitleScan(mainbody, depth = 0)
+        
         with open(self.outputs['Main'],'wb') as out:
             out.write(main.toprettyxml(encoding = 'utf-8'))
         
@@ -260,16 +263,30 @@ class OPSContent(object):
         
         back = doc.getElementsByTagName('back')[0]
         for item in back.childNodes:
-            bibbody.appendChild(item.cloneNode(deep = True))
+            if not item.nodeType == item.TEXT_NODE:
+                if not item.tagName == u'fn-group':
+                    bibbody.appendChild(item.cloneNode(deep = True))
         
         with open(self.outputs['Biblio'],'wb') as out:
             out.write(biblio.toprettyxml(encoding = 'utf-8'))
+
+    def divTitleScan(self, fromnode, depth = 0):
+        taglist = ['h2', 'h3', 'h4', 'h5', 'h6']
+        for item in fromnode.childNodes:
+            try:
+                if item.tagName == u'div':
+                    divtitle = item.getElementsByTagName('title')[0]
+                    divtitle.tagName = taglist[depth]
+                    depth += 1
+                    self.divTitleScan(item, depth)
+                    depth -= 1
+            except AttributeError:
+                pass
 
     def initiateDocument(self, titlestring):
         '''A method for conveniently initiating a new xml.DOM Document'''
         
         impl = minidom.getDOMImplementation()
-        
         
         mytype = impl.createDocumentType('html', 
                                          '-//W3C//DTD XHTML 1.1//EN', 
