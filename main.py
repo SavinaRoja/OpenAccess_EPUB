@@ -29,9 +29,11 @@ def main():
     
     if args.output:
         output.generateHierarchy(args.output)
+        document.fetchImages(dirname = args.output)
         content.OPSContent(args.input, args.output, document.front, 
                            document.back)
-        document.output_epub(args.output)
+        tocncx.generateTOC(document.front, document.features)
+        output.generateOPF(document, args.output)
         output.epubZip(args.output, document.titlestring())
     
 if __name__ == '__main__':
