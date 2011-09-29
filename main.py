@@ -29,7 +29,8 @@ def main():
     
     if args.output:
         output.generateHierarchy(args.output)
-        content.OPSContent(args.input, args.output, document.front)
+        content.OPSContent(args.input, args.output, document.front, 
+                           document.back)
         document.output_epub(args.output)
         output.epubZip(args.output, document.titlestring())
     

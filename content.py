@@ -5,19 +5,20 @@ import utils
 class OPSContent(object):
     '''A class for instantiating content xml documents in the OPS Preferred
     Vocabulary'''
-    def __init__(self, documentstring, outdirect, metadata):
+    def __init__(self, documentstring, outdirect, metadata, backdata):
         self.inputstring = documentstring
         self.doc = minidom.parse(self.inputstring)
         self.outputs = {'Synopsis': os.path.join(outdirect, 'OPS', 'synop.xml'), 
                         'Main': os.path.join(outdirect, 'OPS', 'main.xml'), 
                         'Biblio': os.path.join(outdirect, 'OPS', 'biblio.xml')}
         self.metadata = metadata
+        self.backdata = backdata
         
-        self.createSynopsis(self.metadata)
+        self.createSynopsis(self.metadata, self.backdata)
         self.createMain()
         self.createBiblio()
         
-    def createSynopsis(self, meta):
+    def createSynopsis(self, meta, back):
         '''Create an output file containing a representation of the article 
         synopsis'''
         
@@ -137,11 +138,37 @@ class OPSContent(object):
             datep.appendChild(bold)
             datestring = _data.niceString()
             datep.appendChild(synop.createTextNode('{0} '.format(datestring)))
-        
         synbody.appendChild(datep)
         
-        #Create a node for the correspondence text
+        #Create a node for the Copyright text:
+        copp = synop.createElement('p')
+        copybold = synop.createElement('b')
+        copybold.appendChild(synop.createTextNode('Copyright: '))
+        copp.appendChild(copybold)
+        copystr = u'{0} {1} {2}'.format(u'\u00A9', 
+                                        meta.article_meta.art_copyright_year, 
+                                        meta.article_meta.art_copyright_statement)
+        copp.appendChild(synop.createTextNode(copystr))
+        synbody.appendChild(copp)
         
+        #Create a node for the Funding text
+        fundp = synop.createElement('p')
+        fundbold = synop.createElement('b')
+        fundbold.appendChild(synop.createTextNode('Funding: '))
+        fundp.appendChild(fundbold)
+        fundp.appendChild(synop.createTextNode(back.funding))
+        synbody.appendChild(fundp)
+        
+        #Create a node for the Competing Interests text
+        compip = synop.createElement('p')
+        compibold = synop.createElement('b')
+        compibold.appendChild(synop.createTextNode('Competing Interests: '))
+        compip.appendChild(compibold)
+        compip.appendChild(synop.createTextNode(back.competing_interests))
+        synbody.appendChild(compip)
+        
+        
+        #Create a node for the correspondence text
         corr_line = synop.createElement('p')
         art_corresps = meta.article_meta.art_corresps
         art_corr_nodes = meta.article_meta.correspondences
