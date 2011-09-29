@@ -175,7 +175,7 @@ def generateTOC(fm, features):
     
     tocname = 'NCX for: {0}'.format(fm.article_meta.title)
     doctitle.appendChild(makeText(tocname))
-    docauthor.appendChild(makeText('{0}{1}'.format('Primary author: ', 
+    docauthor.appendChild(makeText(u'{0}{1}'.format('Primary author: ', 
                                                    fm.article_meta.art_auths[0].get_name())))
     
     #Create the navMap element

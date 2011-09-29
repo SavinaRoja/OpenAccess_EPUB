@@ -1,5 +1,6 @@
 import xml.dom.minidom as minidom
 import os, os.path
+import utils
 
 class OPSContent(object):
     '''A class for instantiating content xml documents in the OPS Preferred
@@ -12,19 +13,144 @@ class OPSContent(object):
                         'Biblio': os.path.join(outdirect, 'OPS', 'biblio.xml')}
         self.metadata = metadata
         
-    def createSynopsis(self):
+        self.createSynopsis(self.metadata)
+        self.createMain()
+        self.createBiblio()
+        
+    def createSynopsis(self, meta):
         '''Create an output file containing a representation of the article 
         synopsis'''
-        pass
-    
+        
+        #Initiate the document, returns the document and its body element
+        synop, synbody = self.initiateDocument('Synopsis file')
+        
+        #Create and place the title in the body element
+        art_title = meta.article_meta.title
+        titlenode = synop.createElement('h1')
+        titlenode.appendChild(synop.createTextNode(art_title))
+        synbody.appendChild(titlenode)
+        
+        affiliation_index = []
+        #corresp_dict = {}
+        
+        #Create authors
+        authors = meta.article_meta.art_auths
+        author_container = synop.createElement('h2')
+        first = True
+        #con_char = [u'*', u'\u2020', u'\u2021']
+        #ccnt = 0
+        for author in authors:
+            if not first:
+                author_container.appendChild(synop.createTextNode(', '))
+            else:
+                first = False
+            name = author.get_name()
+            affs = author.affiliation
+            contact = author.contact
+            author_container.appendChild(synop.createTextNode(name))
+            for aff in affs:
+                if aff not in affiliation_index:
+                    affiliation_index.append(aff)
+                sup = synop.createElement('sup')
+                aref = synop.createElement('a')
+                aref.setAttribute('href', 'synop.xml#{0}'.format(aff))
+                aref.appendChild(synop.createTextNode(str(affiliation_index.index(aff) + 1)))
+                sup.appendChild(aref)
+                author_container.appendChild(sup)
+            for contact in author.contact:
+                sup = synop.createElement('sup')
+                aref = synop.createElement('a')
+                aref.setAttribute('href', 'synop.xml#{0}'.format(contact))
+                #character = con_char[ccnt]
+                #aref.appendChild(synop.createTextNode(character))
+                aref.appendChild(synop.createTextNode('*'))
+                sup.appendChild(aref)
+                author_container.appendChild(sup)
+                #corresp_dict[contact] = character
+                #ccnt += 1
+                
+        synbody.appendChild(author_container)
+        
+        #Create a node for the affiliation text
+        aff_line = synop.createElement('p')
+        art_affs = meta.article_meta.art_affs
+        for item in art_affs:
+            if 'aff' in item.rid:
+                sup = synop.createElement('sup')
+                sup.setAttribute('id', item.rid)
+                sup.appendChild(synop.createTextNode(str(art_affs.index(item) + 1)))
+                aff_line.appendChild(sup)
+                aff_line.appendChild(synop.createTextNode(item.address))
+        synbody.appendChild(aff_line)
+        
+        #Create the Abstract
+        abstract = meta.article_meta.abstract
+        abstitle = synop.createElement('h2')
+        abstitle.appendChild(synop.createTextNode('Abstract'))
+        synbody.appendChild(abstitle)
+        synbody.appendChild(abstract)
+        abstract.tagName = 'div'
+        abstract.setAttribute('id', 'abstract')
+        for title in abstract.getElementsByTagName('title'):
+            title.tagName = 'h3'
+        for sec in abstract.getElementsByTagName('sec'):
+            sec.tagName = 'div'
+        for para in abstract.getElementsByTagName('p'):
+            para.tagName = 'big'
+        
+        
+        #Create a node for the correspondence text
+        
+        corr_line = synop.createElement('p')
+        art_corresps = meta.article_meta.art_corresps
+        art_corr_nodes = meta.article_meta.correspondences
+        
+        # PLoS does not appear to list more than one correspondence... >.<
+        corr_line.setAttribute('id', art_corresps[0].rid)
+        corresp_text = utils.serializeText(art_corr_nodes[0])
+        corr_line.appendChild(synop.createTextNode(corresp_text))
+        
+        # If they did, this approach might be used
+        #for item in art_corresps:
+        #    sup = synop.createElement('sup')
+        #    sup.setAttribute('id', item.rid)
+        #    sup.appendChild(synop.createTextNode(corresp_dict[item.rid]))
+        #    corr_line.appendChild(sup)
+        #    if item.address:
+        #        add = synop.createTextNode('Address: {0} '.format(item.address))
+        #        corr_line.appendChild(add)
+        #    if item.email:
+        #        add = synop.createTextNode('E-mail: {0} '.format(item.email))
+        #        corr_line.appendChild(add)
+        synbody.appendChild(corr_line)
+        
+        with open(self.outputs['Synopsis'],'wb') as out:
+            out.write(synop.toprettyxml(encoding = 'utf-8'))
+
     def createMain(self):
         '''Create an output file containing the main article body content'''
-        pass
-    
+        #Initiate the document, returns the document and its body element
+        main, mainbody = self.initiateDocument('Main file')
+        
+        hello_world = main.createElement('p')
+        hello_world.appendChild(main.createTextNode('hello world'))
+        mainbody.appendChild(hello_world)
+        
+        with open(self.outputs['Main'],'wb') as out:
+            out.write(main.toprettyxml(encoding = 'utf-8'))
+        
     def createBiblio(self):
         '''Create an output file containing the article bibliography'''
-        pass
-    
+        #Initiate the document, returns the document and its body element
+        biblio, bibbody = self.initiateDocument('Bibliography file')
+        
+        hello_world = biblio.createElement('p')
+        hello_world.appendChild(biblio.createTextNode('hello world'))
+        bibbody.appendChild(hello_world)
+        
+        with open(self.outputs['Biblio'],'wb') as out:
+            out.write(biblio.toprettyxml(encoding = 'utf-8'))
+
     def initiateDocument(self, titlestring):
         '''A method for conveniently initiating a new xml.DOM Document'''
         
@@ -54,7 +180,6 @@ class OPSContent(object):
         meta = doc.createElement('meta')
         meta.setAttribute('http-equiv', 'Content-Type')
         meta.setAttribute('content', 'application/xhtml+xml')
-        meta.setAttribute('charset', 'utf-8')
         
         headlist = [title, link, meta]
         for tag in headlist:
@@ -64,4 +189,4 @@ class OPSContent(object):
         body = doc.createElement('body')
         root.appendChild(body)
         
-        return doc
+        return doc, body

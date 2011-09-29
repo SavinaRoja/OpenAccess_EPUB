@@ -22,9 +22,9 @@ def main():
     document = Article(args.input)
     
     if args.output:
-        
-        document.output_epub(args.output)
+        output.generateHierarchy(args.output)
         content.OPSContent(args.input, args.output, document.front)
+        document.output_epub(args.output)
         output.epubZip(args.output, document.titlestring())
     
 if __name__ == '__main__':

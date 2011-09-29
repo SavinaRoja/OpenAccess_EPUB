@@ -61,6 +61,7 @@ class ArticleMeta(object):
         self.art_edits = [] # A list of editors.
         self.art_other_contrib = [] # unclassified contributors
         self.art_affs = []
+        self.correspondences = None
         self.art_corresps = []
         self.art_dates = {}
         self.art_auth_contribs = None
@@ -139,9 +140,9 @@ class ArticleMeta(object):
             self.art_affs.append(crossrefs.Affiliation(aff))
         
         author_notes = node.getElementsByTagName('author-notes')[0]
-        correspondences = author_notes.getElementsByTagName('corresp')
+        self.correspondences = author_notes.getElementsByTagName('corresp')
         
-        for corr in correspondences:
+        for corr in self.correspondences:
             self.art_corresps.append(crossrefs.Correspondence(corr))
         
         auth_notes_fn = author_notes.getElementsByTagName('fn')[0]

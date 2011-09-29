@@ -115,7 +115,7 @@ def generateOPF(article, dirname):
         
 def epubZip(inputdirectory, name):
     """Zips up the input file directory into an ePub file."""
-    filename = '{0}.epub'.format(name)
+    filename = u'{0}.epub'.format(name)
     epub = zipfile.ZipFile(filename, 'w')
     os.chdir(inputdirectory)
     epub.write('mimetype')
