@@ -1,6 +1,8 @@
+import utils
+
 """Crossreferences"""
 
-class Xref:
+class Xref(object):
     """The top level class of crossreferences."""
     def __init__(self, xrefnode):
         self.rid = xrefnode.getAttribute('id')
@@ -17,7 +19,10 @@ class Affiliation(Xref):
         addrline = xrefnode.getElementsByTagName('addr-line')
         if addrline:
             self.address = addrline[0].firstChild.data
-        
+        else:
+            for child in xrefnode.childNodes:
+                if child.nodeType == child.TEXT_NODE and not child.data == u'\n':
+                    self.address = child.data
     def __str__(self):
         return 'Reference ID: {0}, Address Line: {1}'.format(self.rid,
                                                              self.address)

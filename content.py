@@ -97,6 +97,31 @@ class OPSContent(object):
             sec.tagName = 'div'
         for para in abstract.getElementsByTagName('p'):
             para.tagName = 'big'
+        for italic in abstract.getElementsByTagName('italic'):
+            italic.tagName = 'i'
+        
+        #Create a node for the Editor
+        ped = synop.createElement('p')
+        ped.setAttribute('id', 'editor')
+        bed = synop.createElement('b')
+        editor_line = synop.createTextNode('Editor: ')
+        bed.appendChild(editor_line)
+        ped.appendChild(bed)
+        first = True
+        for editor in meta.article_meta.art_edits:
+            name = editor.get_name()
+            affs = editor.affiliation
+            ped.appendChild(synop.createTextNode('{0}, '.format(name)))
+            for aff in affs:
+                for item in meta.article_meta.art_affs:
+                    if item.rid == aff:
+                        address = item.address
+                        if first:
+                            ped.appendChild(synop.createTextNode('{0}'.format(address)))
+                            first = False
+                        else:
+                            ped.appendChild(synop.createTextNode('; {0}'.format(address)))
+        synbody.appendChild(ped)
         
         
         #Create a node for the correspondence text

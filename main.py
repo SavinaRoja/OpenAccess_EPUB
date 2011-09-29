@@ -1,5 +1,11 @@
 #! /usr/bin/python
 
+TESTARTICLE = 'test_data/journal.pone.0024702.xml'
+# 'test_data/article.xml'
+# 'test_data/journal.pone.0024702.xml'
+# 'test_data/journal.pone.0025355.xml'
+# 'test_data/journal.pcbi.1002126.xml'
+
 import argparse
 import sys
 import os.path
@@ -13,7 +19,7 @@ def main():
     parser = argparse.ArgumentParser(description = 'OpenAccess_EPUB Parser')
     parser.add_argument('-q', '--quiet', action = 'store_true', default = False)
     parser.add_argument('-i', '--input', action = 'store', 
-                        default = 'test_data/article.xml')
+                        default = TESTARTICLE)
     parser.add_argument('-o', '--output', action = 'store', 
                         default = 'test_output/')
     
