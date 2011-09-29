@@ -15,8 +15,8 @@ class OPSContent(object):
         self.backdata = backdata
         
         self.createSynopsis(self.metadata, self.backdata)
-        self.createMain()
-        self.createBiblio()
+        self.createMain(self.doc)
+        self.createBiblio(self.doc)
         
     def createSynopsis(self, meta, back):
         '''Create an output file containing a representation of the article 
@@ -199,26 +199,56 @@ class OPSContent(object):
         with open(self.outputs['Synopsis'],'wb') as out:
             out.write(synop.toprettyxml(encoding = 'utf-8'))
 
-    def createMain(self):
+    def createMain(self, doc):
         '''Create an output file containing the main article body content'''
         #Initiate the document, returns the document and its body element
         main, mainbody = self.initiateDocument('Main file')
         
-        hello_world = main.createElement('p')
-        hello_world.appendChild(main.createTextNode('hello world'))
-        mainbody.appendChild(hello_world)
+        body = doc.getElementsByTagName('body')[0]
+        for item in body.childNodes:
+            mainbody.appendChild(item.cloneNode(deep = True))
+            
+        for sec in mainbody.getElementsByTagName('sec'):
+            sec.tagName = 'div' #Universally convert <sec> to <div>
+        for italic in mainbody.getElementsByTagName('italic'):
+            italic.tagName = 'i' #Universally convert <italice> to <i>
+        
+        #Need to intelligently handle conversion of <xref> elements
+        xrefs = mainbody.getElementsByTagName('xref')
+        for elem in xrefs:
+            elem.tagName = 'a' #Convert the tag to <a>
+            ref_type = elem.getAttribute('ref-type')
+            refid = elem.getAttribute('rid')
+            if ref_type == u'bibr':
+                dest = u'biblio.xml#{0}'.format(refid)
+            elif ref_type == u'fig':
+                dest = u'main.xml#{0}'.format(refid)
+            elif ref_type == u'supplementary-material':
+                dest = u'main.xml#{0}'.format(refid)
+            elif ref_type == u'table':
+                dest = u'main.xml#{0}'.format(refid)
+            elif ref_type == 'aff':
+                dest = u'synop.xml#{0}'.format(refid)
+            elem.removeAttribute('ref-type')
+            elem.removeAttribute('rid')
+            elem.setAttribute('href', dest)
+            
+        figs = mainbody.getElementsByTagName('fig')
+        for item in figs:
+            fid = item.getAttribute('id')
+            
         
         with open(self.outputs['Main'],'wb') as out:
             out.write(main.toprettyxml(encoding = 'utf-8'))
         
-    def createBiblio(self):
+    def createBiblio(self, doc):
         '''Create an output file containing the article bibliography'''
         #Initiate the document, returns the document and its body element
         biblio, bibbody = self.initiateDocument('Bibliography file')
         
-        hello_world = biblio.createElement('p')
-        hello_world.appendChild(biblio.createTextNode('hello world'))
-        bibbody.appendChild(hello_world)
+        back = doc.getElementsByTagName('back')[0]
+        for item in back.childNodes:
+            bibbody.appendChild(item.cloneNode(deep = True))
         
         with open(self.outputs['Biblio'],'wb') as out:
             out.write(biblio.toprettyxml(encoding = 'utf-8'))
