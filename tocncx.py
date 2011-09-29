@@ -158,7 +158,7 @@ def generateTOC(fm, features):
             metas.append(metatag('dtb:uid', _data))
     
     # NCX Depth of the document
-    metas.append(metatag('dtb:depth', '2'))
+    metas.append(metatag('dtb:depth', '3'))
     
     # Non-negative integer indicating the number of pageTargets in the pageList
     metas.append(metatag('dtb:totalPageCount', '0'))

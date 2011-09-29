@@ -8,6 +8,7 @@ class OPSContent(object):
     def __init__(self, documentstring, outdirect, metadata, backdata):
         self.inputstring = documentstring
         self.doc = minidom.parse(self.inputstring)
+        self.outdir = os.path.join(outdirect, 'OPS')
         self.outputs = {'Synopsis': os.path.join(outdirect, 'OPS', 'synop.xml'), 
                         'Main': os.path.join(outdirect, 'OPS', 'main.xml'), 
                         'Biblio': os.path.join(outdirect, 'OPS', 'biblio.xml')}
@@ -236,7 +237,18 @@ class OPSContent(object):
         figs = mainbody.getElementsByTagName('fig')
         for item in figs:
             fid = item.getAttribute('id')
-            
+            img = None
+            name = fid.split('-')[-1]
+            startpath = os.path.abspath('./') 
+            os.chdir(self.outdir)
+            for path, _subdirs, filenames in os.walk('images'):
+                for filename in filenames:
+                    if os.path.splitext(filename)[0] == name:
+                        img = os.path.join(path, filename)
+            os.chdir(startpath)
+            imgnode = main.createElement('img')
+            imgnode.setAttribute('src', img)
+            item.insertBefore(imgnode, item.firstChild)
         
         with open(self.outputs['Main'],'wb') as out:
             out.write(main.toprettyxml(encoding = 'utf-8'))
