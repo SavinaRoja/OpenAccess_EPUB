@@ -213,6 +213,10 @@ class OPSContent(object):
         for italic in mainbody.getElementsByTagName('italic'):
             italic.tagName = 'i' #Universally convert <italic> to <i>
         
+        #Scan through the Document converting the section title nodes to 
+        #proper format tags
+        self.divTitleScan(mainbody, depth = 0)
+        
         #Need to intelligently handle conversion of <xref> elements
         xrefs = mainbody.getElementsByTagName('xref')
         for elem in xrefs:
@@ -235,6 +239,8 @@ class OPSContent(object):
             
         figs = mainbody.getElementsByTagName('fig')
         for item in figs:
+            parent = item.parentNode
+            sibling = item.nextSibling
             fid = item.getAttribute('id')
             img = None
             name = fid.split('-')[-1]
@@ -245,13 +251,25 @@ class OPSContent(object):
                     if os.path.splitext(filename)[0] == name:
                         img = os.path.join(path, filename)
             os.chdir(startpath)
+            #Create and insert the img node before the fig node's sibling
             imgnode = main.createElement('img')
             imgnode.setAttribute('src', img)
-            item.insertBefore(imgnode, item.firstChild)
+            imgnode.setAttribute('id', fid)
+            parent.insertBefore(imgnode, sibling)
+            #Convert caption to <div class="caption">...</div>
+            caption = item.getElementsByTagName('caption')[0]
+            caption.setAttribute('class', 'caption')
+            prohib_eles = [u'object-id', u'graphic'] 
+            for each in item.childNodes:
+                if not each.nodeType == each.TEXT_NODE:
+                    if each.tagName not in prohib_eles:
+                        parent.insertBefore(each.cloneNode(deep = True), sibling)
+                
+            parent.removeChild(item)
         
-        #Scan through the Document converting the section title nodes to 
-        #proper format tags
-        self.divTitleScan(mainbody, depth = 0)
+        caps = mainbody.getElementsByTagName('caption')
+        for cap in caps:
+            cap.tagName = u'div'
         
         with open(self.outputs['Main'],'wb') as out:
             out.write(main.toprettyxml(encoding = 'utf-8'))
