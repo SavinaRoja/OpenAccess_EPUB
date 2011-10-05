@@ -336,8 +336,31 @@ class OPSContent(object):
             #Extract the year data
             year = fromnode.getElementsByTagName('year')
             ref_string += u'({0}) '.format(utils.getTagData(year))
+            #Extract the article title
+            art_title = fromnode.getElementsByTagName('article-title')
+            ref_string += u'{0} '.format(utils.getTagData(art_title))
+            #Extract the source data
+            source = fromnode.getElementsByTagName('source')
+            ref_string += u'{0} '.format(utils.getTagData(source))
+            #Extract the volume data
+            volume = fromnode.getElementsByTagName('volume')
+            ref_string += u'{0}'.format(utils.getTagData(volume))
+            #Issue data may be present, handle both options
+            issue = fromnode.getElementsByTagName('issue')
+            if issue:
+                ref_string += u'({0}): '.format(utils.getTagData(issue))
+            else:
+                ref_string += u': '
+            #Extract the fpage data
+            fpage = fromnode.getElementsByTagName('fpage')
+            ref_string += u'{0}'.format(utils.getTagData(fpage))
+            #lpage data may be present, handle both options
+            lpage = fromnode.getElementsByTagName('lpage')
+            if lpage:
+                ref_string += u'-{0}.'.format(utils.getTagData(lpage))
+            else:
+                ref_string += u'.'
             
-                
             ref_par.appendChild(doc.createTextNode(ref_string))
         else:
             print('Unrecognized citation type: {0}'.format(citation_type))
