@@ -217,26 +217,6 @@ class OPSContent(object):
         #proper format tags
         self.divTitleScan(mainbody, depth = 0)
         
-        #Need to intelligently handle conversion of <xref> elements
-        xrefs = mainbody.getElementsByTagName('xref')
-        for elem in xrefs:
-            elem.tagName = 'a' #Convert the tag to <a>
-            ref_type = elem.getAttribute('ref-type')
-            refid = elem.getAttribute('rid')
-            if ref_type == u'bibr':
-                dest = u'biblio.xml#{0}'.format(refid)
-            elif ref_type == u'fig':
-                dest = u'main.xml#{0}'.format(refid)
-            elif ref_type == u'supplementary-material':
-                dest = u'main.xml#{0}'.format(refid)
-            elif ref_type == u'table':
-                dest = u'main.xml#{0}'.format(refid)
-            elif ref_type == 'aff':
-                dest = u'synop.xml#{0}'.format(refid)
-            elem.removeAttribute('ref-type')
-            elem.removeAttribute('rid')
-            elem.setAttribute('href', dest)
-            
         figs = mainbody.getElementsByTagName('fig')
         for item in figs:
             parent = item.parentNode
@@ -266,6 +246,26 @@ class OPSContent(object):
                         parent.insertBefore(each.cloneNode(deep = True), sibling)
                 
             parent.removeChild(item)
+            
+        #Need to intelligently handle conversion of <xref> elements
+        xrefs = mainbody.getElementsByTagName('xref')
+        for elem in xrefs:
+            elem.tagName = 'a' #Convert the tag to <a>
+            ref_type = elem.getAttribute('ref-type')
+            refid = elem.getAttribute('rid')
+            if ref_type == u'bibr':
+                dest = u'biblio.xml#{0}'.format(refid)
+            elif ref_type == u'fig':
+                dest = u'main.xml#{0}'.format(refid)
+            elif ref_type == u'supplementary-material':
+                dest = u'main.xml#{0}'.format(refid)
+            elif ref_type == u'table':
+                dest = u'main.xml#{0}'.format(refid)
+            elif ref_type == 'aff':
+                dest = u'synop.xml#{0}'.format(refid)
+            elem.removeAttribute('ref-type')
+            elem.removeAttribute('rid')
+            elem.setAttribute('href', dest)
         
         caps = mainbody.getElementsByTagName('caption')
         for cap in caps:
@@ -280,13 +280,71 @@ class OPSContent(object):
         biblio, bibbody = self.initiateDocument('Bibliography file')
         
         back = doc.getElementsByTagName('back')[0]
-        for item in back.childNodes:
-            if not item.nodeType == item.TEXT_NODE:
-                if not item.tagName == u'fn-group':
-                    bibbody.appendChild(item.cloneNode(deep = True))
+        
+        bib_title = doc.createElement('h2')
+        bib_title.appendChild(doc.createTextNode('References'))
+        bibbody.appendChild(bib_title)
+        
+        refs = back.getElementsByTagName('ref')
+        for item in refs:
+            bibbody.appendChild(self.parseRef(item, biblio))
+        
+        #for item in back.childNodes:
+        #    if not item.nodeType == item.TEXT_NODE:
+        #        if not item.tagName == u'fn-group':
+        #            bibbody.appendChild(item.cloneNode(deep = True))
+        
         
         with open(self.outputs['Biblio'],'wb') as out:
             out.write(biblio.toprettyxml(encoding = 'utf-8'))
+            
+    def parseRef(self, fromnode, doc):
+        '''Interprets the references in the article back reference list into 
+        comprehensible xml'''
+        
+        #Create a paragraph tag to contain the reference text data
+        ref_par = doc.createElement('p')
+        #Set the fragment identifier for the paragraph tag
+        ref_par.setAttribute('id', fromnode.getAttribute('id'))
+        #Pull the label node into a node_list
+        label = fromnode.getElementsByTagName('label')
+        #Collect the citation tag and its citation type
+        citation = fromnode.getElementsByTagName('citation')[0]
+        citation_type = citation.getAttribute('citation-type')
+        
+        #Format the reference string if it is a Journal citation type
+        if citation_type == u'journal':
+            ref_string = u''
+            #Append the Label text
+            ref_string += u'{0}. '.format(utils.getTagData(label))
+            #Collect the author names and construct a formatted string
+            auths = fromnode.getElementsByTagName('name')
+            for auth in auths:
+                surname = auth.getElementsByTagName('surname')
+                given = auth.getElementsByTagName('given-names')
+                name_str = u'{0} {1}'.format(utils.getTagData(surname),
+                                             utils.getTagData(given))
+                if auth.nextSibling:
+                    name_str += u', '
+                else:
+                    name_str += u' '
+                ref_string += name_str
+            #Determine existence of <etal/> and append string if true
+            etal = fromnode.getElementsByTagName('etal')
+            if etal:
+                ref_string += u'et al. '
+            #Extract the year data
+            year = fromnode.getElementsByTagName('year')
+            ref_string += u'({0}) '.format(utils.getTagData(year))
+            
+                
+            ref_par.appendChild(doc.createTextNode(ref_string))
+        else:
+            print('Unrecognized citation type: {0}'.format(citation_type))
+            
+        return ref_par
+            
+        
 
     def divTitleScan(self, fromnode, depth = 0):
         taglist = ['h2', 'h3', 'h4', 'h5', 'h6']

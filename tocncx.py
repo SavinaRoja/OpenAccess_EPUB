@@ -185,5 +185,5 @@ def generateTOC(fm, features):
     navmapper(features, navmap)
     
     outdoc = open('{0}/OPS/toc.ncx'.format(utils.OUT_DIR),'w')
-    outdoc.write(doc.toxml(encoding = 'UTF-8'))
+    outdoc.write(doc.toxml(encoding = 'utf-8'))
     outdoc.close()
