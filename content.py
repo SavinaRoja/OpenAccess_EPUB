@@ -217,6 +217,7 @@ class OPSContent(object):
         #proper format tags
         self.divTitleScan(mainbody, depth = 0)
         
+        #Handle conversion of figures to html image format
         figs = mainbody.getElementsByTagName('fig')
         for item in figs:
             parent = item.parentNode
@@ -246,6 +247,54 @@ class OPSContent(object):
                         parent.insertBefore(each.cloneNode(deep = True), sibling)
                 
             parent.removeChild(item)
+            
+        #Handle conversion of <table-wrap> to html image with reference to 
+        #external file containing original html table
+        tables = mainbody.getElementsByTagName('table-wrap')
+        for item in tables:
+            parent = item.parentNode
+            sibling = item.nextSibling
+            table_id = item.getAttribute('id')
+            label = item.getElementsByTagName('label')
+            label_text = utils.getTagData(label)
+            title = item.getElementsByTagName('title')
+            title_text = utils.getTagData(title)
+            #Create a Table Label, includes label and title, place before the image
+            table_label = main.createElement('div')
+            table_label.setAttribute('class', 'table_label')
+            table_label.setAttribute('id', table_id)
+            table_label_b = main.createElement('b')
+            table_label_b.appendChild(main.createTextNode(label_text))
+            table_label.appendChild(table_label_b)
+            table_label.appendChild(main.createTextNode(title_text))
+            parent.insertBefore(table_label, sibling)
+            
+            name = table_id.split('-')[-1]
+            
+            img = None
+            startpath = os.path.abspath('./') 
+            os.chdir(self.outdir)
+            for path, _subdirs, filenames in os.walk('images'):
+                for filename in filenames:
+                    if os.path.splitext(filename)[0] == name:
+                        img = os.path.join(path, filename)
+            os.chdir(startpath)
+            #Create and insert the img node before the table-wrap node's sibling
+            imgnode = main.createElement('img')
+            imgnode.setAttribute('src', img)
+            parent.insertBefore(imgnode, sibling)
+            #Handle the HTML version of the table
+            try:
+                html_table = item.getElementsByTagName('table')[0]
+                link = main.createElement('a')
+                link.setAttribute('href', 'tables.html#{0}'.format(table_id))
+                link.appendChild(main.createTextNode('HTML version of {0}'.format(label_text)))
+                parent.insertBefore(link , sibling)
+            except:
+                pass
+            
+            parent.removeChild(item)
+        
             
         #Need to intelligently handle conversion of <xref> elements
         xrefs = mainbody.getElementsByTagName('xref')
