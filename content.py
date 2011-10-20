@@ -271,7 +271,6 @@ class OPSContent(object):
             parent.insertBefore(table_label, sibling)
             
             name = table_id.split('-')[-1]
-            
             img = None
             startpath = os.path.abspath('./') 
             os.chdir(self.outdir)
@@ -330,6 +329,36 @@ class OPSContent(object):
         caps = mainbody.getElementsByTagName('caption')
         for cap in caps:
             cap.tagName = u'div'
+        
+        #Handle the display of inline equations
+        inline_equations = mainbody.getElementsByTagName('inline-formula')
+        for each in inline_equations:
+            parent = each.parentNode
+            sibling = each.nextSibling
+            ops_switch = main.createElement('ops:switch')
+            ops_switch.setAttribute('xmlns:ops', 'http://www.idpf.org/2007/ops')
+            ops_default = main.createElement('ops:default')
+            ops_switch.appendChild(ops_default)
+            
+            inline_graphic = each.getElementsByTagName('inline-graphic')[0]
+            xlink_href_id = inline_graphic.getAttribute('xlink:href')
+            name = xlink_href_id.split('.')[-1]
+            img = None
+            startpath = os.path.abspath('./') 
+            os.chdir(self.outdir)
+            for path, _subdirs, filenames in os.walk('images'):
+                for filename in filenames:
+                    if os.path.splitext(filename)[0] == name:
+                        img = os.path.join(path, filename)
+            os.chdir(startpath)
+            
+            imgnode = main.createElement('img')
+            imgnode.setAttribute('src', img)
+            ops_default.appendChild(imgnode)
+            
+            parent.insertBefore(ops_switch, sibling)
+            parent.removeChild(each)
+            
         
         with open(self.outputs['Main'],'wb') as out:
             out.write(main.toprettyxml(encoding = 'utf-8'))
