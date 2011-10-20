@@ -290,10 +290,12 @@ class OPSContent(object):
             try:
                 html_table = item.getElementsByTagName('table')[0]
                 html_table.removeAttribute('alternate-form-of')
-                html_table.setAttribute('id', table_id)
+                html_table.setAttribute('id', 'h{0}'.format(name))
+                for btag in html_table.getElementsByTagName('bold'):
+                    btag.tagName = u'b'
                 table_doc_main.appendChild(html_table)
                 link = main.createElement('a')
-                link.setAttribute('href', 'tables.xml#{0}'.format(table_id))
+                link.setAttribute('href', 'tables.xml#h{0}'.format(name))
                 link.appendChild(main.createTextNode('HTML version of {0}'.format(label_text)))
                 parent.insertBefore(link , sibling)
             except:
