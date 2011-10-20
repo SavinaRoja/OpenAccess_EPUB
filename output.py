@@ -105,9 +105,13 @@ def generateOPF(article, dirname):
     itemref_biblio = mydoc.createElement('itemref')
     itemref_biblio.setAttribute('idref', 'biblio-xml')
     itemref_biblio.setAttribute('linear', 'yes')
+    itemref_tables = mydoc.createElement('itemref')
+    itemref_tables.setAttribute('idref', 'tables-xml')
+    itemref_tables.setAttribute('linear', 'no')
     spine.appendChild(itemref_synop)
     spine.appendChild(itemref_main)
     spine.appendChild(itemref_biblio)
+    spine.appendChild(itemref_tables)
     
     contentpath = os.path.join(dirname,'OPS','content.opf')
     with open(contentpath, 'w') as output:

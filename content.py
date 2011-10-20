@@ -211,6 +211,10 @@ class OPSContent(object):
             
         for sec in mainbody.getElementsByTagName('sec'):
             sec.tagName = 'div' #Universally convert <sec> to <div>
+            try:
+                sec.removeAttribute('sec-type')
+            except:
+                pass
         for italic in mainbody.getElementsByTagName('italic'):
             italic.tagName = 'i' #Universally convert <italic> to <i>
         
@@ -224,6 +228,7 @@ class OPSContent(object):
             parent = item.parentNode
             sibling = item.nextSibling
             fid = item.getAttribute('id')
+            label_text = utils.getTagData(item.getElementsByTagName('label'))
             img = None
             name = fid.split('-')[-1]
             startpath = os.path.abspath('./') 
@@ -237,15 +242,23 @@ class OPSContent(object):
             imgnode = main.createElement('img')
             imgnode.setAttribute('src', img)
             imgnode.setAttribute('id', fid)
+            imgnode.setAttribute('alt', 'A Figure')
             parent.insertBefore(imgnode, sibling)
             #Convert caption to <div class="caption">...</div>
             caption = item.getElementsByTagName('caption')[0]
+            caption.tagName = u'div'
             caption.setAttribute('class', 'caption')
-            prohib_eles = [u'object-id', u'graphic'] 
-            for each in item.childNodes:
-                if not each.nodeType == each.TEXT_NODE:
-                    if each.tagName not in prohib_eles:
-                        parent.insertBefore(each.cloneNode(deep = True), sibling)
+            bold_label_text = main.createElement('b')
+            bold_label_text.appendChild(main.createTextNode('{0}.'.format(label_text)))
+            caption.insertBefore(bold_label_text, caption.firstChild)
+            for title_tag in caption.getElementsByTagName('title'):
+                title_tag.tagName = u'b'
+            parent.insertBefore(caption, sibling)
+            #prohib_eles = [u'object-id', u'graphic', u'label'] 
+            #for each in item.childNodes:
+                #if not each.nodeType == each.TEXT_NODE:
+                    #if each.tagName not in prohib_eles:
+                        #parent.insertBefore(each.cloneNode(deep = True), sibling)
                 
             parent.removeChild(item)
             
@@ -282,6 +295,7 @@ class OPSContent(object):
             #Create and insert the img node before the table-wrap node's sibling
             imgnode = main.createElement('img')
             imgnode.setAttribute('src', img)
+            imgnode.setAttribute('alt', 'A Table')
             parent.insertBefore(imgnode, sibling)
             
             #Handle the HTML version of the table
@@ -300,7 +314,6 @@ class OPSContent(object):
             except:
                 pass
             
-            
             parent.removeChild(item)
             
         with open(self.outputs['Tables'],'wb') as output:
@@ -309,7 +322,7 @@ class OPSContent(object):
         #Need to intelligently handle conversion of <xref> elements
         xrefs = mainbody.getElementsByTagName('xref')
         for elem in xrefs:
-            elem.tagName = 'a' #Convert the tag to <a>
+            elem.tagName = u'a' #Convert the tag to <a>
             ref_type = elem.getAttribute('ref-type')
             refid = elem.getAttribute('rid')
             if ref_type == u'bibr':
@@ -354,6 +367,7 @@ class OPSContent(object):
             
             imgnode = main.createElement('img')
             imgnode.setAttribute('src', img)
+            imgnode.setAttribute('alt', 'An inline formula')
             ops_default.appendChild(imgnode)
             
             parent.insertBefore(ops_switch, sibling)
@@ -387,6 +401,7 @@ class OPSContent(object):
             
             imgnode = main.createElement('img')
             imgnode.setAttribute('src', img)
+            imgnode.setAttribute('alt', 'A display formula')
             ops_default.appendChild(imgnode)
             
             parent.insertBefore(p_eqn, sibling)
