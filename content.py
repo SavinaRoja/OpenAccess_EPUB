@@ -11,7 +11,8 @@ class OPSContent(object):
         self.outdir = os.path.join(outdirect, 'OPS')
         self.outputs = {'Synopsis': os.path.join(outdirect, 'OPS', 'synop.xml'), 
                         'Main': os.path.join(outdirect, 'OPS', 'main.xml'), 
-                        'Biblio': os.path.join(outdirect, 'OPS', 'biblio.xml')}
+                        'Biblio': os.path.join(outdirect, 'OPS', 'biblio.xml'), 
+                        'Tables': os.path.join(outdirect, 'OPS', 'tables.xml')}
         self.metadata = metadata
         self.backdata = backdata
         
@@ -283,18 +284,26 @@ class OPSContent(object):
             imgnode = main.createElement('img')
             imgnode.setAttribute('src', img)
             parent.insertBefore(imgnode, sibling)
+            
             #Handle the HTML version of the table
+            table_doc, table_doc_main = self.initiateDocument('HTML Versions of Tables')
             try:
                 html_table = item.getElementsByTagName('table')[0]
+                html_table.removeAttribute('alternate-form-of')
+                html_table.setAttribute('id', table_id)
+                table_doc_main.appendChild(html_table)
                 link = main.createElement('a')
-                link.setAttribute('href', 'tables.html#{0}'.format(table_id))
+                link.setAttribute('href', 'tables.xml#{0}'.format(table_id))
                 link.appendChild(main.createTextNode('HTML version of {0}'.format(label_text)))
                 parent.insertBefore(link , sibling)
             except:
                 pass
             
+            
             parent.removeChild(item)
-        
+            
+        with open(self.outputs['Tables'],'wb') as output:
+            output.write(table_doc.toprettyxml(encoding = 'utf-8'))
             
         #Need to intelligently handle conversion of <xref> elements
         xrefs = mainbody.getElementsByTagName('xref')
