@@ -488,6 +488,37 @@ class OPSContent(object):
             except:
                 pass
         
+        #Convert supplementary-material tags to div tags
+        #for now they will just be "sanitized", but in the future they
+        #should try to provide valid links to the materials
+        supp_mats = mainbody.getElementsByTagName('supplementary-material')
+        for supp_mat in supp_mats:
+            supp_mat.tagName = u'div'
+            label = supp_mat.getElementsByTagName('label')[0]
+            label.tagName = u'b'
+            bolds = supp_mat.getElementsByTagName('bold')
+            for bold in bolds:
+                bold.tagName = u'b'
+            italics = supp_mat.getElementsByTagName('italic')
+            for italic in italics:
+                italic.tagName = u'i'
+            try:
+                supp_mat.removeAttribute('mimetype')
+            except:
+                pass
+            try:
+                supp_mat.removeAttribute('position')
+            except:
+                pass
+            try:
+                supp_mat.removeAttribute('xlink:href')
+            except:
+                pass
+            try:
+                supp_mat.removeAttribute('xlink:type')
+            except:
+                pass
+        
         with open(self.outputs['Main'],'wb') as out:
             out.write(main.toprettyxml(encoding = 'utf-8'))
         
