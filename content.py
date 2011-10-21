@@ -404,13 +404,9 @@ class OPSContent(object):
                 grandparent.appendChild(disp_p_node_)
                 grandparent.appendChild(newparent)
             
-            ops_switch = main.createElement('ops:switch')
-            ops_switch.setAttribute('xmlns:ops', 'http://www.idpf.org/2007/ops')
-            ops_default = main.createElement('ops:default')
-            ops_switch.appendChild(ops_default)
-            
             disp.tagName = u'ops:switch'
             disp.setAttribute('xmlns:ops', 'http://www.idpf.org/2007/ops')
+            ops_default = main.createElement('ops:default')
             graphic = disp.getElementsByTagName('graphic')[0]
             graphic.tagName = u'img'
             
@@ -426,12 +422,72 @@ class OPSContent(object):
             os.chdir(startpath)
             
             graphic.removeAttribute('xlink:href')
+            try:
+                graphic.removeAttribute('xlink:type')
+            except:
+                pass
             graphic.removeAttribute('alt-version')
             graphic.removeAttribute('mimetype')
             graphic.removeAttribute('position')
             graphic.setAttribute('src', img)
             graphic.setAttribute('alt', 'A display formula')
+            ops_default.appendChild(graphic)
+            disp.appendChild(ops_default)
             
+        #Need to handle lists in the document
+        lists = mainbody.getElementsByTagName('list')
+        for list in lists:
+            try:
+                title = utils.getTagData(list.getElementsByTagName('title'))
+                list.setAttribute('title', title)
+                list.removeChild('title')
+            except:
+                pass
+            try:
+                list_id = list.getAttribute('id')
+                list_content = list.getAttribute('list-content')
+                list_type = list.getAttribute('list-type')
+                prefix_word = list.getAttribute('prefix-word')
+            except:
+                pass
+            
+            if list_type == u'order':
+                list.tagName = u'ol'
+            elif list_type == u'bullet':
+                list.tagName = u'ul'
+            elif list_type == u'alpha-lower':
+                list.tagName = u'ol'
+            elif list_type == u'alpha-upper':
+                list.tagName = u'ol'
+            elif list_type == u'roman-lower':
+                list.tagName = u'ol'
+            elif list_type == u'roman-upper':
+                list.tagName = u'ol'
+            elif list_type == u'simple':
+                list.tagName = u'ul'
+                list.setAttribute('style','simple')
+            else:
+                list.tagName = 'ul'
+                print('Unknown List Type in document!')
+                prefix_word = '!' + prefix_word
+            
+            list_items = list.getElementsByTagName('list-item')
+            for list_item in list_items:
+                list_item.tagName = u'li'
+            
+            try:
+                list.removeAttribute('list-content')
+            except:
+                pass
+            try:
+                list.removeAttribute('list-type')
+            except:
+                pass
+            try:
+                list.removeAttribute('prefix-word')
+            except:
+                pass
+        
         with open(self.outputs['Main'],'wb') as out:
             out.write(main.toprettyxml(encoding = 'utf-8'))
         
