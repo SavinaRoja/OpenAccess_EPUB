@@ -375,19 +375,45 @@ class OPSContent(object):
             
         
         #Handle the display of out of line equations
+        #Requires separating children to two <p> tags flanking the displayed 
+        #formula
         disp_equations = mainbody.getElementsByTagName('disp-formula')
-        for each in disp_equations:
-            parent = each.parentNode
-            sibling = each.nextSibling
-            p_eqn = main.createElement('p')
-            p_eqn.setAttribute('class', 'dispequn')
+        for disp in disp_equations:
+            
+            parent = disp.parentNode
+            sibling = disp.nextSibling
+            
+            if sibling:
+                new_parent = main.createElement('p')
+                disp_index = parent.childNodes.index(disp)
+                for child in parent.childNodes[(disp_index +1):]:
+                    new_parent.appendChild(child)
+            else:
+                new_parent = None
+            
+            grandparent = parent.parentNode
+            parent_sib = parent.nextSibling
+            if parent_sib:
+                disp_p_node = main.createElement('p')
+                disp_p_node.appendChild(disp)
+                grandparent.insertBefore(disp_p_node, parent_sib)
+                if new_parent:
+                    grandparent.insertBefore(new_parent, parent_sib)
+            
+            else:
+                grandparent.appendChild(disp_p_node_)
+                grandparent.appendChild(newparent)
+            
             ops_switch = main.createElement('ops:switch')
             ops_switch.setAttribute('xmlns:ops', 'http://www.idpf.org/2007/ops')
             ops_default = main.createElement('ops:default')
             ops_switch.appendChild(ops_default)
-            p_eqn.appendChild(ops_switch)
             
-            inline_graphic = each.getElementsByTagName('graphic')[0]
+            disp.tagName = u'ops:switch'
+            disp.setAttribute('xmlns:ops', 'http://www.idpf.org/2007/ops')
+            graphic = disp.getElementsByTagName('graphic')[0]
+            graphic.tagName = u'img'
+            
             xlink_href_id = inline_graphic.getAttribute('xlink:href')
             name = xlink_href_id.split('.')[-1]
             img = None
@@ -399,13 +425,12 @@ class OPSContent(object):
                         img = os.path.join(path, filename)
             os.chdir(startpath)
             
-            imgnode = main.createElement('img')
-            imgnode.setAttribute('src', img)
-            imgnode.setAttribute('alt', 'A display formula')
-            ops_default.appendChild(imgnode)
-            
-            parent.insertBefore(p_eqn, sibling)
-            parent.removeChild(each)
+            graphic.removeAttribute('xlink:href')
+            graphic.removeAttribute('alt-version')
+            graphic.removeAttribute('mimetype')
+            graphic.removeAttribute('position')
+            graphic.setAttribute('src', img)
+            graphic.setAttribute('alt', 'A display formula')
             
         with open(self.outputs['Main'],'wb') as out:
             out.write(main.toprettyxml(encoding = 'utf-8'))
