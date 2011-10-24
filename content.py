@@ -539,7 +539,7 @@ class OPSContent(object):
         
         #for item in back.childNodes:
         #    if not item.nodeType == item.TEXT_NODE:
-        #        if not item.tagName == u'fn-group':
+        #        if not item.tagName == u'fn-group':bold
         #            bibbody.appendChild(item.cloneNode(deep = True))
         
         
@@ -610,13 +610,37 @@ class OPSContent(object):
                 ref_string += u'.'
             
             ref_par.appendChild(doc.createTextNode(ref_string))
-        else:
-            print('Unrecognized citation type: {0}'.format(citation_type))
+        
+        elif citation_type == u'other':
+            ref_string = u'{0}. '.format(utils.getTagData(label))
+            ref_string += self.refOther(citation, stringlist = [])
+            ref_par.appendChild(doc.createTextNode(ref_string[:-2]))
             
         return ref_par
             
+    def refOther(self, node, stringlist = []):
+        '''Attempts to broadly handle Other citation types and produce a 
+        human intelligible string output'''
         
-
+        for item in node.childNodes:
+            if item.nodeType == item.TEXT_NODE and not item.data == u'\n':
+                if item.data.lstrip():
+                    if item.parentNode.tagName == u'year':
+                        stringlist.append(u'({0})'.format(item.data))
+                        stringlist.append(u', ')
+                    elif item.parentNode.tagName == u'source':
+                        stringlist.append(u'[{0}]'.format(item.data))
+                        stringlist.append(u', ')
+                    elif item.parentNode.tagName == u'article-title':
+                        stringlist.append(u'\"{0}\"'.format(item.data))
+                        stringlist.append(u', ')
+                    else:
+                        stringlist.append(item.data)
+                        stringlist.append(u', ')
+            else:
+                self.refOther(item, stringlist)
+        return u''.join(stringlist)
+        
     def divTitleScan(self, fromnode, depth = 0):
         taglist = ['h2', 'h3', 'h4', 'h5', 'h6']
         for item in fromnode.childNodes:
