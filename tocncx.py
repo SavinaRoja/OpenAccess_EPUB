@@ -1,7 +1,8 @@
 import utils
 import os, os.path
+import main
     
-def generateTOC(fm, features):
+def generateTOC(fm, features, outdirect):
     '''Used to generate the table of contents for the article. Should be
     kept in accordance with the Daisy Talking Book specification.'''
     
@@ -57,12 +58,12 @@ def generateTOC(fm, features):
             navlabel.appendChild(makeText(titletext))
             navtarget.appendChild(navlabel)
             content = doc.createElement('content')
-            os.chdir('test_output/OPS')
+            os.chdir(u'{0}/OPS'.format(outdirect))
             #for _path, _subdirs, _filenames in os.walk('images'):
             #    for filename in _filenames:
             #        if os.path.splitext(filename)[0] == fid.split('-')[-1]:
             #            src = os.path.join(_path, filename)
-            src = 'main.xml#{0}'.format(fid)
+            src = u'main.xml#{0}'.format(fid)
             os.chdir('../..')
             content.setAttribute('src', src)
             navtarget.appendChild(content)
@@ -168,7 +169,8 @@ def generateTOC(fm, features):
     metas.append(metatag('dtb:maxPageNumber', '0'))
     
     # Name and version of software that generated the NCX
-    metas.append(metatag('dtb:generator', 'openaccess_epub, indev'))
+    metas.append(metatag('dtb:generator', 
+                         'OpenAccess_EPUB {0}'.format(main.__version__)))
     
     for meta in metas:
         head.appendChild(meta)
@@ -184,6 +186,6 @@ def generateTOC(fm, features):
     navlabel.appendChild(makeText('Table of Contents'))
     navmapper(features, navmap)
     
-    outdoc = open('{0}/OPS/toc.ncx'.format(utils.OUT_DIR),'w')
+    outdoc = open(u'{0}/OPS/toc.ncx'.format(outdirect),'w')
     outdoc.write(doc.toxml(encoding = 'utf-8'))
     outdoc.close()

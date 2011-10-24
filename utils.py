@@ -3,7 +3,7 @@ import logging
 import os.path
 from collections import namedtuple
 
-OUT_DIR = 'test_output'
+#OUT_DIR = 'test_output'
 
 logging.basicConfig(level=logging.INFO,
                     format='%(levelname)s: %(message)s')
