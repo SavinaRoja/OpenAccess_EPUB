@@ -390,7 +390,6 @@ class OPSContent(object):
             parent_sib = parent.nextSibling
             if parent_sib:
                 disp_p_node = main.createElement('p')
-                disp_p_node.appendChild(disp)
                 grandparent.insertBefore(disp_p_node, parent_sib)
                 if new_parent:
                     grandparent.insertBefore(new_parent, parent_sib)
@@ -399,11 +398,7 @@ class OPSContent(object):
                 grandparent.appendChild(disp_p_node_)
                 grandparent.appendChild(newparent)
             
-            disp.tagName = u'ops:switch'
-            disp.setAttribute('xmlns:ops', 'http://www.idpf.org/2007/ops')
-            ops_default = main.createElement('ops:default')
             graphic = disp.getElementsByTagName('graphic')[0]
-            graphic.tagName = u'img'
             
             xlink_href_id = inline_graphic.getAttribute('xlink:href')
             name = xlink_href_id.split('.')[-1]
@@ -416,18 +411,12 @@ class OPSContent(object):
                         img = os.path.join(path, filename)
             os.chdir(startpath)
             
-            graphic.removeAttribute('xlink:href')
-            try:
-                graphic.removeAttribute('xlink:type')
-            except:
-                pass
-            graphic.removeAttribute('alt-version')
-            graphic.removeAttribute('mimetype')
-            graphic.removeAttribute('position')
-            graphic.setAttribute('src', img)
-            graphic.setAttribute('alt', 'A display formula')
-            ops_default.appendChild(graphic)
-            disp.appendChild(ops_default)
+            imgnode = main.createElement('img')
+            imgnode.setAttribute('src', img)
+            imgnode.setAttribute('alt', 'A display formula')
+            
+            disp_p_node.appendChild(imgnode)
+            parent.removeChild(disp)
             
         #Need to handle lists in the document
         lists = mainbody.getElementsByTagName('list')
