@@ -83,7 +83,6 @@ class Article(object):
             
             PLOSSTRING = 'article/fetchObject.action?uri=info%3Adoi%2F'
             
-            print(doidata)
             #split the doidata into useful fragments
             slashsplit = doidata.split('/')
             journaldoi = slashsplit[0]
@@ -121,8 +120,8 @@ class Article(object):
                     address = addr_str.format(journalurl, PLOSSTRING, journaldoi,
                                               journalid, articledoi, itype,
                                               str(refnum).zfill(3))
+                    
                     try:
-                        print(address)
                         if itype == 'e':
                             address = address[0:-2]
                         image = urllib2.urlopen(address)
@@ -131,6 +130,8 @@ class Article(object):
                                                   subdirect, filename)
                         with open(image_file, 'wb') as outimage:
                             outimage.write(image.read())
+                        print('Downloaded image {0}{1}'.format( itype, 
+                                                                str(refnum).zfill(3)))
                     
                     except urllib2.HTTPError:
                         logging.debug('reached the end of that type')
