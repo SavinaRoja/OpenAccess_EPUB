@@ -519,6 +519,15 @@ class OPSContent(object):
             except:
                 pass
         
+        ext_links = main.getElementsByTagName('ext-link')
+        for ext_link in ext_links:
+            ext_link.tagName = u'a'
+            ext_link.removeAttribute('ext-link-type')
+            href = ext_link.getAttribute('xlink:href')
+            ext_link.removeAttribute('xlink:href')
+            ext_link.removeAttribute('xlink:type')
+            ext_link.setAttribute('href', href)
+        
         with open(self.outputs['Main'],'wb') as out:
             out.write(main.toprettyxml(encoding = 'utf-8'))
         
