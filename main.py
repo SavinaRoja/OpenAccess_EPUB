@@ -1,5 +1,7 @@
 #! /usr/bin/python
 
+
+__version__ = 'indev'
 TESTARTICLE = 'test_data/journal.pone.0024702.xml'
 # 'test_data/article.xml'
 # 'test_data/journal.pone.0024702.xml'
@@ -17,6 +19,7 @@ def main():
     '''main script'''
     
     parser = argparse.ArgumentParser(description = 'OpenAccess_EPUB Parser')
+    parser.add_argument('--version', action='version', version='OpenAccess_EPUB {}'.format(__version__))
     parser.add_argument('-q', '--quiet', action = 'store_true', default = False)
     parser.add_argument('-i', '--input', action = 'store', 
                         default = TESTARTICLE)
