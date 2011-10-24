@@ -348,10 +348,6 @@ class OPSContent(object):
         for each in inline_equations:
             parent = each.parentNode
             sibling = each.nextSibling
-            ops_switch = main.createElement('ops:switch')
-            ops_switch.setAttribute('xmlns:ops', 'http://www.idpf.org/2007/ops')
-            ops_default = main.createElement('ops:default')
-            ops_switch.appendChild(ops_default)
             
             inline_graphic = each.getElementsByTagName('inline-graphic')[0]
             xlink_href_id = inline_graphic.getAttribute('xlink:href')
@@ -368,9 +364,8 @@ class OPSContent(object):
             imgnode = main.createElement('img')
             imgnode.setAttribute('src', img)
             imgnode.setAttribute('alt', 'An inline formula')
-            ops_default.appendChild(imgnode)
             
-            parent.insertBefore(ops_switch, sibling)
+            parent.insertBefore(imgnode, sibling)
             parent.removeChild(each)
             
         
