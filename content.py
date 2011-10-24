@@ -477,6 +477,7 @@ class OPSContent(object):
         #should try to provide valid links to the materials
         supp_mats = mainbody.getElementsByTagName('supplementary-material')
         for supp_mat in supp_mats:
+            supp_id = supp_mat.getAttribute('id')
             supp_mat.tagName = u'div'
             label = supp_mat.getElementsByTagName('label')[0]
             label.tagName = u'b'
@@ -495,6 +496,21 @@ class OPSContent(object):
             except:
                 pass
             try:
+                plos_jrns= {'pgen': 'http://www.plosgenetics.org/', 
+                            'pone': 'http://www.plosone.org/', 
+                            'pbio': 'http://www.plosbiology.org/', 
+                            'pcbi': 'http://www.ploscompbiol.org/', 
+                            'ppat': 'http://www.plospathogens.org/', 
+                            'pmed': 'http://www.plosmedicine.org/', 
+                            'pntd': 'http://www.plosntds.org/'}
+                jrn = supp_id.split('.')[0]
+                plos_fetch = 'article/fetchSingleRepresentation.action?uri='
+                xlink = supp_mat.getAttribute('xlink:href')
+                href = u'{0}{1}{2}'.format(plos_jrns[jrn], plos_fetch, xlink)
+                anchor = main.createElement('a')
+                anchor.setAttribute('href', href)
+                supp_mat.insertBefore(anchor, label)
+                anchor.appendChild(label)
                 supp_mat.removeAttribute('xlink:href')
             except:
                 pass
