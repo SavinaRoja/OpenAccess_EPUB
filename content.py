@@ -274,6 +274,7 @@ class OPSContent(object):
             
         #Handle conversion of <table-wrap> to html image with reference to 
         #external file containing original html table
+        table_doc, table_doc_main = self.initiateDocument('HTML Versions of Tables')
         tables = mainbody.getElementsByTagName('table-wrap')
         for item in tables:
             parent = item.parentNode
@@ -309,7 +310,6 @@ class OPSContent(object):
             parent.insertBefore(imgnode, sibling)
             
             #Handle the HTML version of the table
-            table_doc, table_doc_main = self.initiateDocument('HTML Versions of Tables')
             try:
                 html_table = item.getElementsByTagName('table')[0]
                 html_table.removeAttribute('alternate-form-of')
