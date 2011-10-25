@@ -49,6 +49,14 @@ def serializeText(fromnode, stringlist = [], sep = u''):
             serializeText(item, stringlist, sep)
     return sep.join(stringlist)
     
+def getText(node):
+    '''Grab the text data from a node'''
+    data = u''
+    for child in node.childNodes:
+        if child.nodeType == child.TEXT_NODE:
+            data = child.data
+    return data
+    
 def getTagData(node_list):
     """Grab the (string) data from text elements
     node_list -- NodeList returned by getElementsByTagName
