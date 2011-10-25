@@ -115,16 +115,16 @@ class OPSContent(object):
         for editor in meta.article_meta.art_edits:
             name = editor.get_name()
             affs = editor.affiliation
-            ped.appendChild(synop.createTextNode('{0}, '.format(name)))
+            ped.appendChild(synop.createTextNode(u'{0}, '.format(name)))
             for aff in affs:
                 for item in meta.article_meta.art_affs:
                     if item.rid == aff:
                         address = item.address
                         if first:
-                            ped.appendChild(synop.createTextNode('{0}'.format(address)))
+                            ped.appendChild(synop.createTextNode(u'{0}'.format(address)))
                             first = False
                         else:
-                            ped.appendChild(synop.createTextNode('; {0}'.format(address)))
+                            ped.appendChild(synop.createTextNode(u'; {0}'.format(address)))
         synbody.appendChild(ped)
         
         #Create a node for the dates
