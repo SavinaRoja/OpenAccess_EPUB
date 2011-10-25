@@ -75,6 +75,8 @@ class Article(object):
         import urllib2, logging, os.path
         import output
         
+        print('Downloading Images. This may take some time...')
+        
         for (_data, _id) in self.front.article_meta.identifiers:
             if _id == 'doi':
                 doidata = _data
