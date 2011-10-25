@@ -58,13 +58,14 @@ def generateTOC(fm, features, outdirect):
             navlabel.appendChild(makeText(titletext))
             navtarget.appendChild(navlabel)
             content = doc.createElement('content')
-            os.chdir(u'{0}/OPS'.format(outdirect))
+            current_dir = os.getcwd()
+            os.chdir(os.path.join(outdirect, 'OPS'))
             #for _path, _subdirs, _filenames in os.walk('images'):
             #    for filename in _filenames:
             #        if os.path.splitext(filename)[0] == fid.split('-')[-1]:
             #            src = os.path.join(_path, filename)
             src = u'main.xml#{0}'.format(fid)
-            os.chdir('../..')
+            os.chdir(current_dir)
             content.setAttribute('src', src)
             navtarget.appendChild(content)
             navpoint.appendChild(navtarget)
@@ -186,6 +187,6 @@ def generateTOC(fm, features, outdirect):
     navlabel.appendChild(makeText('Table of Contents'))
     navmapper(features, navmap)
     
-    outdoc = open(u'{0}/OPS/toc.ncx'.format(outdirect),'w')
+    outdoc = open(os.path.join(outdirect, 'OPS', 'toc.ncx'), 'w')
     outdoc.write(doc.toxml(encoding = 'utf-8'))
     outdoc.close()

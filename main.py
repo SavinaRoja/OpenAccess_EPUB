@@ -81,17 +81,19 @@ def main():
         document = Article(filename)
     
     if args.output:
-        outdirect = args.output
+        outdirect = os.path.join(args.output, document.titlestring())
+        if not os.path.isdir(args.output):
+            os.mkdir(args.output)
     else:
         outdirect = document.titlestring()
         
-        output.generateHierarchy(outdirect)
-        document.fetchImages(dirname = outdirect)
-        content.OPSContent(filename, outdirect, document.front, 
-                           document.back)
-        tocncx.generateTOC(document.front, document.features, outdirect)
-        output.generateOPF(document, outdirect)
-        output.epubZip(outdirect, document.titlestring())
+    output.generateHierarchy(outdirect)
+    document.fetchImages(dirname = outdirect)
+    content.OPSContent(filename, outdirect, document.front, 
+                       document.back)
+    tocncx.generateTOC(document.front, document.features, outdirect)
+    output.generateOPF(document, outdirect)
+    output.epubZip(outdirect)
         
     if download and not args.save_xml:
         os.remove(filename)

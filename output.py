@@ -74,6 +74,7 @@ def generateOPF(article, dirname):
     mimetypes = {'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 'xml': 
                  'application/xhtml+xml', 'png': 'image/png', 'css':
                  'text/css', 'ncx': 'application/x-dtbncx+xml'}
+    current_dir = os.getcwd()
     os.chdir(dirname)
     for path, subname, filenames in os.walk('OPS'):
         path = path[4:]
@@ -92,7 +93,7 @@ def generateOPF(article, dirname):
                     newitem.setAttribute('href', os.path.join(path, filename))
                     newitem.setAttribute('media-type', mimetypes[ext])
                 
-    os.chdir('..')
+    os.chdir(current_dir)
     
     # Spine
     spine.setAttribute('toc', 'ncx')
@@ -117,13 +118,14 @@ def generateOPF(article, dirname):
     with open(contentpath, 'w') as output:
         output.write(mydoc.toxml(encoding = 'UTF-8'))
         
-def epubZip(inputdirectory, name):
-    """Zips up the input file directory into an ePub file."""
-    filename = u'{0}.epub'.format(name)
-    epub = zipfile.ZipFile(filename, 'w')
-    os.chdir(inputdirectory)
+def epubZip(outdirect):
+    '''Zips up the input file directory into an ePub file.'''
+    epub_filename = outdirect + '.epub'
+    epub = zipfile.ZipFile(epub_filename, 'w')
+    current_dir = os.getcwd()
+    os.chdir(outdirect)
     epub.write('mimetype')
     utils.recursive_zip(epub, 'META-INF')
     utils.recursive_zip(epub, 'OPS')
+    os.chdir(current_dir)
     epub.close()
-    os.chdir('..')
