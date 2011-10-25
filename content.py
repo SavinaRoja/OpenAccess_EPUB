@@ -671,6 +671,19 @@ class OPSContent(object):
         except AttributeError:
             for item in topnode:
                 self.boldNodeHandler(item)
+                
+def italicNodeHandler(self, topnode):
+        '''Handles proper conversion of <italic> tags under the provided 
+        topnode. Also handles NodeLists by calling itself on each Node in the 
+        NodeList'''
+        try:
+            italic_nodes = topnode.getElementsByTagName('italic')
+            #In this case, we can just modify them in situ
+            for italic_node in italic_nodes:
+                italic_node.tagName = u'i'
+        except AttributeError:
+            for item in topnode:
+                self.italicNodeHandler(item)
         
         
     def divTitleScan(self, fromnode, depth = 0):
