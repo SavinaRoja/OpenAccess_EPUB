@@ -100,8 +100,8 @@ class OPSContent(object):
             sec.tagName = 'div'
         for para in abstract.getElementsByTagName('p'):
             para.tagName = 'big'
-        for italic in abstract.getElementsByTagName('italic'):
-            italic.tagName = 'i'
+        self.italicNodeHandler(abstract)
+        self.boldNodeHandler(abstract)
         
         #Create a node for the Editor
         ped = synop.createElement('p')
@@ -225,8 +225,7 @@ class OPSContent(object):
                 sec.removeAttribute('sec-type')
             except:
                 pass
-        for italic in mainbody.getElementsByTagName('italic'):
-            italic.tagName = 'i' #Universally convert <italic> to <i>
+        self.italicNodeHandler(mainbody)
         
         #Scan through the Document converting the section title nodes to 
         #proper format tags
@@ -491,9 +490,7 @@ class OPSContent(object):
             label = supp_mat.getElementsByTagName('label')[0]
             label.tagName = u'b'
             self.boldNodeHandler(supp_mat)
-            italics = supp_mat.getElementsByTagName('italic')
-            for italic in italics:
-                italic.tagName = u'i'
+            self.italicNodeHandler(supp_mat)
             try:
                 supp_mat.removeAttribute('mimetype')
             except:
@@ -672,18 +669,18 @@ class OPSContent(object):
             for item in topnode:
                 self.boldNodeHandler(item)
                 
-def italicNodeHandler(self, topnode):
-    '''Handles proper conversion of <italic> tags under the provided 
-    topnode. Also handles NodeLists by calling itself on each Node in the 
-    NodeList'''
-    try:
-        italic_nodes = topnode.getElementsByTagName('italic')
-        #In this case, we can just modify them in situ
-        for italic_node in italic_nodes:
-            italic_node.tagName = u'i'
-    except AttributeError:
-        for item in topnode:
-            self.italicNodeHandler(item)
+    def italicNodeHandler(self, topnode):
+        '''Handles proper conversion of <italic> tags under the provided 
+        topnode. Also handles NodeLists by calling itself on each Node in the 
+        NodeList'''
+        try:
+            italic_nodes = topnode.getElementsByTagName('italic')
+            #In this case, we can just modify them in situ
+            for italic_node in italic_nodes:
+                italic_node.tagName = u'i'
+        except AttributeError:
+            for item in topnode:
+                self.italicNodeHandler(item)
         
     def divTitleScan(self, fromnode, depth = 0):
         taglist = ['h2', 'h3', 'h4', 'h5', 'h6']
