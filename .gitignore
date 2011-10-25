@@ -18,6 +18,10 @@ epubcheck.sh
 test_output/*
 *.epub
 
+# Downloaded XML files #
+############
+downloaded_xml_files/*
+
 # Resources #
 ############
 resources/*

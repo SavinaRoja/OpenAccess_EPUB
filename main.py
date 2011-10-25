@@ -45,6 +45,9 @@ def main():
                                         _fetch, _id, _rep)
             open_xml = urllib2.urlopen(access)
             filename = open_xml.headers['Content-Disposition'].split('\"')[1]
+            if not os.path.isdir('downloaded_xml_files'):
+                os.mkdir('downloaded_xml_files')
+            filename = os.path.join('downloaded_xml_files', filename)
             with open(filename, 'wb') as xml_file:
                 xml_file.write(open_xml.read())
             
@@ -67,6 +70,9 @@ def main():
                                         _fetch, _id, _rep)
             open_xml = urllib2.urlopen(access)
             filename = open_xml.headers['Content-Disposition'].split('\"')[1]
+            if not os.path.isdir('downloaded_xml_files'):
+                os.mkdir('downloaded_xml_files')
+            filename = os.path.join('downloaded_xml_files', filename)
             with open(filename, 'wb') as xml_file:
                 xml_file.write(open_xml.read())
             
