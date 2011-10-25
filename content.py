@@ -87,21 +87,22 @@ class OPSContent(object):
         synbody.appendChild(aff_line)
         
         #Create the Abstract
-        abstract = meta.article_meta.abstract
-        abstitle = synop.createElement('h2')
-        abstitle.appendChild(synop.createTextNode('Abstract'))
-        synbody.appendChild(abstitle)
-        synbody.appendChild(abstract)
-        abstract.tagName = 'div'
-        abstract.setAttribute('id', 'abstract')
-        for title in abstract.getElementsByTagName('title'):
-            title.tagName = 'h3'
-        for sec in abstract.getElementsByTagName('sec'):
-            sec.tagName = 'div'
-        for para in abstract.getElementsByTagName('p'):
-            para.tagName = 'big'
-        self.italicNodeHandler(abstract)
-        self.boldNodeHandler(abstract)
+        if meta.article_meta.abstract:
+            abstract = meta.article_meta.abstract
+            abstitle = synop.createElement('h2')
+            abstitle.appendChild(synop.createTextNode('Abstract'))
+            synbody.appendChild(abstitle)
+            synbody.appendChild(abstract)
+            abstract.tagName = 'div'
+            abstract.setAttribute('id', 'abstract')
+            for title in abstract.getElementsByTagName('title'):
+                title.tagName = 'h3'
+            for sec in abstract.getElementsByTagName('sec'):
+                sec.tagName = 'div'
+            for para in abstract.getElementsByTagName('p'):
+                para.tagName = 'big'
+            self.italicNodeHandler(abstract)
+            self.boldNodeHandler(abstract)
         
         #Create a node for the Editor
         ped = synop.createElement('p')
@@ -688,10 +689,13 @@ class OPSContent(object):
             try:
                 if item.tagName == u'div':
                     divtitle = item.getElementsByTagName('title')[0]
-                    divtitle.tagName = taglist[depth]
-                    depth += 1
-                    self.divTitleScan(item, depth)
-                    depth -= 1
+                    if not divtitle.childNodes:
+                        item.removeChild(divtitle)
+                    else:
+                        divtitle.tagName = taglist[depth]
+                        depth += 1
+                        self.divTitleScan(item, depth)
+                        depth -= 1
             except AttributeError:
                 pass
 

@@ -78,7 +78,8 @@ def dc_description(mydoc, parent, artmeta):
     '''Create dc:description node for OPF'''
     from utils import serializeText #Recursively extract only TextNode data
     newchild = mydoc.createElement('dc:description')
-    newchild.appendChild(mydoc.createTextNode(serializeText(artmeta.abstract)))
+    if artmeta.abstract:
+        newchild.appendChild(mydoc.createTextNode(serializeText(artmeta.abstract)))
     parent.appendChild(newchild)
 
 def dc_relation(mydoc, parent, artmeta):
@@ -135,6 +136,6 @@ def generateDCMetadata(mydoc, opfmetanode, artmeta, jrnmeta):
     dc_relation(mydoc, parent, artmeta)
     dc_source(mydoc, parent, artmeta)
     dc_subject(mydoc, parent, artmeta)
-    dc_format(mydoc, parent) # Format is epub, independent of content
+    dc_format(mydoc, parent) # Format is epub, independent of input
     dc_type(mydoc, parent, artmeta)
     dc_language(mydoc, parent)
