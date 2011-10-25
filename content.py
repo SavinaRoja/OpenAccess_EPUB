@@ -535,7 +535,7 @@ class OPSContent(object):
             ext_link.removeAttribute('xlink:type')
             ext_link.setAttribute('href', href)
             
-        self.boldNodeHandler(main_body)
+        self.boldNodeHandler(mainbody)
         
         with open(self.outputs['Main'],'wb') as out:
             out.write(main.toprettyxml(encoding = 'utf-8'))
@@ -661,11 +661,16 @@ class OPSContent(object):
         
     def boldNodeHandler(self, topnode):
         '''Handles proper conversion of <bold> tags under the provided 
-        topnode'''
-        bold_nodes = topnode.getElementsByTagName('bold')
-        #In this case, we can just modify them in situ
-        for bold_node in bold_nodes:
-            bold_node.tagName = u'b'
+        topnode. Also handles NodeLists by calling itself on each Node in the 
+        NodeList'''
+        try:
+            bold_nodes = topnode.getElementsByTagName('bold')
+            #In this case, we can just modify them in situ
+            for bold_node in bold_nodes:
+                bold_node.tagName = u'b'
+        except AttributeError:
+            for item in topnode:
+                self.boldNodeHandler(item)
         
         
     def divTitleScan(self, fromnode, depth = 0):
