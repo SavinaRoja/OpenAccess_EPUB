@@ -1,4 +1,5 @@
 import xml.dom.minidom as minidom
+import xml.dom
 import os, os.path
 import utils
 
@@ -56,14 +57,14 @@ class OPSContent(object):
                     affiliation_index.append(aff)
                 sup = synop.createElement('sup')
                 aref = synop.createElement('a')
-                aref.setAttribute('href', 'synop.xml#{0}'.format(aff))
+                aref.setAttribute('href', u'synop.xml#{0}'.format(aff))
                 aref.appendChild(synop.createTextNode(str(affiliation_index.index(aff) + 1)))
                 sup.appendChild(aref)
                 author_container.appendChild(sup)
             for contact in author.contact:
                 sup = synop.createElement('sup')
                 aref = synop.createElement('a')
-                aref.setAttribute('href', 'synop.xml#{0}'.format(contact))
+                aref.setAttribute('href', u'synop.xml#{0}'.format(contact))
                 #character = con_char[ccnt]
                 #aref.appendChild(synop.createTextNode(character))
                 aref.appendChild(synop.createTextNode('*'))
@@ -219,18 +220,11 @@ class OPSContent(object):
         body = doc.getElementsByTagName('body')[0]
         for item in body.childNodes:
             mainbody.appendChild(item.cloneNode(deep = True))
-            
-        for sec in mainbody.getElementsByTagName('sec'):
-            sec.tagName = 'div' #Universally convert <sec> to <div>
-            try:
-                sec.removeAttribute('sec-type')
-            except:
-                pass
-        self.italicNodeHandler(mainbody)
         
-        #Scan through the Document converting the section title nodes to 
-        #proper format tags
-        self.divTitleScan(mainbody, depth = 0)
+        self.secNodeHandler(mainbody) #Convert <sec> to <div>
+        self.divTitleFormat(mainbody, depth = 0) #Convert <title> to <h2>...
+        self.italicNodeHandler(mainbody) #Convert <italic> to <i>
+        self.boldNodeHandler(mainbody) #Convert <bold> to <b>
         
         #Handle conversion of figures to html image format
         figs = mainbody.getElementsByTagName('fig')
@@ -663,12 +657,15 @@ class OPSContent(object):
         NodeList'''
         try:
             bold_nodes = topnode.getElementsByTagName('bold')
-            #In this case, we can just modify them in situ
-            for bold_node in bold_nodes:
-                bold_node.tagName = u'b'
+            
         except AttributeError:
             for item in topnode:
                 self.boldNodeHandler(item)
+        else:
+            #In this case, we can just modify them in situ
+            for bold_node in bold_nodes:
+                bold_node.tagName = u'b'
+
                 
     def italicNodeHandler(self, topnode):
         '''Handles proper conversion of <italic> tags under the provided 
@@ -676,14 +673,35 @@ class OPSContent(object):
         NodeList'''
         try:
             italic_nodes = topnode.getElementsByTagName('italic')
-            #In this case, we can just modify them in situ
-            for italic_node in italic_nodes:
-                italic_node.tagName = u'i'
         except AttributeError:
             for item in topnode:
                 self.italicNodeHandler(item)
+        else:
+            #In this case, we can just modify them in situ
+            for italic_node in italic_nodes:
+                italic_node.tagName = u'i'
+
+    
+    def secNodeHandler(self, topnode):
+        '''Handles proper conversion of <sec> tags under the provided topnode.
+        Also handles NodeLists by calling itself on each Node in the NodeList. 
+        '''
+        try:
+            sec_nodes = topnode.getElementsByTagName('sec')
+        except AttributeError:
+            for item in topnode:
+                self.secNodeHandler(item)
+        else:
+            #In this case, we can just modify them in situ
+            for sec_node in sec_nodes:
+                sec_node.tagName = u'div'
+                try:
+                    sec_node.removeAttribute('sec-type')
+                except xml.dom.NotFoundErr:
+                    pass
+    
         
-    def divTitleScan(self, fromnode, depth = 0):
+    def divTitleFormat(self, fromnode, depth = 0):
         taglist = ['h2', 'h3', 'h4', 'h5', 'h6']
         for item in fromnode.childNodes:
             try:
