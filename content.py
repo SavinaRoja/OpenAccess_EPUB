@@ -269,8 +269,8 @@ class OPSContent(object):
             parent = item.parentNode
             sibling = item.nextSibling
             table_id = item.getAttribute('id')
-            label = item.getElementsByTagName('label')
-            label_text = utils.getTagData(label)
+            label = item.getElementsByTagName('label')[0]
+            label_text = utils.getText(label)
             title = item.getElementsByTagName('title')
             title_text = utils.getTagData(title)
             #Create a Table Label, includes label and title, place before the image
@@ -400,7 +400,7 @@ class OPSContent(object):
             
             graphic = disp.getElementsByTagName('graphic')[0]
             
-            xlink_href_id = inline_graphic.getAttribute('xlink:href')
+            xlink_href_id = graphic.getAttribute('xlink:href')
             name = xlink_href_id.split('.')[-1]
             img = None
             startpath = os.path.abspath('./') 
@@ -527,6 +527,10 @@ class OPSContent(object):
             ext_link.removeAttribute('xlink:href')
             ext_link.removeAttribute('xlink:type')
             ext_link.setAttribute('href', href)
+            
+        bolds = main.getElementsByTagName('bold')
+        for bold in bolds:
+            bold.tagName = 'b'
         
         with open(self.outputs['Main'],'wb') as out:
             out.write(main.toprettyxml(encoding = 'utf-8'))
