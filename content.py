@@ -314,8 +314,7 @@ class OPSContent(object):
                 html_table = item.getElementsByTagName('table')[0]
                 html_table.removeAttribute('alternate-form-of')
                 html_table.setAttribute('id', 'h{0}'.format(name))
-                for btag in html_table.getElementsByTagName('bold'):
-                    btag.tagName = u'b'
+                self.boldNodeHandler(html_table)
                 table_doc_main.appendChild(html_table)
                 link = main.createElement('a')
                 link.setAttribute('href', 'tables.xml#h{0}'.format(name))
@@ -491,9 +490,7 @@ class OPSContent(object):
             supp_mat.tagName = u'div'
             label = supp_mat.getElementsByTagName('label')[0]
             label.tagName = u'b'
-            bolds = supp_mat.getElementsByTagName('bold')
-            for bold in bolds:
-                bold.tagName = u'b'
+            self.boldNodeHandler(supp_mat)
             italics = supp_mat.getElementsByTagName('italic')
             for italic in italics:
                 italic.tagName = u'i'
@@ -538,9 +535,7 @@ class OPSContent(object):
             ext_link.removeAttribute('xlink:type')
             ext_link.setAttribute('href', href)
             
-        bolds = main.getElementsByTagName('bold')
-        for bold in bolds:
-            bold.tagName = 'b'
+        self.boldNodeHandler(main_body)
         
         with open(self.outputs['Main'],'wb') as out:
             out.write(main.toprettyxml(encoding = 'utf-8'))
@@ -663,6 +658,15 @@ class OPSContent(object):
             else:
                 self.refOther(item, stringlist)
         return u''.join(stringlist)
+        
+    def boldNodeHandler(self, topnode):
+        '''Handles proper conversion of <bold> tags under the provided 
+        topnode'''
+        bold_nodes = topnode.getElementsByTagName('bold')
+        #In this case, we can just modify them in situ
+        for bold_node in bold_nodes:
+            bold_node.tagName = u'b'
+        
         
     def divTitleScan(self, fromnode, depth = 0):
         taglist = ['h2', 'h3', 'h4', 'h5', 'h6']
