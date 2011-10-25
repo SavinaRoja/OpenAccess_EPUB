@@ -1,7 +1,7 @@
 #! /usr/bin/python
 
 
-__version__ = 'indev'
+__version__ = '0.0.1'
 
 #Standard Library Modules
 import argparse

@@ -183,6 +183,16 @@ class OPSContent(object):
         corresp_text = utils.serializeText(art_corr_nodes[0])
         corr_line.appendChild(synop.createTextNode(corresp_text))
         
+        #Handle conversion of ext-link to <a>
+        ext_links = synop.getElementsByTagName('ext-link')
+        for ext_link in ext_links:
+            ext_link.tagName = u'a'
+            ext_link.removeAttribute('ext-link-type')
+            href = ext_link.getAttribute('xlink:href')
+            ext_link.removeAttribute('xlink:href')
+            ext_link.removeAttribute('xlink:type')
+            ext_link.setAttribute('href', href)
+        
         # If they did, this approach might be used
         #for item in art_corresps:
         #    sup = synop.createElement('sup')
