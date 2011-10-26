@@ -9,7 +9,7 @@ def generateHierarchy(dirname):
     os.mkdir(css)
     #Import CSS from resources/
     with open(os.path.join(css, 'article.css'), 'wb') as dest:
-        with open('./resources/text.css', 'rb') as src:
+        with open(os.path.join('resources', 'text.css')) as src:
             dest.write(src.read())
     images = os.path.join(ops, 'images')
     os.mkdir(images)
