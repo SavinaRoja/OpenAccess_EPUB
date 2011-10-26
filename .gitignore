@@ -22,10 +22,6 @@ test_output/*
 ############
 downloaded_xml_files/*
 
-# Resources #
-############
-resources/*
-
 # Eclipse Files #
 ############
 .project
