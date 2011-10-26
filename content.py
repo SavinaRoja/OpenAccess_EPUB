@@ -221,51 +221,13 @@ class OPSContent(object):
         for item in body.childNodes:
             mainbody.appendChild(item.cloneNode(deep = True))
         
+        self.figNodeHandler(mainbody, main) #Convert <fig> to <img>
         self.secNodeHandler(mainbody) #Convert <sec> to <div>
-        self.divTitleFormat(mainbody, depth = 0) #Convert <title> to <h2>...
+        self.divTitleFormat(mainbody, depth = 0) #Convert <title> to <h#>...
         self.italicNodeHandler(mainbody) #Convert <italic> to <i>
         self.boldNodeHandler(mainbody) #Convert <bold> to <b>
         
-        #Handle conversion of figures to html image format
-        figs = mainbody.getElementsByTagName('fig')
-        for item in figs:
-            parent = item.parentNode
-            sibling = item.nextSibling
-            fid = item.getAttribute('id')
-            label_text = utils.getTagData(item.getElementsByTagName('label'))
-            img = None
-            name = fid.split('-')[-1]
-            startpath = os.path.abspath('./') 
-            os.chdir(self.outdir)
-            for path, _subdirs, filenames in os.walk('images'):
-                for filename in filenames:
-                    if os.path.splitext(filename)[0] == name:
-                        img = os.path.join(path, filename)
-            os.chdir(startpath)
-            #Create and insert the img node before the fig node's sibling
-            imgnode = main.createElement('img')
-            imgnode.setAttribute('src', img)
-            imgnode.setAttribute('id', fid)
-            imgnode.setAttribute('alt', 'A Figure')
-            parent.insertBefore(imgnode, sibling)
-            #Convert caption to <div class="caption">...</div>
-            caption = item.getElementsByTagName('caption')[0]
-            caption.tagName = u'div'
-            caption.setAttribute('class', 'caption')
-            bold_label_text = main.createElement('b')
-            bold_label_text.appendChild(main.createTextNode('{0}.'.format(label_text)))
-            caption.insertBefore(bold_label_text, caption.firstChild)
-            for title_tag in caption.getElementsByTagName('title'):
-                title_tag.tagName = u'b'
-            parent.insertBefore(caption, sibling)
-            #prohib_eles = [u'object-id', u'graphic', u'label'] 
-            #for each in item.childNodes:
-                #if not each.nodeType == each.TEXT_NODE:
-                    #if each.tagName not in prohib_eles:
-                        #parent.insertBefore(each.cloneNode(deep = True), sibling)
-                
-            parent.removeChild(item)
-            
+        
         #Handle conversion of <table-wrap> to html image with reference to 
         #external file containing original html table
         table_doc, table_doc_main = self.initiateDocument('HTML Versions of Tables')
@@ -318,29 +280,12 @@ class OPSContent(object):
                 pass
             
             parent.removeChild(item)
-            
+        
         with open(self.outputs['Tables'],'wb') as output:
             output.write(table_doc.toprettyxml(encoding = 'utf-8'))
             
         #Need to intelligently handle conversion of <xref> elements
-        xrefs = mainbody.getElementsByTagName('xref')
-        for elem in xrefs:
-            elem.tagName = u'a' #Convert the tag to <a>
-            ref_type = elem.getAttribute('ref-type')
-            refid = elem.getAttribute('rid')
-            if ref_type == u'bibr':
-                dest = u'biblio.xml#{0}'.format(refid)
-            elif ref_type == u'fig':
-                dest = u'main.xml#{0}'.format(refid)
-            elif ref_type == u'supplementary-material':
-                dest = u'main.xml#{0}'.format(refid)
-            elif ref_type == u'table':
-                dest = u'main.xml#{0}'.format(refid)
-            elif ref_type == 'aff':
-                dest = u'synop.xml#{0}'.format(refid)
-            elem.removeAttribute('ref-type')
-            elem.removeAttribute('rid')
-            elem.setAttribute('href', dest)
+        self.xrefNodeHandler(mainbody)
         
         caps = mainbody.getElementsByTagName('caption')
         for cap in caps:
@@ -650,7 +595,111 @@ class OPSContent(object):
             else:
                 self.refOther(item, stringlist)
         return u''.join(stringlist)
-        
+    
+    def figNodeHandler(self, topnode, doc):
+        '''Handles conversion of <fig> tags under the provided topnode. Also 
+        handles Nodelists by calling itself on each Node in the NodeList.'''
+        try:
+            fig_nodes = topnode.getElementsByTagName('fig')
+        except AttributeError:
+            for item in topnode:
+                self.figNodeHandler(item)
+        else:
+            for fig_node in fig_nodes:
+                #These are in order
+                fig_object_id = fig_node.getElementsByTagName('object-id') #zero or more
+                fig_label = fig_node.getElementsByTagName('label') #zero or one
+                fig_caption = fig_node.getElementsByTagName('caption') #zero or one
+                #Accessibility Elements ; Any combination of
+                fig_alt_text = fig_node.getElementsByTagName('alt-text')
+                fig_long_desc = fig_node.getElementsByTagName('long-desc')
+                #Address Linking Elements ; Any combination of
+                fig_email = fig_node.getElementsByTagName('email')
+                fig_ext_link = fig_node.getElementsByTagName('ext-link')
+                fig_uri = fig_node.getElementsByTagName('uri')
+                #Document location information
+                fig_parent = fig_node.parentNode
+                fig_sibling = fig_node.nextSibling
+                #This should provide the fragment identifier
+                fig_id = fig_node.getAttribute('id')
+                
+                if fig_alt_text: #Extract the alt-text if list non-empty
+                    fig_alt_text_text = utils.getTagData(fig_alt_text)
+                else:
+                    fig_alt_text_text = 'A figure'
+                    
+                if fig_long_desc:
+                    fig_long_desc_text = utils.getTagData(fig_long_desc)
+                else:
+                    fig_long_desc_text = None
+                
+                #In this case, we will create an <img> node to replace <fig>
+                img_node = doc.createElement('img')
+                
+                #The following code block uses the fragment identifier to
+                #locate the correct source file based on PLoS convention
+                name = fig_id.split('-')[-1]
+                startpath = os.getcwd()
+                os.chdir(self.outdir)
+                for path, _subdirs, filenames in os.walk('images'):
+                    for filename in filenames:
+                        if os.path.splitext(filename)[0] == name:
+                            img_src = os.path.join(path, filename)
+                os.chdir(startpath)
+                #Now we can begin to process to output
+                try:
+                    img_node.setAttribute('src', img_src)
+                except NameError:
+                    print('Image source not found')
+                    img_node.setAttribute('src', 'not_found')
+                img_node.setAttribute('id', fig_id)
+                img_node.setAttribute('alt', fig_alt_text_text)
+                #The handling of longdesc is important to accessibility
+                #Due to the current workflow, we will be storing the text of 
+                #longdesc in the optional title attribute of <img>
+                #A more optimal strategy would be to place it in its own text
+                #file, we need to change the generation of the OPF to do this
+                #See http://idpf.org/epub/20/spec/OPS_2.0.1_draft.htm#Section2.3.4
+                if fig_long_desc_text:
+                    img_node.setAttribute('title', fig_long_desc_text)
+                
+                #Replace the fig_node with img_node
+                fig_parent.replaceChild(img_node, fig_node)
+                
+                #Handle the figure caption if it exists
+                if fig_caption:
+                    fig_caption_node = fig_caption[0] #Should only be one if nonzero
+                    #Modify this <caption> in situ to <div class="caption">
+                    fig_caption_node.tagName = u'div'
+                    fig_caption_node.setAttribute('class', 'caption')
+                    if fig_label: #Extract the label text if list non-empty
+                        fig_label_text = utils.getTagData(fig_label)
+                        #Format the text to bold and prepend to caption children
+                        bold_label_text = doc.createElement('b')
+                        bold_label_text.appendChild(doc.createTextNode(fig_label_text))
+                        fig_caption_node.insertBefore(bold_label_text, fig_caption_node.firstChild)
+                        #We want to handle the <title> in our caption/div as a special case
+                        #For this reason, figNodeHandler should be called before divTitleScan
+                        for _title in fig_caption_node.getElementsByTagName('title'):
+                            _title.tagName = u'b'
+                    #Place after the image node
+                    fig_parent.insertBefore(fig_caption_node, fig_sibling)
+                
+                #Handle email
+                for email in fig_email:
+                    email.tagName = 'a'
+                    text = each.getTagData
+                    email.setAttribute('href','mailto:{0}'.format(text))
+                    fig_parent.insertBefore(email, fig_sibling)
+                #ext-links are currently ignored
+                
+                #uris are currently ignored
+                
+                #Fig may contain many more elements which are currently ignored
+                #See http://dtd.nlm.nih.gov/publishing/tag-library/2.0/n-un80.html
+                #For more details on what could be potentially handled
+                
+    
     def boldNodeHandler(self, topnode):
         '''Handles proper conversion of <bold> tags under the provided 
         topnode. Also handles NodeLists by calling itself on each Node in the 
@@ -700,7 +749,35 @@ class OPSContent(object):
                 except xml.dom.NotFoundErr:
                     pass
     
+    def xrefNodeHandler(self, topnode):
+        '''Handles conversion of <xref> tags. These tags are utilized for 
+        internal crossreferencing.'''
         
+        #We need mappings for local files to ref-type attribute values
+        ref_map = {u'bibr': u'biblio.xml#', 
+                   u'fig': u'main.xml#', 
+                   u'supplementary-material': u'main.xml#', 
+                   u'table': u'main.xml#', 
+                   u'aff': u'synop.xml#'}
+        
+        try:
+            xref_nodes = topnode.getElementsByTagName('xref')
+        except AttributeError:
+            for item in topnode:
+                self.xrefNodeHandler(item)
+        else:
+            for xref_node in xref_nodes:
+                xref_node.tagName = u'a' #Convert to <a> tag
+                #Handle the ref-type attribute
+                ref_type = xref_node.getAttribute('ref-type')
+                xref_node.removeAttribute('ref-type')
+                #Handle the rid attribute
+                rid = xref_node.getAttribute('rid')
+                xref_node.removeAttribute('rid')
+                #Set the href attribute
+                href = '{0}{1}'.format(ref_map[ref_type], rid)
+                xref_node.setAttribute('href', href)
+                
     def divTitleFormat(self, fromnode, depth = 0):
         taglist = ['h2', 'h3', 'h4', 'h5', 'h6']
         for item in fromnode.childNodes:
