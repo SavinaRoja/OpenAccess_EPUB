@@ -252,7 +252,7 @@ class OPSContent(object):
             
             name = table_id.split('-')[-1]
             img = None
-            startpath = os.path.abspath('./') 
+            startpath = os.getcwd()
             os.chdir(self.outdir)
             for path, _subdirs, filenames in os.walk('images'):
                 for filename in filenames:
@@ -301,7 +301,7 @@ class OPSContent(object):
             xlink_href_id = inline_graphic.getAttribute('xlink:href')
             name = xlink_href_id.split('.')[-1]
             img = None
-            startpath = os.path.abspath('./') 
+            startpath = os.getcwd()
             os.chdir(self.outdir)
             for path, _subdirs, filenames in os.walk('images'):
                 for filename in filenames:
@@ -351,7 +351,7 @@ class OPSContent(object):
             xlink_href_id = graphic.getAttribute('xlink:href')
             name = xlink_href_id.split('.')[-1]
             img = None
-            startpath = os.path.abspath('./') 
+            startpath = os.getcwd()
             os.chdir(self.outdir)
             for path, _subdirs, filenames in os.walk('images'):
                 for filename in filenames:
