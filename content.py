@@ -280,9 +280,9 @@ class OPSContent(object):
                 pass
             
             parent.removeChild(item)
-        
-        with open(self.outputs['Tables'],'wb') as output:
-            output.write(table_doc.toprettyxml(encoding = 'utf-8'))
+        if tables:
+            with open(self.outputs['Tables'],'wb') as output:
+                output.write(table_doc.toprettyxml(encoding = 'utf-8'))
             
         #Need to intelligently handle conversion of <xref> elements
         self.xrefNodeHandler(mainbody)
@@ -713,7 +713,10 @@ class OPSContent(object):
                 self.tableWrapNodeHandler(item, doc)
         else:
             for tab_wrap in table_wraps:
-                pass
+                #These are in order
+                tab_object_id = tab_wrap.getElementsByTagName('object-id') #zero or more
+                tab_label = tab_wrap.getElementsByTagName('label') #zero or one
+                tab_caption = tab_wrap.getElementsByTagName('caption') #zero or one
             
     
     def boldNodeHandler(self, topnode):

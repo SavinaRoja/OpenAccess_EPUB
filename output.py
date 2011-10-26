@@ -76,6 +76,7 @@ def generateOPF(article, dirname):
                  'text/css', 'ncx': 'application/x-dtbncx+xml'}
     current_dir = os.getcwd()
     os.chdir(dirname)
+    tables = False
     for path, subname, filenames in os.walk('OPS'):
         path = path[4:]
         if filenames:
@@ -87,6 +88,8 @@ def generateOPF(article, dirname):
                     newitem.setAttribute('media-type', mimetypes['ncx'])
                 else:
                     name, ext = os.path.splitext(filename)
+                    if name == 't001':
+                        tables = True
                     ext = ext[1:]
                     newitem = manifest.appendChild(mydoc.createElement('item'))
                     newitem.setAttribute('id', '{0}-{1}'.format(name, ext))
@@ -112,7 +115,8 @@ def generateOPF(article, dirname):
     spine.appendChild(itemref_synop)
     spine.appendChild(itemref_main)
     spine.appendChild(itemref_biblio)
-    spine.appendChild(itemref_tables)
+    if tables:
+        spine.appendChild(itemref_tables)
     
     contentpath = os.path.join(dirname,'OPS','content.opf')
     with open(contentpath, 'w') as output:
