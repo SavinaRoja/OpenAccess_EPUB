@@ -758,7 +758,8 @@ class OPSContent(object):
                    u'fig': u'main.xml#', 
                    u'supplementary-material': u'main.xml#', 
                    u'table': u'main.xml#', 
-                   u'aff': u'synop.xml#'}
+                   u'aff': u'synop.xml#', 
+                   u'sec': u'main.xml#'}
         
         try:
             xref_nodes = topnode.getElementsByTagName('xref')
