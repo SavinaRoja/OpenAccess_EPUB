@@ -683,14 +683,20 @@ class OPSContent(object):
                         for _title in fig_caption_node.getElementsByTagName('title'):
                             _title.tagName = u'b'
                     #Place after the image node
-                    fig_parent.insertBefore(fig_caption_node, fig_sibling)
+                    if fig_sibling:
+                        fig_parent.insertBefore(fig_caption_node, fig_sibling)
+                    else:
+                        fig_parent.appendChild(fig_caption_node)
                 
                 #Handle email
                 for email in fig_email:
                     email.tagName = 'a'
                     text = each.getTagData
                     email.setAttribute('href','mailto:{0}'.format(text))
-                    fig_parent.insertBefore(email, fig_sibling)
+                    if fig_sibling:
+                        fig_parent.insertBefore(email, fig_sibling)
+                    else:
+                        fig_parent.appendChild(email)
                 #ext-links are currently ignored
                 
                 #uris are currently ignored
@@ -717,6 +723,18 @@ class OPSContent(object):
                 tab_object_id = tab_wrap.getElementsByTagName('object-id') #zero or more
                 tab_label = tab_wrap.getElementsByTagName('label') #zero or one
                 tab_caption = tab_wrap.getElementsByTagName('caption') #zero or one
+                #Accessibility Elements ; Any combination of
+                tab_alt_text = tab_wrap.getElementsByTagName('alt-text')
+                tab_long_desc = tab_wrap.getElementsByTagName('long-desc')
+                #Address Linking Elements ; Any combination of
+                tab_email = tab_wrap.getElementsByTagName('email')
+                tab_ext_link = tab_wrap.getElementsByTagName('ext-link')
+                tab_uri = tab_wrap.getElementsByTagName('uri')
+                #Document location information
+                tab_parent = tab_wrap.parentNode
+                tab_sibling = tab_wrap.nextSibling
+                #This should provide the fragment identifier
+                tab_id = tab_wrap.getAttribute('id')
             
     
     def boldNodeHandler(self, topnode):
