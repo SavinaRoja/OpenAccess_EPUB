@@ -62,10 +62,13 @@ def getTagData(node_list):
     node_list -- NodeList returned by getElementsByTagName
     """
     data = u''
-    for node in node_list:
-        if node.firstChild.nodeType == node.TEXT_NODE:
-            data = node.firstChild.data
-    return data
+    try:
+        for node in node_list:
+            if node.firstChild.nodeType == node.TEXT_NODE:
+                data = node.firstChild.data
+        return data
+    except TypeError:
+        getTagData([node_list])
 
 def recursive_zip(zipf, directory, folder = ""):
     '''Recursively traverses the output directory to construct the zipfile'''
