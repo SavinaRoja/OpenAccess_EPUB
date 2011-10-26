@@ -75,7 +75,7 @@ class Article(object):
         import urllib2, logging, os.path
         import output
         
-        print('Downloading Images. This may take some time...')
+        print('Downloading images. This may take some time...')
         
         for (_data, _id) in self.front.article_meta.identifiers:
             if _id == 'doi':
@@ -139,7 +139,8 @@ class Article(object):
                         logging.debug('reached the end of that type')
                         break
                     refnum += 1
-    
+        print('Done downloading images')
+        
     def featureParse(self, doc, fromnode, destnode):
         '''A method that traverses the node, extracting a hierarchy of specific
         tagNames'''
