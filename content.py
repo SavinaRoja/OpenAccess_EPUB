@@ -676,7 +676,7 @@ class OPSContent(object):
                         fig_label_text = utils.getTagData(fig_label)
                         #Format the text to bold and prepend to caption children
                         bold_label_text = doc.createElement('b')
-                        bold_label_text.appendChild(doc.createTextNode(fig_label_text))
+                        bold_label_text.appendChild(doc.createTextNode(fig_label_text + '.'))
                         fig_caption_node.insertBefore(bold_label_text, fig_caption_node.firstChild)
                         #We want to handle the <title> in our caption/div as a special case
                         #For this reason, figNodeHandler should be called before divTitleFormat
@@ -779,20 +779,27 @@ class OPSContent(object):
                 xref_node.setAttribute('href', href)
                 
     def divTitleFormat(self, fromnode, depth = 0):
+        '''A method for converting title tags to heading format tags'''
         taglist = ['h2', 'h3', 'h4', 'h5', 'h6']
         for item in fromnode.childNodes:
             try:
-                if item.tagName == u'div':
-                    divtitle = item.getElementsByTagName('title')[0]
-                    if not divtitle.childNodes:
-                        item.removeChild(divtitle)
-                    else:
-                        divtitle.tagName = taglist[depth]
-                        depth += 1
-                        self.divTitleScan(item, depth)
-                        depth -= 1
+                tag = item.tagName
             except AttributeError:
                 pass
+            else:
+                if item.tagName == u'div':
+                    try:
+                        divtitle = item.getElementsByTagName('title')[0]
+                    except IndexError:
+                        pass
+                    else:
+                        if not divtitle.childNodes:
+                            item.removeChild(divtitle)
+                        else:
+                            divtitle.tagName = taglist[depth]
+                            depth += 1
+                            self.divTitleFormat(item, depth)
+                            depth -= 1
 
     def initiateDocument(self, titlestring):
         '''A method for conveniently initiating a new xml.DOM Document'''
