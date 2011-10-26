@@ -55,7 +55,7 @@ class DateInfo(object):
         monthlist = ['January', 'February', 'March', 'April', 'May', 'June', 
                   'July', 'August', 'September', 'October', 'November', 
                   'December']
-        retstr = '{0} {1}, {2}'.format(monthlist[self.month], self.day,
+        retstr = '{0} {1}, {2}'.format(monthlist[self.month - 1], self.day,
                                        self.year)
         return retstr
     
