@@ -679,7 +679,7 @@ class OPSContent(object):
                         bold_label_text.appendChild(doc.createTextNode(fig_label_text))
                         fig_caption_node.insertBefore(bold_label_text, fig_caption_node.firstChild)
                         #We want to handle the <title> in our caption/div as a special case
-                        #For this reason, figNodeHandler should be called before divTitleScan
+                        #For this reason, figNodeHandler should be called before divTitleFormat
                         for _title in fig_caption_node.getElementsByTagName('title'):
                             _title.tagName = u'b'
                     #Place after the image node
