@@ -603,7 +603,7 @@ class OPSContent(object):
             fig_nodes = topnode.getElementsByTagName('fig')
         except AttributeError:
             for item in topnode:
-                self.figNodeHandler(item)
+                self.figNodeHandler(item, doc)
         else:
             for fig_node in fig_nodes:
                 #These are in order
@@ -699,6 +699,22 @@ class OPSContent(object):
                 #See http://dtd.nlm.nih.gov/publishing/tag-library/2.0/n-un80.html
                 #For more details on what could be potentially handled
                 
+    
+    def tableWrapNodeHandler(self, topnode, doc):
+        '''Handles conversion of <table-wrap> tags under the provided topnode. 
+        Also handles NodeLists by calling itself on each Node in the NodeList. 
+        Must be compliant with the Journal Publishing Tag Set 2.0 and produce 
+        OPS 2.0.1 compliant output. HTML versions of tables will be exported to
+        tables.xml and must be fully HTML compliant'''
+        try:
+            table_wraps = topnode.getElementsByTagName('table-wrap')
+        except AttributeError:
+            for item in topnode:
+                self.tableWrapNodeHandler(item, doc)
+        else:
+            for tab_wrap in table_wraps:
+                pass
+            
     
     def boldNodeHandler(self, topnode):
         '''Handles proper conversion of <bold> tags under the provided 
