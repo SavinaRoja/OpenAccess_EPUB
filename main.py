@@ -103,6 +103,11 @@ def main():
         
     if download and not args.save_xml:
         os.remove(filename)
+    
+    #WARNING: THIS IS A RECURSIVE DELETION FUNCTION
+    #DO NOT CHANGE THIS OR THE CREATION OF OUTDIRECT WITHOUT EXTREME CAUTION
+    #YOU MIGHT DELETE MORE THAN YOU WANT, DO NOT PUSH CHANGES WITHOUT
+    #EXTENSIVE TESTING OR YOU WILL RISK DAMAGING THE FILESYSTEMS OF OTHER USERS
     if args.cleanup:
         for root, dirs, files in os.walk(outdirect, topdown=False):
             for name in files:
