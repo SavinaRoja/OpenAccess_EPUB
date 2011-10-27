@@ -735,6 +735,92 @@ class OPSContent(object):
                 tab_sibling = tab_wrap.nextSibling
                 #This should provide the fragment identifier
                 tab_id = tab_wrap.getAttribute('id')
+                
+                if tab_alt_text: #Extract the alt-text if list non-empty
+                    tab_alt_text_text = utils.getTagData(tab_alt_text)
+                else:
+                    tab_alt_text_text = 'A figure'
+                    
+                if tab_long_desc:
+                    tab_long_desc_text = utils.getTagData(tab_long_desc)
+                else:
+                    tab_long_desc_text = None
+                
+                #In this case, we will create an <img> node to replace <table-wrap>
+                img_node = doc.createElement('img')
+                
+                #The following code block uses the fragment identifier to
+                #locate the correct source file based on PLoS convention
+                name = fig_id.split('-')[-1]
+                startpath = os.getcwd()
+                os.chdir(self.outdir)
+                for path, _subdirs, filenames in os.walk('images'):
+                    for filename in filenames:
+                        if os.path.splitext(filename)[0] == name:
+                            img_src = os.path.join(path, filename)
+                os.chdir(startpath)
+                
+                #Now we can begin to process to output
+                try:
+                    img_node.setAttribute('src', img_src)
+                except NameError:
+                    print('Image source not found')
+                    img_node.setAttribute('src', 'not_found')
+                img_node.setAttribute('id', tab_id)
+                img_node.setAttribute('alt', tab_alt_text_text)
+                #The handling of longdesc is important to accessibility
+                #Due to the current workflow, we will be storing the text of 
+                #longdesc in the optional title attribute of <img>
+                #A more optimal strategy would be to place it in its own text
+                #file, we need to change the generation of the OPF to do this
+                #See http://idpf.org/epub/20/spec/OPS_2.0.1_draft.htm#Section2.3.4
+                if tab_long_desc_text:
+                    img_node.setAttribute('title', tab_long_desc_text)
+                
+                #Replace the fig_node with img_node
+                tab_parent.replaceChild(img_node, tag_wrap)
+                
+                #Handle the figure caption if it exists
+                if tab_caption:
+                    tab_caption_node = tab_caption[0] #Should only be one if nonzero
+                    #Modify this <caption> in situ to <div class="caption">
+                    tab_caption_node.tagName = u'div'
+                    tab_caption_node.setAttribute('class', 'caption')
+                    if tab_label: #Extract the label text if list non-empty
+                        tab_label_text = utils.getTagData(tab_label)
+                        #Format the text to bold and prepend to caption children
+                        bold_label_text = doc.createElement('b')
+                        bold_label_text.appendChild(doc.createTextNode(tab_label_text + '.'))
+                        tab_caption_node.insertBefore(bold_label_text, tab_caption_node.firstChild)
+                        #We want to handle the <title> in our caption/div as a special case
+                        #For this reason, figNodeHandler should be called before divTitleFormat
+                        for _title in tab_caption_node.getElementsByTagName('title'):
+                            _title.tagName = u'b'
+                    #Place after the image node
+                    if tab_sibling:
+                        tab_parent.insertBefore(fig_caption_node, fig_sibling)
+                    else:
+                        tab_parent.appendChild(fig_caption_node)
+                
+                #Handle email
+                for email in tab_email:
+                    email.tagName = 'a'
+                    text = each.getTagData
+                    email.setAttribute('href','mailto:{0}'.format(text))
+                    if tab_sibling:
+                        tab_parent.insertBefore(email, fig_sibling)
+                    else:
+                        tab_parent.appendChild(email)
+                #ext-links are currently ignored
+                
+                #uris are currently ignored
+                
+                #Fig may contain many more elements which are currently ignored
+                #See http://dtd.nlm.nih.gov/publishing/tag-library/2.0/n-un80.html
+                #For more details on what could be potentially handled
+                
+                
+                
             
     
     def boldNodeHandler(self, topnode):
