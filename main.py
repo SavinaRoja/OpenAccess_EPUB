@@ -35,8 +35,8 @@ def main():
     args = parser.parse_args()
     
     if 'http://www' in args.input:
+        download = True
         try:
-            download = True
             address = urlparse.urlparse(args.input)
             _fetch = '/article/fetchObjectAttachment.action?uri='
             _id = address.path.split('/')[2]
@@ -44,6 +44,11 @@ def main():
             access = '{0}://{1}{2}{3}{4}'.format(address.scheme, address.netloc, 
                                         _fetch, _id, _rep)
             open_xml = urllib2.urlopen(access)
+        except:
+            print('Invalid Link: Enter a corrected link or use local file')
+            sys.exit()
+        
+        else:
             filename = open_xml.headers['Content-Disposition'].split('\"')[1]
             if not os.path.isdir('downloaded_xml_files'):
                 os.mkdir('downloaded_xml_files')
@@ -53,13 +58,11 @@ def main():
             
             document = Article(filename)
             
-        except:
-            print('Invalid Link: Enter a corrected link or use local file')
-            sys.exit()
+        
     
     elif args.input[:4] == 'doi:':
+        download = True
         try:
-            download = True
             doi_url = 'http://dx.doi.org/' + args.input[4:]
             page = urllib2.urlopen(doi_url)
             address = urlparse.urlparse(page.geturl())
@@ -69,6 +72,14 @@ def main():
             access = '{0}://{1}{2}{3}{4}'.format(address.scheme, address.netloc, 
                                         _fetch, _id, _rep)
             open_xml = urllib2.urlopen(access)
+            
+        except:
+            print('Invalid DOI Link: Make sure that the address and format are correct')
+            print('A valid entry looks like: \"doi:10.1371/journal.pcbi.1002222\"')
+            sys.exit()
+            
+        
+        else:
             filename = open_xml.headers['Content-Disposition'].split('\"')[1]
             if not os.path.isdir('downloaded_xml_files'):
                 os.mkdir('downloaded_xml_files')
@@ -77,10 +88,8 @@ def main():
                 xml_file.write(open_xml.read())
             
             document = Article(filename)
-        except:
-            print('Invalid DOI Link: Make sure that the address and format are correct')
-            print('A valid entry looks like: \"doi:10.1371/journal.pcbi.1002222\"')
-            sys.exit()
+        
+        
     else:
         download = False
         filename = args.input
