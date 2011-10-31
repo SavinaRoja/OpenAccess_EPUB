@@ -58,10 +58,11 @@ def getTagText(node):
     except AttributeError:
         getTagText(node[0])
     else:
-        for child in children:
-            if child.nodeType == child.TEXT_NODE and not child.data == u'\n':
-                data = child.data
-        return data
+        if children:
+            for child in children:
+                if child.nodeType == child.TEXT_NODE and not child.data == u'\n':
+                    data = child.data
+            return data
     
 def getTagData(node_list):
     """Grab the (string) data from text elements
