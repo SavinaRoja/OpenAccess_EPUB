@@ -222,67 +222,19 @@ class OPSContent(object):
             mainbody.appendChild(item.cloneNode(deep = True))
         
         self.figNodeHandler(mainbody, main) #Convert <fig> to <img>
+        
+        tab_doc, tab_docbody = self.initiateDocument('HTML Versions of Tables')
+        self.tableWrapNodeHandler(mainbody, main, tab_docbody) #Convert <table-wrap>
+        
         self.secNodeHandler(mainbody) #Convert <sec> to <div>
         self.divTitleFormat(mainbody, depth = 0) #Convert <title> to <h#>...
         self.italicNodeHandler(mainbody) #Convert <italic> to <i>
         self.boldNodeHandler(mainbody) #Convert <bold> to <b>
         
         
-        #Handle conversion of <table-wrap> to html image with reference to 
-        #external file containing original html table
-        table_doc, table_doc_main = self.initiateDocument('HTML Versions of Tables')
-        tables = mainbody.getElementsByTagName('table-wrap')
-        for item in tables:
-            parent = item.parentNode
-            sibling = item.nextSibling
-            table_id = item.getAttribute('id')
-            label = item.getElementsByTagName('label')[0]
-            label_text = utils.getText(label)
-            title = item.getElementsByTagName('title')
-            title_text = utils.getTagData(title)
-            #Create a Table Label, includes label and title, place before the image
-            table_label = main.createElement('div')
-            table_label.setAttribute('class', 'table_label')
-            table_label.setAttribute('id', table_id)
-            table_label_b = main.createElement('b')
-            table_label_b.appendChild(main.createTextNode(label_text))
-            table_label.appendChild(table_label_b)
-            table_label.appendChild(main.createTextNode(title_text))
-            parent.insertBefore(table_label, sibling)
-            
-            name = table_id.split('-')[-1]
-            img = None
-            startpath = os.getcwd()
-            os.chdir(self.outdir)
-            for path, _subdirs, filenames in os.walk('images'):
-                for filename in filenames:
-                    if os.path.splitext(filename)[0] == name:
-                        img = os.path.join(path, filename)
-            os.chdir(startpath)
-            #Create and insert the img node before the table-wrap node's sibling
-            imgnode = main.createElement('img')
-            imgnode.setAttribute('src', img)
-            imgnode.setAttribute('alt', 'A Table')
-            parent.insertBefore(imgnode, sibling)
-            
-            #Handle the HTML version of the table
-            try:
-                html_table = item.getElementsByTagName('table')[0]
-                html_table.removeAttribute('alternate-form-of')
-                html_table.setAttribute('id', 'h{0}'.format(name))
-                self.boldNodeHandler(html_table)
-                table_doc_main.appendChild(html_table)
-                link = main.createElement('a')
-                link.setAttribute('href', 'tables.xml#h{0}'.format(name))
-                link.appendChild(main.createTextNode('HTML version of {0}'.format(label_text)))
-                parent.insertBefore(link , sibling)
-            except:
-                pass
-            
-            parent.removeChild(item)
-        if tables:
+        if tab_docbody.getElementsByTagName('table'):
             with open(self.outputs['Tables'],'wb') as output:
-                output.write(table_doc.toprettyxml(encoding = 'utf-8'))
+                output.write(tab_doc.toprettyxml(encoding = 'utf-8'))
             
         #Need to intelligently handle conversion of <xref> elements
         self.xrefNodeHandler(mainbody)
@@ -706,7 +658,7 @@ class OPSContent(object):
                 #For more details on what could be potentially handled
                 
     
-    def tableWrapNodeHandler(self, topnode, doc):
+    def tableWrapNodeHandler(self, topnode, doc, tabdoc):
         '''Handles conversion of <table-wrap> tags under the provided topnode. 
         Also handles NodeLists by calling itself on each Node in the NodeList. 
         Must be compliant with the Journal Publishing Tag Set 2.0 and produce 
@@ -751,7 +703,7 @@ class OPSContent(object):
                 
                 #The following code block uses the fragment identifier to
                 #locate the correct source file based on PLoS convention
-                name = fig_id.split('-')[-1]
+                name = tab_id.split('-')[-1]
                 startpath = os.getcwd()
                 os.chdir(self.outdir)
                 for path, _subdirs, filenames in os.walk('images'):
@@ -766,7 +718,6 @@ class OPSContent(object):
                 except NameError:
                     print('Image source not found')
                     img_node.setAttribute('src', 'not_found')
-                img_node.setAttribute('id', tab_id)
                 img_node.setAttribute('alt', tab_alt_text_text)
                 #The handling of longdesc is important to accessibility
                 #Due to the current workflow, we will be storing the text of 
@@ -777,30 +728,30 @@ class OPSContent(object):
                 if tab_long_desc_text:
                     img_node.setAttribute('title', tab_long_desc_text)
                 
-                #Replace the fig_node with img_node
-                tab_parent.replaceChild(img_node, tag_wrap)
+                #Replace the tab_wrap_node with img_node
+                tab_parent.replaceChild(img_node, tab_wrap)
                 
-                #Handle the figure caption if it exists
+                #Handle the table caption if it exists
                 if tab_caption:
-                    tab_caption_node = tab_caption[0] #Should only be one if nonzero
-                    #Modify this <caption> in situ to <div class="caption">
-                    tab_caption_node.tagName = u'div'
-                    tab_caption_node.setAttribute('class', 'caption')
-                    if tab_label: #Extract the label text if list non-empty
-                        tab_label_text = utils.getTagData(tab_label)
-                        #Format the text to bold and prepend to caption children
-                        bold_label_text = doc.createElement('b')
-                        bold_label_text.appendChild(doc.createTextNode(tab_label_text + '.'))
-                        tab_caption_node.insertBefore(bold_label_text, tab_caption_node.firstChild)
-                        #We want to handle the <title> in our caption/div as a special case
-                        #For this reason, figNodeHandler should be called before divTitleFormat
-                        for _title in tab_caption_node.getElementsByTagName('title'):
-                            _title.tagName = u'b'
-                    #Place after the image node
-                    if tab_sibling:
-                        tab_parent.insertBefore(fig_caption_node, fig_sibling)
-                    else:
-                        tab_parent.appendChild(fig_caption_node)
+                    tab_caption_node = tab_caption[0] #There should only be one
+                    tab_caption_title = tab_caption_node.getElementsByTagName('title')
+                    if tab_caption_title:
+                        tab_caption_title_node = tab_caption_title[0]
+                
+                #Create a Table header, includes label and title, place before the image
+                tab_header = doc.createElement('div')
+                tab_header.setAttribute('class', 'table_header')
+                tab_header.setAttribute('id', tab_id)
+                if tab_label:
+                    tab_header_b = doc.createElement('b')
+                    for item in tab_label[0].childNodes:
+                        tab_header_b.appendChild(item.cloneNode(deep = True))
+                    tab_header_b.appendChild(doc.createTextNode(u'. '))
+                    tab_header.appendChild(tab_header_b)
+                if tab_caption_title_node:
+                    for item in tab_caption_title_node.childNodes:
+                        tab_header.appendChild(item.cloneNode(deep = True))
+                tab_parent.insertBefore(tab_header, img_node)
                 
                 #Handle email
                 for email in tab_email:
@@ -808,9 +759,92 @@ class OPSContent(object):
                     text = each.getTagData
                     email.setAttribute('href','mailto:{0}'.format(text))
                     if tab_sibling:
-                        tab_parent.insertBefore(email, fig_sibling)
+                        tab_parent.insertBefore(email, tab_sibling)
                     else:
                         tab_parent.appendChild(email)
+                
+                #Handle <table>s: This is an XHTML Table Model (less the <caption>)
+                #These text format tables are useful alternatives to the 
+                #rasterized images in terms of accessibility and machine-
+                #readability. This element should be preserved and placed in
+                #tables.xml
+                tables = tab_wrap.getElementsByTagName('table')
+                tab_first = True
+                for table in tables:
+                    try:
+                        table.removeAttribute('alternate-form-of')
+                    except xml.dom.NotFoundErr:
+                        pass
+                    if tab_first:
+                        table.setAttribute('id', 'h{0}'.format(name))
+                    #Unfortunately, this XHTML Table Model is allowed to have
+                    #unorthodox elements... the fooNodeHandler methods may be necessary
+                    self.boldNodeHandler(table)
+                    self.xrefNodeHandler(table)
+                    self.italicNodeHandler(table)
+                    
+                    #Add the table to the table document
+                    tabdoc.appendChild(table)
+                
+                #Create a link to the HTML table version
+                h_link = doc.createElement('a')
+                h_link.setAttribute('href', 'tables.xml#h{0}'.format(name))
+                h_link.appendChild(doc.createTextNode('HTML version of this table'))
+                
+                
+                tab_parent.insertBefore(h_link, tab_sibling)
+                
+                #Handle <table-wrap-foot>
+                #Because the contents of this element are presented by PLoS in 
+                #the rasterized image, it makes little sense to include it in 
+                #the text itself, instead we will append it to tables.xml
+                tab_wrap_foots = tab_wrap.getElementsByTagName('table-wrap-foot')
+                for tab_foot in tab_wrap_foots:
+                    foot_div = doc.createElement('div')
+                    foot_div.setAttribute('class', 'footnotes')
+                    for child in tab_foot.childNodes:
+                        foot_div.appendChild(child.cloneNode(deep = True))
+                    for fn in foot_div.getElementsByTagName('fn'):
+                        fn.tagName = 'div'
+                        try:
+                            fn.removeAttribute('symbol')
+                        except xml.dom.NotFoundErr:
+                            pass
+                        try:
+                            fn.removeAttribute('xml:lang')
+                        except xml.dom.NotFoundErr:
+                            pass
+                        fn_type = fn.getAttribute('fn-type')
+                        try:
+                            fn.removeAttribute('fn-type')
+                        except xml.dom.NotFoundErr:
+                            pass
+                        for label in foot_div.getElementsByTagName('label'):
+                            if utils.getTagText(label):
+                                label.tagName = u'b'
+                            else:
+                                label_parent = label.parentNode
+                                label_parent.removeChild(label)
+                        for title in foot_div.getElementsByTagName('title'):
+                            title.tagName = u'b'
+                        for cps in foot_div.getElementsByTagName('copyright-statement'):
+                            cps.tagName = u'p'
+                        for attr in foot_div.getElementsByTagName('attrib'):
+                            attr.tagName = u'p'
+                        
+                        self.boldNodeHandler(foot_div)
+                        self.xrefNodeHandler(foot_div)
+                        self.italicNodeHandler(foot_div)
+                        
+                        tabdoc.appendChild(foot_div)
+                        
+                #Place a link in the table document that directs back to the main
+                m_link = doc.createElement('a')
+                m_link.setAttribute('href', 'main.xml#{0}'.format(tab_id))
+                m_link.appendChild(doc.createTextNode('Back to the text'))
+                m_link_p = doc.createElement('p')
+                m_link_p.appendChild(m_link)
+                tabdoc.appendChild(m_link_p)
                 #ext-links are currently ignored
                 
                 #uris are currently ignored
@@ -882,7 +916,8 @@ class OPSContent(object):
                    u'supplementary-material': u'main.xml#', 
                    u'table': u'main.xml#', 
                    u'aff': u'synop.xml#', 
-                   u'sec': u'main.xml#'}
+                   u'sec': u'main.xml#', 
+                   u'table-fn': u'tables.xml#'}
         
         try:
             xref_nodes = topnode.getElementsByTagName('xref')
