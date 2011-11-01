@@ -53,7 +53,7 @@ def getTagText(node):
     '''Grab the text data from a Node. If it is provided a NodeList, it will 
     return the text data from the first contained Node.'''
     data = u''
-    try :
+    try:
         children = node.childNodes
     except AttributeError:
         getTagText(node[0])
@@ -63,7 +63,31 @@ def getTagText(node):
                 if child.nodeType == child.TEXT_NODE and not child.data == u'\n':
                     data = child.data
             return data
+
+def getFormattedNode(node):
+    '''This method is called on a Node whose children may include emphasis 
+    elements. The contained emphasis elements will be converted to ePub-safe
+    emphasis elements. Non-emphasis elements will be untouched.'''
     
+    #Some of these elements are to be supported through CSS
+    emphasis_elements = [u'bold', u'italic', u'monospace', u'overline', 
+                         u'sc', u'strike', u'underline']
+    spans = {u'monospace': u'monospace', u'overline': u'overline', 
+             u'sc': u'small-caps', u'strike': u'line-through', 
+             u'underline': u'underline'}
+    
+    clone = node.cloneNode(deep = True)
+    for element in emphasis_elements:
+        for item in clone.getElementsByTagName(element):
+            if item.tagName == u'bold':
+                item.tagName = u'b'
+            elif item.tagName == u'italic':
+                item.tagName = u'i'
+            elif item in spans:
+                item.tagName = u'span'
+                item.setAttribute('style', spans[item])
+    return clone
+
 def getTagData(node_list):
     """Grab the (string) data from text elements
     node_list -- NodeList returned by getElementsByTagName
