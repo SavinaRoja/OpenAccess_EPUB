@@ -13,8 +13,10 @@ def dc_identifier(mydoc, parent, artmeta):
 
 def dc_title(mydoc, parent, artmeta):
     '''Create dc:title node for OPF'''
+    from utils import serializeText
     newchild = mydoc.createElement('dc:title')
-    newchild.appendChild(mydoc.createTextNode(artmeta.title))
+    title_text = serializeText(artmeta.title, stringlist = [])
+    newchild.appendChild(mydoc.createTextNode(title_text))
     parent.appendChild(newchild)
 
 def dc_rights(mydoc, parent, artmeta):

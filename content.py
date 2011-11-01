@@ -31,7 +31,9 @@ class OPSContent(object):
         #Create and place the title in the body element
         art_title = meta.article_meta.title
         titlenode = synop.createElement('h1')
-        titlenode.appendChild(synop.createTextNode(art_title))
+        titlenode.childNodes = art_title.childNodes
+        #for item in art_title.childNodes:
+        #    titlenode.appendChild(item.cloneNode(deep = True))
         synbody.appendChild(titlenode)
         
         affiliation_index = []

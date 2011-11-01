@@ -1,6 +1,7 @@
 """Handles metadata related tasks for the article"""
 import logging
 from utils import getTagData
+from utils import getFormattedNode
 
 class FrontMatter(object):
     """Article metadata"""
@@ -93,7 +94,7 @@ class ArticleMeta(object):
         # title and alternate title
         title_grps = node.getElementsByTagName('title-group')
         for title_grp in title_grps:
-            self.title = getTagData(title_grp.getElementsByTagName('article-title'))
+            self.title = getFormattedNode(title_grp.getElementsByTagName('article-title')[0])
             self.alt_title = getTagData(title_grp.getElementsByTagName('alt-title'))
             self.trans_title = getTagData(title_grp.getElementsByTagName('trans-title'))
             self.subtitle = getTagData(title_grp.getElementsByTagName('subtitle'))
