@@ -102,6 +102,7 @@ def main():
     else:
         outdirect = document.titlestring()
         
+    print('Processing output to {0}.epub'.format(outdirect))
     output.generateHierarchy(outdirect)
     document.fetchImages(dirname = outdirect)
     content.OPSContent(filename, outdirect, document.front, 
