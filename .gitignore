@@ -12,6 +12,7 @@
 # Epubcheck #
 ############
 epubcheck.sh
+batchtest.sh
 
 # Test Output #
 ############
