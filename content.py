@@ -211,6 +211,8 @@ class OPSContent(object):
         #        corr_line.appendChild(add)
         synbody.appendChild(corr_line)
         
+        self.postNodeHandling(synbody, synop)
+        
         with open(self.outputs['Synopsis'],'wb') as out:
             out.write(synop.toprettyxml(encoding = 'utf-8'))
 
@@ -220,27 +222,29 @@ class OPSContent(object):
         main, mainbody = self.initiateDocument('Main file')
         
         body = doc.getElementsByTagName('body')[0]
+        
+        #Here we copy the entirety of the body element over to our main document
         for item in body.childNodes:
             mainbody.appendChild(item.cloneNode(deep = True))
         
+        #Process figures
         self.figNodeHandler(mainbody, main) #Convert <fig> to <img>
         
+        #Process tables
         tab_doc, tab_docbody = self.initiateDocument('HTML Versions of Tables')
         self.tableWrapNodeHandler(mainbody, main, tab_docbody) #Convert <table-wrap>
+        self.postNodeHandling(tab_docbody, tab_doc)
         
-        self.secNodeHandler(mainbody) #Convert <sec> to <div>
+        #General processing
+        self.postNodeHandling(mainbody, main, ignorelist = [])
+        #Conversion of existing <div><title/></div> to <div><h#/></div>
         self.divTitleFormat(mainbody, depth = 0) #Convert <title> to <h#>...
-        self.italicNodeHandler(mainbody) #Convert <italic> to <i>
-        self.boldNodeHandler(mainbody) #Convert <bold> to <b>
-        self.underlineNodeHandler(mainbody)
         
-        
+        #If any tables were in the article, make the tablss.xml
         if tab_docbody.getElementsByTagName('table'):
             with open(self.outputs['Tables'],'wb') as output:
                 output.write(tab_doc.toprettyxml(encoding = 'utf-8'))
             
-        #Need to intelligently handle conversion of <xref> elements
-        self.xrefNodeHandler(mainbody)
         
         caps = mainbody.getElementsByTagName('caption')
         for cap in caps:
@@ -452,6 +456,8 @@ class OPSContent(object):
         #        if not item.tagName == u'fn-group':bold
         #            bibbody.appendChild(item.cloneNode(deep = True))
         
+        #The biblio is currently entirely rendered instead of copied, as such
+        #it has no need of postNodeHandling()
         
         with open(self.outputs['Biblio'],'wb') as out:
             out.write(biblio.toprettyxml(encoding = 'utf-8'))
@@ -550,6 +556,24 @@ class OPSContent(object):
             else:
                 self.refOther(item, stringlist)
         return u''.join(stringlist)
+    
+    def postNodeHandling(self, topnode, doc, ignorelist = []):
+        '''A wrapper function for all of the node handlers. Conceptually,
+        this function should be called after special cases have been handled 
+        such as in figures, tables, and references. This function provides 
+        simple access to the entire cohort of default nodeHandlers which may 
+        be utilized after special cases have been handled. Passing a list of 
+        string tagNames allows those tags to be ignored'''
+        handlers = {'bold': self.boldNodeHandler(topnode), 
+                    'italic': self.italicNodeHandler(topnode), 
+                    'underline': self.underlineNodeHandler(topnode), 
+                    'xref': self.xrefNodeHandler(topnode), 
+                    'sec': self.secNodeHandler(topnode), 
+                    'named-content': self.namedContentNodeHandler(topnode)}
+        
+        for tagname in handlers:
+            if tagname not in ignorelist:
+                handlers[tagname]
     
     def figNodeHandler(self, topnode, doc):
         '''Handles conversion of <fig> tags under the provided topnode. Also 
@@ -905,7 +929,78 @@ class OPSContent(object):
             for underline_node in underline_nodes:
                 underline_node.tagName = u'span'
                 underline_node.setAttribute('style', 'text-decoration:underline')
-
+    
+    def namedContentNodeHandler(self, topnode):
+        '''Handles the <named-content> tag. This method needs development to 
+        fit PLoS practice. Handles NodeLists by calling itself on each Node in 
+        the NodeList'''
+        
+        #The content-type attribute can be used to identify the subject or type 
+        #of content that makes this word or phrase semantically special and, 
+        #therefore, to be treated differently. For example, this attribute 
+        #could be used to identify a drug name, company name, or product name. 
+        #It could be used to define systematics terms, such as genus, family, 
+        #order, or suborder. It could also be used to identify biological 
+        #components, such as gene, protein, or peptide. It could be used to 
+        #name body systems, such as circulatory or skeletal. Therefore, values 
+        #may include information classes, semantic categories, or types of 
+        #nouns such as "generic-drug-name", "genus-species", "gene", "peptide", 
+        #"product", etc.
+        
+        try:
+            namedcontent_nodes = topnode.getElementsByTagName('named-content')
+        except AttributeError:
+            for item in topnode:
+                self.namedContentNodeHandler(item)
+        else:
+            #In this case, we modify them in situ
+            for nc_node in namedcontent_nodes:
+                nc_content_type = nc_node.getAttribute('content-type')
+                try:
+                    nc_node.removeAttribute('content-type')
+                except xml.dom.NotFoundErr:
+                    pass
+                nc_id = nc_node.getAttribute('id')
+                nc_xlink_actuate = nc_node.getAttribute('xlink:actuate')
+                try:
+                    nc_node.removeAttribute('xlink:actuate')
+                except xml.dom.NotFoundErr:
+                    pass
+                nc_xlink_href = nc_node.getAttribute('xlink:href')
+                try:
+                    nc_node.removeAttribute('xlink:href')
+                except xml.dom.NotFoundErr:
+                    pass
+                nc_xlink_role = nc_node.getAttribute('xlink:role')
+                try:
+                    nc_node.removeAttribute('xlink:role')
+                except xml.dom.NotFoundErr:
+                    pass
+                nc_xlink_show = nc_node.getAttribute('xlink:show')
+                try:
+                    nc_node.removeAttribute('xlink:show')
+                except xml.dom.NotFoundErr:
+                    pass
+                nc_xlink_title = nc_node.getAttribute('xlink:title')
+                try:
+                    nc_node.removeAttribute('xlink:title')
+                except xml.dom.NotFoundErr:
+                    pass
+                nc_xlink_type = nc_node.getAttribute('xlink:type')
+                try:
+                    nc_node.removeAttribute('xlink:type')
+                except xml.dom.NotFoundErr:
+                    pass
+                nc_xmlns_xlink = nc_node.getAttribute('xmlns:xlink')
+                try:
+                    nc_node.removeAttribute('xmlns:xlink')
+                except xml.dom.NotFoundErr:
+                    pass
+                
+                #Current approach: convert to <span style="content-type">
+                nc_node.tagName = u'span'
+                nc_node.setAttribute('style', nc_content_type)
+        
     
     def secNodeHandler(self, topnode):
         '''Handles proper conversion of <sec> tags under the provided topnode.
