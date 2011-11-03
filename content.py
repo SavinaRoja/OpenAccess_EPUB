@@ -232,6 +232,7 @@ class OPSContent(object):
         self.divTitleFormat(mainbody, depth = 0) #Convert <title> to <h#>...
         self.italicNodeHandler(mainbody) #Convert <italic> to <i>
         self.boldNodeHandler(mainbody) #Convert <bold> to <b>
+        self.underlineNodeHandler(mainbody)
         
         
         if tab_docbody.getElementsByTagName('table'):
@@ -737,6 +738,7 @@ class OPSContent(object):
                 if tab_caption:
                     tab_caption_node = tab_caption[0] #There should only be one
                     tab_caption_title = tab_caption_node.getElementsByTagName('title')
+                    tab_caption_title_node = None
                     if tab_caption_title:
                         tab_caption_title_node = tab_caption_title[0]
                 
@@ -888,6 +890,21 @@ class OPSContent(object):
             #In this case, we can just modify them in situ
             for italic_node in italic_nodes:
                 italic_node.tagName = u'i'
+    
+    def underlineNodeHandler(self, topnode):
+        '''Handles proper conversion of <underline> tags under the provided 
+        topnode. Also handles NodeLists by calling itself on each Node in the 
+        NodeList'''
+        try:
+            underline_nodes = topnode.getElementsByTagName('underline')
+        except AttributeError:
+            for item in topnode:
+                self.underlineNodeHandler(item)
+        else:
+            #In this case, we can just modify them in situ
+            for underline_node in underline_nodes:
+                underline_node.tagName = u'span'
+                underline_node.setAttribute('style', 'text-decoration:underline')
 
     
     def secNodeHandler(self, topnode):
