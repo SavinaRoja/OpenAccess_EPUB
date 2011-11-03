@@ -72,9 +72,11 @@ def getFormattedNode(node):
     #Some of these elements are to be supported through CSS
     emphasis_elements = [u'bold', u'italic', u'monospace', u'overline', 
                          u'sc', u'strike', u'underline']
-    spans = {u'monospace': u'monospace', u'overline': u'overline', 
-             u'sc': u'small-caps', u'strike': u'line-through', 
-             u'underline': u'underline'}
+    spans = {u'monospace': u'font-family:monospace', 
+             u'overline': u'text-decoration:overline', 
+             u'sc': u'font-variant:small-caps', 
+             u'strike': u'text-decoration:line-through', 
+             u'underline': u'text-decoration:underline'}
     
     clone = node.cloneNode(deep = True)
     for element in emphasis_elements:
