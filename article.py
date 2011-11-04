@@ -66,6 +66,7 @@ class Article(object):
         titlestring = u'{0}_{1}{2}'.format(self.front.journal_meta.identifier['pmc'],
                                            self.front.article_meta.art_auths[0].surname,
                                            self.front.article_meta.art_dates['collection'].year)
+        titlestring = titlestring.replace(u' ', u'-')
         
         return titlestring
         
@@ -123,21 +124,26 @@ class Article(object):
                                               journalid, articledoi, itype,
                                               str(refnum).zfill(3))
                     
+                    if itype == 'e':
+                        address = address[:-2]
+                        
                     try:
-                        if itype == 'e':
-                            address = address[0:-2]
                         image = urllib2.urlopen(address)
+                        
+                    except urllib2.HTTPError, e:
+                        if not e.code == 500:
+                            logging.error('urllib2.HTTPError {0}'.format(e.code))
+                        break
+                        
+                    else:
                         filename = '{0}{1}.png'.format(itype, str(refnum).zfill(3))
                         image_file = os.path.join(dirname, 'OPS', 'images',
                                                   subdirect, filename)
                         with open(image_file, 'wb') as outimage:
                             outimage.write(image.read())
-                        print('Downloaded image {0}{1}'.format( itype, 
-                                                                str(refnum).zfill(3)))
-                    
-                    except urllib2.HTTPError:
-                        logging.debug('reached the end of that type')
-                        break
+                        print('Downloaded image {0}{1}'.format(itype, 
+                                                               str(refnum).zfill(3)))
+                        
                     refnum += 1
         print('Done downloading images')
         
