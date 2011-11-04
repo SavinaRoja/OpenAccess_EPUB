@@ -9,6 +9,7 @@ import sys
 import os.path
 import urllib2
 import urlparse
+import logging
 
 #OpenAccess_EPUB Modules
 import metadata
@@ -33,6 +34,9 @@ def main():
                         help = 'Use this flag to automatically delete the output directory upon completion')
     
     args = parser.parse_args()
+    
+    logging.basicConfig(filename='logging.log',level=logging.DEBUG)
+    logging.info('OpenAccess_EPUB Log')
     
     if 'http://www' in args.input:
         download = True
@@ -126,6 +130,7 @@ def main():
                 os.rmdir(os.path.join(root, name))
         os.rmdir(outdirect)
         
+    logging.info('Finished')
     
 if __name__ == '__main__':
     main()
