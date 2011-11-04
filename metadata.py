@@ -56,7 +56,7 @@ class ArticleMeta(object):
         self.copyright = None
         
         self.history = {}
-        self.abstract = None
+        self.abstracts = {}
         self.summary = None
         self.art_auths = [] # A list of authors.
         self.art_edits = [] # A list of editors.
@@ -104,16 +104,13 @@ class ArticleMeta(object):
         
         self.volume = getTagData(node.getElementsByTagName('volume'))
         
-        # Abstract nodes become attributes
-        abstracts = node.getElementsByTagName('abstract')
-        for entry in abstracts:
-            if not entry.hasAttributes():
-                self.abstract = entry
+        # Abstract nodes
+        for abstract in node.getElementsByTagName('abstract'):
+            type = abstract.getAttribute('abstract-type')
+            if type:
+                self.abstracts[type] = abstract
             else:
-                if entry.getAttribute('abstract-type') == 'summary':
-                    self.summary = entry
-                else:
-                    print('unknown abstract type')
+                self.abstracts['default'] = abstract
         
         # Article categories
         tmp = node.getElementsByTagName('article-categories')[0]
