@@ -90,8 +90,11 @@ class OPSContent(object):
         synbody.appendChild(aff_line)
         
         #Create the Abstract
-        if meta.article_meta.abstract:
-            abstract = meta.article_meta.abstract
+        try:
+            abstract = meta.article_meta.abstracts['default']
+        except KeyError:
+            pass
+        else:
             abstitle = synop.createElement('h2')
             abstitle.appendChild(synop.createTextNode('Abstract'))
             synbody.appendChild(abstitle)
@@ -104,8 +107,7 @@ class OPSContent(object):
                 sec.tagName = 'div'
             for para in abstract.getElementsByTagName('p'):
                 para.tagName = 'big'
-            self.italicNodeHandler(abstract)
-            self.boldNodeHandler(abstract)
+            self.postNodeHandling(abstract, synop)
         
         #Create a node for the Editor
         ped = synop.createElement('p')
