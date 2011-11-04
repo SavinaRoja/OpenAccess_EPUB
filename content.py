@@ -240,7 +240,7 @@ class OPSContent(object):
         #Conversion of existing <div><title/></div> to <div><h#/></div>
         self.divTitleFormat(mainbody, depth = 0) #Convert <title> to <h#>...
         
-        #If any tables were in the article, make the tablss.xml
+        #If any tables were in the article, make the tables.xml
         if tab_docbody.getElementsByTagName('table'):
             with open(self.outputs['Tables'],'wb') as output:
                 output.write(tab_doc.toprettyxml(encoding = 'utf-8'))
@@ -249,31 +249,6 @@ class OPSContent(object):
         caps = mainbody.getElementsByTagName('caption')
         for cap in caps:
             cap.tagName = u'div'
-        
-        #Handle the display of inline equations
-        inline_equations = mainbody.getElementsByTagName('inline-formula')
-        for each in inline_equations:
-            parent = each.parentNode
-            sibling = each.nextSibling
-            
-            inline_graphic = each.getElementsByTagName('inline-graphic')[0]
-            xlink_href_id = inline_graphic.getAttribute('xlink:href')
-            name = xlink_href_id.split('.')[-1]
-            img = None
-            startpath = os.getcwd()
-            os.chdir(self.outdir)
-            for path, _subdirs, filenames in os.walk('images'):
-                for filename in filenames:
-                    if os.path.splitext(filename)[0] == name:
-                        img = os.path.join(path, filename)
-            os.chdir(startpath)
-            
-            imgnode = main.createElement('img')
-            imgnode.setAttribute('src', img)
-            imgnode.setAttribute('alt', 'An inline formula')
-            
-            parent.insertBefore(imgnode, sibling)
-            parent.removeChild(each)
             
         
         #Handle the display of out of line equations
@@ -569,7 +544,8 @@ class OPSContent(object):
                     'underline': self.underlineNodeHandler(topnode), 
                     'xref': self.xrefNodeHandler(topnode), 
                     'sec': self.secNodeHandler(topnode), 
-                    'named-content': self.namedContentNodeHandler(topnode)}
+                    'named-content': self.namedContentNodeHandler(topnode), 
+                    'inline-formula': self.inlineFormulaNodeHandler(topnode, doc)}
         
         for tagname in handlers:
             if tagname not in ignorelist:
@@ -685,6 +661,69 @@ class OPSContent(object):
                 #For more details on what could be potentially handled
                 
     
+    def inlineFormulaNodeHandler(self, topnode, doc):
+        '''Handles <inline-formula> nodes for ePub formatting. At the moment, 
+        there is no way to support MathML (without manual curation) which 
+        would be more optimal for accessibility. If PLoS eventually publishes 
+        the MathML (or SVG) then that option should be handled. For now, the 
+        rasterized images will be placed in-line. This accepts either Nodes or 
+        NodeLists and handles all instances of <inline-formula> beneath them'''
+        try:
+            inline_formulas = topnode.getElementsByTagName('inline-formula')
+        except AttributeError:
+            for item in topnode:
+                self.inlineFormulaNodeHandler(topnode, doc)
+        else:
+            #There is a potential for complexity of content within the
+            #<inline-formula> tag. I have supplied methods for collecting the 
+            #complex matter, but do not yet implement its inclusion
+            for if_node in inline_formulas:
+                parent = if_node.parentNode
+                sibling = if_node.nextSibling
+                
+                #Potential Attributes
+                if_alt_form_of = if_node.getAttribute('alternate-form-of')
+                try:
+                    if_node.removeAttribute('alternate-form-of')
+                except xml.dom.NotFoundErr:
+                    pass
+                if_id = if_node.getAttribute('id')
+                
+                #Handle the conversion of emphasis elements
+                #if_node = utils.getFormattedNode(if_node)
+                
+                #Potential contents
+                if_private_char = if_node.getElementsByTagName('private-char')
+                if_tex_math = if_node.getElementsByTagName('tex-math')
+                if_mml_math = if_node.getElementsByTagName('mml:math')
+                if_inline_formula = if_node.getElementsByTagName('inline-formula')
+                if_sub = if_node.getElementsByTagName('sub')
+                if_sup = if_node.getElementsByTagName('sup')
+                
+                #Collect the inline-graphic element, which we will try to use 
+                #in order to create an image node
+                if_inline_graphic = if_node.getElementsByTagName('inline-graphic')
+                
+                if if_inline_graphic:
+                    ig_node = if_inline_graphic[0]
+                    xlink_href_id = ig_node.getAttribute('xlink:href')
+                    name = xlink_href_id.split('.')[-1]
+                    img = None
+                    startpath = os.getcwd()
+                    os.chdir(self.outdir)
+                    for path, _subdirs, filenames in os.walk('images'):
+                        for filename in filenames:
+                            if os.path.splitext(filename)[0] == name:
+                                img = os.path.join(path, filename)
+                    os.chdir(startpath)
+                if img:
+                    imgnode = doc.createElement('img')
+                    imgnode.setAttribute('src', img)
+                    imgnode.setAttribute('alt', 'An inline formula')
+                    parent.insertBefore(imgnode, sibling)
+                
+                parent.removeChild(if_node)
+    
     def tableWrapNodeHandler(self, topnode, doc, tabdoc):
         '''Handles conversion of <table-wrap> tags under the provided topnode. 
         Also handles NodeLists by calling itself on each Node in the NodeList. 
@@ -759,10 +798,10 @@ class OPSContent(object):
                 tab_parent.replaceChild(img_node, tab_wrap)
                 
                 #Handle the table caption if it exists
+                tab_caption_title_node = None
                 if tab_caption:
                     tab_caption_node = tab_caption[0] #There should only be one
                     tab_caption_title = tab_caption_node.getElementsByTagName('title')
-                    tab_caption_title_node = None
                     if tab_caption_title:
                         tab_caption_title_node = tab_caption_title[0]
                 

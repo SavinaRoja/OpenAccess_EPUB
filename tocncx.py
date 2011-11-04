@@ -143,7 +143,7 @@ def generateTOC(fm, features, outdirect):
         navlabel = doc.createElement('navLabel')
         loe.appendChild(navlabel)
         navlabel.appendChild(makeText('List of Equations'))
-        ncx.appendChild(lot)
+        ncx.appendChild(loe)
         #Create the navList element for the list of equations
         listEquations(features, loe)
         

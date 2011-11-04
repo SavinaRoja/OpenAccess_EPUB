@@ -1,7 +1,7 @@
 #! /usr/bin/python
 
 
-__version__ = '0.0.2'
+__version__ = '0.0.3'
 
 #Standard Library Modules
 import argparse
@@ -102,7 +102,7 @@ def main():
     else:
         outdirect = document.titlestring()
         
-    print('Processing output to {0}.epub'.format(outdirect))
+    print(u'Processing output to {0}.epub'.format(outdirect))
     output.generateHierarchy(outdirect)
     document.fetchImages(dirname = outdirect)
     content.OPSContent(filename, outdirect, document.front, 

@@ -85,7 +85,10 @@ class ArticleMeta(object):
             self.identifiers.add(ident)
             
         # history
-        hist = node.getElementsByTagName('history')[0]
+        try:
+            hist = node.getElementsByTagName('history')[0]
+        except IndexError:
+            hist = None
         dates = hist.getElementsByTagName('date')
         for entry in dates:
             entry_date = epub_date.DateInfo(entry)
