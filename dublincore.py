@@ -85,7 +85,7 @@ def dc_description(mydoc, parent, artmeta):
                       'short', 'executive-summary']
     for type in type_hierarchy:
         try:
-            abstract_node = artmeta.abstract[type]
+            abstract_node = artmeta.abstracts[type]
         except KeyError:
             pass
         else:
