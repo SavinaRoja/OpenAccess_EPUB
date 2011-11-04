@@ -83,6 +83,7 @@ def dc_description(mydoc, parent, artmeta):
     #This lists the abstract types in decreasing preference for use in dc:description 
     type_hierarchy = ['default', 'ASCII', 'summary', 'web-summary', 'editor', 
                       'short', 'executive-summary']
+    abstract_node = None
     for type in type_hierarchy:
         try:
             abstract_node = artmeta.abstracts[type]
