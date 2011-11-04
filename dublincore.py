@@ -80,9 +80,21 @@ def dc_description(mydoc, parent, artmeta):
     '''Create dc:description node for OPF'''
     from utils import serializeText #Recursively extract only TextNode data
     newchild = mydoc.createElement('dc:description')
-    if artmeta.abstract:
-        newchild.appendChild(mydoc.createTextNode(serializeText(artmeta.abstract)))
-    parent.appendChild(newchild)
+    #This lists the abstract types in decreasing preference for use in dc:description 
+    type_hierarchy = ['default', 'ASCII', 'summary', 'web-summary', 'editor', 
+                      'short', 'executive-summary']
+    for type in type_hierarchy:
+        try:
+            abstract_node = artmeta.abstract[type]
+        except KeyError:
+            pass
+        else:
+            break #If we find an appropriate key, break out of the for loop
+        
+    if abstract_node:
+        abstract_text = serializeText(abstract_node, stringlist = [])
+        newchild.appendChild(mydoc.createTextNode(abstract_text))
+        parent.appendChild(newchild)
 
 def dc_relation(mydoc, parent, artmeta):
     '''Create dc:relation node(s) for OPF'''
