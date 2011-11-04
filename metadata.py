@@ -2,6 +2,7 @@
 import logging
 from utils import getTagData
 from utils import getFormattedNode
+import xml.dom
 
 class FrontMatter(object):
     """Article metadata"""
@@ -113,8 +114,12 @@ class ArticleMeta(object):
                 self.abstracts['default'] = abstract
         
         # Article categories
-        tmp = node.getElementsByTagName('article-categories')[0]
-        self.article_categories = ArticleCategories(tmp)
+        try:
+            article_cat_node = node.getElementsByTagName('article-categories')[0]
+        except IndexError:
+            self.article_categories = None
+        else:
+            self.article_categories = ArticleCategories(article_cat_node)
         
         # Issue: <issue> number, <issue-id> identifier, <issue-title> title
         self.issue = getTagData(node.getElementsByTagName('issue'))
@@ -163,27 +168,40 @@ class ArticleMeta(object):
             self.art_dates[entry.getAttribute('pub-type')] = entry_date
         
 class ArticleCategories(object):
-    """Article Categories information"""
+    '''A class representing the <article-categories> in the Journal Publishing 
+    Tag Set 2.0'''
     def __init__(self, node):
-        self.series_text = u''
-        self.series_title = []
-        self.subj_groups = {}
+        self.series_text = u'' #zero or one. Content: text with emphasis
+        self.series_titles = [] #zero or more. Content: text with emphasis
+        self.subj_groups = {} #zero or more. Content: subject
         self.identify(node)
 
     def identify(self, node):
-        """pull everything from the xml node"""
-        self.series_text = getTagData(node.getElementsByTagName('series-text'))
-        tmp = node.getElementsByTagName('series-title')
-        for item in tmp:
-            title = item.firstChild.data
-            self.series_title.append(title)
+        '''Acquire xml elements'''
+        #Get the series-text node which can include emphasis elements
+        try:
+            series_text_node = node.getElementsByTagName('series-text')[0]
+        except IndexError:
+            pass
+        else:
+            self.series_text = getFormattedNode(series_text_node)
+            
+        #Get the series-title nodes which may contain emphasis elements
+        series_title_nodes = node.getElementsByTagName('series-title')
+        for item in series_title_nodes:
+            self.series_titles.append(getFormattedNode(item))
+            
+        #Subj-groups can be simple or complicated, specific to individual 
+        #practice by publisher. PLoS appears to keep it simple, and uses either
+        #subj-group-type = "Discipline" or "Discipline-v2" These subject nodes 
+        #will be assigned to lists according to and key-accessible by subj-group-type
         subj_group_nodes = node.getElementsByTagName('subj-group')
         for each in subj_group_nodes:
             type = each.getAttribute('subj-group-type')
             subj_list = []
             subj_nodes = each.getElementsByTagName('subject')
             for subj_node in subj_nodes:
-                subj_list.append(getTagData([subj_node]))
+                subj_list.append(getFormattedNode(subj_node))
             self.subj_groups[type] = subj_list
             
         
