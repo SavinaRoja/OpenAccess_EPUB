@@ -110,9 +110,20 @@ def dc_source(mydoc, parent, artmeta):
 
 def dc_subject(mydoc, parent, artmeta):
     '''Create dc:subject node(s) for OPF'''
-    for subject in artmeta.article_categories.subj_groups['Discipline']:
+    from utils import serializeText
+    subj_list = []
+    try:
+        subj_list += artmeta.article_categories.subj_groups['Discipline']
+    except KeyError:
+        pass
+    try:
+        subj_list += artmeta.article_categories.subj_groups['Discipline-v2']
+    except KeyError:
+        pass
+    for subject in subj_list:
         newchild = mydoc.createElement('dc:subject')
-        newchild.appendChild(mydoc.createTextNode(subject))
+        subject_text = serializeText(subject, stringlist = [])
+        newchild.appendChild(mydoc.createTextNode(subject_text))
         parent.appendChild(newchild)
 
 def dc_format(mydoc, parent):
@@ -123,10 +134,19 @@ def dc_format(mydoc, parent):
 
 def dc_type(mydoc, parent, artmeta):
     '''Creates dc:type node for OPF'''
+    #Recommended best practice is to use a controlled vocabulary such as:
+    #http://dublincore.org/documents/dcmi-type-vocabulary/
+    #This is implemented here:
     newchild = mydoc.createElement('dc:type')
-    datastring = artmeta.article_categories.subj_groups['heading'][0]
+    datastring = 'text'
     newchild.appendChild(mydoc.createTextNode(datastring))
     parent.appendChild(newchild)
+    
+    #An alternative implementation might utilize the "heading" subject group:
+    #newchild = mydoc.createElement('dc:type')
+    #datastring = artmeta.article_categories.subj_groups['heading'][0]
+    #newchild.appendChild(mydoc.createTextNode(datastring))
+    #parent.appendChild(newchild)
 
 def dc_language(mydoc, parent):
     '''Creates dc:language for OPF'''
