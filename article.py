@@ -108,18 +108,12 @@ class Article(object):
             elif journalid == 'pone':
                 journalurl = 'http://www.plosone.org/'
             
-            imagetypes = ['g', 't', 'e']
+            imagetypes = [('g', 'figures'), ('t', 'tables'), ('e', 'equations')]
             
-            for itype in imagetypes:
-                if itype == 'g':
-                    subdirect = 'figures'
-                elif itype == 't':
-                    subdirect = 'tables'
-                elif itype == 'e':
-                    subdirect = 'equations'
+            for itype, subdirect in imagetypes:
                     
                 for refnum in range(1,1000):
-                    addr_str = '{0}{1}{2}%2Fjournal.{3}.{4}.{5}{6}&representation=PNG_L'
+                    addr_str = '{0}{1}{2}%2Fjournal.{3}.{4}.{5}{6}&representation=PNG_S'
                     address = addr_str.format(journalurl, PLOSSTRING, journaldoi,
                                               journalid, articledoi, itype,
                                               str(refnum).zfill(3))
