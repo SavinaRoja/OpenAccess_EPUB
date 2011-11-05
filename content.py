@@ -350,49 +350,6 @@ class OPSContent(object):
             except:
                 pass
         
-        #Convert supplementary-material tags to div tags
-        #for now they will just be "sanitized", but in the future they
-        #should try to provide valid links to the materials
-        supp_mats = mainbody.getElementsByTagName('supplementary-material')
-        for supp_mat in supp_mats:
-            supp_id = supp_mat.getAttribute('id')
-            supp_mat.tagName = u'div'
-            label = supp_mat.getElementsByTagName('label')[0]
-            label.tagName = u'b'
-            self.boldNodeHandler(supp_mat)
-            self.italicNodeHandler(supp_mat)
-            try:
-                supp_mat.removeAttribute('mimetype')
-            except:
-                pass
-            try:
-                supp_mat.removeAttribute('position')
-            except:
-                pass
-            try:
-                plos_jrns= {'pgen': 'http://www.plosgenetics.org/', 
-                            'pone': 'http://www.plosone.org/', 
-                            'pbio': 'http://www.plosbiology.org/', 
-                            'pcbi': 'http://www.ploscompbiol.org/', 
-                            'ppat': 'http://www.plospathogens.org/', 
-                            'pmed': 'http://www.plosmedicine.org/', 
-                            'pntd': 'http://www.plosntds.org/'}
-                jrn = supp_id.split('.')[0]
-                plos_fetch = 'article/fetchSingleRepresentation.action?uri='
-                xlink = supp_mat.getAttribute('xlink:href')
-                href = u'{0}{1}{2}'.format(plos_jrns[jrn], plos_fetch, xlink)
-                anchor = main.createElement('a')
-                anchor.setAttribute('href', href)
-                supp_mat.insertBefore(anchor, label)
-                anchor.appendChild(label)
-                supp_mat.removeAttribute('xlink:href')
-            except:
-                pass
-            try:
-                supp_mat.removeAttribute('xlink:type')
-            except:
-                pass
-        
         ext_links = main.getElementsByTagName('ext-link')
         for ext_link in ext_links:
             ext_link.tagName = u'a'
@@ -919,7 +876,59 @@ class OPSContent(object):
                 
                 
             
-    
+    def supplementaryMaterialNodeHandler(self, topnode):
+        '''Handles conversion of <supplementary-material> tags under the 
+        provided topnode. Also handles NodeLists by calling itself on each 
+        Node in the NodeList.'''
+        
+        try:
+            supp_mats = topnode.getElementsByTagName('supplementary-material')
+        except AttributeError:
+            for item in topnode:
+                self.supplementaryMaterialNodeHandler(item)
+        else:
+            for supp_mat in supp_mats:
+                supp_mat_id = supp_mat.getAttribute('id')
+    #Convert supplementary-material tags to div tags
+        #for now they will just be "sanitized", but in the future they
+        #should try to provide valid links to the materials
+#            supp_id = supp_mat.getAttribute('id')
+#            supp_mat.tagName = u'div'
+#            label = supp_mat.getElementsByTagName('label')[0]
+#            label.tagName = u'b'
+#            self.boldNodeHandler(supp_mat)
+#            self.italicNodeHandler(supp_mat)
+#            try:
+#                supp_mat.removeAttribute('mimetype')
+#            except:
+#                pass
+#            try:
+#                supp_mat.removeAttribute('position')
+#            except:
+#                pass
+#            try:
+#                plos_jrns= {'pgen': 'http://www.plosgenetics.org/', 
+#                            'pone': 'http://www.plosone.org/', 
+#                            'pbio': 'http://www.plosbiology.org/', 
+#                            'pcbi': 'http://www.ploscompbiol.org/', 
+#                            'ppat': 'http://www.plospathogens.org/', 
+#                            'pmed': 'http://www.plosmedicine.org/', 
+#                            'pntd': 'http://www.plosntds.org/'}
+#                jrn = supp_id.split('.')[0]
+#                plos_fetch = 'article/fetchSingleRepresentation.action?uri='
+#                xlink = supp_mat.getAttribute('xlink:href')
+#                href = u'{0}{1}{2}'.format(plos_jrns[jrn], plos_fetch, xlink)
+#                anchor = main.createElement('a')
+#                anchor.setAttribute('href', href)
+#                supp_mat.insertBefore(anchor, label)
+#                anchor.appendChild(label)
+#                supp_mat.removeAttribute('xlink:href')
+#            except:
+#                pass
+#                supp_mat.removeAttribute('xlink:type')
+#            except:
+#                pass
+#    
     def boldNodeHandler(self, topnode):
         '''Handles proper conversion of <bold> tags under the provided 
         topnode. Also handles NodeLists by calling itself on each Node in the 
