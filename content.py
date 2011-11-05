@@ -247,12 +247,6 @@ class OPSContent(object):
             with open(self.outputs['Tables'],'wb') as output:
                 output.write(tab_doc.toprettyxml(encoding = 'utf-8'))
             
-        
-        caps = mainbody.getElementsByTagName('caption')
-        for cap in caps:
-            cap.tagName = u'div'
-            
-        
         #Handle the display of out of line equations
         #Requires separating children to two <p> tags flanking the displayed 
         #formula
