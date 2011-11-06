@@ -237,6 +237,9 @@ class OPSContent(object):
         self.tableWrapNodeHandler(mainbody, main, tab_docbody) #Convert <table-wrap>
         self.postNodeHandling(tab_docbody, tab_doc)
         
+        #Process supplementary-materials
+        self.supplementaryMaterialNodeHandler(mainbody, main)
+        
         #General processing
         self.postNodeHandling(mainbody, main, ignorelist = [])
         #Conversion of existing <div><title/></div> to <div><h#/></div>
@@ -876,7 +879,7 @@ class OPSContent(object):
                 
                 
             
-    def supplementaryMaterialNodeHandler(self, topnode):
+    def supplementaryMaterialNodeHandler(self, topnode, doc):
         '''Handles conversion of <supplementary-material> tags under the 
         provided topnode. Also handles NodeLists by calling itself on each 
         Node in the NodeList.'''
