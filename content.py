@@ -888,47 +888,78 @@ class OPSContent(object):
                 self.supplementaryMaterialNodeHandler(item)
         else:
             for supp_mat in supp_mats:
-                supp_mat_id = supp_mat.getAttribute('id')
-    #Convert supplementary-material tags to div tags
-        #for now they will just be "sanitized", but in the future they
-        #should try to provide valid links to the materials
-#            supp_id = supp_mat.getAttribute('id')
-#            supp_mat.tagName = u'div'
-#            label = supp_mat.getElementsByTagName('label')[0]
-#            label.tagName = u'b'
-#            self.boldNodeHandler(supp_mat)
-#            self.italicNodeHandler(supp_mat)
-#            try:
-#                supp_mat.removeAttribute('mimetype')
-#            except:
-#                pass
-#            try:
-#                supp_mat.removeAttribute('position')
-#            except:
-#                pass
-#            try:
-#                plos_jrns= {'pgen': 'http://www.plosgenetics.org/', 
-#                            'pone': 'http://www.plosone.org/', 
-#                            'pbio': 'http://www.plosbiology.org/', 
-#                            'pcbi': 'http://www.ploscompbiol.org/', 
-#                            'ppat': 'http://www.plospathogens.org/', 
-#                            'pmed': 'http://www.plosmedicine.org/', 
-#                            'pntd': 'http://www.plosntds.org/'}
-#                jrn = supp_id.split('.')[0]
-#                plos_fetch = 'article/fetchSingleRepresentation.action?uri='
-#                xlink = supp_mat.getAttribute('xlink:href')
-#                href = u'{0}{1}{2}'.format(plos_jrns[jrn], plos_fetch, xlink)
-#                anchor = main.createElement('a')
-#                anchor.setAttribute('href', href)
-#                supp_mat.insertBefore(anchor, label)
-#                anchor.appendChild(label)
-#                supp_mat.removeAttribute('xlink:href')
-#            except:
-#                pass
-#                supp_mat.removeAttribute('xlink:type')
-#            except:
-#                pass
-#    
+                #http://dtd.nlm.nih.gov/publishing/tag-library/2.0/n-au40.html
+                #Provides the details on this node. There are many potential 
+                #attributes which are not employed by PLoS, they stick closely  
+                #id, mimetype, xlink:href, position, and xlink:type
+                #This code will not function fully without a provided id
+                #PLoS appears very strict with its inclusion
+                
+                attrs = {'id': None, 'mimetype': None, 'xlink:href': None, 
+                         'position': None, 'xlink:type': None}
+                keep_attrs = ['id']
+                #A different approach to attribute handling... pack them all 
+                #into a dictionary for key access and remove them if not valid 
+                #ePub attributes. Retrieve attribute valuse as needed from dict
+                for attr in attrs:
+                    try:
+                        attrs[attr] = supp_mat.getAttribute(attr)
+                    except xml.dom.NotFoundErr:
+                        pass
+                    else:
+                        if attr not in keep_attrs:
+                            supp_mat.removeAttribute(attr)
+                            
+                supp_mat.tagName = 'div' #Convert supplementary-material to div
+                
+                try:
+                    supp_mat_object_id = supp_mat.getElementsByTagName('object-id')[0]
+                except IndexError:
+                    supp_mat_object_id = None
+                else:
+                    #We remove this tag and ignore it for now
+                    supp_mat.removeChild(supp_mat_object_id)
+                
+                try: #Convert the label to bold if it exists
+                    supp_mat_label = supp_mat.getElementsByTagName('label')[0]
+                except IndexError:
+                    supp_mat_label = None
+                else:
+                    supp_mat_label.tagName = u'b'
+                    
+                try:
+                    supp_mat_caption =supp_mat.getElementsByTagName('caption')[0]
+                except IndexError:
+                    supp_mat_caption = None
+                else:
+                    supp_mat_caption.tagName = u'div' 
+                
+                #A mapping of 4-character codes to web addresses
+                plos_jrns= {'pgen': 'http://www.plosgenetics.org/', 
+                            'pone': 'http://www.plosone.org/', 
+                            'pbio': 'http://www.plosbiology.org/', 
+                            'pcbi': 'http://www.ploscompbiol.org/', 
+                            'ppat': 'http://www.plospathogens.org/', 
+                            'pmed': 'http://www.plosmedicine.org/', 
+                            'pntd': 'http://www.plosntds.org/'}
+                try:
+                    jrn = attrs['id'].split('.')[0]
+                except KeyError:
+                    print('supplementary-tag tag found wihthout attribute \"id\"')
+                else:
+                    fetch = 'article/fetchSingleRepresentation.action?uri='
+                    try:
+                        xlink = attrs['xlink:href']
+                    except KeyError:
+                        print('supplementary-tag tag found wihthout attribute \"xlink:href\"')
+                    else:
+                        href = u'{0}{1}{2}'.format(plos_jrns[jrn], fetch, xlink)
+                        anchor = doc.createElement('a')
+                        anchor.setAttribute('href', href)
+                        if supp_mat_label:
+                            supp_mat.insertBefore(anchor, supp_mat_label)
+                            anchor.appendChild(supp_mat_label)
+                
     def boldNodeHandler(self, topnode):
         '''Handles proper conversion of <bold> tags under the provided 
         topnode. Also handles NodeLists by calling itself on each Node in the 
