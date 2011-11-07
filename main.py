@@ -31,12 +31,10 @@ def main():
     parser.add_argument('-s', '--save-xml', action = 'store_true', default = False, 
                         help = 'If downloading the article xml file, use this flag to save it after completion')
     parser.add_argument('-c', '--cleanup', action = 'store_true', default = False, 
-                        help = 'Use this flag to automatically delete the output directory upon completion')
-    
+                        help = 'Use this flag to automatically delete the pre-package output directory upon completion')
+    parser.add_argument('-l', '--logging', action = 'store_true', default = False, 
+                        help = 'Turn on logging. Saves to logs directory with the same name as the output epub file.')
     args = parser.parse_args()
-    
-    logging.basicConfig(filename='logging.log',level=logging.DEBUG)
-    logging.info('OpenAccess_EPUB Log')
     
     if 'http://www' in args.input:
         download = True
@@ -93,7 +91,6 @@ def main():
             
             document = Article(filename)
         
-        
     else:
         download = False
         filename = args.input
@@ -105,7 +102,15 @@ def main():
             os.mkdir(args.output)
     else:
         outdirect = document.titlestring()
-        
+    
+    if args.logging:
+        if not os.path.isdir('logs'):
+                os.mkdir('logs')
+        logname = u'{0}.log'.format(document.titlestring())
+        logdirect = os.path.join('logs', logname)
+        logging.basicConfig(filename=logdirect,level=logging.DEBUG)
+        logging.info('OpenAccess_EPUB Log v.{0}'.format(__version__))
+    
     print(u'Processing output to {0}.epub'.format(outdirect))
     output.generateHierarchy(outdirect)
     document.fetchImages(dirname = outdirect)
@@ -120,8 +125,7 @@ def main():
     
     #WARNING: THIS IS A RECURSIVE DELETION FUNCTION
     #DO NOT CHANGE THIS OR THE CREATION OF OUTDIRECT WITHOUT EXTREME CAUTION
-    #YOU MIGHT DELETE MORE THAN YOU WANT, DO NOT PUSH CHANGES WITHOUT
-    #EXTENSIVE TESTING OR YOU WILL RISK DAMAGING THE FILESYSTEMS OF OTHER USERS
+    #YOU MIGHT DELETE MORE THAN YOU WANT...
     if args.cleanup:
         for root, dirs, files in os.walk(outdirect, topdown=False):
             for name in files:
@@ -130,7 +134,6 @@ def main():
                 os.rmdir(os.path.join(root, name))
         os.rmdir(outdirect)
         
-    logging.info('Finished')
     
 if __name__ == '__main__':
     main()
