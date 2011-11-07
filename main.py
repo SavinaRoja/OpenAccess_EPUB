@@ -1,7 +1,6 @@
 #! /usr/bin/python
 
-
-__version__ = '0.0.3'
+__version__ = '0.0.3a'
 
 #Standard Library Modules
 import argparse
@@ -33,8 +32,14 @@ def main():
     parser.add_argument('-c', '--cleanup', action = 'store_true', default = False, 
                         help = 'Use this flag to automatically delete the pre-package output directory upon completion')
     parser.add_argument('-l', '--logging', action = 'store_true', default = False, 
-                        help = 'Turn on logging. Saves to logs directory with the same name as the output epub file.')
+                        help = 'Turn on logging. Saves a logfile in the logs directory for the process.')
     args = parser.parse_args()
+    
+    if not os.path.isdir('logs'):
+        os.mkdir('logs')
+    logname = os.path.join('logs', 'temp.log')
+    logging.basicConfig(filename = logname, level = logging.DEBUG)
+    logging.info('OpenAccess_EPUB Log v.{0}'.format(__version__))
     
     if 'http://www' in args.input:
         download = True
@@ -103,14 +108,6 @@ def main():
     else:
         outdirect = document.titlestring()
     
-    if args.logging:
-        if not os.path.isdir('logs'):
-                os.mkdir('logs')
-        logname = u'{0}.log'.format(document.titlestring())
-        logdirect = os.path.join('logs', logname)
-        logging.basicConfig(filename=logdirect,level=logging.DEBUG)
-        logging.info('OpenAccess_EPUB Log v.{0}'.format(__version__))
-    
     print(u'Processing output to {0}.epub'.format(outdirect))
     output.generateHierarchy(outdirect)
     document.fetchImages(dirname = outdirect)
@@ -122,6 +119,11 @@ def main():
         
     if download and not args.save_xml:
         os.remove(filename)
+    
+    if args.logging:
+        newname = u'{0}.log'.format(document.titlestring())
+        newname =  os.path.join('logs', newname)
+        os.rename(logname, newname)
     
     #WARNING: THIS IS A RECURSIVE DELETION FUNCTION
     #DO NOT CHANGE THIS OR THE CREATION OF OUTDIRECT WITHOUT EXTREME CAUTION
