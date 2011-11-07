@@ -1,12 +1,6 @@
-"""utility/common stuff"""
-import logging
+'''utility/common stuff'''
 import os.path
 from collections import namedtuple
-
-#OUT_DIR = 'test_output'
-
-logging.basicConfig(level=logging.INFO,
-                    format='%(levelname)s: %(message)s')
 
 Identifier = namedtuple('Identifer', 'id, type')
 
@@ -91,9 +85,9 @@ def getFormattedNode(node):
     return clone
 
 def getTagData(node_list):
-    """Grab the (string) data from text elements
+    '''Grab the (string) data from text elements
     node_list -- NodeList returned by getElementsByTagName
-    """
+    '''
     data = u''
     try:
         for node in node_list:
