@@ -19,6 +19,10 @@ batchtest.sh
 test_output/*
 *.epub
 
+# Logs #
+############
+logs/*
+
 # Downloaded XML files #
 ############
 downloaded_xml_files/*
