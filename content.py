@@ -1,5 +1,6 @@
 import xml.dom.minidom as minidom
 import xml.dom
+import logging
 import os, os.path
 import utils
 
@@ -353,15 +354,6 @@ class OPSContent(object):
             except:
                 pass
         
-        ext_links = main.getElementsByTagName('ext-link')
-        for ext_link in ext_links:
-            ext_link.tagName = u'a'
-            ext_link.removeAttribute('ext-link-type')
-            href = ext_link.getAttribute('xlink:href')
-            ext_link.removeAttribute('xlink:href')
-            ext_link.removeAttribute('xlink:type')
-            ext_link.setAttribute('href', href)
-            
         self.boldNodeHandler(mainbody)
         
         with open(self.outputs['Main'],'wb') as out:
@@ -501,7 +493,8 @@ class OPSContent(object):
                     'xref': self.xrefNodeHandler(topnode), 
                     'sec': self.secNodeHandler(topnode), 
                     'named-content': self.namedContentNodeHandler(topnode), 
-                    'inline-formula': self.inlineFormulaNodeHandler(topnode, doc)}
+                    'inline-formula': self.inlineFormulaNodeHandler(topnode, doc),
+                    'ext-link': self.extLinkNodeHandler(topnode)}
         
         for tagname in handlers:
             if tagname not in ignorelist:
@@ -905,13 +898,12 @@ class OPSContent(object):
                 #into a dictionary for key access and remove them if not valid 
                 #ePub attributes. Retrieve attribute valuse as needed from dict
                 for attr in attrs:
-                    try:
-                        attrs[attr] = supp_mat.getAttribute(attr)
-                    except xml.dom.NotFoundErr:
-                        pass
-                    else:
-                        if attr not in keep_attrs:
+                    attrs[attr] = supp_mat.getAttribute(attr)
+                    if attr not in keep_attrs:
+                        try:
                             supp_mat.removeAttribute(attr)
+                        except xml.dom.NotFoundErr:
+                            pass
                             
                 supp_mat.tagName = 'div' #Convert supplementary-material to div
                 
@@ -1100,7 +1092,8 @@ class OPSContent(object):
     
     def xrefNodeHandler(self, topnode):
         '''Handles conversion of <xref> tags. These tags are utilized for 
-        internal crossreferencing.'''
+        internal crossreferencing. Works on all tags under the provided Node 
+        or under all Nodes in a NodeList.'''
         
         #We need mappings for local files to ref-type attribute values
         ref_map = {u'bibr': u'biblio.xml#', 
@@ -1129,6 +1122,44 @@ class OPSContent(object):
                 href = '{0}{1}'.format(ref_map[ref_type], rid)
                 xref_node.setAttribute('href', href)
                 
+    
+    def extLinkNodeHandler(self, topnode):
+        '''Handles conversion of <ext-link> tags. These tags are utilized for 
+        external referencing. Works on all tags under the provided Node or 
+        under all Nodes in a NodeList.'''
+        
+        attrs = {'ext-link-type': None, 'id': None, 'xlink:actuate': None, 
+                 'xlink:href': None, 'xlink:role': None, 'xlink:show': None, 
+                 'xlink:title': None, 'xlink:type': None, 'xmlns:xlink': None}
+        keep_attrs = ['id']
+        
+        try:
+            ext_links = topnode.getElementsByTagName('ext-link')
+        except AttributeError:
+            for item in topnode:
+                self.extLinkNodeHandler(item)
+        else:
+            for ext_link in ext_links:
+                ext_link.tagName = u'a' #convert to <a>
+                #Handle the potential attributes
+                
+                for attr in attrs:
+                    attrs[attr] = ext_link.getAttribute(attr)
+                    if attr not in keep_attrs:
+                        try:
+                            ext_link.removeAttribute(attr)
+                        except xml.dom.NotFoundErr:
+                            pass
+                    #Set the href value from the xlink:href
+                    if attrs['xlink:href']:
+                        ext_link.setAttribute('href', attrs['xlink:href'])
+                    
+                    #Logging and Debug section
+                    if attrs['ext-link-type'] != 'uri':
+                        logging.info('<ext-link> attribute \"ext-link-type\" = {0}'.format(attrs['ext-link-type']))
+                    if attrs['xlink:type'] != 'simple':
+                        logging.info('<ext-link> attribute \"xlink:type\" = {0}'.format(attrs['xlink:type']))
+            
     def divTitleFormat(self, fromnode, depth = 0):
         '''A method for converting title tags to heading format tags'''
         taglist = ['h2', 'h3', 'h4', 'h5', 'h6']
