@@ -494,7 +494,8 @@ class OPSContent(object):
                     'sec': self.secNodeHandler(topnode), 
                     'named-content': self.namedContentNodeHandler(topnode), 
                     'inline-formula': self.inlineFormulaNodeHandler(topnode, doc),
-                    'ext-link': self.extLinkNodeHandler(topnode)}
+                    'ext-link': self.extLinkNodeHandler(topnode),
+                    'sc': self.smallCapsNodeHandler(topnode)}
         
         for tagname in handlers:
             if tagname not in ignorelist:
@@ -984,6 +985,21 @@ class OPSContent(object):
             #In this case, we can just modify them in situ
             for italic_node in italic_nodes:
                 italic_node.tagName = u'i'
+        
+    def smallCapsNodeHandler(self, topnode):
+        '''Handles proper conversion of <sc> tags under the provided 
+        topnode. Also handles NodeLists by calling itself on each Node in the 
+        NodeList'''
+        try:
+            sc_nodes = topnode.getElementsByTagName('sc')
+        except AttributeError:
+            for item in topnode:
+                self.smallCapsNodeHandler(item)
+        else:
+            #In this case, we can just modify them in situ
+            for sc_node in sc_nodes:
+                sc_node.tagName = u'span'
+                sc_node.setAttribute('style', 'font-variant:small-caps')
     
     def underlineNodeHandler(self, topnode):
         '''Handles proper conversion of <underline> tags under the provided 
