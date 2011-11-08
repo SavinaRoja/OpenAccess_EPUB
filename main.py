@@ -120,7 +120,7 @@ def main():
     if download and not args.save_xml:
         os.remove(filename)
     
-    if args.logging:
+    if args.logging: #rename the log file, or it will be overwritten next time
         newname = u'{0}.log'.format(document.titlestring())
         newname =  os.path.join('logs', newname)
         os.rename(logname, newname)
