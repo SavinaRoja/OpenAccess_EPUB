@@ -146,23 +146,35 @@ class Article(object):
         tagNames'''
         import utils
         
-        tagnamestrs = [u'sec', u'fig', u'table', u'inline-formula', 
+        tagnamestrs = [u'sec', u'fig', u'table-wrap', u'inline-formula', 
                        u'disp-formula']
         
         for child in fromnode.childNodes:
             try:
-                if child.tagName in tagnamestrs:
-                    clone = child.cloneNode(deep = False)
-                    title = child.getElementsByTagName('title')[0]
-                    clone.appendChild(title.cloneNode(deep = True))
-                    clone.setAttribute('playOrder', str(self.playorder))
-                    clone.setAttribute('title', 
-                                       utils.serializeText(title, 
-                                                           stringlist = []))
-                    
-                    self.playorder += 1
-                    destnode.appendChild(clone)
-                    
-                    self.featureParse(doc, child, clone)
+                tagname = child.tagName
             except AttributeError:
                 pass
+            else:
+                if tagname in tagnamestrs:
+                    clone = child.cloneNode(deep = False)
+                    try:
+                        title_node = child.getElementsByTagName('title')[0]
+                    except IndexError: #in the case that it has no title
+                        title_node = doc.createElement('title')
+                        title_node.appendChild(doc.createTextNode(''))
+                        clone.appendChild(title_node.cloneNode(deep = True))
+                        clone.setAttribute('playOrder', str(self.playorder))
+                        clone.setAttribute('title', '')
+                        self.playorder += 1
+                        destnode.appendChild(clone)
+                        self.featureParse(doc, child, clone)
+                    except AttributeError: #TextNodes have no attribute tagName
+                        pass
+                    else:
+                        clone.appendChild(title_node.cloneNode(deep = True))
+                        clone.setAttribute('playOrder', str(self.playorder))
+                        clone.setAttribute('title', 
+                                           utils.serializeText(title_node, stringlist = []))
+                        self.playorder += 1
+                        destnode.appendChild(clone)
+                        self.featureParse(doc, child, clone)

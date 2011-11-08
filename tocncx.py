@@ -125,7 +125,7 @@ def generateTOC(fm, features, outdirect):
         #Create the navList element for the list of figures
         listFigures(features, lof)
     
-    if features.getElementsByTagName('table'):
+    if features.getElementsByTagName('table-wrap'):
         lot = doc.createElement('navList')
         lot.setAttribute('id', 'lot')
         lot.setAttribute('class', 'lot')
