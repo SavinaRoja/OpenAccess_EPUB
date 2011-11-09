@@ -71,7 +71,7 @@ def generateTOC(fm, features, outdirect):
             navpoint.appendChild(navtarget)
             
     def listTables(featurenode, navpoint):
-        for child in featurenode.getElementsByTagName('table'):
+        for child in featurenode.getElementsByTagName('table-wrap'):
             navtarget = doc.createElement('navTarget')
             navtarget.setAttribute('class', 'table')
             navtarget.setAttribute('playOrder',child.getAttribute('playOrder'))
@@ -84,6 +84,7 @@ def generateTOC(fm, features, outdirect):
             navtarget.appendChild(navlabel)
             content = doc.createElement('content')
             src = 'main.xml#{0}'.format(tid)
+            content.setAttribute('src', src)
             navtarget.appendChild(content)
             navpoint.appendChild(navtarget)
             
@@ -188,5 +189,5 @@ def generateTOC(fm, features, outdirect):
     navmapper(features, navmap)
     
     outdoc = open(os.path.join(outdirect, 'OPS', 'toc.ncx'), 'w')
-    outdoc.write(doc.toxml(encoding = 'utf-8'))
+    outdoc.write(doc.toprettyxml(encoding = 'utf-8'))
     outdoc.close()
