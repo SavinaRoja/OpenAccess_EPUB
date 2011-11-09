@@ -251,55 +251,6 @@ class OPSContent(object):
             with open(self.outputs['Tables'],'wb') as output:
                 output.write(tab_doc.toprettyxml(encoding = 'utf-8'))
             
-        #Handle the display of out of line equations
-        #Requires separating children to two <p> tags flanking the displayed 
-        #formula
-        disp_equations = mainbody.getElementsByTagName('disp-formula')
-        for disp in disp_equations:
-            
-            parent = disp.parentNode
-            sibling = disp.nextSibling
-            
-            if sibling:
-                new_parent = main.createElement('p')
-                disp_index = parent.childNodes.index(disp)
-                for child in parent.childNodes[(disp_index +1):]:
-                    new_parent.appendChild(child)
-            else:
-                new_parent = None
-            
-            grandparent = parent.parentNode
-            parent_sib = parent.nextSibling
-            if parent_sib:
-                disp_p_node = main.createElement('p')
-                grandparent.insertBefore(disp_p_node, parent_sib)
-                if new_parent:
-                    grandparent.insertBefore(new_parent, parent_sib)
-            
-            else:
-                grandparent.appendChild(disp_p_node_)
-                grandparent.appendChild(newparent)
-            
-            graphic = disp.getElementsByTagName('graphic')[0]
-            
-            xlink_href_id = graphic.getAttribute('xlink:href')
-            name = xlink_href_id.split('.')[-1]
-            img = None
-            startpath = os.getcwd()
-            os.chdir(self.outdir)
-            for path, _subdirs, filenames in os.walk('images'):
-                for filename in filenames:
-                    if os.path.splitext(filename)[0] == name:
-                        img = os.path.join(path, filename)
-            os.chdir(startpath)
-            
-            imgnode = main.createElement('img')
-            imgnode.setAttribute('src', img)
-            imgnode.setAttribute('alt', 'A display formula')
-            
-            disp_p_node.appendChild(imgnode)
-            parent.removeChild(disp)
-            
         #Need to handle lists in the document
         lists = mainbody.getElementsByTagName('list')
         for list in lists:
@@ -493,7 +444,8 @@ class OPSContent(object):
                     'xref': self.xrefNodeHandler(topnode), 
                     'sec': self.secNodeHandler(topnode), 
                     'named-content': self.namedContentNodeHandler(topnode), 
-                    'inline-formula': self.inlineFormulaNodeHandler(topnode, doc),
+                    'inline-formula': self.inlineFormulaNodeHandler(topnode, doc), 
+                    'disp-formula': self.dispFormulaNodeHandler(topnode, doc), 
                     'ext-link': self.extLinkNodeHandler(topnode),
                     'sc': self.smallCapsNodeHandler(topnode)}
         
@@ -673,6 +625,82 @@ class OPSContent(object):
                     parent.insertBefore(imgnode, sibling)
                 
                 parent.removeChild(if_node)
+    
+    def dispFormulaNodeHandler(self, topnode, doc):
+        '''Handles <disp-formula> nodes for ePub formatting. This method works 
+        similarly to inlineFormulaNodeHandler but must change the structure of 
+        the DOM in order to handle out-of-line formatting. This creates a 
+        somewhat delicate situation as different contexts may call for unique 
+        handling. Consider the handling of disp-formulas within table elements 
+        to be a special case and provide unique handling there. It may be 
+        possible to resolve this more elegantly later with the use of CSS.'''
+        
+        attrs = {'id': None, 'alternate-form-of': None}
+        
+        try:
+            disp_formulas = topnode.getElementsByTagName('disp-formula')
+        except AttributeError:
+            for item in topnode:
+                self.dispFormulaNodeHandler(item, doc)
+        else:
+            for disp_node in disp_formulas:
+                #Gather some needed structural elements
+                parent = disp_node.parentNode
+                sibling = disp_node.nextSibling #None if the last child
+                grandparent = parent.parentNode
+                parent_sibling = parent.nextSibling #None if the last child
+                
+                #Collect the attributes
+                for attr in attrs:
+                    attrs[attr] = disp_node.getAttribute(attr)
+                
+                #To break things up, we must add all the elements that come 
+                #after the disp-formula to a new parent, <p>, tag
+                if sibling: #Do this only if there are sibling(s)
+                    new_parent = doc.createElement('p')
+                    disp_index = parent.childNodes.index(disp_node)
+                    for child in parent.childNodes[(disp_index + 1):]:
+                        new_parent.appendChild(child)
+                else:
+                    new_parent = None
+                
+                if parent_sibling: #Insert formula paragraph tag before the parent siblings
+                    disp_p = doc.createElement('p')
+                    grandparent.insertBefore(disp_p, parent_sibling)
+                    if new_parent: #Insert the siblings under the new_parent before the parent siblings
+                        grandparent.insertBefore(new_parent, parent_sibling)
+                else: #Simply add to the end if there are no parent siblings
+                    grandparent.appendChild(disp_p, parent_sibling)
+                    grandparent.appendChild(new_parent, parent_sibling)
+                
+                #Now that we have done necessary structural rearrangements, we
+                #must create an appropriate image element
+                try:
+                    graphic = disp_node.getElementsByTagName('graphic')[0]
+                except IndexError:
+                    logging.error('disp-formula element does not contain graphic element')
+                else:
+                    graphic_xlink_href = graphic.getAttribute('xlink:href')
+                    if not graphic_xlink_href:
+                        logging.error('graphic xlink:href attribute not present for disp-formula')
+                    else:
+                        name = graphic_xlink_href.split('.')[-1]
+                        img = None
+                        startpath = os.getcwd()
+                        os.chdir(self.outdir)
+                        for path, _subdirs, filenames in os.walk('images'):
+                            for filename in filenames:
+                                if os.path.splitext(filename)[0] == name:
+                                    img = os.path.join(path, filename)
+                        os.chdir(startpath)
+                        
+                        #Create an img node which we will append to disp_p
+                        img_node = doc.createElement('img')
+                        img_node.setAttribute('img', img)
+                        img_node.setAttribute('alt', 'A display formula')
+                        disp_p.appendChild(img_node)
+                        #Now remove the original <disp-formula> element
+                        parent.removeChild(disp_node)
     
     def tableWrapNodeHandler(self, topnode, doc, tabdoc):
         '''Handles conversion of <table-wrap> tags under the provided topnode. 
