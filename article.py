@@ -115,7 +115,7 @@ class Article(object):
             for itype, subdirect, itype_str in imagetypes:
                     
                 for refnum in range(1,1000):
-                    addr_str = '{0}{1}{2}%2Fjournal.{3}.{4}.{5}{6}&representation=PNG_S'
+                    addr_str = '{0}{1}{2}%2Fjournal.{3}.{4}.{5}{6}&representation=PNG_L'
                     address = addr_str.format(journalurl, PLOSSTRING, journaldoi,
                                               journalid, articledoi, itype,
                                               str(refnum).zfill(3))
@@ -149,8 +149,7 @@ class Article(object):
         tagNames'''
         import utils
         
-        tagnamestrs = [u'sec', u'fig', u'table-wrap', u'inline-formula', 
-                       u'disp-formula']
+        tagnamestrs = [u'sec', u'fig', u'table-wrap']
         
         for child in fromnode.childNodes:
             try:

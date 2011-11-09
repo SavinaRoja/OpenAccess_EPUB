@@ -1,6 +1,6 @@
 #! /usr/bin/python
 
-__version__ = '0.0.3a'
+__version__ = '0.0.4'
 
 #Standard Library Modules
 import argparse

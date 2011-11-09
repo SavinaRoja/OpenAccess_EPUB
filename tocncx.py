@@ -87,23 +87,6 @@ def generateTOC(fm, features, outdirect):
             content.setAttribute('src', src)
             navtarget.appendChild(content)
             navpoint.appendChild(navtarget)
-            
-    def listEquations(featurenode, navpoint):
-        children = featurenode.getElementsByTagName('inline-formula')
-        children += featurenode.getElementsByTagName('disp-formula')
-        for child in children:
-            navtarget = doc.createElement('navTarget')
-            navtarget.setAttribute('class', 'equation')
-            navlabel = doc.createElement('navLabel')
-            eid = child.getAttribute('id')
-            titlenode = child.getElementsByTagName('title')[0]
-            titletext = utils.serializeText(titlenode, stringlist = [])
-            navlabel.appendChild(makeText(titletext))
-            navtarget.appendChild(navlabel)
-            content = doc.createElement('content')
-            src = 'main.xml#{0}'.format(eid)
-            navtarget.appendChild(content)
-            navpoint.appendChild(navtarget)
     
     ncx = doc.lastChild #IGNORE:E1101
     ncx.setAttribute('version', '2005-1')
@@ -136,18 +119,6 @@ def generateTOC(fm, features, outdirect):
         ncx.appendChild(lot)
         #Create the navList element for the list of tables
         listTables(features, lot)
-        
-    if features.getElementsByTagName('inline-formula') or features.getElementsByTagName('disp-formula'):
-        loe = doc.createElement('navList')
-        loe.setAttribute('id', 'loe')
-        loe.setAttribute('class', 'loe')
-        navlabel = doc.createElement('navLabel')
-        loe.appendChild(navlabel)
-        navlabel.appendChild(makeText('List of Equations'))
-        ncx.appendChild(loe)
-        #Create the navList element for the list of equations
-        listEquations(features, loe)
-        
     
     statement = doc.createComment('''The following metadata items, except for dtb:generator,
             are required for all NCX documents, including those 
