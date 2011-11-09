@@ -696,7 +696,7 @@ class OPSContent(object):
                         
                         #Create an img node which we will append to disp_p
                         img_node = doc.createElement('img')
-                        img_node.setAttribute('img', img)
+                        img_node.setAttribute('src', img)
                         img_node.setAttribute('alt', 'A display formula')
                         disp_p.appendChild(img_node)
                         #Now remove the original <disp-formula> element
