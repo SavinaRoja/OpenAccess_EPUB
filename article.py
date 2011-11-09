@@ -108,9 +108,11 @@ class Article(object):
             elif journalid == 'pone':
                 journalurl = 'http://www.plosone.org/'
             
-            imagetypes = [('g', 'figures'), ('t', 'tables'), ('e', 'equations')]
+            imagetypes = [('g', 'figures', 'figure'), 
+                          ('t', 'tables', 'table'), 
+                          ('e', 'equations', 'equation')]
             
-            for itype, subdirect in imagetypes:
+            for itype, subdirect, itype_str in imagetypes:
                     
                 for refnum in range(1,1000):
                     addr_str = '{0}{1}{2}%2Fjournal.{3}.{4}.{5}{6}&representation=PNG_S'
@@ -135,8 +137,9 @@ class Article(object):
                                                   subdirect, filename)
                         with open(image_file, 'wb') as outimage:
                             outimage.write(image.read())
-                        print('Downloaded image {0}{1}'.format(itype, 
-                                                               str(refnum).zfill(3)))
+                        print('Downloaded {0} image {1}{2}'.format(itype_str, 
+                                                                   itype, 
+                                                                   str(refnum).zfill(3)))
                         
                     refnum += 1
         print('Done downloading images')
