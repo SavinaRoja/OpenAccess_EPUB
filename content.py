@@ -794,6 +794,7 @@ class OPSContent(object):
                         pass
                     if tab_first:
                         table.setAttribute('id', 'h{0}'.format(name))
+                        tab_first = False
                     #Unfortunately, this XHTML Table Model is allowed to have
                     #unorthodox elements... the fooNodeHandler methods may be necessary
                     self.boldNodeHandler(table)
