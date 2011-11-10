@@ -251,63 +251,8 @@ class OPSContent(object):
         if tab_docbody.getElementsByTagName('table'):
             with open(self.outputs['Tables'],'wb') as output:
                 output.write(tab_doc.toprettyxml(encoding = 'utf-8'))
-            
-        #Need to handle lists in the document
-        lists = mainbody.getElementsByTagName('list')
-        for list in lists:
-            try:
-                title = utils.getTagData(list.getElementsByTagName('title'))
-                list.setAttribute('title', title)
-                list.removeChild('title')
-            except:
-                pass
-            try:
-                list_id = list.getAttribute('id')
-                list_content = list.getAttribute('list-content')
-                list_type = list.getAttribute('list-type')
-                prefix_word = list.getAttribute('prefix-word')
-            except:
-                pass
-            
-            if list_type == u'order':
-                list.tagName = u'ol'
-            elif list_type == u'bullet':
-                list.tagName = u'ul'
-            elif list_type == u'alpha-lower':
-                list.tagName = u'ol'
-            elif list_type == u'alpha-upper':
-                list.tagName = u'ol'
-            elif list_type == u'roman-lower':
-                list.tagName = u'ol'
-            elif list_type == u'roman-upper':
-                list.tagName = u'ol'
-            elif list_type == u'simple':
-                list.tagName = u'ul'
-                list.setAttribute('style','simple')
-            else:
-                list.tagName = 'ul'
-                print('Unknown List Type in document!')
-                prefix_word = '!' + prefix_word
-            
-            list_items = list.getElementsByTagName('list-item')
-            for list_item in list_items:
-                list_item.tagName = u'li'
-            
-            try:
-                list.removeAttribute('list-content')
-            except:
-                pass
-            try:
-                list.removeAttribute('list-type')
-            except:
-                pass
-            try:
-                list.removeAttribute('prefix-word')
-            except:
-                pass
         
-        self.boldNodeHandler(mainbody)
-        
+        #Write the document
         with open(self.outputs['Main'],'wb') as out:
             out.write(main.toprettyxml(encoding = 'utf-8'))
         
@@ -448,7 +393,9 @@ class OPSContent(object):
                     'inline-formula': self.inlineFormulaNodeHandler(topnode, doc), 
                     'disp-formula': self.dispFormulaNodeHandler(topnode, doc), 
                     'ext-link': self.extLinkNodeHandler(topnode),
-                    'sc': self.smallCapsNodeHandler(topnode)}
+                    'sc': self.smallCapsNodeHandler(topnode),
+                    'list': self.listNodeHandler(topnode),
+                    'graphic': self.graphicNodeHandler(topnode)}
         
         for tagname in handlers:
             if tagname not in ignorelist:
@@ -508,7 +455,7 @@ class OPSContent(object):
                 try:
                     img_node.setAttribute('src', img_src)
                 except NameError:
-                    print('Image source not found')
+                    loggin.error('Image source not found')
                     img_node.setAttribute('src', 'not_found')
                 img_node.setAttribute('id', fig_id)
                 img_node.setAttribute('alt', fig_alt_text_text)
@@ -636,8 +583,6 @@ class OPSContent(object):
         to be a special case and provide unique handling there. It may be 
         possible to resolve this more elegantly later with the use of CSS.'''
         
-        attrs = {'id': None, 'alternate-form-of': None}
-        
         try:
             disp_formulas = topnode.getElementsByTagName('disp-formula')
         except AttributeError:
@@ -650,6 +595,8 @@ class OPSContent(object):
                 sibling = disp_node.nextSibling #None if the last child
                 grandparent = parent.parentNode
                 parent_sibling = parent.nextSibling #None if the last child
+                
+                attrs = {'id': None, 'alternate-form-of': None}
                 
                 #Collect the attributes
                 for attr in attrs:
@@ -1174,9 +1121,6 @@ class OPSContent(object):
         external referencing. Works on all tags under the provided Node or 
         under all Nodes in a NodeList.'''
         
-        attrs = {'ext-link-type': None, 'id': None, 'xlink:actuate': None, 
-                 'xlink:href': None, 'xlink:role': None, 'xlink:show': None, 
-                 'xlink:title': None, 'xlink:type': None, 'xmlns:xlink': None}
         keep_attrs = ['id']
         
         try:
@@ -1190,6 +1134,13 @@ class OPSContent(object):
                 #Handle the potential attributes
                 
                 for attr in attrs:
+                    
+                    attrs = {'ext-link-type': None, 'id': None, 
+                             'xlink:actuate': None, 'xlink:href': None, 
+                             'xlink:role': None, 'xlink:show': None, 
+                             'xlink:title': None, 'xlink:type': None, 
+                             'xmlns:xlink': None}
+                    
                     attrs[attr] = ext_link.getAttribute(attr)
                     if attr not in keep_attrs:
                         try:
@@ -1205,7 +1156,112 @@ class OPSContent(object):
                         logging.info('<ext-link> attribute \"ext-link-type\" = {0}'.format(attrs['ext-link-type']))
                     if attrs['xlink:type'] != 'simple':
                         logging.info('<ext-link> attribute \"xlink:type\" = {0}'.format(attrs['xlink:type']))
-            
+    
+    def listNodeHandler(self, topnode):
+        '''Handles conversion of <list> tags which are used to represent data 
+        in either a linked fashion with or without linear order. Finds all 
+        <list> elements under the provided Node; also works on NodeLists by 
+        calling itself on each element in the list'''
+        
+        types = {'order': 'ol', 'bullet': 'ul', 'alpha-lower': 'ol', 
+                 'alpha-upper': 'ol', 'roman-lower': 'ol', 'roman-upper': 'ol', 
+                 'simple': 'ul', '': 'ul'}
+        
+        try: 
+            lists = topnode.getElementsByTagName('list')
+        except AttributeError:
+            for item in topnode:
+                self.listNodeHandler(item, doc)
+        else:
+            for list in lists:
+                
+                attrs = {'id': None, 'list-content': None, 'list-type': None, 
+                         'prefix-word': None}
+                
+                #Collect all attribute values into dict and remove from DOM
+                for attr in attrs:
+                    attrs[attr] = list.getAttribute(attr)
+                    try:
+                        list.removeAttribute(attr)
+                    except xml.dom.NotFoundErr:
+                        pass
+                
+                try: #A list has zero or one title elements
+                    list_title_node = list.getElementsByTagName('list')[0]
+                except IndexError:
+                    list_title_node = None
+                else: #Do something with the title element
+                    list.setAttribute('title', utils.serializeText(list_title_node))
+                    list.removeChild(list_title_node)
+                
+                try: #Set tagName as mapped in types{} based on list-type value
+                    list.tagName = types[attrs['list-type']]
+                except KeyError:
+                    logging.warning('unknown list-type value found: {0}'.format(attrs['list-type']))
+                    list.tagName = 'ul'
+                    list.setAttribute('style', 'simple')
+                
+                #Lists can be stacked: we cannot simply use getElementsByTagName
+                
+                list_items = []
+                for child in list.childNodes:
+                    try:
+                        if child.tagName == 'list-item':
+                            list_items.append(child)
+                    except AttributeError:
+                        pass
+                
+                for list_item in list_items:
+                    list_item.tagName = u'li'
+    
+    def graphicNodeHandler(self, topnode):
+        '''Handles rudimentary conversion of <graphic> tags. Typically when 
+        found when not enclosed in any other structure. Finds all <graphic> 
+        tags under the provided topnode. Also works on NodeLists by calling 
+        itself on each node in the NodeList.'''
+        
+        #<graphic> elements are commonly found in special contexts:
+        #In those cases, decide if this method provides the needed support
+        #or if special handling is needed.
+        try:
+            graphics = topnode.getElementsByTagName('graphic')
+        except AttributeError:
+            for item in topnode:
+                self.graphicNodeHandler()
+        else:
+            for graphic in graphics:
+                #Handle graphic Attributes
+                attrs = {'alt-version': None, 'alternate-form-of': None, 
+                         'id': None, 'mime-subtype': None, 'mimetype': None, 
+                         'position': None, 'xlink:actuate': None, 
+                         'xlink:href': None, 'xlink:role': None, 
+                         'xlink:title': None, 'xlink:type': None, 
+                         'xmlns:xlink': None}
+                for attr in attrs:
+                    attrs[attr] = graphic.getAttribute(attr)
+                    try:
+                        graphic.removeAttribute(attr)
+                    except xml.dom.NotFoundErr:
+                        pass
+                
+                name = attrs['xlink:href'].split('.')[-1]
+                img = None
+                startpath = os.getcwd()
+                os.chdir(self.outdir)
+                for path, _subdirs, filenames in os.walk('images'):
+                    for filename in filenames:
+                        if os.path.splitext(filename)[0] == name:
+                            img = os.path.join(path, filename)
+                os.chdir(startpath)
+                
+                #modify the <graphic> tag to <img>
+                if img:
+                    graphic.tagName = 'img'
+                    graphic.setAttribute('src', img)
+                else:
+                    logging.error('graphicNodeHandler: Image source not found')
+    
+    
     def divTitleFormat(self, fromnode, depth = 0):
         '''A method for converting title tags to heading format tags'''
         taglist = ['h2', 'h3', 'h4', 'h5', 'h6']
