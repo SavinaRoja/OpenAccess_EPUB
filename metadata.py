@@ -90,10 +90,11 @@ class ArticleMeta(object):
             hist = node.getElementsByTagName('history')[0]
         except IndexError:
             hist = None
-        dates = hist.getElementsByTagName('date')
-        for entry in dates:
-            entry_date = epub_date.DateInfo(entry)
-            self.history[entry.getAttribute('date-type')] = entry_date
+        else:
+            dates = hist.getElementsByTagName('date')
+            for entry in dates:
+                entry_date = epub_date.DateInfo(entry)
+                self.history[entry.getAttribute('date-type')] = entry_date
         
         # title and alternate title
         title_grps = node.getElementsByTagName('title-group')
