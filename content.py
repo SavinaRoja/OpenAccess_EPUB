@@ -33,6 +33,7 @@ class OPSContent(object):
         art_title = meta.article_meta.title
         titlenode = synop.createElement('h1')
         titlenode.childNodes = art_title.childNodes
+        titlenode.setAttribute('id', 'title')
         #for item in art_title.childNodes:
         #    titlenode.appendChild(item.cloneNode(deep = True))
         synbody.appendChild(titlenode)

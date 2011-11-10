@@ -28,11 +28,27 @@ def generateTOC(fm, features, outdirect):
         text.appendChild(doc.createTextNode(textstring))
         return text
     
-    def navmapper(featurenode, navpoint):
+    def navmapper(featurenode, navMap, first = True):
+        #Add the Title Page navPoint
+        if first:
+            titlepage_nav = doc.createElement('navPoint')
+            navMap.appendChild(titlepage_nav)
+            titlepage_nav.setAttribute('playOrder', '1')
+            titlepage_nav.setAttribute('id', 'titlepage')
+            titlepage_label = doc.createElement('navLabel')
+            titlepage_label_text = doc.createElement('text')
+            titlepage_label_text.appendChild(doc.createTextNode('Title Page'))
+            titlepage_label.appendChild(titlepage_label_text)
+            titlepage_nav.appendChild(titlepage_label)
+            titlepage_content = doc.createElement('content')
+            titlepage_content.setAttribute('src', 'synop.xml#title')
+            titlepage_nav.appendChild(titlepage_content)
+        
+        #Add navPoints for all other features
         for child in featurenode.childNodes:
             if child.tagName == 'sec':
                 navnode = doc.createElement('navPoint')
-                navpoint.appendChild(navnode)
+                navMap.appendChild(navnode)
                 navnode.setAttribute('playOrder',child.getAttribute('playOrder'))
                 navnode.setAttribute('id', child.getAttribute('id'))
                 titlenode = child.getElementsByTagName('title')[0]
@@ -43,7 +59,7 @@ def generateTOC(fm, features, outdirect):
                 content = doc.createElement('content')
                 content.setAttribute('src', 'main.xml#{0}'.format(child.getAttribute('id')))
                 navnode.appendChild(content)
-                navmapper(child, navnode)
+                navmapper(child, navnode, first = False)
     
     def listFigures(featurenode, navpoint):
         for child in featurenode.getElementsByTagName('fig'):
@@ -159,6 +175,5 @@ def generateTOC(fm, features, outdirect):
     navlabel.appendChild(makeText('Table of Contents'))
     navmapper(features, navmap)
     
-    outdoc = open(os.path.join(outdirect, 'OPS', 'toc.ncx'), 'w')
-    outdoc.write(doc.toprettyxml(encoding = 'utf-8'))
-    outdoc.close()
+    with open(os.path.join(outdirect, 'OPS', 'toc.ncx'), 'w') as outdoc:
+        outdoc.write(doc.toprettyxml(encoding = 'utf-8'))

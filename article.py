@@ -20,7 +20,7 @@ class Article(object):
         attr_strings = [u'article-type', u'dtd-version', u'xml:lang', u'xmlns:mml', u'xmlns:xlink']
         
         self.attributes = {}
-        self.playorder = 1
+        self.playorder = 2
         
         for attr in attr_strings:
             value = self.root_tag.getAttribute(attr)
