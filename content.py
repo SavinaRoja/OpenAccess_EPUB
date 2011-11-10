@@ -1132,15 +1132,13 @@ class OPSContent(object):
             for ext_link in ext_links:
                 ext_link.tagName = u'a' #convert to <a>
                 #Handle the potential attributes
-                
-                for attr in attrs:
-                    
-                    attrs = {'ext-link-type': None, 'id': None, 
+                attrs = {'ext-link-type': None, 'id': None, 
                              'xlink:actuate': None, 'xlink:href': None, 
                              'xlink:role': None, 'xlink:show': None, 
                              'xlink:title': None, 'xlink:type': None, 
                              'xmlns:xlink': None}
-                    
+                
+                for attr in attrs:
                     attrs[attr] = ext_link.getAttribute(attr)
                     if attr not in keep_attrs:
                         try:
