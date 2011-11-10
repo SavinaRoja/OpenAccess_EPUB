@@ -114,7 +114,7 @@ class Article(object):
             
             for itype, subdirect, itype_str in imagetypes:
                     
-                for refnum in range(1,1000):
+                for refnum in range(1,10000):
                     addr_str = '{0}{1}{2}%2Fjournal.{3}.{4}.{5}{6}&representation=PNG_L'
                     address = addr_str.format(journalurl, PLOSSTRING, journaldoi,
                                               journalid, articledoi, itype,
