@@ -1,8 +1,9 @@
 """Handles metadata related tasks for the article"""
 import logging
-from utils import getTagData
-from utils import getFormattedNode
+import epub_date
+import contributor, crossrefs
 import xml.dom
+from utils import *
 
 class FrontMatter(object):
     """Article metadata"""
@@ -31,22 +32,37 @@ class FrontMatter(object):
     def __str__(self):
         retstr = 'FrontMatter'
         return retstr
-    
-"""Article metadata"""
-import epub_date
-from utils import Identifier, getTagData
-import logging
-import contributor, crossrefs
 
 class ArticleMeta(object):
-    """Article metadata"""
+    '''Article Metadata: this class takes the <article-meta> element as input 
+    and holds representations of the data its children contain as local 
+    attributes. The specification for the <article-meta> tag can be found at: 
+    http://dtd.nlm.nih.gov/publishing/tag-library/2.0/n-p5c0.html'''
+    
+    #The elements contained in the article-meta may exist under certain defined
+    #conditions: zero or one, zero or more, one of (options)...
+    #For the sake of clarity and consistency, it is wise to apply a similar 
+    #approach in the collection of elements with the same condition.
+    
+    #For "zero or one": collect at most one, or nothing
+    #try:
+    #    self.article_categories = node.getElementsByTagName('article-categories')[0]
+    #except IndexError:
+    #    self.article_categories = None
+    
+    #For "zero or more": collect all of them
+    #self.article_id = node.getElementsByTagName('article-id')
+    #This is a NodeList of unknown length, iteration over it with a for-loop
+    #is possible to act on each Node, or if empty it will evaluate false in an 
+    #if-statement.
+    
     def __init__(self, node):
         self.identifiers = set()
         self.article_categories = None 
-        self.title = None
-        self.alt_title = None
-        self.trans_title = None
-        self.subtitle = None
+        self.article_title = None
+        self.alt_titles = {}
+        self.trans_titles = {}
+        self.subtitles = []
         self.title_fn = None 
         self.publication_dates = None
         self.volume = None
@@ -74,16 +90,69 @@ class ArticleMeta(object):
         
         self.identify(node)
         
+    def makeIdentifiers(self, nodelist):
+        '''This method takes a NodeList of article-id elements and returns a 
+        set of "Identifier" namedtuples.'''
+        
+        id_set = set()
+        for article_id in nodelist:
+            pub_id_type = article_id.getAttribute('pub-id-type')
+            data = getTagText(article_id)
+            ident = Identifier(data, pub_id_type)
+            logging.debug(ident)
+            id_set.add(ident)
+        return(id_set)
+    
+    def makeTitles(self, node):
+        '''This method takes a title-group node as input and returns '''
+        #The article title is a required element, we will return a more nicely 
+        #formatted version of it to the self.article_title attribute
+        article_title_node = node.getElementsByTagName('article-title')[0]
+        article_title = getFormattedNode(article_title_node)
+        #Zero or more subtitle nodes, these are rare and have no attributes:
+        #Collect a NodeList of them, no planned usage for now
+        subtitles = node.getElementsByTagName('subtitle')
+        #Zero or more trans-title nodes, these can be distinguished by the 
+        #xml:lang attribute, make a dictionary, keying language to node
+        trans_titles = node.getElementsByTagName('trans-title')
+        trans_title_dict = {}
+        for trans_title in trans_titles:
+            lang = trans_title.getAttribute('xml:lang')
+            title = getFormattedNode(trans_title)
+            trans_title_dict[lang] = title
+        #Zero or more alt-title nodes, these can be distinguished by the 
+        #alt-title-type attribute. make a dictionary, keyed to this attribute
+        alt_titles = node.getElementsByTagName('alt-title')
+        alt_title_dict = {}
+        for alt_title in alt_titles:
+            type =alt_title.getAttribute('alt-title-type')
+            title = getFormattedNode(alt_title)
+            alt_title_dict[type] = title
+        #We will ignore the fn-group element for now
+        
+        return(article_title, subtitles, trans_title_dict, alt_title_dict)
+        
     def identify(self, node):
         """pull everything from the xml node"""
-        # get article-id nodes
-        id_nodes = node.getElementsByTagName('article-id')
-        for item in id_nodes:
-            id_data = item.firstChild.data
-            id_type = item.getAttribute('pub-id-type')
-            ident = Identifier(id_data, id_type)
-            logging.debug(ident)
-            self.identifiers.add(ident)
+        # get article-id nodes, assign as class attribute for direct accession
+        self.article_ids = node.getElementsByTagName('article-id')
+        # Create self.identifiers from article-id nodes
+        self.identifiers = self.makeIdentifiers(self.article_ids)
+        # get article-categories node
+        try:
+            article_categories_node = node.getElementsByTagName('article-categories')[0]
+        except IndexError:
+            logging.debug('No article-categories node found')
+            self.article_categories = None
+        else: #Instantiate ArticleCategories if the node was found
+            self.article_categories = ArticleCategories(article_categories_node)
+        # get title-group node
+        try:
+            title_group_node = node.getElementsByTagName('title-group')[0]
+        except IndexError:
+            logging.critical('title-group not found! Articles need titles!')
+        else: #Set the title values with makeTitles()
+            self.article_title, self.subtitles, self.trans_titles, self.alt_titles = self.makeTitles(title_group_node)
             
         # history
         try:
@@ -96,14 +165,6 @@ class ArticleMeta(object):
                 entry_date = epub_date.DateInfo(entry)
                 self.history[entry.getAttribute('date-type')] = entry_date
         
-        # title and alternate title
-        title_grps = node.getElementsByTagName('title-group')
-        for title_grp in title_grps:
-            self.title = getFormattedNode(title_grp.getElementsByTagName('article-title')[0])
-            self.alt_title = getTagData(title_grp.getElementsByTagName('alt-title'))
-            self.trans_title = getTagData(title_grp.getElementsByTagName('trans-title'))
-            self.subtitle = getTagData(title_grp.getElementsByTagName('subtitle'))
-        
         self.volume = getTagData(node.getElementsByTagName('volume'))
         
         # Abstract nodes
@@ -113,14 +174,6 @@ class ArticleMeta(object):
                 self.abstracts[type] = abstract
             else:
                 self.abstracts['default'] = abstract
-        
-        # Article categories
-        try:
-            article_cat_node = node.getElementsByTagName('article-categories')[0]
-        except IndexError:
-            self.article_categories = None
-        else:
-            self.article_categories = ArticleCategories(article_cat_node)
         
         # Issue: <issue> number, <issue-id> identifier, <issue-title> title
         self.issue = getTagData(node.getElementsByTagName('issue'))

@@ -30,7 +30,7 @@ class OPSContent(object):
         synop, synbody = self.initiateDocument('Synopsis file')
         
         #Create and place the title in the body element
-        art_title = meta.article_meta.title
+        art_title = meta.article_meta.article_title
         titlenode = synop.createElement('h1')
         titlenode.childNodes = art_title.childNodes
         titlenode.setAttribute('id', 'title')

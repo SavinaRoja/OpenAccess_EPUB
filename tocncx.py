@@ -164,7 +164,8 @@ def generateTOC(fm, features, outdirect):
     for meta in metas:
         head.appendChild(meta)
     
-    tocname = 'NCX for: {0}'.format(fm.article_meta.title)
+    titletext = utils.serializeText(fm.article_meta.article_title, stringlist = [])
+    tocname = 'NCX for: {0}'.format(titletext)
     doctitle.appendChild(makeText(tocname))
     docauthor.appendChild(makeText(u'{0}{1}'.format('Primary author: ', 
                                                    fm.article_meta.art_auths[0].get_name())))
