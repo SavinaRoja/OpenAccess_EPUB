@@ -104,7 +104,12 @@ class ArticleMeta(object):
         return(id_set)
     
     def makeTitles(self, node):
-        '''This method takes a title-group node as input and returns '''
+        '''This method takes a title-group node as input and returns four 
+        units of data corresponding to four tags inside the title-group. 
+        article-title is returned as a formatted Node, subtitle is returned as 
+        a plain NodeList, trans-title is returned as a dictionary mapping 
+        values of xml:lang to the Node, and alt-title is returned as a 
+        dictionary mapping values of alt-title-type to the Node.'''
         #The article title is a required element, we will return a more nicely 
         #formatted version of it to the self.article_title attribute
         article_title_node = node.getElementsByTagName('article-title')[0]
@@ -131,7 +136,19 @@ class ArticleMeta(object):
         #We will ignore the fn-group element for now
         
         return(article_title, subtitles, trans_title_dict, alt_title_dict)
-        
+    
+    def makeHistory(self, node):
+        '''This method takes the <history> node as input and returns a 
+        dictionary mapping of dates (epub_date.DateInfo) to the values of the 
+        date-type attribute.'''
+        dict = {}
+        dates = node.getElementsByTagName('date')
+        for date in dates:
+            date_info = epub_date.DateInfo(date)
+            date_type = date.getAttribute('date-type')
+            dict[date_type] = date_info
+        return(dict)
+    
     def identify(self, node):
         """pull everything from the xml node"""
         # get article-id nodes, assign as class attribute for direct accession
@@ -156,14 +173,11 @@ class ArticleMeta(object):
             
         # history
         try:
-            hist = node.getElementsByTagName('history')[0]
+            history_node = node.getElementsByTagName('history')[0]
         except IndexError:
-            hist = None
+            self.history = {}
         else:
-            dates = hist.getElementsByTagName('date')
-            for entry in dates:
-                entry_date = epub_date.DateInfo(entry)
-                self.history[entry.getAttribute('date-type')] = entry_date
+            self.history = self.makeHistory(history_node)
         
         self.volume = getTagData(node.getElementsByTagName('volume'))
         

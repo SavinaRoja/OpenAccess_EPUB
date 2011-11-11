@@ -139,9 +139,12 @@ class OPSContent(object):
         datep.setAttribute('id', 'dates')
         hist = meta.article_meta.history
         dates = meta.article_meta.art_dates
-        datelist = [('Received', hist['received']), 
-                    ('Accepted', hist['accepted']), 
-                    ('Published', dates['epub'])]
+        if hist:
+            datelist = [('Received', hist['received']), 
+                        ('Accepted', hist['accepted']), 
+                        ('Published', dates['epub'])]
+        else:
+            datelist = [('Published', dates['epub'])]
         
         for _bold, _data in datelist:
             bold = synop.createElement('b')
