@@ -19,6 +19,10 @@ batchtest.sh
 test_output/*
 *.epub
 
+# Cache #
+############
+cache/PLoS/*
+
 # Logs #
 ############
 logs/*

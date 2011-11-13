@@ -130,7 +130,6 @@ class Article(object):
                                                   journaldoi, journalid, 
                                                   articledoi, itype,
                                                   str(refnum).zfill(3))
-                        
                         if itype == 'e':
                             address = address[:-2]
                             
@@ -155,12 +154,8 @@ class Article(object):
                         refnum += 1
             print('Done downloading images')
         
-        
         dirname_ops_images = os.path.join(dirname, 'OPS', 'images')
         shutil.copytree(cache_dir_images, dirname_ops_images)
-        
-        
-        
         
     def featureParse(self, doc, fromnode, destnode):
         '''A method that traverses the node, extracting a hierarchy of specific
