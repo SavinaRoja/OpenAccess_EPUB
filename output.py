@@ -11,16 +11,16 @@ def generateHierarchy(dirname):
     with open(os.path.join(css, 'article.css'), 'wb') as dest:
         with open(os.path.join('resources', 'text.css')) as src:
             dest.write(src.read())
-    images = os.path.join(ops, 'images')
-    os.mkdir(images)
-    figures = os.path.join(images, 'figures')
-    os.mkdir(figures)
-    tables = os.path.join(images, 'tables')
-    os.mkdir(tables)
-    supp = os.path.join(images, 'supplementary')
-    os.mkdir(supp)
-    eqn = os.path.join(images, 'equations')
-    os.mkdir(eqn)
+    #images = os.path.join(ops, 'images')
+    #os.mkdir(images)
+    #figures = os.path.join(images, 'figures')
+    #os.mkdir(figures)
+    #tables = os.path.join(images, 'tables')
+    #os.mkdir(tables)
+    #supp = os.path.join(images, 'supplementary')
+    #os.mkdir(supp)
+    #eqn = os.path.join(images, 'equations')
+    #os.mkdir(eqn)
     
     # Create mimetype file in root directory
     mimepath = os.path.join(dirname, 'mimetype')

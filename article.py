@@ -76,7 +76,7 @@ class Article(object):
         import urllib2, logging, os.path, shutil
         import output
          
-        print('Downloading images. This may take some time...')
+        print('Processing images...')
         
         for (_data, _id) in self.front.article_meta.identifiers:
             if _id == 'doi':
@@ -88,73 +88,79 @@ class Article(object):
         if prefix == '10.1371':
             publisher = 'PLoS'
             cache_dir = os.path.join(cache, publisher, suffix)
+            cache_dir_images = os.path.join(cache_dir, 'images')
             if os.path.isdir(cache_dir):
                 cached = True
+                logging.info('Cached images found')
+                print('Cached images found. Transferring from cache...')
             else:
-                os.mkdir(cache_dir))
+                logging.info('Cached images not found, creating cache...')
+                os.mkdir(cache_dir)
+                model_images = os.path.join(cache, 'model', 'images')
+                shutil.copytree(model_images, cache_dir_images)
         
-        if cached:
-            shutil.copytree()
+        if not cached:
+            print('Downloading images, this may take some time...')
+            if publisher == 'PLoS':
+                PLOSSTRING = 'article/fetchObject.action?uri=info%3Adoi%2F'
+                #split the doidata into useful fragments
+                slashsplit = doidata.split('/')
+                journaldoi = slashsplit[0]
+                dotsplit = slashsplit[1].split('.')
+                journalid = dotsplit[1]
+                articledoi = dotsplit[2]
+                
+                jids = {'pgen': 'http://www.plosgenetics.org/', 
+                        'pcbi': 'http://www.ploscompbiol.org/', 
+                        'ppat': 'http://www.plospathogens.org/', 
+                        'pntd': 'http://www.plosntds.org/', 
+                        'pmed': 'http://www.plosmedicine.org/', 
+                        'pbio': 'http://www.plosbiology.org/',
+                        'pone': 'http://www.plosone.org/'}
+                
+                imagetypes = [('g', 'figures', 'figure'), 
+                              ('t', 'tables', 'table'), 
+                              ('e', 'equations', 'equation')]
+                
+                for itype, subdirect, itype_str in imagetypes:
+                        
+                    for refnum in range(1,10000):
+                        addr_str = '{0}{1}{2}%2Fjournal.{3}.{4}.{5}{6}&representation=PNG_L'
+                        address = addr_str.format(jids[journalid], PLOSSTRING, 
+                                                  journaldoi, journalid, 
+                                                  articledoi, itype,
+                                                  str(refnum).zfill(3))
+                        
+                        if itype == 'e':
+                            address = address[:-2]
+                            
+                        try:
+                            image = urllib2.urlopen(address)
+                            
+                        except urllib2.HTTPError, e:
+                            if not e.code == 500:
+                                logging.error('urllib2.HTTPError {0}'.format(e.code))
+                            break
+                            
+                        else:
+                            filename = '{0}{1}.png'.format(itype, str(refnum).zfill(3))
+                            image_file = os.path.join(cache_dir, 'images',
+                                                      subdirect, filename)
+                            with open(image_file, 'wb') as outimage:
+                                outimage.write(image.read())
+                            print('Downloaded {0} image {1}{2}'.format(itype_str, 
+                                                                       itype, 
+                                                                       str(refnum).zfill(3)))
+                            
+                        refnum += 1
+            print('Done downloading images')
         
-        if publisher == 'PLoS':
-            PLOSSTRING = 'article/fetchObject.action?uri=info%3Adoi%2F'
-            #split the doidata into useful fragments
-            slashsplit = doidata.split('/')
-            journaldoi = slashsplit[0]
-            dotsplit = slashsplit[1].split('.')
-            journalid = dotsplit[1]
-            articledoi = dotsplit[2]
-            
-            if journalid == 'pgen':
-                journalurl = 'http://www.plosgenetics.org/'
-            elif journalid == 'pcbi':
-                journalurl = 'http://www.ploscompbiol.org/'
-            elif journalid == 'ppat':
-                journalurl = 'http://www.plospathogens.org/'
-            elif journalid == 'pntd':
-                journalurl = 'http://www.plosntds.org/'
-            elif journalid == 'pmed':
-                journalurl = 'http://www.plosmedicine.org/'
-            elif journalid == 'pbio':
-                journalurl = 'http://www.plosbiology.org/'
-            elif journalid == 'pone':
-                journalurl = 'http://www.plosone.org/'
-            
-            imagetypes = [('g', 'figures', 'figure'), 
-                          ('t', 'tables', 'table'), 
-                          ('e', 'equations', 'equation')]
-            
-            for itype, subdirect, itype_str in imagetypes:
-                    
-                for refnum in range(1,10000):
-                    addr_str = '{0}{1}{2}%2Fjournal.{3}.{4}.{5}{6}&representation=PNG_L'
-                    address = addr_str.format(journalurl, PLOSSTRING, journaldoi,
-                                              journalid, articledoi, itype,
-                                              str(refnum).zfill(3))
-                    
-                    if itype == 'e':
-                        address = address[:-2]
-                        
-                    try:
-                        image = urllib2.urlopen(address)
-                        
-                    except urllib2.HTTPError, e:
-                        if not e.code == 500:
-                            logging.error('urllib2.HTTPError {0}'.format(e.code))
-                        break
-                        
-                    else:
-                        filename = '{0}{1}.png'.format(itype, str(refnum).zfill(3))
-                        image_file = os.path.join(dirname, 'OPS', 'images',
-                                                  subdirect, filename)
-                        with open(image_file, 'wb') as outimage:
-                            outimage.write(image.read())
-                        print('Downloaded {0} image {1}{2}'.format(itype_str, 
-                                                                   itype, 
-                                                                   str(refnum).zfill(3)))
-                        
-                    refnum += 1
-        print('Done downloading images')
+        
+        dirname_ops_images = os.path.join(dirname, 'OPS', 'images')
+        shutil.copytree(cache_dir_images, dirname_ops_images)
+        
+        
+        
         
     def featureParse(self, doc, fromnode, destnode):
         '''A method that traverses the node, extracting a hierarchy of specific
