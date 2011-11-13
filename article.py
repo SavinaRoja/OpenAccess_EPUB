@@ -70,22 +70,34 @@ class Article(object):
         
         return titlestring
         
-    def fetchImages(self, publisher = 'PLoS', dirname = 'test_output'): #Default to PLoS for now
+    def fetchImages(self, cache, publisher = 'PLoS', dirname = 'test_output'): #Default to PLoS for now
         '''Fetch the images associated with the article.'''
         
-        import urllib2, logging, os.path
+        import urllib2, logging, os.path, shutil
         import output
-        
+         
         print('Downloading images. This may take some time...')
         
         for (_data, _id) in self.front.article_meta.identifiers:
             if _id == 'doi':
                 doidata = _data
         
+        #Check cache to see if images already have been downloaded
+        cached = False
+        prefix, suffix = os.path.split(doidata)
+        if prefix == '10.1371':
+            publisher = 'PLoS'
+            cache_dir = os.path.join(cache, publisher, suffix)
+            if os.path.isdir(cache_dir):
+                cached = True
+            else:
+                os.mkdir(cache_dir))
+        
+        if cached:
+            shutil.copytree()
+        
         if publisher == 'PLoS':
-            
             PLOSSTRING = 'article/fetchObject.action?uri=info%3Adoi%2F'
-            
             #split the doidata into useful fragments
             slashsplit = doidata.split('/')
             journaldoi = slashsplit[0]

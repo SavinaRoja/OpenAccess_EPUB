@@ -15,10 +15,12 @@ import metadata
 import output 
 import tocncx 
 import content
+from settings import Settings
 from article import Article
 
 def main():
     '''main script'''
+    settings = Settings()
     
     parser = argparse.ArgumentParser(description = 'OpenAccess_EPUB Parser')
     parser.add_argument('--version', action='version', version='OpenAccess_EPUB {0}'.format(__version__))
@@ -110,7 +112,7 @@ def main():
     
     print(u'Processing output to {0}.epub'.format(outdirect))
     output.generateHierarchy(outdirect)
-    document.fetchImages(dirname = outdirect)
+    document.fetchImages(cache = settings.cache_location, dirname = outdirect)
     content.OPSContent(filename, outdirect, document.front, 
                        document.back)
     tocncx.generateTOC(document.front, document.features, outdirect)

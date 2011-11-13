@@ -218,9 +218,11 @@ class ArticleMeta(object):
         
         for corr in self.correspondences:
             self.art_corresps.append(crossrefs.Correspondence(corr))
-        
-        auth_notes_fn = author_notes.getElementsByTagName('fn')[0]
-        auth_notes_fn_p = auth_notes_fn.getElementsByTagName('p')[0]
+        try:
+            auth_notes_fn = author_notes.getElementsByTagName('fn')[0]
+            auth_notes_fn_p = auth_notes_fn.getElementsByTagName('p')[0]
+        except IndexError:
+            pass
         
         self.art_auth_contribs = auth_notes_fn_p.firstChild.data
         copyright_year = node.getElementsByTagName('copyright-year')[0]
