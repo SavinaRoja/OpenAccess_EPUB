@@ -187,12 +187,13 @@ class OPSContent(object):
         #Create a node for the correspondence text
         corr_line = synop.createElement('p')
         art_corresps = meta.article_meta.art_corresps
-        art_corr_nodes = meta.article_meta.correspondences
+        correspondence_nodes = meta.article_meta.correspondences
         
         # PLoS does not appear to list more than one correspondence... >.<
         corr_line.setAttribute('id', art_corresps[0].rid)
-        corresp_text = utils.serializeText(art_corr_nodes[0])
-        corr_line.appendChild(synop.createTextNode(corresp_text))
+        for correspondence in correspondence_nodes:
+            corr_line.childNodes += correspondence.childNodes
+        #corr_line.appendChild(synop.createTextNode(corresp_text))
         
         #Handle conversion of ext-link to <a>
         ext_links = synop.getElementsByTagName('ext-link')
@@ -395,10 +396,11 @@ class OPSContent(object):
                     'named-content': self.namedContentNodeHandler(topnode), 
                     'inline-formula': self.inlineFormulaNodeHandler(topnode, doc), 
                     'disp-formula': self.dispFormulaNodeHandler(topnode, doc), 
-                    'ext-link': self.extLinkNodeHandler(topnode),
-                    'sc': self.smallCapsNodeHandler(topnode),
-                    'list': self.listNodeHandler(topnode),
-                    'graphic': self.graphicNodeHandler(topnode)}
+                    'ext-link': self.extLinkNodeHandler(topnode), 
+                    'sc': self.smallCapsNodeHandler(topnode), 
+                    'list': self.listNodeHandler(topnode), 
+                    'graphic': self.graphicNodeHandler(topnode), 
+                    'email': self.emailNodeHandler(topnode)}
         
         for tagname in handlers:
             if tagname not in ignorelist:
@@ -1118,6 +1120,32 @@ class OPSContent(object):
                 href = '{0}{1}'.format(ref_map[ref_type], rid)
                 xref_node.setAttribute('href', href)
                 
+    
+    def emailNodeHandler(self, topnode):
+        '''Handles conversion of <email> tags underneath the provided Node 
+        or NodeList.'''
+        
+        try:
+            emails = topnode.getElementsByTagName('email')
+        except AttributeError:
+            for item in topnode:
+                self.emailNodeHandler(item)
+        else:
+            for email in emails:
+                attrs = {'xlink:actuate': None, 'xlink:href': None, 
+                         'xlink:role': None, 'xlink:show': None, 
+                         'xlink:title': None, 'xlink:type': None, 
+                         'xmlns:xlink': None}
+                for attr in attrs:
+                    attrs[attr] = email.getAttribute(attr)
+                    try:
+                        email.removeAttribute(attr)
+                    except xml.dom.NotFoundErr:
+                        pass
+                email.tagName = u'a'
+                address = utils.getTagText(email)
+                href = u'mailto:{0}'.format(address)
+                email.setAttribute('href', href)
     
     def extLinkNodeHandler(self, topnode):
         '''Handles conversion of <ext-link> tags. These tags are utilized for 

@@ -79,10 +79,10 @@ class ArticleMeta(object):
         self.art_edits = [] # A list of editors.
         self.art_other_contrib = [] # unclassified contributors
         self.art_affs = []
-        self.correspondences = None
+        self.correspondences = []
         self.art_corresps = []
         self.art_dates = {}
-        self.art_auth_contribs = None
+        self.author_notes_contributions = None
         self.art_copyright_year = None
         self.art_copyright_statement = None
         self.art_eloc_id = None
@@ -137,6 +137,13 @@ class ArticleMeta(object):
         
         return(article_title, subtitles, trans_title_dict, alt_title_dict)
     
+    def makeVolume(self, node):
+        '''This method takes the <volume> node as input and returns the string 
+        contents of the node.'''
+        volume_str = getTagText(node)
+        return(volume_str)
+        
+    
     def makeHistory(self, node):
         '''This method takes the <history> node as input and returns a 
         dictionary mapping of dates (epub_date.DateInfo) to the values of the 
@@ -148,6 +155,23 @@ class ArticleMeta(object):
             date_type = date.getAttribute('date-type')
             dict[date_type] = date_info
         return(dict)
+    
+    def makeAuthorNotes(self, node):
+        '''This method accepts the <author-notes> node as input and uses the 
+        contents to add to the local attributes \"art_corresps\" and 
+        \"author_notes_contributions\"'''
+        try:
+            an_title = node.getElementsByTagName('title')[0]
+        except IndexError:
+            an_title = None
+        self.correspondences = node.getElementsByTagName('corresp')
+        an_fns = node.getElementsByTagName('fn')
+        
+        for corresp in self.correspondences:
+            self.art_corresps.append(crossrefs.Correspondence(corresp))
+        for fn in an_fns:
+            if fn.getAttribute('fn-type') == u'con':
+                self.author_notes_contributions = fn
     
     def identify(self, node):
         """pull everything from the xml node"""
@@ -179,7 +203,13 @@ class ArticleMeta(object):
         else:
             self.history = self.makeHistory(history_node)
         
-        self.volume = getTagData(node.getElementsByTagName('volume'))
+        #volume number
+        try:
+            volume_node = node.getElementsByTagName('volume')[0]
+        except IndexError:
+            self.volume = ''
+        else:
+            self.volume = self.makeVolume(volume_node)
         
         # Abstract nodes
         for abstract in node.getElementsByTagName('abstract'):
@@ -213,18 +243,13 @@ class ArticleMeta(object):
         for aff in affs:
             self.art_affs.append(crossrefs.Affiliation(aff))
         
-        author_notes = node.getElementsByTagName('author-notes')[0]
-        self.correspondences = author_notes.getElementsByTagName('corresp')
-        
-        for corr in self.correspondences:
-            self.art_corresps.append(crossrefs.Correspondence(corr))
         try:
-            auth_notes_fn = author_notes.getElementsByTagName('fn')[0]
-            auth_notes_fn_p = auth_notes_fn.getElementsByTagName('p')[0]
+            author_notes = node.getElementsByTagName('author-notes')[0]
         except IndexError:
             pass
+        else:
+            self.makeAuthorNotes(author_notes)
         
-        self.art_auth_contribs = auth_notes_fn_p.firstChild.data
         copyright_year = node.getElementsByTagName('copyright-year')[0]
         self.art_copyright_year = copyright_year.firstChild.data
         cpright = node.getElementsByTagName('copyright-statement')[0]
