@@ -75,6 +75,7 @@ class Article(object):
         
         import urllib2, logging, os.path, shutil
         import output
+        from time import sleep
          
         print('Processing images...')
         
@@ -137,7 +138,13 @@ class Article(object):
                             image = urllib2.urlopen(address)
                             
                         except urllib2.HTTPError, e:
-                            if not e.code == 500:
+                            if e.code == 503: #Server overloaded
+                                sleep(1) #wait a second
+                                try:
+                                    image = urllib2.urlopen(address)
+                                except:
+                                    break
+                            elif e.code == 500:
                                 logging.error('urllib2.HTTPError {0}'.format(e.code))
                             break
                             
