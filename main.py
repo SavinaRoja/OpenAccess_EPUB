@@ -43,6 +43,16 @@ def main():
     logging.basicConfig(filename = logname, level = logging.DEBUG)
     logging.info('OpenAccess_EPUB Log v.{0}'.format(__version__))
     
+    if not os.path.isdir('cache'):
+        os.mkdir('cache')
+        os.mkdir(os.path.join('cache', 'model'))
+        os.mkdir(os.path.join('cache', 'PLoS'))
+        os.mkdir(os.path.join('cache', 'model', 'images'))
+        os.mkdir(os.path.join('cache', 'model', 'images', 'figures'))
+        os.mkdir(os.path.join('cache', 'model', 'images', 'tables'))
+        os.mkdir(os.path.join('cache', 'model', 'images', 'equations'))
+        os.mkdir(os.path.join('cache', 'model', 'images', 'supplementary'))
+    
     if 'http://www' in args.input:
         download = True
         try:
