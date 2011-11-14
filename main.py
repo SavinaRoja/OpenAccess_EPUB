@@ -43,15 +43,16 @@ def main():
     logging.basicConfig(filename = logname, level = logging.DEBUG)
     logging.info('OpenAccess_EPUB Log v.{0}'.format(__version__))
     
-    if not os.path.isdir('cache'):
-        os.mkdir('cache')
-        os.mkdir(os.path.join('cache', 'model'))
-        os.mkdir(os.path.join('cache', 'PLoS'))
-        os.mkdir(os.path.join('cache', 'model', 'images'))
-        os.mkdir(os.path.join('cache', 'model', 'images', 'figures'))
-        os.mkdir(os.path.join('cache', 'model', 'images', 'tables'))
-        os.mkdir(os.path.join('cache', 'model', 'images', 'equations'))
-        os.mkdir(os.path.join('cache', 'model', 'images', 'supplementary'))
+    cache_loc = settings.cache_location
+    if not os.path.isdir(cache_loc):
+        os.mkdir(cache_loc)
+        os.mkdir(os.path.join(cache_loc, 'model'))
+        os.mkdir(os.path.join(cache_loc, 'PLoS'))
+        os.mkdir(os.path.join(cache_loc, 'model', 'images'))
+        os.mkdir(os.path.join(cache_loc, 'model', 'images', 'figures'))
+        os.mkdir(os.path.join(cache_loc, 'model', 'images', 'tables'))
+        os.mkdir(os.path.join(cache_loc, 'model', 'images', 'equations'))
+        os.mkdir(os.path.join(cache_loc, 'model', 'images', 'supplementary'))
     
     if 'http://www' in args.input:
         download = True
@@ -122,7 +123,7 @@ def main():
     
     print(u'Processing output to {0}.epub'.format(outdirect))
     output.generateHierarchy(outdirect)
-    document.fetchImages(cache = settings.cache_location, dirname = outdirect)
+    document.fetchImages(cache = cache_loc, dirname = outdirect)
     content.OPSContent(filename, outdirect, document.front, 
                        document.back)
     tocncx.generateTOC(document.front, document.features, outdirect)
