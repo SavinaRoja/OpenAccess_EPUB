@@ -458,7 +458,7 @@ class OPSContent(object):
                 try:
                     img_node.setAttribute('src', img_src)
                 except NameError:
-                    loggin.error('Image source not found')
+                    logging.error('Image source not found')
                     img_node.setAttribute('src', 'not_found')
                 img_node.setAttribute('id', fig_id)
                 img_node.setAttribute('alt', fig_alt_text_text)
@@ -1136,10 +1136,10 @@ class OPSContent(object):
                 ext_link.tagName = u'a' #convert to <a>
                 #Handle the potential attributes
                 attrs = {'ext-link-type': None, 'id': None, 
-                             'xlink:actuate': None, 'xlink:href': None, 
-                             'xlink:role': None, 'xlink:show': None, 
-                             'xlink:title': None, 'xlink:type': None, 
-                             'xmlns:xlink': None}
+                         'xlink:actuate': None, 'xlink:href': None, 
+                         'xlink:role': None, 'xlink:show': None, 
+                         'xlink:title': None, 'xlink:type': None, 
+                         'xmlns:xlink': None}
                 
                 for attr in attrs:
                     attrs[attr] = ext_link.getAttribute(attr)
@@ -1153,9 +1153,9 @@ class OPSContent(object):
                         ext_link.setAttribute('href', attrs['xlink:href'])
                     
                     #Logging and Debug section
-                    if attrs['ext-link-type'] != 'uri':
+                    if not attrs['ext-link-type'] == u'uri':
                         logging.info('<ext-link> attribute \"ext-link-type\" = {0}'.format(attrs['ext-link-type']))
-                    if attrs['xlink:type'] != 'simple':
+                    if not attrs['xlink:type'] == u'simple':
                         logging.info('<ext-link> attribute \"xlink:type\" = {0}'.format(attrs['xlink:type']))
     
     def listNodeHandler(self, topnode):
