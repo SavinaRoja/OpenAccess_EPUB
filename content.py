@@ -103,6 +103,7 @@ class OPSContent(object):
             synbody.appendChild(abstract)
             abstract.tagName = 'div'
             abstract.setAttribute('id', 'abstract')
+            abstract.setAttribute('class', 'abstract')
             for title in abstract.getElementsByTagName('title'):
                 title.tagName = 'h3'
             for sec in abstract.getElementsByTagName('sec'):
@@ -129,6 +130,7 @@ class OPSContent(object):
             synbody.appendChild(editor_abs)
             editor_abs.tagName = 'div'
             editor_abs.setAttribute('id','editor_abstract')
+            editor_abs.setAttribute('class', 'abstract')
             for title in editor_abs.getElementsByTagName('title'):
                 title.tagName = 'h3'
             for sec in editor_abs.getElementsByTagName('sec'):

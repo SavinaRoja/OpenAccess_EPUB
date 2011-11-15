@@ -1,5 +1,11 @@
 /*I know a little CSS now */
 blockquote
 {
-background-color:#80C0FF
+background-color:#80C0FF;
+}
+div.abstract
+{
+padding:0 10px;
+margin:20px 0 40px 0;
+border-left:5px solid #CCE3F6;
 }
