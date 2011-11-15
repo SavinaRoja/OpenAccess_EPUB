@@ -29,7 +29,7 @@ class Contributor:
         except IndexError:
             self.collab = None
         else:
-            self.collab = 
+            self.collab = collab_node
         
         
         self.xrefs = contribnode.getElementsByTagName('xref')
