@@ -64,7 +64,7 @@ class Article(object):
         '''Creates a titlestring for use as the epub filename'''
         
         titlestring = u'{0}_{1}{2}'.format(self.front.journal_meta.identifier['pmc'],
-                                           self.front.article_meta.art_auths[0].surname,
+                                           self.front.article_meta.art_auths[0].get_surname(),
                                            self.front.article_meta.art_dates['collection'].year)
         titlestring = titlestring.replace(u' ', u'-')
         

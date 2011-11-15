@@ -149,6 +149,5 @@ def main():
                 os.rmdir(os.path.join(root, name))
         os.rmdir(outdirect)
         
-    
 if __name__ == '__main__':
     main()

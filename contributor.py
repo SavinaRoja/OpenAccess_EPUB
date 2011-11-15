@@ -45,6 +45,14 @@ class Contributor:
         out = 'Surname: {0}, Given Name: {1}, AffiliationID: {2}, Contact: {3}'
         return out.format(self.surname, self.givenname,
                           self.affiliation, self.contact)
+        
+    def get_surname(self):
+        '''An alternative to get_name which provides only the surname and an 
+        option for collab'''
+        if not self.collab:
+            return(self.surname)
+        else:
+            return(serializeText(self.collab, stringlist = []))
 
     def get_name(self):
         """Get the name. Formatted as: Carl Sagan"""
@@ -55,11 +63,14 @@ class Contributor:
     
     def get_fileas_name(self):
         '''Get the name. Formatted as: Sagan C'''
-        names = self.givenname.split(' ')
-        initials = ''
-        for name in names:
-            initials += name[0]
-        return(u'{0}, {1}'.format(self.surname, initials))
+        if not self.collab:
+            names = self.givenname.split(' ')
+            initials = ''
+            for name in names:
+                initials += name[0]
+            return(u'{0}, {1}'.format(self.surname, initials))
+        else:
+            return(serializeText(self.collab, stringlist = []))
 
 class Author(Contributor):
     """Represents an author."""
