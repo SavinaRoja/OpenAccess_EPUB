@@ -423,6 +423,8 @@ class OPSContent(object):
         string tagNames allows those tags to be ignored'''
         handlers = {'bold': self.boldNodeHandler(topnode), 
                     'italic': self.italicNodeHandler(topnode), 
+                    'sub': self.subNodeHandler(topnode), 
+                    'sup': self.supNodeHandler(topnode), 
                     'underline': self.underlineNodeHandler(topnode), 
                     'xref': self.xrefNodeHandler(topnode), 
                     'sec': self.secNodeHandler(topnode), 
@@ -1031,7 +1033,39 @@ class OPSContent(object):
             #In this case, we can just modify them in situ
             for italic_node in italic_nodes:
                 italic_node.tagName = u'i'
-        
+    
+    def subNodeHandler(self, topnode):
+        '''Handles the potential attribute \"arrange\" for sub elements under 
+        the provided Node. Also handles NodeLists by calling itself on each 
+        Node in the NodeList'''
+        try:
+            sub_nodes = topnode.getElementsByTagName('sub')
+        except AttributeError:
+            for item in topnode:
+                self.subNodeHandler(item)
+        else:
+            for sub_node in sub_nodes:
+                arrange = sub_node.getAttribute('arrange')
+                if arrange:
+                    sub_node.removeAttribute('arrange')
+                    sub_node.setAttribute('class', arrange)
+    
+    def supNodeHandler(self, topnode):
+        '''Handles the potential attribute \"arrange\" for sup elements under 
+        the provided Node. Also handles NodeLists by calling itself on each 
+        Node in the NodeList'''
+        try:
+            sup_nodes = topnode.getElementsByTagName('sup')
+        except AttributeError:
+            for item in topnode:
+                self.subNodeHandler(item)
+        else:
+            for sup_node in sup_nodes:
+                arrange = sup_node.getAttribute('arrange')
+                if arrange:
+                    sup_node.removeAttribute('arrange')
+                    sup_node.setAttribute('class', arrange)
+    
     def smallCapsNodeHandler(self, topnode):
         '''Handles proper conversion of <sc> tags under the provided 
         topnode. Also handles NodeLists by calling itself on each Node in the 
