@@ -4,8 +4,8 @@ class Back(object):
     
     def __init__(self, node):
         self.footnotes = node.getElementsByTagName('fn')
-        self.funding = None
-        self.competing_interests = None
+        self.funding = u''
+        self.competing_interests = u''
         for item in self.footnotes:
             if item.getAttribute('fn-type') == u'conflict':
                 text = utils.serializeText(item, stringlist = [])

@@ -99,6 +99,7 @@ class ArticleMeta(object):
             pub_id_type = article_id.getAttribute('pub-id-type')
             data = getTagText(article_id)
             ident = Identifier(data, pub_id_type)
+            print(ident)
             logging.debug(ident)
             id_set.add(ident)
         return(id_set)

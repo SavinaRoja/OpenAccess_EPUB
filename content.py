@@ -167,22 +167,24 @@ class OPSContent(object):
         synbody.appendChild(copp)
         
         #Create a node for the Funding text
-        fundp = synop.createElement('p')
-        fundp.setAttribute('id', 'funding')
-        fundbold = synop.createElement('b')
-        fundbold.appendChild(synop.createTextNode('Funding: '))
-        fundp.appendChild(fundbold)
-        fundp.appendChild(synop.createTextNode(back.funding))
-        synbody.appendChild(fundp)
+        if back.funding:
+            fundp = synop.createElement('p')
+            fundp.setAttribute('id', 'funding')
+            fundbold = synop.createElement('b')
+            fundbold.appendChild(synop.createTextNode('Funding: '))
+            fundp.appendChild(fundbold)
+            fundp.appendChild(synop.createTextNode(back.funding))
+            synbody.appendChild(fundp)
         
         #Create a node for the Competing Interests text
-        compip = synop.createElement('p')
-        compip.setAttribute('id', 'competing-interests')
-        compibold = synop.createElement('b')
-        compibold.appendChild(synop.createTextNode('Competing Interests: '))
-        compip.appendChild(compibold)
-        compip.appendChild(synop.createTextNode(back.competing_interests))
-        synbody.appendChild(compip)
+        if back.competing_interests:
+            compip = synop.createElement('p')
+            compip.setAttribute('id', 'competing-interests')
+            compibold = synop.createElement('b')
+            compibold.appendChild(synop.createTextNode('Competing Interests: '))
+            compip.appendChild(compibold)
+            compip.appendChild(synop.createTextNode(back.competing_interests))
+            synbody.appendChild(compip)
         
         #Create a node for the correspondence text
         corr_line = synop.createElement('p')
@@ -242,6 +244,9 @@ class OPSContent(object):
         tab_doc, tab_docbody = self.initiateDocument('HTML Versions of Tables')
         self.tableWrapNodeHandler(mainbody, main, tab_docbody) #Convert <table-wrap>
         self.postNodeHandling(tab_docbody, tab_doc)
+        
+        #Process boxed-text
+        self.boxedTextNodeHandler(mainbody)
         
         #Process supplementary-materials
         self.supplementaryMaterialNodeHandler(mainbody, main)
@@ -851,10 +856,41 @@ class OPSContent(object):
                 #Fig may contain many more elements which are currently ignored
                 #See http://dtd.nlm.nih.gov/publishing/tag-library/2.0/n-un80.html
                 #For more details on what could be potentially handled
-                
-                
-                
-            
+    
+    def boxedTextNodeHandler(self, topnode):
+        '''Handles conversion of <boxed-text> tags under the provided topnode. 
+        The best semantic approximation for boxed-text elements that I can 
+        decide on currently is the blockquote element. Also handles NodeLists 
+        by calling itself on each Node in the NodeList.'''
+        
+        keep_attrs = ['id']
+        
+        try:
+            boxed_texts = topnode.getElementsByTagName('boxed-text')
+        except AttributeError:
+            for item in topnode:
+                self.boxedTextNodeHandler(item)
+        else:
+            for boxed_text in boxed_texts:
+                attrs = {'content-type': None, 'id': None, 
+                         'position': None, 'xml:lang': None}
+                for attr in attrs:
+                    attrs[attr] = boxed_text.getAttribute(attr)
+                    if attr not in keep_attrs:
+                        try:
+                            boxed_text.removeAttribute(attr)
+                        except xml.dom.NotFoundErr:
+                            pass
+                        
+                parent = boxed_text.parentNode
+                boxed_text.tagName = 'blockquote'
+                try:
+                    boxed_text_title = boxed_text.getElementsByTagName('title')[0]
+                except IndexError:
+                    pass
+                else:
+                    boxed_text_title.tagName = u'b'
+    
     def supplementaryMaterialNodeHandler(self, topnode, doc):
         '''Handles conversion of <supplementary-material> tags under the 
         provided topnode. Also handles NodeLists by calling itself on each 
@@ -1100,7 +1136,8 @@ class OPSContent(object):
                    u'table': u'main.xml#', 
                    u'aff': u'synop.xml#', 
                    u'sec': u'main.xml#', 
-                   u'table-fn': u'tables.xml#'}
+                   u'table-fn': u'tables.xml#', 
+                   u'boxed-text': u'main.xml#'}
         
         try:
             xref_nodes = topnode.getElementsByTagName('xref')

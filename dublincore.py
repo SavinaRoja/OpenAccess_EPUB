@@ -55,11 +55,16 @@ def dc_coverage(mydoc, parent, artmeta):
 
 def dc_date(mydoc, parent, artmeta):
     '''Create dc:date nodes for OPF'''
-    newchild = mydoc.createElement('dc:date')
-    datastring = artmeta.history['accepted'].dateString()
-    newchild.appendChild(mydoc.createTextNode(datastring))
-    newchild.setAttribute('opf:event', 'creation') # Extended by OPF
-    parent.appendChild(newchild)
+    try:
+        accepted = artmeta.history['accepted']
+    except KeyError:
+        pass
+    else:
+        newchild = mydoc.createElement('dc:date')
+        datastring = accepted.dateString()
+        newchild.appendChild(mydoc.createTextNode(datastring))
+        newchild.setAttribute('opf:event', 'creation') # Extended by OPF
+        parent.appendChild(newchild)
     
     newchild = mydoc.createElement('dc:date')
     datastring = artmeta.art_dates['epub'].dateString()
@@ -68,13 +73,15 @@ def dc_date(mydoc, parent, artmeta):
     parent.appendChild(newchild)
     
     try:
+        ecorrected = artmeta.art_dates['ecorrected']
+    except KeyError:
+        pass
+    else:
         newchild = mydoc.createElement('dc:date')
-        datastring = artmeta.art_dates['ecorrected'].dateString()
+        datastring = ecorrected.dateString()
         newchild.appendChild(mydoc.createTextNode(datastring))
         newchild.setAttribute('opf:event', 'modification') # Extended by OPF
         parent.appendChild(newchild)
-    except KeyError:
-        pass
 
 def dc_description(mydoc, parent, artmeta):
     '''Create dc:description node for OPF'''

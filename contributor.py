@@ -1,5 +1,5 @@
 """contributor.py"""
-from utils import getTagData
+from utils import getTagData, serializeText
 
 class Contributor:
     """Represents a contributor to the article.
@@ -13,9 +13,24 @@ class Contributor:
         self.affiliation = []
         self.contact = []
         
-        namenode = contribnode.getElementsByTagName('name')[0]
-        self.givenname = getTagData(namenode.getElementsByTagName('given-names'))
-        self.surname = getTagData(namenode.getElementsByTagName('surname'))
+        try:
+            namenode = contribnode.getElementsByTagName('name')[0]
+        except IndexError:
+            pass
+        else:
+            self.surname = getTagData(namenode.getElementsByTagName('surname'))
+            try:
+                self.givenname = getTagData(namenode.getElementsByTagName('given-names'))
+            except:
+                pass
+        
+        try:
+            collab_node = contribnode.getElementsByTagName('collab')[0]
+        except IndexError:
+            self.collab = None
+        else:
+            self.collab = 
+        
         
         self.xrefs = contribnode.getElementsByTagName('xref')
 
@@ -33,7 +48,10 @@ class Contributor:
 
     def get_name(self):
         """Get the name. Formatted as: Carl Sagan"""
-        return(u'{0} {1}'.format(self.givenname, self.surname))
+        if not self.collab:
+            return(u'{0} {1}'.format(self.givenname, self.surname))
+        else:
+            return(serializeText(self.collab, stringlist = []))
     
     def get_fileas_name(self):
         '''Get the name. Formatted as: Sagan C'''
