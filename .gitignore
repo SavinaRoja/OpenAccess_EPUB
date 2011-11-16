@@ -14,9 +14,9 @@
 epubcheck.sh
 batchtest.sh
 
-# Test Output #
+# Output #
 ############
-test_output/*
+output/*
 *.epub
 
 # Cache #
