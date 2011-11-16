@@ -27,13 +27,13 @@ def main():
     #parser.add_argument('-q', '--quiet', action = 'store_true', default = False)
     parser.add_argument('-i', '--input', action = 'store', 
                         help = 'Input may be a path to a local directory, a URL to a PLoS journal article, or a PLoS DOI string')
-    parser.add_argument('-o', '--output', action = 'store', 
+    parser.add_argument('-o', '--output', action = 'store', default = settings.default_output, 
                         help = 'Use to specify a desired output directory')
-    parser.add_argument('-s', '--save-xml', action = 'store_true', default = False, 
+    parser.add_argument('-s', '--save-xml', action = 'store_true', default = settings.save_xml, 
                         help = 'If downloading the article xml file, use this flag to save it after completion')
-    parser.add_argument('-c', '--cleanup', action = 'store_true', default = False, 
+    parser.add_argument('-c', '--cleanup', action = 'store_true', default = settings.cleanup, 
                         help = 'Use this flag to automatically delete the pre-package output directory upon completion')
-    parser.add_argument('-l', '--logging', action = 'store_true', default = False, 
+    parser.add_argument('-l', '--logging', action = 'store_true', default = settings.logging, 
                         help = 'Turn on logging. Saves a logfile in the logs directory for the process.')
     args = parser.parse_args()
     

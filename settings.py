@@ -6,5 +6,10 @@ class Settings(object):
     def __init__(self):
         #Set the cache location
         local = os.getcwd()
-        path = 'cache'
-        self.cache_location = os.path.join(local, path)
+        
+        self.caching = True
+        self.cache_location = os.path.join(local, 'cache')
+        self.logging = True
+        self.save_xml = True
+        self.default_output = os.path.join(local, 'output')
+        self.cleanup = True
