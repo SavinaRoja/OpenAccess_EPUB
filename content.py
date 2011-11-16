@@ -129,6 +129,7 @@ class OPSContent(object):
             title.tagName = u'h2'
             synbody.appendChild(editor_abs)
             editor_abs.tagName = 'div'
+            editor_abs.removeAttribute('abstract-type')
             editor_abs.setAttribute('id','editor_abstract')
             editor_abs.setAttribute('class', 'abstract')
             for title in editor_abs.getElementsByTagName('title'):
