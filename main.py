@@ -1,6 +1,6 @@
 #! /usr/bin/python
 
-__version__ = '0.0.6b'
+__version__ = '0.0.6c'
 
 #Standard Library Modules
 import argparse
@@ -20,6 +20,7 @@ from settings import Settings
 from article import Article
 
 def initCache(cache_loc):
+    '''Initiates the cache if it does not exist'''
     os.mkdir(cache_loc)
     os.mkdir(os.path.join(cache_loc, 'model'))
     os.mkdir(os.path.join(cache_loc, 'PLoS'))
@@ -28,6 +29,72 @@ def initCache(cache_loc):
     os.mkdir(os.path.join(cache_loc, 'model', 'images', 'tables'))
     os.mkdir(os.path.join(cache_loc, 'model', 'images', 'equations'))
     os.mkdir(os.path.join(cache_loc, 'model', 'images', 'supplementary'))
+
+def urlInput(input, xml_dir):
+    '''Handles input in URL form to instantiate the document'''
+    try:
+        address = urlparse.urlparse(input)
+        _fetch = '/article/fetchObjectAttachment.action?uri='
+        _id = address.path.split('/')[2]
+        _rep = '&representation=XML'
+        access = '{0}://{1}{2}{3}{4}'.format(address.scheme, address.netloc, 
+                                    _fetch, _id, _rep)
+        open_xml = urllib2.urlopen(access)
+    except:
+        print('Invalid Link: Enter a corrected link or use local file')
+        sys.exit(1)
+    
+    else:
+        filename = open_xml.headers['Content-disposition'].split('\"')[1]
+        filename = os.path.join(xml_dir, filename)
+        with open(filename, 'wb') as xml_file:
+            xml_file.write(open_xml.read())
+        document = Article(filename)
+        return(document, filename)
+
+def doiInput(input, xml_dir):
+    '''Handles input in DOI form to instantiate the document'''
+    try:
+        doi_url = 'http://dx.doi.org/' + input[4:]
+        page = urllib2.urlopen(doi_url)
+        address = urlparse.urlparse(page.geturl())
+        _fetch = '/article/fetchObjectAttachment.action?uri='
+        _id = address.path.split('/')[2]
+        _rep = '&representation=XML'
+        access = '{0}://{1}{2}{3}{4}'.format(address.scheme, address.netloc, 
+                                    _fetch, _id, _rep)
+        open_xml = urllib2.urlopen(access)
+        
+    except:
+        print('Invalid DOI Link: Make sure that the address and format are correct')
+        print('A valid entry looks like: \"doi:10.1371/journal.pcbi.1002222\"')
+        sys.exit(1)
+    
+    else:
+        filename = open_xml.headers['Content-Disposition'].split('\"')[1]
+        filename = os.path.join(xml_dir, filename)
+        with open(filename, 'wb') as xml_file:
+            xml_file.write(open_xml.read())
+        document = Article(filename)
+        return(document, filename)
+
+def localInput(input):
+    '''Handles input in the form of local file to instantiate the document'''
+    xml_local = input
+    document = Article(xml_local)
+    return(document, xml_local)
+
+def dirExists(outdirect, batch):
+    if not batch:
+        print(u'The directory {0} already exists.'.format(outdirect))
+        r = raw_input('Replace? [y/n]')
+        if r in ['y', 'Y', '']:
+            shutil.rmtree(outdirect)
+        else:
+            print('Aborting process.')
+            sys.exit()
+    else:
+        shutil.rmtree(outdirect)
 
 def main():
     '''main script'''
@@ -46,6 +113,8 @@ def main():
                         help = 'Use to specify a non-default log directory')
     parser.add_argument('-c', '--cache', action = 'store', default = settings.cache_location, 
                         help = 'Use to specify a non-default cache directory')
+    parser.add_argument('-b', '--batch', action = 'store', default = False, 
+                        help = 'Use to specify a batch directory; each article inside will be processed.')
     args = parser.parse_args()
     
     #Check for directory existence, create if not found
@@ -53,100 +122,45 @@ def main():
     #Be fixed but I am not sure if it should
     if not os.path.isdir(args.log_to):
         os.mkdir(args.log_to)
-    
     if not os.path.isdir(args.cache):
         initCache(args.cache)
-    
     if not os.path.isdir(args.save_xml):
         os.mkdir(args.save_xml)
-    
     if not os.path.isdir(args.output):
         os.mkdir(args.output)
     
+    #Initiate logging settings
     logname = os.path.join('logs', 'temp.log')
     logging.basicConfig(filename = logname, level = logging.DEBUG)
     logging.info('OpenAccess_EPUB Log v.{0}'.format(__version__))
     
     if 'http://www' in args.input:
         download = True
-        try:
-            address = urlparse.urlparse(args.input)
-            _fetch = '/article/fetchObjectAttachment.action?uri='
-            _id = address.path.split('/')[2]
-            _rep = '&representation=XML'
-            access = '{0}://{1}{2}{3}{4}'.format(address.scheme, address.netloc, 
-                                        _fetch, _id, _rep)
-            open_xml = urllib2.urlopen(access)
-        except:
-            print('Invalid Link: Enter a corrected link or use local file')
-            sys.exit()
-        
-        else:
-            filename = open_xml.headers['Content-Disposition'].split('\"')[1]
-            if not os.path.isdir('downloaded_xml_files'):
-                os.mkdir('downloaded_xml_files')
-            filename = os.path.join('downloaded_xml_files', filename)
-            with open(filename, 'wb') as xml_file:
-                xml_file.write(open_xml.read())
-            
-            document = Article(filename)
+        document, xml_local = urlInput(args.input, args.save_xml)
     
     elif args.input[:4] == 'doi:':
         download = True
-        try:
-            doi_url = 'http://dx.doi.org/' + args.input[4:]
-            page = urllib2.urlopen(doi_url)
-            address = urlparse.urlparse(page.geturl())
-            _fetch = '/article/fetchObjectAttachment.action?uri='
-            _id = address.path.split('/')[2]
-            _rep = '&representation=XML'
-            access = '{0}://{1}{2}{3}{4}'.format(address.scheme, address.netloc, 
-                                        _fetch, _id, _rep)
-            open_xml = urllib2.urlopen(access)
-            
-        except:
-            print('Invalid DOI Link: Make sure that the address and format are correct')
-            print('A valid entry looks like: \"doi:10.1371/journal.pcbi.1002222\"')
-            sys.exit()
-            
-        
-        else:
-            filename = open_xml.headers['Content-Disposition'].split('\"')[1]
-            if not os.path.isdir('downloaded_xml_files'):
-                os.mkdir('downloaded_xml_files')
-            filename = os.path.join('downloaded_xml_files', filename)
-            with open(filename, 'wb') as xml_file:
-                xml_file.write(open_xml.read())
-            
-            document = Article(filename)
+        document, xml_local = doiInput(args.input, args.save_xml)
         
     else:
         download = False
-        filename = args.input
-        document = Article(filename)
+        document, xml_local = localInput(args.input)
     
     outdirect = os.path.join(args.output, document.titlestring())
     if os.path.isdir(outdirect):
-        print(u'The directory {0} already exists.'.format(outdirect))
-        r = raw_input('Replace? [y/n]')
-        if r in ['y', 'Y', '']:
-            shutil.rmtree(outdirect)
-        else:
-            print('Aborting process.')
-            sys.exit()
-        
+        dirExists(outdirect, args.batch)
     
     print(u'Processing output to {0}.epub'.format(outdirect))
     output.generateHierarchy(outdirect)
     document.fetchImages(cache = args.cache, dirname = outdirect)
-    content.OPSContent(filename, outdirect, document.front, 
+    content.OPSContent(xml_local, outdirect, document.front, 
                        document.back)
     tocncx.generateTOC(document.front, document.features, outdirect)
     output.generateOPF(document, outdirect)
     output.epubZip(outdirect)
         
-    if download and not args.save_xml:
-        os.remove(filename)
+    if download and not settings.save_xml:
+        os.remove(xml_local)
     
     newname = u'{0}.log'.format(document.titlestring())
     newname =  os.path.join(args.log_to, newname)
