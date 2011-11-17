@@ -1,6 +1,6 @@
 #! /usr/bin/python
 
-__version__ = '0.0.6'
+__version__ = '0.0.6a'
 
 #Standard Library Modules
 import argparse
@@ -89,8 +89,6 @@ def main():
                 xml_file.write(open_xml.read())
             
             document = Article(filename)
-            
-        
     
     elif args.input[:4] == 'doi:':
         download = True
@@ -141,19 +139,13 @@ def main():
         os.remove(filename)
     
     newname = u'{0}.log'.format(document.titlestring())
-    newname =  os.path.join('logs', newname)
+    newname =  os.path.join(args.log_to, newname)
     os.rename(logname, newname)
     
-    #WARNING: THIS IS A RECURSIVE DELETION FUNCTION
-    #DO NOT CHANGE THIS OR THE CREATION OF OUTDIRECT WITHOUT EXTREME CAUTION
-    #YOU MIGHT DELETE MORE THAN YOU WANT...
+    #WARNING: shutil.rmtree() is a recursive deletion function, care should be 
+    #taken whenever modifying this code
     if settings.cleanup:
-        for root, dirs, files in os.walk(outdirect, topdown=False):
-            for name in files:
-                os.remove(os.path.join(root, name))
-            for name in dirs:
-                os.rmdir(os.path.join(root, name))
-        os.rmdir(outdirect)
+        shutil.rmtree(outdirect)
         
 if __name__ == '__main__':
     main()
