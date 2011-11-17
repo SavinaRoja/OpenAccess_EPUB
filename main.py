@@ -95,9 +95,24 @@ def dirExists(outdirect, batch):
             sys.exit()
     else:
         shutil.rmtree(outdirect)
+        
+def makeEPUB(document, xml_local, cache_dir, outdirect):
+    '''
+    Encapsulates the primary processing work-flow. Before this method is 
+    called, pre-processing has occurred to define important directory and file 
+    locations. The document has been processed for metadata and now it is time 
+    to generate the ePub content.
+    '''
+    print(u'Processing output to {0}.epub'.format(outdirect))
+    output.generateHierarchy(outdirect)
+    document.fetchImages(cache = cache_dir, dirname = outdirect)
+    content.OPSContent(xml_local, outdirect, document.front, document.back)
+    tocncx.generateTOC(document.front, document.features, outdirect)
+    output.generateOPF(document, outdirect)
+    output.epubZip(outdirect)
 
 def main():
-    '''main script'''
+    '''Main Script'''
     settings = Settings()
     
     parser = argparse.ArgumentParser(description = 'OpenAccess_EPUB Parser')
@@ -134,30 +149,33 @@ def main():
     logging.basicConfig(filename = logname, level = logging.DEBUG)
     logging.info('OpenAccess_EPUB Log v.{0}'.format(__version__))
     
-    if 'http://www' in args.input:
-        download = True
-        document, xml_local = urlInput(args.input, args.save_xml)
+    if args.batch:
+        files = os.listdir(args.batch)
+        for file in files:
+            if not os.path.splitext(file)[1] == '.xml':
+                pass
+            else:
+                filename = os.path.join(args.batch, file)
+                document, xml_local = localInput(file)
+                
     
-    elif args.input[:4] == 'doi:':
-        download = True
-        document, xml_local = doiInput(args.input, args.save_xml)
-        
-    else:
-        download = False
-        document, xml_local = localInput(args.input)
+    if not args.batch:
+        #Determination of input type and processing
+        if 'http://www' in args.input:
+            download = True
+            document, xml_local = urlInput(args.input, args.save_xml)
+        elif args.input[:4] == 'doi:':
+            download = True
+            document, xml_local = doiInput(args.input, args.save_xml)
+        else:
+            download = False
+            document, xml_local = localInput(args.input)
     
     outdirect = os.path.join(args.output, document.titlestring())
     if os.path.isdir(outdirect):
         dirExists(outdirect, args.batch)
     
-    print(u'Processing output to {0}.epub'.format(outdirect))
-    output.generateHierarchy(outdirect)
-    document.fetchImages(cache = args.cache, dirname = outdirect)
-    content.OPSContent(xml_local, outdirect, document.front, 
-                       document.back)
-    tocncx.generateTOC(document.front, document.features, outdirect)
-    output.generateOPF(document, outdirect)
-    output.epubZip(outdirect)
+    makeEPUB(document, xml_local, args.cache, outdirect)
         
     if download and not settings.save_xml:
         os.remove(xml_local)
