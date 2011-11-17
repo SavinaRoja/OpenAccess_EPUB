@@ -67,8 +67,8 @@ class ArticleMeta(object):
         self.publication_dates = None
         self.volume = None
         self.issue = None
-        self.issue_id = None
-        self.issue_title = None
+        self.issue_id = {}
+        self.issue_titles = []
         # object for copyright-statement AND copyright-year
         self.copyright = None
         
@@ -143,7 +143,12 @@ class ArticleMeta(object):
         contents of the node.'''
         volume_str = getTagText(node)
         return(volume_str)
-        
+    
+    def makeIssue(self, node):
+        '''This method takes the <issue> node as input and returns the string 
+        contents of the node.'''
+        issue_str = getTagText(node)
+        return(issue_str)
     
     def makeHistory(self, node):
         '''This method takes the <history> node as input and returns a 
@@ -221,9 +226,22 @@ class ArticleMeta(object):
                 self.abstracts['default'] = abstract
         
         # Issue: <issue> number, <issue-id> identifier, <issue-title> title
-        self.issue = getTagData(node.getElementsByTagName('issue'))
-        self.issue_id = getTagData(node.getElementsByTagName('issue-id'))
-        self.issue_title = getTagData(node.getElementsByTagName('issue-title'))
+        try:
+            issue = node.getElementsByTagName('issue')[0]
+        except IndexError:
+            self.issue = ''
+        else:
+            self.issue = self.makeIssue(issue)
+        
+        for issue_id in node.getElementsByTagName('issue-id'):
+            pub_id_type = issue_id.getAttribute('pub-id-type')
+            self.issue_id[pub_id_type] = getTagText(issue_id)
+        
+        for issue_title in node.getElementsByTagName('issue-title'):
+            issue_title_text = getTagText(issue_title)
+            self.issue_titles.append(issue_title_text)
+            log_str = u'<issue-title> found with value: {0}'
+            logging.info(log_str.format(issue_title_text))
         
         contrib_groups = node.getElementsByTagName('contrib-group')
         contributor_list = []
