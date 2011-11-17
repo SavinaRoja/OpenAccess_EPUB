@@ -1,11 +1,12 @@
 #! /usr/bin/python
 
-__version__ = '0.0.6a'
+__version__ = '0.0.6b'
 
 #Standard Library Modules
 import argparse
 import sys
 import os.path
+import shutil
 import urllib2
 import urlparse
 import logging
@@ -125,6 +126,15 @@ def main():
         document = Article(filename)
     
     outdirect = os.path.join(args.output, document.titlestring())
+    if os.path.isdir(outdirect):
+        print(u'The directory {0} already exists.'.format(outdirect))
+        r = raw_input('Replace? [y/n]')
+        if r in ['y', 'Y', '']:
+            shutil.rmtree(outdirect)
+        else:
+            print('Aborting process.')
+            sys.exit()
+        
     
     print(u'Processing output to {0}.epub'.format(outdirect))
     output.generateHierarchy(outdirect)
