@@ -22,7 +22,7 @@ class Settings(object):
         #saved locally
         self.save_xml = True
         #This sets the downloaded xml file location
-        self.dl_xml_location = os.path.join(local, 'downloaded_xml_files')
+        self.xml_location = os.path.join(local, 'downloaded_xml_files')
         
         #This sets a default output location
         self.default_output = os.path.join(local, 'output')

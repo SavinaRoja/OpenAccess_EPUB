@@ -18,6 +18,16 @@ import content
 from settings import Settings
 from article import Article
 
+def initCache(cache_loc):
+    os.mkdir(cache_loc)
+    os.mkdir(os.path.join(cache_loc, 'model'))
+    os.mkdir(os.path.join(cache_loc, 'PLoS'))
+    os.mkdir(os.path.join(cache_loc, 'model', 'images'))
+    os.mkdir(os.path.join(cache_loc, 'model', 'images', 'figures'))
+    os.mkdir(os.path.join(cache_loc, 'model', 'images', 'tables'))
+    os.mkdir(os.path.join(cache_loc, 'model', 'images', 'equations'))
+    os.mkdir(os.path.join(cache_loc, 'model', 'images', 'supplementary'))
+
 def main():
     '''main script'''
     settings = Settings()
@@ -29,30 +39,32 @@ def main():
                         help = 'Input may be a path to a local directory, a URL to a PLoS journal article, or a PLoS DOI string')
     parser.add_argument('-o', '--output', action = 'store', default = settings.default_output, 
                         help = 'Use to specify a desired output directory')
-    parser.add_argument('-s', '--save-xml', action = 'store_true', default = settings.save_xml, 
-                        help = 'If downloading the article xml file, use this flag to save it after completion')
-    parser.add_argument('-c', '--cleanup', action = 'store_true', default = settings.cleanup, 
-                        help = 'Use this flag to automatically delete the pre-package output directory upon completion')
-    parser.add_argument('-l', '--logging', action = 'store_true', default = settings.logging, 
-                        help = 'Turn on logging. Saves a logfile in the logs directory for the process.')
+    parser.add_argument('-s', '--save-xml', action = 'store', default = settings.xml_location, 
+                        help = 'Use to specify a directory for storing downloaded xml files')
+    parser.add_argument('-l', '--log-to', action = 'store', default = settings.log_location, 
+                        help = 'Use to specify a non-default log directory')
+    parser.add_argument('-c', '--cache', action = 'store', default = settings.cache_location, 
+                        help = 'Use to specify a non-default cache directory')
     args = parser.parse_args()
     
-    if not os.path.isdir('logs'):
-        os.mkdir('logs')
+    #Check for directory existence, create if not found
+    #This will break if the path has no immediate parent directory, this could 
+    #Be fixed but I am not sure if it should
+    if not os.path.isdir(args.log_to):
+        os.mkdir(args.log_to)
+    
+    if not os.path.isdir(args.cache):
+        initCache(args.cache)
+    
+    if not os.path.isdir(args.save_xml):
+        os.mkdir(args.save_xml)
+    
+    if not os.path.isdir(args.output):
+        os.mkdir(args.output)
+    
     logname = os.path.join('logs', 'temp.log')
     logging.basicConfig(filename = logname, level = logging.DEBUG)
     logging.info('OpenAccess_EPUB Log v.{0}'.format(__version__))
-    
-    cache_loc = settings.cache_location
-    if not os.path.isdir(cache_loc):
-        os.mkdir(cache_loc)
-        os.mkdir(os.path.join(cache_loc, 'model'))
-        os.mkdir(os.path.join(cache_loc, 'PLoS'))
-        os.mkdir(os.path.join(cache_loc, 'model', 'images'))
-        os.mkdir(os.path.join(cache_loc, 'model', 'images', 'figures'))
-        os.mkdir(os.path.join(cache_loc, 'model', 'images', 'tables'))
-        os.mkdir(os.path.join(cache_loc, 'model', 'images', 'equations'))
-        os.mkdir(os.path.join(cache_loc, 'model', 'images', 'supplementary'))
     
     if 'http://www' in args.input:
         download = True
@@ -114,16 +126,11 @@ def main():
         filename = args.input
         document = Article(filename)
     
-    if args.output:
-        outdirect = os.path.join(args.output, document.titlestring())
-        if not os.path.isdir(args.output):
-            os.mkdir(args.output)
-    else:
-        outdirect = document.titlestring()
+    outdirect = os.path.join(args.output, document.titlestring())
     
     print(u'Processing output to {0}.epub'.format(outdirect))
     output.generateHierarchy(outdirect)
-    document.fetchImages(cache = cache_loc, dirname = outdirect)
+    document.fetchImages(cache = args.cache, dirname = outdirect)
     content.OPSContent(filename, outdirect, document.front, 
                        document.back)
     tocncx.generateTOC(document.front, document.features, outdirect)
@@ -133,15 +140,14 @@ def main():
     if download and not args.save_xml:
         os.remove(filename)
     
-    if args.logging: #rename the log file, or it will be overwritten next time
-        newname = u'{0}.log'.format(document.titlestring())
-        newname =  os.path.join('logs', newname)
-        os.rename(logname, newname)
+    newname = u'{0}.log'.format(document.titlestring())
+    newname =  os.path.join('logs', newname)
+    os.rename(logname, newname)
     
     #WARNING: THIS IS A RECURSIVE DELETION FUNCTION
     #DO NOT CHANGE THIS OR THE CREATION OF OUTDIRECT WITHOUT EXTREME CAUTION
     #YOU MIGHT DELETE MORE THAN YOU WANT...
-    if args.cleanup:
+    if settings.cleanup:
         for root, dirs, files in os.walk(outdirect, topdown=False):
             for name in files:
                 os.remove(os.path.join(root, name))
