@@ -1,3 +1,5 @@
+from utils import serializeText
+
 # Currently, the Dublin Core will only be extended by the OPF Spec
 # See http://old.idpf.org/2007/opf/OPF_2.0_final_spec.html#Section2.2
 
@@ -13,7 +15,6 @@ def dc_identifier(mydoc, parent, artmeta):
 
 def dc_title(mydoc, parent, artmeta):
     '''Create dc:title node for OPF'''
-    from utils import serializeText
     newchild = mydoc.createElement('dc:title')
     title_text = serializeText(artmeta.article_title, stringlist = [])
     newchild.appendChild(mydoc.createTextNode(title_text))
@@ -22,7 +23,8 @@ def dc_title(mydoc, parent, artmeta):
 def dc_rights(mydoc, parent, artmeta):
     '''Create dc:rights node for OPF'''
     newchild = mydoc.createElement('dc:rights')
-    newchild.appendChild(mydoc.createTextNode(artmeta.art_copyright_statement))
+    copyright_text = serializeText(artmeta.art_copyright_statement)
+    newchild.appendChild(mydoc.createTextNode(copyright_text))
     parent.appendChild(newchild)
 
 def dc_creator(mydoc, parent, artmeta):

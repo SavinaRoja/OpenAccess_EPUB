@@ -272,7 +272,7 @@ class ArticleMeta(object):
         copyright_year = node.getElementsByTagName('copyright-year')[0]
         self.art_copyright_year = copyright_year.firstChild.data
         cpright = node.getElementsByTagName('copyright-statement')[0]
-        self.art_copyright_statement = cpright.firstChild.data
+        self.art_copyright_statement = getFormattedNode(cpright)
         elocation_id = node.getElementsByTagName('elocation-id')[0]
         self.art_eloc_id = elocation_id.firstChild.data
         

@@ -189,10 +189,10 @@ class OPSContent(object):
         copybold = synop.createElement('b')
         copybold.appendChild(synop.createTextNode('Copyright: '))
         copp.appendChild(copybold)
-        copystr = u'{0} {1} {2}'.format(u'\u00A9', 
-                                        meta.article_meta.art_copyright_year, 
-                                        meta.article_meta.art_copyright_statement)
+        copystr = u'{0} {1}'.format(u'\u00A9', 
+                                    meta.article_meta.art_copyright_year)
         copp.appendChild(synop.createTextNode(copystr))
+        copp.childNodes += meta.article_meta.art_copyright_statement.childNodes
         synbody.appendChild(copp)
         
         #Create a node for the Funding text
@@ -1034,6 +1034,21 @@ class OPSContent(object):
             #In this case, we can just modify them in situ
             for italic_node in italic_nodes:
                 italic_node.tagName = u'i'
+
+    def monospaceNodeHandler(self, topnode):
+        '''Handles proper conversion of <monospace> tags under the provided 
+        topnode. Also handles NodeLists by calling itself on each Node in the 
+        NodeList'''
+        try:
+            monospace_nodes = topnode.getElementsByTagName('monospace')
+        except AttributeError:
+            for item in topnode:
+                self.monospaceNodeHandler(item)
+        else:
+            #In this case, we can just modify them in situ
+            for mono_node in monospace_noces:
+                mono_node.tagName = u'span'
+                mono_node.setAttribute('style', 'font-family:monospace')
     
     def subNodeHandler(self, topnode):
         '''Handles the potential attribute \"arrange\" for sub elements under 
