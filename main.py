@@ -1,6 +1,6 @@
 #! /usr/bin/python
 
-__version__ = '0.0.6c'
+__version__ = '0.0.7'
 
 #Standard Library Modules
 import argparse
@@ -18,6 +18,8 @@ import tocncx
 import content
 from settings import Settings
 from article import Article
+
+settings = Settings()
 
 def initCache(cache_loc):
     '''Initiates the cache if it does not exist'''
@@ -95,8 +97,8 @@ def dirExists(outdirect, batch):
             sys.exit()
     else:
         shutil.rmtree(outdirect)
-        
-def makeEPUB(document, xml_local, cache_dir, outdirect):
+    
+def makeEPUB(document, xml_local, cache_dir, outdirect, log_to):
     '''
     Encapsulates the primary processing work-flow. Before this method is 
     called, pre-processing has occurred to define important directory and file 
@@ -110,10 +112,14 @@ def makeEPUB(document, xml_local, cache_dir, outdirect):
     tocncx.generateTOC(document.front, document.features, outdirect)
     output.generateOPF(document, outdirect)
     output.epubZip(outdirect)
+    
+    #WARNING: shutil.rmtree() is a recursive deletion function, care should be 
+    #taken whenever modifying this code
+    if settings.cleanup:
+        shutil.rmtree(outdirect)
 
 def main():
     '''Main Script'''
-    settings = Settings()
     
     parser = argparse.ArgumentParser(description = 'OpenAccess_EPUB Parser')
     parser.add_argument('--version', action='version', version='OpenAccess_EPUB {0}'.format(__version__))
@@ -145,19 +151,23 @@ def main():
         os.mkdir(args.output)
     
     #Initiate logging settings
-    logname = os.path.join('logs', 'temp.log')
+    logname = os.path.join(args.log_to, 'temp.log')
     logging.basicConfig(filename = logname, level = logging.DEBUG)
     logging.info('OpenAccess_EPUB Log v.{0}'.format(__version__))
     
     if args.batch:
+        download = False
         files = os.listdir(args.batch)
         for file in files:
             if not os.path.splitext(file)[1] == '.xml':
                 pass
             else:
                 filename = os.path.join(args.batch, file)
-                document, xml_local = localInput(file)
-                
+                document, xml_local = localInput(filename)
+                outdirect = os.path.join(args.output, document.titlestring())
+                if os.path.isdir(outdirect):
+                    dirExists(outdirect, args.batch)
+                makeEPUB(document, xml_local, args.cache, outdirect, args.log_to)
     
     if not args.batch:
         #Determination of input type and processing
@@ -175,7 +185,7 @@ def main():
     if os.path.isdir(outdirect):
         dirExists(outdirect, args.batch)
     
-    makeEPUB(document, xml_local, args.cache, outdirect)
+    makeEPUB(document, xml_local, args.cache, outdirect, args.log_to)
         
     if download and not settings.save_xml:
         os.remove(xml_local)
@@ -184,10 +194,6 @@ def main():
     newname =  os.path.join(args.log_to, newname)
     os.rename(logname, newname)
     
-    #WARNING: shutil.rmtree() is a recursive deletion function, care should be 
-    #taken whenever modifying this code
-    if settings.cleanup:
-        shutil.rmtree(outdirect)
-        
+    
 if __name__ == '__main__':
     main()
