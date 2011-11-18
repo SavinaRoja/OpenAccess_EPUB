@@ -52,7 +52,6 @@ class Article(object):
         #        pass
         
         self.front = Front(frontnode)
-        self.body = body.Body(self.bodynode)
         self.back = Back(self.backnode)
         
         #Create an attribute element to hold the document's features
