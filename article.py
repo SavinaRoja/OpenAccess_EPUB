@@ -1,4 +1,5 @@
-import front, body, back
+import utils
+import front, body
 import xml.dom.minidom as minidom
 
 class Article(object):
@@ -51,7 +52,7 @@ class Article(object):
         
         self.front = front.Front(frontnode)
         self.body = body.Body(self.bodynode)
-        self.back = back.Back(self.backnode)
+        self.back = Back(self.backnode)
         
         #Create an attribute element to hold the document's features
         self.features = doc.createElement('features')
@@ -200,3 +201,17 @@ class Article(object):
                         self.playorder += 1
                         destnode.appendChild(clone)
                         self.featureParse(doc, child, clone)
+                        
+class Back(object):
+    
+    def __init__(self, node):
+        self.footnotes = node.getElementsByTagName('fn')
+        self.funding = u''
+        self.competing_interests = u''
+        for item in self.footnotes:
+            if item.getAttribute('fn-type') == u'conflict':
+                text = utils.serializeText(item, stringlist = [])
+                self.competing_interests = text
+            elif item.getAttribute('fn-type') == u'financial-disclosure':
+                text = utils.serializeText(item, stringlist = [])
+                self.funding = text
