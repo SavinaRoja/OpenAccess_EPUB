@@ -424,6 +424,7 @@ class OPSContent(object):
         string tagNames allows those tags to be ignored'''
         handlers = {'bold': self.boldNodeHandler(topnode), 
                     'italic': self.italicNodeHandler(topnode), 
+                    'monospace': self.monospaceNodeHandler(topnode), 
                     'sub': self.subNodeHandler(topnode), 
                     'sup': self.supNodeHandler(topnode), 
                     'underline': self.underlineNodeHandler(topnode), 
@@ -996,7 +997,7 @@ class OPSContent(object):
                     try:
                         xlink = attrs['xlink:href']
                     except KeyError:
-                        print('supplementary-tag tag found wihthout attribute \"xlink:href\"')
+                        print('supplementary-tag tag found without attribute \"xlink:href\"')
                     else:
                         href = u'{0}{1}{2}'.format(plos_jrns[jrn], fetch, xlink)
                         anchor = doc.createElement('a')
@@ -1046,7 +1047,7 @@ class OPSContent(object):
                 self.monospaceNodeHandler(item)
         else:
             #In this case, we can just modify them in situ
-            for mono_node in monospace_noces:
+            for mono_node in monospace_nodes:
                 mono_node.tagName = u'span'
                 mono_node.setAttribute('style', 'font-family:monospace')
     
