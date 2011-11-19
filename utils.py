@@ -106,7 +106,19 @@ def recursive_zip(zipf, directory, folder = ""):
         elif os.path.isdir(os.path.join(directory, item)):
             recursive_zip(zipf, os.path.join(directory, item),
                           os.path.join(folder, item))
-    
+
+def suggestedArticleTypes():
+    '''Returns a list of suggested values for article-type'''
+    #See http://dtd.nlm.nih.gov/publishing/tag-library/3.0/n-w2d0.html
+    s = ['abstract', 'addendum', 'announcement', 'article-commentary', 
+         'book-review', 'books-received', 'brief-report', 'calendar', 
+         'case-report', 'collection', 'correction', 'discussion', 
+         'dissertation', 'editorial', 'in-brief', 'introduction', 'letter', 
+         'meeting-report', 'news', 'obituary', 'oration', 
+         'partial-retraction', 'product-review', 'rapid-communication', 
+         'rapid-communication', 'reply', 'reprint', 'research-article', 
+         'retraction', 'review-article', 'translation']
+    return(s)
 
 def initiateDocument(titlestring,
                      _publicId = '-//W3C//DTD XHTML 1.1//EN',
