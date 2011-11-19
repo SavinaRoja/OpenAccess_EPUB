@@ -1,7 +1,6 @@
 import utils
 import metadata
 import logging
-import front, body
 import xml.dom.minidom as minidom
 
 class Article(object):
@@ -85,7 +84,7 @@ class Article(object):
         
         #To make our lives easier (I hope), we can instantiate special classes 
         #for Front and Back nodes.
-        self.front = Front(front_node[0])
+        self.front = Front(front_node)
         if back_node:
             self.back = Back(back_node[0])
         else:
@@ -102,7 +101,7 @@ class Article(object):
         #Create an attribute element to hold the document's features
         self.features = doc.createElement('features')
         #Run the featureParse method to get feature tree
-        self.featureParse(doc, self.bodynode, self.features)
+        self.featureParse(doc, self.body, self.features)
         
     def validateAttrs(self):
         '''Most of the time, attributes are not required nor do they have fixed
@@ -119,8 +118,8 @@ class Article(object):
         attr_err = 'Article attribute {0} has improper value: {1}'
         
         for _key, _val in mandates:
-            if not self.attrs(_key) == _val:
-                logging.error(attr_err.format(_key, self.attrs(_key)))
+            if not self.attrs[_key] == _val:
+                logging.error(attr_err.format(_key, self.attrs[_key]))
         
         if self.attrs['article-type'] not in utils.suggestedArticleTypes():
             art_type_err = 'article-type value is not a suggested value: {0}'
