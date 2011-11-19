@@ -1,0 +1,40 @@
+Introduction
+------------
+OpenAccess_EPUB is a I created with the broad goal of bringing OpenAccess (OA) 
+journal articles and content into the modern e-book format. EPUB was a natural 
+choice for format and so I began to develop a tool to translate from the XML 
+PLoS presented for its articles to the EPUB2 format.
+
+The project is still quite new, and is still only geared at supporting PLoS 
+content. If more OA publishers expose suitable formats for translation, then 
+the project should naturally expand. A significant advantage of the EPUB 
+format is its increased accessibility for those with visual or reading 
+impairments, as well as providing certain enhancements over standard PDF.
+
+As I write this, PLoS publishes XML according to the Journal Publishing Tag
+Set 2.0, but plans to move in a few months to Tag Set 3.0. EPUB3 also recently 
+became the official current EPUB version. My goal is to be mostly ready for 
+Journal Publishing Tag Set 3.0 to EPUB3 conversion by the time PLoS updates.
+
+Getting Started
+---------------
+Nicer documentation for users wishing to use the program is on the wiki:
+https://github.com/SavinaRoja/OpenAccess_EPUB/wiki
+
+OpenAccess_EPUB is a CLI tool implemented in Python to convert PLoS articles
+to EPUB. The user can indicate the desired content in three ways: path to
+local file, PLoS URL, or Digital Object Identifier (DOI). 
+
+From the program directory, try:
+python main.py -i path/to/local/PLoS_xml_file
+
+How to Contribute
+-----------------
+If you would like to contribute to the project, there are many ways to do so. 
+If you know Python and would like to assist in development, contact me and we 
+can discuss collaboration. Feedback regarding bugs, presentation, formatting, 
+and accessibility are all quite valuable. 
+
+Author
+------
+Paul Barton (SavinaRoja)
