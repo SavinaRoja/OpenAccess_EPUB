@@ -1,5 +1,6 @@
 import utils
 import metadata
+import logging
 import front, body
 import xml.dom.minidom as minidom
 
@@ -9,57 +10,121 @@ class Article(object):
     Journal Publishing DTD, which contains all the metadata and content for 
     the article
     
-    http://dtd.nlm.nih.gov/publishing/tag-library/2.0/index.html
+    3.0 Tagset:
+    http://dtd.nlm.nih.gov/publishing/tag-library/3.0/n-3q20.html
+    
+    2.0 Tagset:
+    http://dtd.nlm.nih.gov/publishing/tag-library/2.0/n-9kc0.html
     '''
     
-    def __init__(self, document):
+    def __init__(self, xml_file):
         
-        self.inputstring = document
-        doc = minidom.parse(self.inputstring)
-        
+        logging.info('Parsing file: {0}'.format(xml_file))
+        doc = minidom.parse(xml_file)
         self.root_tag = doc.documentElement
         
-        attr_strings = [u'article-type', u'dtd-version', u'xml:lang', u'xmlns:mml', u'xmlns:xlink']
+        #The potential Attributes of the <article> tag
+        #article-type Type of Article
+        #dtd-version Version of the Tag Set (DTD)
+        #xml:lang Language
+        #xmlns:mml MathML Namespace Declaration
+        #xmlns:xlink XLink Namespace Declaration
+        #xmlns:xsi XML Schema Namespace Declaration
         
-        self.attributes = {}
-        self.playorder = 2
+        self.attrs = {'article-type': None, 'dtd-version': None, 'xml:lang': None, 
+                      'xmlns:mml': None, 'xmlns:xlink': None, 'xmlns:xsi': None}
         
-        for attr in attr_strings:
-            value = self.root_tag.getAttribute(attr)
-            self.attributes[attr] = value
+        for attr in self.attrs:
+            #getAttribute() returns an empty string if the attribute DNE
+            self.attrs[attr] = self.root_tag.getAttribute(attr)
+            
+        self.validateAttrs() #Log errors for invalid attribute values
         
+        #The following, in order:
+        #<front> Front Matter
+        #<body> Body of the Article, zero or one
+        #<back> Back Matter, zero or one
+        #<floats-group> Floating Element Group, zero or one
+        #Any one of:
+        #    <sub-article> Sub-Article, zero or more
+        #    <response> Response, zero or more
         
-        if self.attributes[u'xmlns:mml'] != u'http://www.w3.org/1998/Math/MathML':
-            print('ERROR: The MathML attribute value may not be changed from \'http://www.w3.org/1998/Math/MathML\'')
-        
-        if self.attributes[u'xmlns:xlink'] != u'http://www.w3.org/1999/xlink':
-            print('ERROR: The XLink Namespace Declaration attribute value may not be changed from \'http://www.w3.org/1999/xlink\'')
-        
-        #Mandatory
-        frontnode = self.root_tag.getElementsByTagName('front')[0]
-        
-        #Technically optional, but assume for now that they will be present
-        self.bodynode = self.root_tag.getElementsByTagName('body')[0]
-        self.backnode = self.root_tag.getElementsByTagName('back')[0]
-        
-        #It can have a <sub-article> or a <response>, but let's ignore that for now
+        #When getElementsByTagName() does not find any elements, it creates an 
+        #empty NodeList. It will thus evaluate False in control flow, consider 
+        #the following approaches: I have come to prefer the latter...
+        #
         #try:
-        #    subarticlenode = self.root_tag.getElementsByTagName('sub-article')[0]
-        #except:
-        #    try:
-        #        responsenode = self.root_tag.getElementsByTagName('response')[0]
-        #    except:
-        #        pass
+        #    zero_or_one = self.root_tag.getElementsByTagName('zero-or-one')[0]
+        #except IndexError:
+        #    zero_or_one = None
+        #    logging.info('zero-or-one tag not found')
+        #----------------------------------------------------------------------
+        #zero_or_one = self.root_tag.getElementsByTagName('zero-or-one')
+        #if zero_or_one:
+        #    doStuffWith(zero_or_one[0])
         
-        self.front = Front(frontnode)
-        self.back = Back(self.backnode)
+        #This tag is mandatory, bad input here deserves an error
+        try:
+            front_node = self.root_tag.getElementsByTagName('front')[0]
+        except IndexError:
+            msg = '<front> element was not detected in the document'
+            logging.critical(msg)
+            print(msg)
+            sys.exit()
+        #These tags are not mandatory, but rather expected...
+        body_node = self.root_tag.getElementsByTagName('body')
+        back_node = self.root_tag.getElementsByTagName('back')
+        
+        #This tag is new to 3.0, I don't know what to expect of it yet
+        floats_group_node = self.root_tag.getElementsByTagName('floats-group')
+        
+        #These tags are zero or more, and mutually exclusive
+        sub_article_nodes = self.root_tag.getElementsByTagName('sub-article')
+        if not sub_article_nodes:
+            response_nodes = self.root_tag.getElementsByTagName('response')
+        
+        #To make our lives easier (I hope), we can instantiate special classes 
+        #for Front and Back nodes.
+        self.front = Front(front_node[0])
+        if back_node:
+            self.back = Back(back_node[0])
+        else:
+            self.back = None
+        #We could do the same for Body, but it is not needed.
+        if body_node:
+            self.body = body_node[0]
+        else:
+            self.body = None
+        
+        
+        self.playorder = 2
         
         #Create an attribute element to hold the document's features
         self.features = doc.createElement('features')
         #Run the featureParse method to get feature tree
         self.featureParse(doc, self.bodynode, self.features)
         
-        #print(self.features.toprettyxml(encoding = 'utf-8'))
+    def validateAttrs(self):
+        '''Most of the time, attributes are not required nor do they have fixed
+         values. But in this case, there are some mandatory requirements.'''
+        #I would love to check xml:lang against RFC 4646: 
+        # http://www.ietf.org/rfc/rfc4646.txt
+        #I don't know a good tool for it though, so it gets a pass for now.
+        
+        mandates = [('xmlns:mml', 'http://www.w3.org/1998/Math/MathML'), 
+                    ('xmlns:xlink', 'http://www.w3.org/1999/xlink'), 
+                    ('dtd-version', '3.0'), 
+                    ('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance')]
+        
+        attr_err = 'Article attribute {0} has improper value: {1}'
+        
+        for _key, _val in mandates:
+            if not self.attrs(_key) == _val:
+                logging.error(attr_err.format(_key, self.attrs(_key)))
+        
+        if self.attrs['article-type'] not in utils.suggestedArticleTypes():
+            art_type_err = 'article-type value is not a suggested value: {0}'
+            logging.warning(art_type_err.format(self.attrs['article-type']))
         
     def titlestring(self):
         '''Creates a titlestring for use as the epub filename'''
