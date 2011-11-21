@@ -13,8 +13,9 @@ impairments, as well as providing certain enhancements over standard PDF.
 
 As I write this, PLoS publishes XML according to the Journal Publishing Tag
 Set 2.0, but plans to move in a few months to Tag Set 3.0. EPUB3 also recently 
-became the official current EPUB version. My goal is to be mostly ready for 
-Journal Publishing Tag Set 3.0 to EPUB3 conversion by the time PLoS updates.
+became the official current EPUB version. There are concerns about how widely 
+supported EPUB3 will be. So for some time, EPUB2 will be the primary focus for 
+conversion, and eventually they should both be options.
 
 Getting Started
 ---------------
