@@ -186,7 +186,8 @@ def main():
     #The name of the processing directory and the .epub should be a string like
     #journal.pcbi.1002211
     #or if already re-named, it will assume the xml name
-    output_name = os.path.splitext(os.path.split(xml_local)[1])[0]
+    input_name = os.path.splitext(os.path.split(xml_local)[1])[0]
+    output_name = os.path.join(args.output, input_name)
     
     if os.path.isdir(output_name):
         dirExists(output_name, args.batch)
@@ -196,7 +197,7 @@ def main():
     if download and not settings.save_xml:
         os.remove(xml_local)
     
-    newname = u'{0}.log'.format(output_name)
+    newname = u'{0}.log'.format(input_name)
     newname =  os.path.join(args.log_to, newname)
     os.rename(logname, newname)
     
