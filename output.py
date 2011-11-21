@@ -76,7 +76,6 @@ def generateOPF(article, dirname):
                  'text/css', 'ncx': 'application/x-dtbncx+xml'}
     current_dir = os.getcwd()
     os.chdir(dirname)
-    tables = False
     for path, subname, filenames in os.walk('OPS'):
         path = path[4:]
         if filenames:
@@ -88,14 +87,14 @@ def generateOPF(article, dirname):
                     newitem.setAttribute('media-type', mimetypes['ncx'])
                 else:
                     name, ext = os.path.splitext(filename)
-                    if name == 't001':
-                        tables = True
                     ext = ext[1:]
                     newitem = manifest.appendChild(mydoc.createElement('item'))
                     newitem.setAttribute('id', '{0}-{1}'.format(name, ext))
                     newitem.setAttribute('href', os.path.join(path, filename))
                     newitem.setAttribute('media-type', mimetypes[ext])
-                
+    
+    tables = article.body.getElementsByTagName('table')
+    
     os.chdir(current_dir)
     
     # Spine
