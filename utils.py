@@ -107,6 +107,99 @@ def recursive_zip(zipf, directory, folder = ""):
             recursive_zip(zipf, os.path.join(directory, item),
                           os.path.join(folder, item))
 
+def fetchPLoSImages(doidata, cache_dir, output_dir, caching):
+    '''Fetch the images associated with the article.'''
+    
+    import urllib2, logging, os.path, shutil
+    import output
+    from time import sleep
+     
+    print('Processing images...')
+    
+    output_dir_images = os.path.join(output_dir, 'OPS', 'images')
+    
+    #Check cache to see if images already have been downloaded
+    cached = False
+    prefix, suffix = os.path.split(doidata)
+    if prefix == '10.1371':
+        publisher = 'PLoS'
+        art_cache = os.path.join(cache_dir, publisher, suffix)
+        art_cache_images = os.path.join(art_cache, 'images')
+        if os.path.isdir(art_cache):
+            cached = True
+            logging.info('Cached images found')
+            print('Cached images found. Transferring from cache...')
+            shutil.copytree(art_cache_images, output_dir_images)
+        else:
+            logging.info('Cached images not found')
+    
+    if not cached:
+        model_images = os.path.join(cache_dir, 'model', 'images')
+        shutil.copytree(model_images, output_dir_images)
+        print('Downloading images, this may take some time...')
+        if publisher == 'PLoS':
+            PLOSSTRING = 'article/fetchObject.action?uri=info%3Adoi%2F'
+            #split the doidata into useful fragments
+            slashsplit = doidata.split('/')
+            journaldoi = slashsplit[0]
+            dotsplit = slashsplit[1].split('.')
+            journalid = dotsplit[1]
+            articledoi = dotsplit[2]
+            
+            jids = {'pgen': 'http://www.plosgenetics.org/', 
+                    'pcbi': 'http://www.ploscompbiol.org/', 
+                    'ppat': 'http://www.plospathogens.org/', 
+                    'pntd': 'http://www.plosntds.org/', 
+                    'pmed': 'http://www.plosmedicine.org/', 
+                    'pbio': 'http://www.plosbiology.org/',
+                    'pone': 'http://www.plosone.org/'}
+            
+            imagetypes = [('g', 'figures', 'figure'), 
+                          ('t', 'tables', 'table'), 
+                          ('e', 'equations', 'equation')]
+            
+            for itype, subdirect, itype_str in imagetypes:
+                    
+                for refnum in range(1,10000):
+                    addr_str = '{0}{1}{2}%2Fjournal.{3}.{4}.{5}{6}&representation=PNG_L'
+                    address = addr_str.format(jids[journalid], PLOSSTRING, 
+                                              journaldoi, journalid, 
+                                              articledoi, itype,
+                                              str(refnum).zfill(3))
+                    if itype == 'e':
+                        address = address[:-2]
+                        
+                    try:
+                        image = urllib2.urlopen(address)
+                        
+                    except urllib2.HTTPError, e:
+                        if e.code == 503: #Server overloaded
+                            sleep(1) #wait a second
+                            try:
+                                image = urllib2.urlopen(address)
+                            except:
+                                break
+                        elif e.code == 500:
+                            logging.error('urllib2.HTTPError {0}'.format(e.code))
+                        break
+                        
+                    else:
+                        filename = '{0}{1}.png'.format(itype, str(refnum).zfill(3))
+                        image_file = os.path.join(output_dir_images, 
+                                                  subdirect, filename)
+                        with open(image_file, 'wb') as outimage:
+                            outimage.write(image.read())
+                        dl_str = 'Downloaded {0} image {1}{2}'
+                        print(dl_str.format(itype_str, itype, str(refnum).zfill(3)))
+                        
+                    refnum += 1
+        print('Done downloading images')
+    if caching and not cached:
+        os.mkdir(art_cache)
+        shutil.copytree(output_dir_images, art_cache_images)
+        
+
+
 def suggestedArticleTypes():
     '''Returns a list of suggested values for article-type'''
     #See http://dtd.nlm.nih.gov/publishing/tag-library/3.0/n-w2d0.html

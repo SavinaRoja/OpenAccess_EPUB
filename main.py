@@ -12,6 +12,7 @@ import urlparse
 import logging
 
 #OpenAccess_EPUB Modules
+import utils
 import metadata
 import output 
 import tocncx 
@@ -107,7 +108,7 @@ def makeEPUB(document, xml_local, cache_dir, outdirect, log_to):
     '''
     print(u'Processing output to {0}.epub'.format(outdirect))
     output.generateHierarchy(outdirect)
-    document.fetchImages(cache = cache_dir, dirname = outdirect)
+    utils.fetchPLoSImages(document.getDOI(), cache_dir, outdirect, settings.caching)
     content.OPSContent(xml_local, outdirect, document.front, document.back)
     tocncx.generateTOC(document.front, document.features, outdirect)
     output.generateOPF(document, outdirect)
@@ -181,16 +182,21 @@ def main():
             download = False
             document, xml_local = localInput(args.input)
     
-    outdirect = os.path.join(args.output, document.titlestring())
-    if os.path.isdir(outdirect):
-        dirExists(outdirect, args.batch)
+    #For now PloS naming will be maintained
+    #The name of the processing directory and the .epub should be a string like
+    #journal.pcbi.1002211
+    #or if already re-named, it will assume the xml name
+    output_name = os.path.splitext(os.path.split(xml_local)[1])[0]
     
-    makeEPUB(document, xml_local, args.cache, outdirect, args.log_to)
+    if os.path.isdir(output_name):
+        dirExists(output_name, args.batch)
+    
+    makeEPUB(document, xml_local, args.cache, output_name, args.log_to)
         
     if download and not settings.save_xml:
         os.remove(xml_local)
     
-    newname = u'{0}.log'.format(document.titlestring())
+    newname = u'{0}.log'.format(output_name)
     newname =  os.path.join(args.log_to, newname)
     os.rename(logname, newname)
     

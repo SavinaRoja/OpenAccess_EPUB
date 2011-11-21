@@ -124,7 +124,13 @@ class Article(object):
         if self.attrs['article-type'] not in utils.suggestedArticleTypes():
             art_type_err = 'article-type value is not a suggested value: {0}'
             logging.warning(art_type_err.format(self.attrs['article-type']))
-        
+    
+    def getDOI(self):
+        '''A method for returning the DOI identifier of an article'''
+        for (_data, _id) in self.front.article_meta.identifiers:
+            if _id == 'doi':
+                return(_data)
+    
     def titlestring(self):
         '''Creates a titlestring for use as the epub filename'''
         
@@ -135,100 +141,7 @@ class Article(object):
         
         return titlestring
         
-    def fetchImages(self, cache, publisher = 'PLoS', dirname = 'test_output'): #Default to PLoS for now
-        '''Fetch the images associated with the article.'''
-        
-        import urllib2, logging, os.path, shutil
-        import output
-        from time import sleep
-         
-        print('Processing images...')
-        
-        for (_data, _id) in self.front.article_meta.identifiers:
-            if _id == 'doi':
-                doidata = _data
-        
-        #Check cache to see if images already have been downloaded
-        cached = False
-        prefix, suffix = os.path.split(doidata)
-        if prefix == '10.1371':
-            publisher = 'PLoS'
-            cache_dir = os.path.join(cache, publisher, suffix)
-            cache_dir_images = os.path.join(cache_dir, 'images')
-            if os.path.isdir(cache_dir):
-                cached = True
-                logging.info('Cached images found')
-                print('Cached images found. Transferring from cache...')
-            else:
-                logging.info('Cached images not found, creating cache...')
-                os.mkdir(cache_dir)
-                model_images = os.path.join(cache, 'model', 'images')
-                shutil.copytree(model_images, cache_dir_images)
-        
-        if not cached:
-            print('Downloading images, this may take some time...')
-            if publisher == 'PLoS':
-                PLOSSTRING = 'article/fetchObject.action?uri=info%3Adoi%2F'
-                #split the doidata into useful fragments
-                slashsplit = doidata.split('/')
-                journaldoi = slashsplit[0]
-                dotsplit = slashsplit[1].split('.')
-                journalid = dotsplit[1]
-                articledoi = dotsplit[2]
-                
-                jids = {'pgen': 'http://www.plosgenetics.org/', 
-                        'pcbi': 'http://www.ploscompbiol.org/', 
-                        'ppat': 'http://www.plospathogens.org/', 
-                        'pntd': 'http://www.plosntds.org/', 
-                        'pmed': 'http://www.plosmedicine.org/', 
-                        'pbio': 'http://www.plosbiology.org/',
-                        'pone': 'http://www.plosone.org/'}
-                
-                imagetypes = [('g', 'figures', 'figure'), 
-                              ('t', 'tables', 'table'), 
-                              ('e', 'equations', 'equation')]
-                
-                for itype, subdirect, itype_str in imagetypes:
-                        
-                    for refnum in range(1,10000):
-                        addr_str = '{0}{1}{2}%2Fjournal.{3}.{4}.{5}{6}&representation=PNG_L'
-                        address = addr_str.format(jids[journalid], PLOSSTRING, 
-                                                  journaldoi, journalid, 
-                                                  articledoi, itype,
-                                                  str(refnum).zfill(3))
-                        if itype == 'e':
-                            address = address[:-2]
-                            
-                        try:
-                            image = urllib2.urlopen(address)
-                            
-                        except urllib2.HTTPError, e:
-                            if e.code == 503: #Server overloaded
-                                sleep(1) #wait a second
-                                try:
-                                    image = urllib2.urlopen(address)
-                                except:
-                                    break
-                            elif e.code == 500:
-                                logging.error('urllib2.HTTPError {0}'.format(e.code))
-                            break
-                            
-                        else:
-                            filename = '{0}{1}.png'.format(itype, str(refnum).zfill(3))
-                            image_file = os.path.join(cache_dir, 'images',
-                                                      subdirect, filename)
-                            with open(image_file, 'wb') as outimage:
-                                outimage.write(image.read())
-                            print('Downloaded {0} image {1}{2}'.format(itype_str, 
-                                                                       itype, 
-                                                                       str(refnum).zfill(3)))
-                            
-                        refnum += 1
-            print('Done downloading images')
-        
-        dirname_ops_images = os.path.join(dirname, 'OPS', 'images')
-        shutil.copytree(cache_dir_images, dirname_ops_images)
-        
+            
     def featureParse(self, doc, fromnode, destnode):
         '''A method that traverses the node, extracting a hierarchy of specific
         tagNames'''
@@ -285,7 +198,6 @@ class Front(object):
         articlemetanode = self.root_tag.getElementsByTagName('article-meta')[0]
         self.article_meta = metadata.ArticleMeta(articlemetanode)
         
-
 class Back(object):
     
     def __init__(self, node):
