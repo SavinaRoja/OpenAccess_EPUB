@@ -165,10 +165,11 @@ def main():
             else:
                 filename = os.path.join(args.batch, file)
                 document, xml_local = localInput(filename)
-                outdirect = os.path.join(args.output, document.titlestring())
-                if os.path.isdir(outdirect):
-                    dirExists(outdirect, args.batch)
-                makeEPUB(document, xml_local, args.cache, outdirect, args.log_to)
+                input_name = os.path.splitext(os.path.split(xml_local)[1])[0]
+                output_name = os.path.join(args.output, input_name)
+                if os.path.isdir(output_name):
+                    dirExists(output_name, args.batch)
+                makeEPUB(document, xml_local, args.cache, output_name, args.log_to)
     
     if not args.batch:
         #Determination of input type and processing
@@ -200,7 +201,6 @@ def main():
     newname = u'{0}.log'.format(input_name)
     newname =  os.path.join(args.log_to, newname)
     os.rename(logname, newname)
-    
     
 if __name__ == '__main__':
     main()
