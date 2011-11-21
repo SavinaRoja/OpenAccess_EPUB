@@ -132,7 +132,7 @@ class Article(object):
                 return(_data)
     
     def titlestring(self):
-        '''Creates a titlestring for use as the epub filename'''
+        '''Creates a string which may be used as the title if desired.'''
         
         titlestring = u'{0}_{1}{2}'.format(self.front.journal_meta.identifier['pmc'],
                                            self.front.article_meta.art_auths[0].get_surname(),
