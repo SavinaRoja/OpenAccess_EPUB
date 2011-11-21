@@ -823,12 +823,11 @@ class OPSContent(object):
                     tabdoc.appendChild(table)
                 
                 #Create a link to the HTML table version
-                h_link = doc.createElement('a')
-                h_link.setAttribute('href', 'tables.xml#h{0}'.format(name))
-                h_link.appendChild(doc.createTextNode('HTML version of this table'))
-                
-                
-                tab_parent.insertBefore(h_link, tab_sibling)
+                if tables:
+                    h_link = doc.createElement('a')
+                    h_link.setAttribute('href', 'tables.xml#h{0}'.format(name))
+                    h_link.appendChild(doc.createTextNode('HTML version of this table'))
+                    tab_parent.insertBefore(h_link, tab_sibling)
                 
                 #Handle <table-wrap-foot>
                 #Because the contents of this element are presented by PLoS in 
@@ -989,9 +988,9 @@ class OPSContent(object):
                             'pmed': 'http://www.plosmedicine.org/', 
                             'pntd': 'http://www.plosntds.org/'}
                 try:
-                    jrn = attrs['id'].split('.')[0]
+                    jrn = attrs['id'].split('.')[0].split('-')[0]
                 except KeyError:
-                    print('supplementary-tag tag found wihthout attribute \"id\"')
+                    print('supplementary-tag tag found without attribute \"id\"')
                 else:
                     fetch = 'article/fetchSingleRepresentation.action?uri='
                     try:
