@@ -435,7 +435,7 @@ class OPSContent(object):
                     'disp-formula': self.dispFormulaNodeHandler(topnode, doc), 
                     'ext-link': self.extLinkNodeHandler(topnode), 
                     'sc': self.smallCapsNodeHandler(topnode), 
-                    'list': self.listNodeHandler(topnode), 
+                    'list': self.listNodeHandler(topnode, doc), 
                     'graphic': self.graphicNodeHandler(topnode), 
                     'email': self.emailNodeHandler(topnode)}
         
@@ -1049,6 +1049,43 @@ class OPSContent(object):
             for mono_node in monospace_nodes:
                 mono_node.tagName = u'span'
                 mono_node.setAttribute('style', 'font-family:monospace')
+                
+    def dispQuoteNodeHandler(self, topnode, doc):
+        '''Handles proper conversion of <disp-quote> tags under the provided 
+        topnode. Also handles NodeLists by calling itself on each Node in the 
+        NodeList'''
+        try:
+            disp_quote_nodes = topnode.getElementsByTagName('disp-quote')
+        except AttributeError:
+            for item in topnode:
+                self.dispQuoteNodeHandler(item, doc)
+        else:
+            for disp in disp_quote_nodes:
+                
+                attrs = {'content-type': None, 'id': None, 
+                         'specific-use': None, 'xml:lang': None}
+                for attr in attrs:
+                    attrs[attr] = disp.getAttribute(attr)
+                    try:
+                        disp.removeAttribute(attr)
+                    except xml.dom.NotFoundErr:
+                        pass
+                    
+                    parent = disp.parentNode
+                    grandparent = parent.parentNode
+                    disp_index = parent.childNodes.index(disp)
+                    parent_sibling = parent.nextSibling
+                    
+                    disp_p = doc.createElement('p')
+                    grandparent.insertBefore(disp_p, parent_sibling)
+                    new_p = doc.createElement('p')
+                    grandparent.insertBefore(new_p, parent_sibling)
+                    for each in parent.childNodes[disp_index + 1:]:
+                        new_p.appendChild(each)
+                        
+                    #Now that we have modified the structure, modify the tag
+                    #and it's children:
+                    
     
     def subNodeHandler(self, topnode):
         '''Handles the potential attribute \"arrange\" for sub elements under 
@@ -1301,7 +1338,7 @@ class OPSContent(object):
                     if not attrs['xlink:type'] == u'simple':
                         logging.info('<ext-link> attribute \"xlink:type\" = {0}'.format(attrs['xlink:type']))
     
-    def listNodeHandler(self, topnode):
+    def listNodeHandler(self, topnode, doc):
         '''Handles conversion of <list> tags which are used to represent data 
         in either a linked fashion with or without linear order. Finds all 
         <list> elements under the provided Node; also works on NodeLists by 
@@ -1318,6 +1355,18 @@ class OPSContent(object):
                 self.listNodeHandler(item, doc)
         else:
             for list in lists:
+                
+                parent = list.parentNode
+                grandparent = parent.parentNode
+                list_index = parent.childNodes.index(list)
+                parent_sibling = parent.nextSibling
+                
+                if parent.tagName == 'p':
+                    grandparent.insertBefore(list, parent_sibling)
+                    new_p = doc.createElement('p')
+                    grandparent.insertBefore(new_p, parent_sibling)
+                    for each in parent.childNodes[list_index + 1:]:
+                        new_p.appendChild(each)
                 
                 attrs = {'id': None, 'list-content': None, 'list-type': None, 
                          'prefix-word': None}
@@ -1357,6 +1406,7 @@ class OPSContent(object):
                 
                 for list_item in list_items:
                     list_item.tagName = u'li'
+                
     
     def graphicNodeHandler(self, topnode):
         '''Handles rudimentary conversion of <graphic> tags. Typically when 
