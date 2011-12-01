@@ -1,4 +1,8 @@
-import os, os.path, zipfile, utils, dublincore
+import os
+import os.path
+import zipfile
+import utils
+import dublincore
 
 def generateOPF(article, dirname):
     '''Creates the content.opf document from an Article instance issued as 
