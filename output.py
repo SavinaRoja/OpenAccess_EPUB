@@ -1,42 +1,5 @@
 import os, os.path, zipfile, utils, dublincore
 
-def generateHierarchy(dirname):
-    os.mkdir(dirname)
-    os.mkdir(os.path.join(dirname, 'META-INF'))
-    ops = os.path.join(dirname, 'OPS')
-    os.mkdir(ops)
-    css = os.path.join(ops, 'css')
-    os.mkdir(css)
-    #Import CSS from resources/
-    with open(os.path.join(css, 'article.css'), 'wb') as dest:
-        with open(os.path.join('resources', 'text.css')) as src:
-            dest.write(src.read())
-    #images = os.path.join(ops, 'images')
-    #os.mkdir(images)
-    #figures = os.path.join(images, 'figures')
-    #os.mkdir(figures)
-    #tables = os.path.join(images, 'tables')
-    #os.mkdir(tables)
-    #supp = os.path.join(images, 'supplementary')
-    #os.mkdir(supp)
-    #eqn = os.path.join(images, 'equations')
-    #os.mkdir(eqn)
-    
-    # Create mimetype file in root directory
-    mimepath = os.path.join(dirname, 'mimetype')
-    with open(mimepath, 'w') as mimetype:
-        mimetype.write('application/epub+zip')
-    
-    # Create the container.xml file in META-INF
-    meta_path = os.path.join(dirname, 'META-INF', 'container.xml')
-    with open(meta_path, 'w') as container_xml:
-        container_xml.write('''<?xml version="1.0" encoding="UTF-8" ?>
-<container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
-   <rootfiles>
-      <rootfile full-path="OPS/content.opf" media-type="application/oebps-package+xml"/>
-   </rootfiles>
-</container>''')
-
 def generateOPF(article, dirname):
     '''Creates the content.opf document from an Article instance issued as 
     input'''
