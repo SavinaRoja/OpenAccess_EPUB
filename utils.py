@@ -1,5 +1,6 @@
 '''utility/common stuff'''
 import os.path
+import zipfile
 from collections import namedtuple
 
 Identifier = namedtuple('Identifer', 'id, type')
@@ -143,6 +144,18 @@ def getTagData(node_list):
         return data
     except TypeError:
         getTagData([node_list])
+        
+def epubZip(outdirect):
+    '''Zips up the input file directory into an ePub file.'''
+    epub_filename = outdirect + '.epub'
+    epub = zipfile.ZipFile(epub_filename, 'w')
+    current_dir = os.getcwd()
+    os.chdir(outdirect)
+    epub.write('mimetype')
+    recursive_zip(epub, 'META-INF')
+    recursive_zip(epub, 'OPS')
+    os.chdir(current_dir)
+    epub.close()
 
 def recursive_zip(zipf, directory, folder = ""):
     '''Recursively traverses the output directory to construct the zipfile'''

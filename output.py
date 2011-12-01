@@ -1,6 +1,5 @@
 import os
 import os.path
-import zipfile
 import utils
 import dublincore
 
@@ -87,15 +86,3 @@ def generateOPF(article, dirname):
     contentpath = os.path.join(dirname,'OPS','content.opf')
     with open(contentpath, 'w') as output:
         output.write(mydoc.toxml(encoding = 'UTF-8'))
-        
-def epubZip(outdirect):
-    '''Zips up the input file directory into an ePub file.'''
-    epub_filename = outdirect + '.epub'
-    epub = zipfile.ZipFile(epub_filename, 'w')
-    current_dir = os.getcwd()
-    os.chdir(outdirect)
-    epub.write('mimetype')
-    utils.recursive_zip(epub, 'META-INF')
-    utils.recursive_zip(epub, 'OPS')
-    os.chdir(current_dir)
-    epub.close()
