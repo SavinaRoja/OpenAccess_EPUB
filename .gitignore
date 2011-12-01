@@ -14,6 +14,10 @@
 epubcheck.sh
 batchtest.sh
 
+# Certain Resources #
+############
+resources/base_epub/
+
 # Output #
 ############
 output/*
