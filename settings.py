@@ -31,3 +31,11 @@ class Settings(object):
         #directory once it finishes zipping it to ePub.
         #It is generally good to leave as True. You can always unzip the ePub.
         self.cleanup = True
+        
+        #This determines the location of the base_epub directory, which is the 
+        #reference directory copied to instantiate the epub hierarchy
+        self.base_epub = os.path.join('resources', 'base_epub')
+        
+        #This determines the location of the base css file, which is copied to 
+        #the ePub's css directory
+        self.css_location = os.path.join('resources', 'text.css')
