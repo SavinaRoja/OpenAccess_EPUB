@@ -170,8 +170,10 @@ def recursive_zip(zipf, directory, folder = ""):
 def fetchPLoSImages(doidata, cache_dir, output_dir, caching):
     '''Fetch the images associated with the article.'''
     
-    import urllib2, logging, os.path, shutil
-    import output
+    import urllib2
+    import logging
+    import os.path
+    import shutil
     from time import sleep
      
     print('Processing images...')

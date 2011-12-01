@@ -14,8 +14,8 @@ import logging
 #OpenAccess_EPUB Modules
 import utils
 import metadata
-import output 
-import tocncx 
+import opf
+import tocncx
 import content
 from settings import Settings
 from article import Article
@@ -113,7 +113,7 @@ def makeEPUB(document, xml_local, cache_dir, outdirect, log_to):
     utils.fetchPLoSImages(document.getDOI(), cache_dir, outdirect, settings.caching)
     content.OPSContent(xml_local, outdirect, document.front, document.back)
     tocncx.generateTOC(document.front, document.features, outdirect)
-    output.generateOPF(document, outdirect)
+    opf.generateOPF(document, outdirect)
     utils.epubZip(outdirect)
     
     #WARNING: shutil.rmtree() is a recursive deletion function, care should be 
