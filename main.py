@@ -107,7 +107,9 @@ def makeEPUB(document, xml_local, cache_dir, outdirect, log_to):
     to generate the ePub content.
     '''
     print(u'Processing output to {0}.epub'.format(outdirect))
-    output.generateHierarchy(outdirect)
+    if not os.path.isdir(settings.base_epub):
+        utils.makeEPUBBase(settings.base_epub, settings.css_location)
+    shutil.copytree(settings.base_epub, outdirect)
     utils.fetchPLoSImages(document.getDOI(), cache_dir, outdirect, settings.caching)
     content.OPSContent(xml_local, outdirect, document.front, document.back)
     tocncx.generateTOC(document.front, document.features, outdirect)
