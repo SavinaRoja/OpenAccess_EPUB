@@ -4,6 +4,53 @@ from collections import namedtuple
 
 Identifier = namedtuple('Identifer', 'id, type')
 
+def makeEPUBBase(location, css_location):
+    '''Contains the  functionality to create the ePub directory hierarchy from 
+    scratch. Typical practice will not require this method, but use this to 
+    replace the default base ePub directory if it is not present. It may also 
+    used as a primer on ePub directory construction:
+    base_epub/
+    base_epub/mimetype
+    base_epub/META-INF/
+    base_epub/META-INF/container.xml
+    base_epub/OPS/
+    base_epub/OPS/css
+    base_epub/OPS/css/article.css
+    base_epub/OPS/images/
+    base_epub/OPS/images/equations/
+    base_epub/OPS/images/figures/
+    base_epub/OPS/images/tables/'''
+    
+    #Create root directory
+    rootname = location
+    os.mkdir(rootname)
+    #Create mimetype file in root directory
+    mime_path = os.path.join(rootname, 'mimetype')
+    with open(mime_path, 'w') as mimetype:
+        mimetype.write('application/epub+zip')
+    #Create OPS and META-INF directorys
+    os.mkdir(os.path.join(rootname, 'META-INF'))
+    os.mkdir(os.path.join(rootname, 'OPS'))
+    #Create container.xml file in META-INF
+    meta_path = os.path.join(rootname, 'META-INF', 'container.xml')
+    with open(meta_path, 'w') as container:
+        container.write('''<?xml version="1.0" encoding="UTF-8" ?>
+<container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
+   <rootfiles>
+      <rootfile full-path="OPS/content.opf" media-type="application/oebps-package+xml"/>
+   </rootfiles>
+</container>''')
+    #It is considered better practice to leave the instantiation of image 
+    #directories up to other methods. Such directories are technically 
+    #optional and may depend on content
+    
+    #Create the css directory in OPS, then copy the file from resources
+    os.mkdir(os.path.join(rootname, 'OPS', 'css'))
+    css_path = os.path.join(rootname, 'OPS', 'css', 'article.css')
+    with open(css_path, 'w') as css_out:
+        with open(css_location, 'r') as css_src:
+            css_out.write(css_src.read())
+
 def createDCElement(document, name, data, attributes = None):
     '''A convenience method for creating DC tag elements.
     Used in content.opf'''
