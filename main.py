@@ -1,6 +1,6 @@
 #! /usr/bin/python
 
-__version__ = '0.0.7'
+__version__ = '0.0.8'
 
 #Standard Library Modules
 import argparse
@@ -139,6 +139,8 @@ def main():
                         help = 'Use to specify a non-default cache directory')
     parser.add_argument('-b', '--batch', action = 'store', default = False, 
                         help = 'Use to specify a batch directory; each article inside will be processed.')
+    parser.add_argument('-C', '--collection', action = 'store', default = False, 
+                        help = 'Use to create an ePub file containing multiple resources.')
     args = parser.parse_args()
     
     #Check for directory existence, create if not found
@@ -173,7 +175,12 @@ def main():
                     dirExists(output_name, args.batch)
                 makeEPUB(document, xml_local, args.cache, output_name, args.log_to)
     
-    if not args.batch:
+    if args.collection:
+        shutil.copytree(settings.base_epub, outdirect)
+        
+        makeCollectionEPub()
+    
+    else:
         #Determination of input type and processing
         if 'http://www' in args.input:
             download = True
