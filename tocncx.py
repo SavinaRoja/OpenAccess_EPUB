@@ -131,7 +131,7 @@ those conforming to the relaxed constraints of OPS 2.0'''))
                         navlblstr = utils.serializeText(title_node, stringlist = [])
                     navlbl.appendChild(self.makeText(navlblstr))
                     navcon = nav.appendChild(self.toc.createElement('content'))
-                    navcon.setAttribute('id', 'main.xml#{0}'.format(id))
+                    navcon.setAttribute('src', 'main.xml#{0}'.format(id))
                     self.structureParse(child, nav, depth, first = False)
     
     def write(self, location):
