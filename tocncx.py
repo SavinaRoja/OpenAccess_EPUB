@@ -1,180 +1,182 @@
 import utils
-import os, os.path
+import os.path
+from xml.dom.minidom import getDOMImplementation
 import main
     
-def generateTOC(fm, features, outdirect):
-    '''Used to generate the table of contents for the article. Should be
-    kept in accordance with the Daisy Talking Book specification.'''
+class tocNCX(object):
+    '''A class to represent the Table of Contents NCX. Should be versatile in 
+    use for all ePub creation modes. Should be kept in accordance with the 
+    Daisy Talking Book specification.'''
     
-    #Different construction than found in utils.initiateDocument()
-    _publicId = '-//NISO//DTD ncx 2005-1//EN'
-    _systemId = 'http://www.daisy.org/z3986/2005/ncx-2005-1.dtd'
+    def __init__(self, collection_mode = False):
+        self.collection_mode = collection_mode
+        #Make a DOM implementation of our file
+        _publicId = '-//NISO//DTD ncx 2005-1//EN'
+        _systemId = 'http://www.daisy.org/z3986/2005/ncx-2005-1.dtd'
+        
+        impl = getDOMImplementation()
+        mytype = impl.createDocumentType('ncx', _publicId, _systemId)
+        self.toc = impl.createDocument(None, 'ncx', mytype)
+        
+        self.ncx = self.toc.lastChild #IGNORE:E1101
+        self.ncx.setAttribute('version', '2005-1')
+        self.ncx.setAttribute('xml:lang', 'en-US')
+        self.ncx.setAttribute('xmlns', 'http://www.daisy.org/z3986/2005/ncx/')
+        #Create the sub elements to <ncx>
+        ncx_subelements = ['head', 'docTitle', 'docAuthor', 'navMap']
+        for element in ncx_subelements:
+            self.ncx.appendChild(self.toc.createElement(element))
+        self.head, self.doctitle, self.docauthor, self.navmap = self.ncx.childNodes
+        #Create some optional subelements
+        self.lof = self.toc.createElement('navList')
+        self.lof.setAttribute('class', 'lof')
+        self.lof.setAttribute('id', 'lof')
+        self.lot = self.toc.createElement('navList')
+        self.lot.setAttribute('class', 'lot')
+        self.lot.setAttribute('id', 'lot')
+        #The <head> element requires some base content
+        self.head.appendChild(self.toc.createComment('''The following metadata 
+items, except for dtb:generator, are required for all NCX documents, including 
+those conforming to the relaxed constraints of OPS 2.0'''))
+        metas = ['dtb:uid', 'dtb:depth','dtb:totalPageCount', 
+                 'dtb:maxPageNumber', 'dtb:generator']
+        for meta in metas:
+            meta_tag = self.toc.createElement('meta')
+            meta_tag.setAttribute('name', meta)
+            self.head.appendChild(meta_tag)
+        #Some important integers
+        self.playOrder = 1
+        self.maxdepth = 0
+        #List of articles included
+        self.articles = []
     
-    from xml.dom.minidom import getDOMImplementation
+    def takeArticle(self, article):
+        '''Process the contents of an article to build the NCX'''
+        self.articles += [article]
+        front = article.front
+        body = article.body
+        #If we are only packing one article...
+        if not self.collection_mode:
+            #Place the article title into <docTitle>
+            titletext = utils.serializeText(front.article_meta.article_title, stringlist = [])
+            tocname = u'NCX For: {0}'.format(titletext)
+            self.doctitle.appendChild(self.makeText(tocname))
+            #Place the article's first author into <docAuthor>
+            authortext = front.article_meta.art_auths[0].get_name()
+            authlabel = u'Primary author: {0}'.format(authortext)
+            self.docauthor.appendChild(self.makeText(authlabel))
+            #Using the body node, construct the navMap and other lists
+            lbl = self.toc.createElement('navLabel')
+            lbl.appendChild(self.makeText('Table of Contents'))
+            self.navmap.appendChild(lbl)
+            self.structureParse(article.body)
+            if self.lof.childNodes:
+                self.makeFiguresList()
+            if self.lot.childNodes:
+                self.makeTablesList()
+            #Set the metas with self.setMetas()
+            self.setMetas()
+        #If we are packing arbitrarily many articles...
+        else:
+            pass
     
-    impl = getDOMImplementation()
+    def structureParse(self, srcnode, dstnode = None, depth = 0, first = True):
+        '''The structure of an article's <body> content can be analyzed in 
+        terms of nested <sec> tags, along with features like <fig> and 
+        <table-wrap>.'''
+        depth += 1
+        if depth > self.maxdepth:
+            self.maxdepth = depth
+        if not dstnode:
+            dstnode = self.navmap
+        #We build the first structure element, it is not found in article.body
+        if first:
+            nav = dstnode.appendChild(self.toc.createElement('navPoint'))
+            nav.setAttribute('id', 'titlepage')
+            nav.setAttribute('playOrder', str(self.playOrder))
+            self.playOrder += 1
+            navlbl = nav.appendChild(self.toc.createElement('navLabel'))
+            navlbl.appendChild(self.makeText('Title Page'))
+            navcon = nav.appendChild(self.toc.createElement('content'))
+            navcon.setAttribute('src','synop.xml#title')
+        #Tag name strings we check for to determine structures and features
+        tagnamestrs = [u'sec', u'fig', u'table-wrap']
+        #Do the recursive parsing
+        for child in srcnode.childNodes:
+            try:
+                tagname = child.tagName
+            except AttributeError: #Text nodes have no attribute tagName
+                pass
+            else:
+                if tagname in tagnamestrs:
+                    if tagname == u'sec':
+                        nav = self.toc.createElement('navPoint')
+                        dstnode.appendChild(nav)
+                    elif tagname == u'fig':
+                        nav = self.toc.createElement('navTarget')
+                        self.lof.appendChild(nav)
+                    elif tagname == u'table-wrap':
+                        nav = self.toc.createElement('navTarget')
+                        self.lot.appendChild(nav)
+                    id = child.getAttribute('id')
+                    nav.setAttribute('id', id)
+                    nav.setAttribute('playOrder', str(self.playOrder))
+                    self.playOrder += 1
+                    navlbl = nav.appendChild(self.toc.createElement('navLabel'))
+                    try:
+                        title_node = child.getElementsByTagName('title')[0]
+                    except IndexError: #For whatever reason, no title node
+                        navlblstr = 'Item title not found!'
+                    else:
+                        navlblstr = utils.serializeText(title_node, stringlist = [])
+                    navlbl.appendChild(self.makeText(navlblstr))
+                    navcon = nav.appendChild(self.toc.createElement('content'))
+                    navcon.setAttribute('id', 'main.xml#{0}'.format(id))
+                    self.structureParse(child, nav, depth, first = False)
     
-    mytype = impl.createDocumentType('ncx', _publicId, _systemId)
-    doc = impl.createDocument(None, 'ncx', mytype)
+    def write(self, location):
+        filename = os.path.join(location, 'OPS', 'toc.ncx')
+        with open(filename, 'w') as output:
+            output.write(self.toc.toprettyxml(encoding = 'utf-8'))
     
-    def metatag(_name, _content):
-        meta = doc.createElement('meta')
-        meta.setAttribute('name', _name)
-        meta.setAttribute('content', _content)
-        return meta
-    
-    def makeText(textstring):
-        text = doc.createElement('text')
-        text.appendChild(doc.createTextNode(textstring))
+    def makeText(self, textstring):
+        text = self.toc.createElement('text')
+        text.appendChild(self.toc.createTextNode(textstring))
         return text
     
-    def navmapper(featurenode, navMap, first = True):
-        #Add the Title Page navPoint
-        if first:
-            titlepage_nav = doc.createElement('navPoint')
-            navMap.appendChild(titlepage_nav)
-            titlepage_nav.setAttribute('playOrder', '1')
-            titlepage_nav.setAttribute('id', 'titlepage')
-            titlepage_label = doc.createElement('navLabel')
-            titlepage_label_text = doc.createElement('text')
-            titlepage_label_text.appendChild(doc.createTextNode('Title Page'))
-            titlepage_label.appendChild(titlepage_label_text)
-            titlepage_nav.appendChild(titlepage_label)
-            titlepage_content = doc.createElement('content')
-            titlepage_content.setAttribute('src', 'synop.xml#title')
-            titlepage_nav.appendChild(titlepage_content)
-        
-        #Add navPoints for all other features
-        for child in featurenode.childNodes:
-            if child.tagName == 'sec':
-                navnode = doc.createElement('navPoint')
-                navMap.appendChild(navnode)
-                navnode.setAttribute('playOrder',child.getAttribute('playOrder'))
-                navnode.setAttribute('id', child.getAttribute('id'))
-                titlenode = child.getElementsByTagName('title')[0]
-                titletext = utils.serializeText(titlenode, stringlist = [])
-                navlabel = doc.createElement('navLabel')
-                navnode.appendChild(navlabel)
-                navlabel.appendChild(makeText(titletext))
-                content = doc.createElement('content')
-                content.setAttribute('src', 'main.xml#{0}'.format(child.getAttribute('id')))
-                navnode.appendChild(content)
-                navmapper(child, navnode, first = False)
+    def setMetas(self):
+        '''Provides attribute values to the four required meta elements.'''
+        metas = self.head.getElementsByTagName('meta')
+        for meta in metas:
+            if meta.getAttribute('name') == 'dtb:depth':
+                meta.setAttribute('content', str(self.maxdepth - 1))
+            elif meta.getAttribute('name') == 'dtb:uid':
+                if not self.collection_mode:
+                    ids = self.articles[0].front.article_meta.identifiers
+                    for (_data, _id) in ids:
+                        if _id == 'doi':
+                            uid = _data
+                    meta.setAttribute('content', uid)
+                else:
+                    meta.setAttribute('content', '10.1371')
+            elif meta.getAttribute('name') == 'dtb:generator':
+                content = 'OpenAccess_EPUB {0}'.format(main.__version__)
+                meta.setAttribute('content', content)
+            else:
+                meta.setAttribute('content', '0')
     
-    def listFigures(featurenode, navpoint):
-        for child in featurenode.getElementsByTagName('fig'):
-            navtarget = doc.createElement('navTarget')
-            navtarget.setAttribute('class', 'figure')
-            navtarget.setAttribute('playOrder',child.getAttribute('playOrder'))
-            fid = child.getAttribute('id')
-            navtarget.setAttribute('id', fid)
-            navlabel = doc.createElement('navLabel')
-            titlenode = child.getElementsByTagName('title')[0]
-            titletext = utils.serializeText(titlenode, stringlist = [])
-            navlabel.appendChild(makeText(titletext))
-            navtarget.appendChild(navlabel)
-            content = doc.createElement('content')
-            current_dir = os.getcwd()
-            os.chdir(os.path.join(outdirect, 'OPS'))
-            #for _path, _subdirs, _filenames in os.walk('images'):
-            #    for filename in _filenames:
-            #        if os.path.splitext(filename)[0] == fid.split('-')[-1]:
-            #            src = os.path.join(_path, filename)
-            src = u'main.xml#{0}'.format(fid)
-            os.chdir(current_dir)
-            content.setAttribute('src', src)
-            navtarget.appendChild(content)
-            navpoint.appendChild(navtarget)
-            
-    def listTables(featurenode, navpoint):
-        for child in featurenode.getElementsByTagName('table-wrap'):
-            navtarget = doc.createElement('navTarget')
-            navtarget.setAttribute('class', 'table')
-            navtarget.setAttribute('playOrder',child.getAttribute('playOrder'))
-            tid = child.getAttribute('id')
-            navtarget.setAttribute('id', tid)
-            navlabel = doc.createElement('navLabel')
-            titlenode = child.getElementsByTagName('title')[0]
-            titletext = utils.serializeText(titlenode, stringlist = [])
-            navlabel.appendChild(makeText(titletext))
-            navtarget.appendChild(navlabel)
-            content = doc.createElement('content')
-            src = 'main.xml#{0}'.format(tid)
-            content.setAttribute('src', src)
-            navtarget.appendChild(content)
-            navpoint.appendChild(navtarget)
+    def makeFiguresList(self):
+        '''Prepends the List of Figures with appropriate navLabel and adds the 
+        element to the ncx element'''
+        navlbl = self.toc.createElement('navLabel')
+        navlbl.appendChild(self.makeText('List of Figures'))
+        self.lof.insertBefore(navlbl, self.lof.firstChild)
+        self.ncx.appendChild(self.lof)
     
-    ncx = doc.lastChild #IGNORE:E1101
-    ncx.setAttribute('version', '2005-1')
-    ncx.setAttribute('xml:lang', 'en-US')
-    ncx.setAttribute('xmlns', 'http://www.daisy.org/z3986/2005/ncx/')
-    
-    ncx_elements = ['head', 'docTitle', 'docAuthor', 'navMap']
-    for element in ncx_elements:
-        ncx.appendChild(doc.createElement(element))
-    head, doctitle, docauthor, navmap = ncx.childNodes
-    
-    if features.getElementsByTagName('fig'):
-        lof = doc.createElement('navList')
-        lof.setAttribute('id', 'lof')
-        lof.setAttribute('class', 'lof')
-        navlabel = doc.createElement('navLabel')
-        lof.appendChild(navlabel)
-        navlabel.appendChild(makeText('List of Figures'))
-        ncx.appendChild(lof)
-        #Create the navList element for the list of figures
-        listFigures(features, lof)
-    
-    if features.getElementsByTagName('table-wrap'):
-        lot = doc.createElement('navList')
-        lot.setAttribute('id', 'lot')
-        lot.setAttribute('class', 'lot')
-        navlabel = doc.createElement('navLabel')
-        lot.appendChild(navlabel)
-        navlabel.appendChild(makeText('List of Tables'))
-        ncx.appendChild(lot)
-        #Create the navList element for the list of tables
-        listTables(features, lot)
-    
-    statement = doc.createComment('''The following metadata items, except for dtb:generator,
-            are required for all NCX documents, including those 
-            conforming to the relaxed constraints of OPS 2.0''')
-    head.appendChild(statement)
-    
-    metas = []
-    #For now, the global unique identifier will utilize the DOI
-    for (_data, _id) in fm.article_meta.identifiers:
-        if _id == 'doi':
-            metas.append(metatag('dtb:uid', _data))
-    
-    # NCX Depth of the document
-    metas.append(metatag('dtb:depth', '3'))
-    
-    # Non-negative integer indicating the number of pageTargets in the pageList
-    metas.append(metatag('dtb:totalPageCount', '0'))
-    
-    # Non-negative integer indicating the largest value attribute on
-    # pageTarget in the pageList.
-    metas.append(metatag('dtb:maxPageNumber', '0'))
-    
-    # Name and version of software that generated the NCX
-    metas.append(metatag('dtb:generator', 
-                         'OpenAccess_EPUB {0}'.format(main.__version__)))
-    
-    for meta in metas:
-        head.appendChild(meta)
-    
-    titletext = utils.serializeText(fm.article_meta.article_title, stringlist = [])
-    tocname = u'NCX for: {0}'.format(titletext)
-    doctitle.appendChild(makeText(tocname))
-    docauthor.appendChild(makeText(u'{0}{1}'.format('Primary author: ', 
-                                                   fm.article_meta.art_auths[0].get_name())))
-    
-    #Create the navMap element
-    navlabel = doc.createElement('navLabel')
-    navmap.appendChild(navlabel)
-    navlabel.appendChild(makeText('Table of Contents'))
-    navmapper(features, navmap)
-    
-    with open(os.path.join(outdirect, 'OPS', 'toc.ncx'), 'w') as outdoc:
-        outdoc.write(doc.toprettyxml(encoding = 'utf-8'))
+    def makeTablesList(self):
+        '''Prepends the List of Tables with appropriate navLabel and adds the 
+        element to the ncx element'''
+        navlbl = self.toc.createElement('navLabel')
+        navlbl.appendChild(self.makeText('List of Tables'))
+        self.lot.insertBefore(navlbl, self.lot.firstChild)
+        self.ncx.appendChild(self.lot)
