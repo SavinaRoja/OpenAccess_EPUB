@@ -85,4 +85,4 @@ def generateOPF(article, dirname):
     
     contentpath = os.path.join(dirname,'OPS','content.opf')
     with open(contentpath, 'w') as output:
-        output.write(mydoc.toxml(encoding = 'UTF-8'))
+        output.write(mydoc.toprettyxml(encoding = 'UTF-8'))
