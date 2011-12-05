@@ -529,12 +529,8 @@ class OPSContent(object):
                         bold_label_text = doc.createElement('b')
                         bold_label_text.appendChild(doc.createTextNode(fig_label_text + '.'))
                         fig_caption_node.insertBefore(bold_label_text, fig_caption_node.firstChild)
-
                     #Place after the image node
-                    if fig_sibling:
-                        fig_parent.insertBefore(fig_caption_node, fig_sibling)
-                    else:
-                        fig_parent.appendChild(fig_caption_node)
+                    fig_parent.insertBefore(fig_caption_node, fig_sibling)
                 
                 #Handle email
                 for email in fig_email:
