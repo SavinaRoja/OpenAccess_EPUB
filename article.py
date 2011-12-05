@@ -141,7 +141,6 @@ class Article(object):
         
         return titlestring
         
-            
     def featureParse(self, doc, fromnode, destnode):
         '''A method that traverses the node, extracting a hierarchy of specific
         tagNames'''
@@ -168,7 +167,7 @@ class Article(object):
                         self.playorder += 1
                         destnode.appendChild(clone)
                         self.featureParse(doc, child, clone)
-                    except AttributeError: #TextNodes have no attribute tagName
+                    except AttributeError:
                         pass
                     else:
                         clone.appendChild(title_node.cloneNode(deep = True))
