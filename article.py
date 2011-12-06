@@ -140,50 +140,10 @@ class Article(object):
         titlestring = titlestring.replace(u' ', u'-')
         
         return titlestring
-        
-    def featureParse(self, doc, fromnode, destnode):
-        '''A method that traverses the node, extracting a hierarchy of specific
-        tagNames'''
-        import utils
-        
-        tagnamestrs = [u'sec', u'fig', u'table-wrap']
-        
-        for child in fromnode.childNodes:
-            try:
-                tagname = child.tagName
-            except AttributeError:
-                pass
-            else:
-                if tagname in tagnamestrs:
-                    clone = child.cloneNode(deep = False)
-                    try:
-                        title_node = child.getElementsByTagName('title')[0]
-                    except IndexError: #in the case that it has no title
-                        title_node = doc.createElement('title')
-                        title_node.appendChild(doc.createTextNode(''))
-                        clone.appendChild(title_node.cloneNode(deep = True))
-                        clone.setAttribute('playOrder', str(self.playorder))
-                        clone.setAttribute('title', '')
-                        self.playorder += 1
-                        destnode.appendChild(clone)
-                        self.featureParse(doc, child, clone)
-                    except AttributeError:
-                        pass
-                    else:
-                        clone.appendChild(title_node.cloneNode(deep = True))
-                        clone.setAttribute('playOrder', str(self.playorder))
-                        clone.setAttribute('title', 
-                                           utils.serializeText(title_node, stringlist = []))
-                        self.playorder += 1
-                        destnode.appendChild(clone)
-                        self.featureParse(doc, child, clone)
 
 class Front(object):
-    
-    '''
-    The metadata for an article, such as the name and issue of the journal 
-    in which the article appears and the author(s) of the article
-    '''
+    '''The metadata for an article, such as the name and issue of the journal 
+    in which the article appears and the author(s) of the article'''
     
     def __init__(self, node):
         #Front may have no attributes
@@ -198,7 +158,8 @@ class Front(object):
         self.article_meta = metadata.ArticleMeta(articlemetanode)
         
 class Back(object):
-    
+    '''The back element for an article, contains footnotes, funding, competing 
+    and interests'''
     def __init__(self, node):
         self.footnotes = node.getElementsByTagName('fn')
         self.funding = u''
