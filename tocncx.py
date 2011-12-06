@@ -78,7 +78,10 @@ those conforming to the relaxed constraints of OPS 2.0'''))
             self.setMetas()
         #If we are packing arbitrarily many articles...
         else:
-            pass
+            #Place the article title into <docTitle>
+            titletext = 'Custom Collection'
+            tocname = u'NCX For: {0}'.format(titletext)
+            self.doctitle.appendChild(self.makeText(tocname))
     
     def structureParse(self, srcnode, dstnode = None, depth = 0, first = True):
         '''The structure of an article's <body> content can be analyzed in 
