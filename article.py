@@ -94,15 +94,7 @@ class Article(object):
             self.body = body_node[0]
         else:
             self.body = None
-        
-        
-        self.playorder = 2
-        
-        #Create an attribute element to hold the document's features
-        self.features = doc.createElement('features')
-        #Run the featureParse method to get feature tree
-        self.featureParse(doc, self.body, self.features)
-        
+
     def validateAttrs(self):
         '''Most of the time, attributes are not required nor do they have fixed
          values. But in this case, there are some mandatory requirements.'''
