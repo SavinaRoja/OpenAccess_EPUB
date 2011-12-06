@@ -57,14 +57,6 @@ those conforming to the relaxed constraints of OPS 2.0'''))
         body = article.body
         #If we are only packing one article...
         if not self.collection_mode:
-            #Place the article title into <docTitle>
-            titletext = utils.serializeText(front.article_meta.article_title, stringlist = [])
-            tocname = u'NCX For: {0}'.format(titletext)
-            self.doctitle.appendChild(self.makeText(tocname))
-            #Place the article's first author into <docAuthor>
-            authortext = front.article_meta.art_auths[0].get_name()
-            authlabel = u'Primary author: {0}'.format(authortext)
-            self.docauthor.appendChild(self.makeText(authlabel))
             #Using the body node, construct the navMap and other lists
             lbl = self.toc.createElement('navLabel')
             lbl.appendChild(self.makeText('Table of Contents'))
@@ -76,12 +68,16 @@ those conforming to the relaxed constraints of OPS 2.0'''))
                 self.makeTablesList()
             #Set the metas with self.setMetas()
             self.setMetas()
+            #Set the docAuthor and docTitle nodes
+            self.makeDocAuthor()
+            self.makeDocTitle()
         #If we are packing arbitrarily many articles...
         else:
             #Place the article title into <docTitle>
             titletext = 'Custom Collection'
             tocname = u'NCX For: {0}'.format(titletext)
             self.doctitle.appendChild(self.makeText(tocname))
+            #For <docAuthor>, I guess 
     
     def structureParse(self, srcnode, dstnode = None, depth = 0, first = True):
         '''The structure of an article's <body> content can be analyzed in 
@@ -136,6 +132,35 @@ those conforming to the relaxed constraints of OPS 2.0'''))
                     navcon = nav.appendChild(self.toc.createElement('content'))
                     navcon.setAttribute('src', 'main.xml#{0}'.format(id))
                     self.structureParse(child, nav, depth, first = False)
+    
+    def makeDocTitle(self):
+        '''Fills in the <docTitle> node, works for both single and collection 
+        mode.'''
+        if not self.collection_mode:
+            article = self.articles[0]
+            front = article.front
+            titletext = utils.serializeText(front.article_meta.article_title, stringlist = [])
+            tocname = u'NCX For: {0}'.format(titletext)
+            self.doctitle.appendChild(self.makeText(tocname))
+        else:
+            tocname = u'NCX For: PLoS Article Collection'
+            self.doctitle.appendChild(tocname)
+    
+    def makeDocAuthor(self):
+        '''Fills in the <docAuthor> node, works for both single and collection 
+        mode.'''
+        if not self.collection_mode:
+            article = self.articles[0]
+            front = article.front
+            authortext = front.article_meta.art_auths[0].get_name()
+            authlabel = u'Primary author: {0}'.format(authortext)
+            self.docauthor.appendChild(self.makeText(authlabel))
+        else:
+            article = self.articles[0]
+            front = article.front
+            authortext = front.article_meta.art_auths[0].get_name()
+            authlabel = u'Primary author of first paper: {0}'.format(authortext)
+            self.docauthor.appendChild(self.makeText(authlabel))
     
     def write(self, location):
         filename = os.path.join(location, 'OPS', 'toc.ncx')
