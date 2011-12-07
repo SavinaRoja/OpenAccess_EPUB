@@ -7,7 +7,7 @@ from xml.dom.minidom import getDOMImplementation
 class contentOPF(object):
     '''A class to represent the OPF document.'''
     
-    def __init__(self, collection_mode = False):
+    def __init__(self, location, collection_mode = False):
         #Create a DOMImplementation for the OPF
         impl = getDOMImplementation()
         self.opf = impl.createDocument(None, 'package', None)
@@ -26,7 +26,10 @@ class contentOPF(object):
             self.package.appendChild(self.opf.createElement(element))
         self.metadata, self.manifest, self.spine, self.guide = self.package.childNodes
         self.spine.setAttribute('toc', 'ncx')
-        
+        #Due to importance in relative positioning of the content.opf file to 
+        #other files in the the packaged, the contentOPF instance shoudl be 
+        #aware of its location
+        self.location = location
         #Make a list of articles, even if only one expected
         self.articles = []
         
@@ -68,9 +71,34 @@ class contentOPF(object):
             r.setAttribute(idref.format(i))
         if tables:
             self.spine.appendChild(tab_ref)
-            
-    def write(self, location):
-        filename = os.path.join(location, 'OPS', 'content.opf')
+    
+    def makeManifest(self):
+        '''The Manifest declares all of the documents within the ePub (except 
+        mimetype and META-INF/container.xml). It should be generated as a 
+        final step in the ePub process and after all articles have been parsed 
+        into <metadata> and <spine>.'''
+        mimetypes = {'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 'xml': 
+                     'application/xhtml+xml', 'png': 'image/png', 'css':
+                     'text/css', 'ncx': 'application/x-dtbncx+xml'}
+        current_dir = os.getcwd()
+        os.chdir(self.location)
+        for path, subname, filenames in os.walk('OPS'):
+            path = path[4:]
+            if filenames:
+                for filename in filenames:
+                    name, ext = os.path.splitext(filename)
+                    ext = ext[1:]
+                    new = self.manifest.appendChild(mydoc.createElement('item'))
+                    new.setAttribute('href', os.path.join(path, filename))
+                    new.setAttribute('media-type', mimetypes[ext])
+                    if filename == 'toc.ncx':
+                        new.setAttribute('id', 'ncx')
+                    else:
+                        new.setAttribute('id', filename.replace('.', '-'))
+        os.chdir(current_dir)
+    
+    def write(self):
+        filename = os.path.join(self.location, 'OPS', 'content.opf')
         with open(filename, 'w') as output:
             output.write(self.toc.toprettyxml(encoding = 'utf-8'))
 
