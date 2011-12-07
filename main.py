@@ -147,7 +147,7 @@ def main():
     
     #Check for directory existence, create if not found
     #This will break if the path has no immediate parent directory, this could 
-    #Be fixed but I am not sure if it should
+    #be fixed but I am not sure if it should
     if not os.path.isdir(args.log_to):
         os.mkdir(args.log_to)
     if not os.path.isdir(args.cache):
@@ -179,8 +179,18 @@ def main():
     
     #if args.collection:
     #    shutil.copytree(settings.base_epub, outdirect)
-    #    
-    #    makeCollectionEPub()
+    #    with open(args.collection, 'r') as collection:
+    #        inputs = collection.readlines()
+    #    for input in inputs:
+    #        if 'http://www' in args.input:
+    #            download = True
+    #            document, xml_local = urlInput(args.input, args.save_xml)
+    #        elif args.input[:4] == 'doi:':
+    #            download = True
+    #            document, xml_local = doiInput(args.input, args.save_xml)
+    #        else:
+    #            download = False
+    #            document, xml_local = localInput(args.input)
     
     else:
         #Determination of input type and processing
