@@ -78,7 +78,24 @@ those conforming to the relaxed constraints of OPS 2.0'''))
         #If we are packing arbitrarily many articles...
         else:
             titletext = utils.serializeText(front.article_meta.article_title, stringlist = [])
-            nav = self.navMap.appendChild(self.toc.createElement('navPoint'))
+            nav = self.navmap.appendChild(self.toc.createElement('navPoint'))
+            nav.setAttribute('id', 'article')
+            nav.setAttribute('playOrder', str(self.playOrder))
+            self.playOrder += 1
+            navlbl = nav.appendChild(self.toc.createElement('navLabel'))
+            navlbl.appendChild(self.makeText(titletext))
+            navcon = nav.appendChild(self.toc.createElement('content'))
+            navcon.setAttribute('src', 'synop.{0}.xml'.format(self.jid))
+            self.structureParse(article.body, nav, depth = 1)
+            if self.lof.childNodes:
+                self.makeFiguresList()
+            if self.lot.childNodes:
+                self.makeTablesList()
+            #Set the metas with self.setMetas()
+            self.setMetas()
+            #Set the docAuthor and docTitle nodes
+            self.makeDocAuthor()
+            self.makeDocTitle()
     
     def structureParse(self, srcnode, dstnode = None, depth = 0, first = True):
         '''The structure of an article's <body> content can be analyzed in 
@@ -145,7 +162,7 @@ those conforming to the relaxed constraints of OPS 2.0'''))
             self.doctitle.appendChild(self.makeText(tocname))
         else:
             tocname = u'NCX For: PLoS Article Collection'
-            self.doctitle.appendChild(tocname)
+            self.doctitle.appendChild(self.makeText(tocname))
     
     def makeDocAuthor(self):
         '''Fills in the <docAuthor> node, works for both single and collection 
