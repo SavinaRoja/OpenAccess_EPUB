@@ -177,10 +177,10 @@ def main():
                     dirExists(output_name, args.batch)
                 makeEPUB(document, xml_local, args.cache, output_name, args.log_to)
     
-    if args.collection:
-        shutil.copytree(settings.base_epub, outdirect)
-        
-        makeCollectionEPub()
+    #if args.collection:
+    #    shutil.copytree(settings.base_epub, outdirect)
+    #    
+    #    makeCollectionEPub()
     
     else:
         #Determination of input type and processing
