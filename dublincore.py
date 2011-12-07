@@ -3,6 +3,17 @@ from utils import serializeText
 # Currently, the Dublin Core will only be extended by the OPF Spec
 # See http://old.idpf.org/2007/opf/OPF_2.0_final_spec.html#Section2.2
 
+def alreadyExists(dc_term, dc_string, parent):
+    '''Method to determine if a specified Dublin Core Term already exists in 
+    the metadata which contains the specified string'''
+    terms = parent.getElementsByTagName(dc_term)
+    for term in terms:
+        term_str = utils.serializeText(term, stringlist = [])
+        if term_str == dc_string:
+            return True
+        else:
+            return False
+
 def dc_identifier(mydoc, parent, artmeta):
     '''Create dc:identifer node for OPF'''
     for (_data, _id) in artmeta.identifiers:
@@ -13,17 +24,19 @@ def dc_identifier(mydoc, parent, artmeta):
             newchild.setAttribute('opf:scheme', 'DOI') #Extended by OPF
             parent.appendChild(newchild)
 
-def dc_title(mydoc, parent, artmeta):
+def dc_title(mydoc, parent, artmeta, title_text = ''):
     '''Create dc:title node for OPF'''
     newchild = mydoc.createElement('dc:title')
-    title_text = serializeText(artmeta.article_title, stringlist = [])
+    if not title_text:
+        title_text = serializeText(artmeta.article_title, stringlist = [])
     newchild.appendChild(mydoc.createTextNode(title_text))
     parent.appendChild(newchild)
 
-def dc_rights(mydoc, parent, artmeta):
+def dc_rights(mydoc, parent, artmeta, copyright_text = ''):
     '''Create dc:rights node for OPF'''
     newchild = mydoc.createElement('dc:rights')
-    copyright_text = serializeText(artmeta.art_copyright_statement, stringlist = [])
+    if not copyright_text:
+        copyright_text = serializeText(artmeta.art_copyright_statement, stringlist = [])
     newchild.appendChild(mydoc.createTextNode(copyright_text))
     parent.appendChild(newchild)
 
@@ -32,18 +45,20 @@ def dc_creator(mydoc, parent, artmeta):
     for auth in artmeta.art_auths:
         newchild = mydoc.createElement('dc:creator')
         newchild.appendChild(mydoc.createTextNode(auth.get_name()))
-        newchild.setAttribute('opf:role', 'aut') #Extended by OPF
-        newchild.setAttribute('opf:file-as', auth.get_fileas_name()) #Extended by OPF
-        parent.appendChild(newchild)
+        if not alreadyExists('dc:creator', auth.get_name(), parent):
+            newchild.setAttribute('opf:role', 'aut') #Extended by OPF
+            newchild.setAttribute('opf:file-as', auth.get_fileas_name()) #Extended by OPF
+            parent.appendChild(newchild)
 
 def dc_contributor(mydoc, parent, artmeta):
     '''Create dc:contributor node(s) for OPF'''
     for contr in artmeta.art_edits:
         newchild = mydoc.createElement('dc:contributor')
         newchild.appendChild(mydoc.createTextNode(contr.get_name()))
-        newchild.setAttribute('opf:role', 'edt')
-        newchild.setAttribute('opf:file-as', contr.get_fileas_name())
-        parent.appendChild(newchild)
+        if not alreadyExists('dc:contibutor', contr.get_name(), parent):
+            newchild.setAttribute('opf:role', 'edt')
+            newchild.setAttribute('opf:file-as', contr.get_fileas_name())
+            parent.appendChild(newchild)
     
     for contr in artmeta.art_other_contrib:
         newchild = mydoc.createElement('dc:contributor')
@@ -132,8 +147,9 @@ def dc_subject(mydoc, parent, artmeta):
     for subject in subj_list:
         newchild = mydoc.createElement('dc:subject')
         subject_text = serializeText(subject, stringlist = [])
-        newchild.appendChild(mydoc.createTextNode(subject_text))
-        parent.appendChild(newchild)
+        if not alreadyExists('dc:subject', subject_text, parent):
+            newchild.appendChild(mydoc.createTextNode(subject_text))
+            parent.appendChild(newchild)
 
 def dc_format(mydoc, parent):
     '''Create dc:format node(s) for OPF'''
@@ -141,7 +157,7 @@ def dc_format(mydoc, parent):
     newchild.appendChild(mydoc.createTextNode('application/epub+zip'))
     parent.appendChild(newchild)
 
-def dc_type(mydoc, parent, artmeta):
+def dc_type(mydoc, parent):
     '''Creates dc:type node for OPF'''
     #Recommended best practice is to use a controlled vocabulary such as:
     #http://dublincore.org/documents/dcmi-type-vocabulary/
@@ -181,5 +197,5 @@ def generateDCMetadata(mydoc, opfmetanode, artmeta, jrnmeta):
     dc_source(mydoc, parent, artmeta)
     dc_subject(mydoc, parent, artmeta)
     dc_format(mydoc, parent) # Format is epub, independent of input
-    dc_type(mydoc, parent, artmeta)
+    dc_type(mydoc, parent)
     dc_language(mydoc, parent)
