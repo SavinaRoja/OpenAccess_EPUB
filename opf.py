@@ -12,7 +12,7 @@ class ContentOPF(object):
         impl = getDOMImplementation()
         self.opf = impl.createDocument(None, 'package', None)
         #Grab the root <package> node
-        self.package = mydoc.lastChild
+        self.package = self.opf.lastChild
         #Set attributes for this node, including namespace declarations
         self.package.setAttribute('version', '2.0')
         self.package.setAttribute('unique-identifier', 'PrimaryID')
@@ -57,7 +57,39 @@ class ContentOPF(object):
             dublincore.generateDCMetadata(self.opf, self.metadata, 
                                           self.ameta, self.jmeta)
         else:
-            dublincore.dc_format(self.opf, self.metadata)
+            #These terms are sensible to include from each article contained
+            #dublincore module contains alreadyExists() to avoid repetitive
+            #declarations of metadata
+            dublincore.dc_creator(self.opf, self.metadata, ameta)
+            dublincore.dc_contributor(self.opf, self.metadata, ameta)
+            dublincore.dc_subject(self.opf, self.metadata, ameta)
+            self.collectionMetadata()
+            
+    def collectionMetadata(self):
+        '''Some of the Dublin Core metata items are nonsensical in the case of 
+        a Collection and they are ignored. Some are of interest, but are 
+        non-trivial to provide, and may require manual editing by the user. 
+        This method provides provisional support for certain dc:terms that are 
+        sensible, and independent of article content.'''
+        dublincore.dc_format(self.opf, self.metadata)
+        dublincore.dc_language(self.opf, self.metadata)
+        dublincore.dc_type(self.opf, self.metadata)
+        #I want to be fair here with regards to copyright statements. All PLoS 
+        #articles are Creative Commons, which allows free use, modification, 
+        #and reproduction, so long as sources are attributed. Attribution to 
+        #each article is tricky for collections within the ePub 2.0 spec and 
+        #deserves deeper discussion. At this stage, I feel the following 
+        #approach for dc:rights is acceptable, it acknowledges the CCAL 
+        #rights declared in the original articles, while not mandating that 
+        #any custom modifications made by potential users do the same.
+        #The CCAL terms for the original content should be respected.
+        cp_text = '''This is a collection of open-access articles published by 
+PLoS and distributed under the terms of the Creative Commons Attribution 
+License, which permits unrestricted us, distribution, and reproduction in any 
+medium, provided the original author and source are credited.'''
+        dublincore.dc_rights(self.opf, self.metadata, copyright_text = cp_text)
+        title = 'A Collection of open-access PLoS Journal articles'
+        dublincore.dc_type(self.opf, self.metadata, titletext = title)
         
     def addToSpine(self, id_string, tables):
         idref = '{0}-' + '{0}-xml'.format(id_string)
