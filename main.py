@@ -112,7 +112,7 @@ def makeEPUB(document, xml_local, cache_dir, outdirect, log_to):
     shutil.copytree(settings.base_epub, outdirect)
     utils.fetchPLoSImages(document.getDOI(), cache_dir, outdirect, settings.caching)
     content.OPSContent(xml_local, outdirect, document.front, document.back)
-    toc = tocncx.tocNCX()
+    toc = tocncx.TocNCX()
     toc.takeArticle(document)
     toc.write(outdirect)
     opf.generateOPF(document, outdirect)

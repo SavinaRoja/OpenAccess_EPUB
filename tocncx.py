@@ -3,7 +3,7 @@ import os.path
 from xml.dom.minidom import getDOMImplementation
 import main
     
-class tocNCX(object):
+class TocNCX(object):
     '''A class to represent the Table of Contents NCX. Should be versatile in 
     use for all ePub creation modes. Should be kept in accordance with the 
     Daisy Talking Book specification.'''
