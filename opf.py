@@ -25,6 +25,7 @@ class contentOPF(object):
         for element in opf_subelements:
             self.package.appendChild(self.opf.createElement(element))
         self.metadata, self.manifest, self.spine, self.guide = self.package.childNodes
+        self.spine.setAttribute('toc', 'ncx')
         
         #Make a list of articles, even if only one expected
         self.articles = []
@@ -33,17 +34,45 @@ class contentOPF(object):
         '''Handles the input from an article. The OPF Package processes the 
         article for metadata and specific filename-ID associations. Other jobs 
         are independent of article material and are handled elsewhere.'''
+        #Add the Article to the list
+        self.articles += [article]
+        #Easy accession of metadata
+        ameta = article.front.article_meta
+        jmeta = article.front.journal_meta
+        #Create appropriate idrefs, these are mapped to packaged files in 
+        #the manifest. Because this is simple and we have set expectations
+        #<spine> can be appended immediately
+        for (_data, _id) in ameta.identifiers:
+            if _id == 'doi':
+                aid = _data.split('journal.')[1]
+        aid_dashed = aid.replace('.', '-')
+        tables = article.body.getElementsByTagName('table')
+        self.addToSpine(aid_dashed, tables)
+        
         if not self.collection_mode:
-            #Add the Article to the list
-            self.articles += [article]
-            #Easy accession of metadata
-            ameta = article.front.article_meta
-            jmeta = article.front.journal_meta
             #Utilize the methods in the dublincore module to translate metadata
             dublincore.generateDCMetadata(self.opf, self.metadata, 
                                           self.ameta, self.jmeta)
+        else:
+            dublincore.dc_format(self.opf, self.metadata)
+        
+    def addToSpine(self, id_string, tables):
+        idref = '{0}-' + '{0}-xml'.format(id_string)
+        syn_ref = self.spine.appendChild(self.opf.createElement('itemref'))
+        main_ref = self.spine.appendChild(self.opf.createElement('itemref'))
+        bib_ref = self.spine.appendChild(self.opf.createElement('itemref'))
+        tab_ref = self.opf.createElement('itemref')
+        for r, i, l in [(syn_ref, 'synop', 'yes'), (main_ref, 'main', 'yes'), 
+                        (bib_ref, 'biblio', 'yes'), (tab_ref, 'tables', 'no')]:
+            r.setAttribute('linear', l)
+            r.setAttribute(idref.format(i))
+        if tables:
+            self.spine.appendChild(tab_ref)
             
-            
+    def write(self, location):
+        filename = os.path.join(location, 'OPS', 'content.opf')
+        with open(filename, 'w') as output:
+            output.write(self.toc.toprettyxml(encoding = 'utf-8'))
 
 def generateOPF(article, dirname):
     '''Creates the content.opf document from an Article instance issued as 
