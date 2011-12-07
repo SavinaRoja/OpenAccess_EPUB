@@ -28,6 +28,16 @@ def generateOPF(article, dirname):
         package.appendChild(mydoc.createElement(node))
     metadata, manifest, spine, guide = package.childNodes
     
+    #Get string from dirname sans "journal."
+    jid = dirname.split('journal.')[1] #journal id string
+    jid_dashed = jid.replace('.', '-')
+    #File IDs
+    syn_id = 'synop-{0}-xml'.format(jid_dashed)
+    main_id = 'main-{0}-xml'.format(jid_dashed)
+    bib_id = 'biblio-{0}-xml'.format(jid_dashed)
+    tab_id = 'tables-{0}-xml'.format(jid_dashed)
+    
+    
     #Create useful accession points to article data
     artmeta = article.front.article_meta
     jrnmeta = article.front.journal_meta
@@ -55,7 +65,7 @@ def generateOPF(article, dirname):
                     name, ext = os.path.splitext(filename)
                     ext = ext[1:]
                     newitem = manifest.appendChild(mydoc.createElement('item'))
-                    newitem.setAttribute('id', '{0}-{1}'.format(name, ext))
+                    newitem.setAttribute('id', filename.replace('.', '-'))
                     newitem.setAttribute('href', os.path.join(path, filename))
                     newitem.setAttribute('media-type', mimetypes[ext])
     
@@ -66,16 +76,16 @@ def generateOPF(article, dirname):
     # Spine
     spine.setAttribute('toc', 'ncx')
     itemref_synop = mydoc.createElement('itemref')
-    itemref_synop.setAttribute('idref', 'synop-xml')
+    itemref_synop.setAttribute('idref', syn_id)
     itemref_synop.setAttribute('linear', 'yes')
     itemref_main = mydoc.createElement('itemref')
-    itemref_main.setAttribute('idref', 'main-xml')
+    itemref_main.setAttribute('idref', main_id)
     itemref_main.setAttribute('linear', 'yes')
     itemref_biblio = mydoc.createElement('itemref')
-    itemref_biblio.setAttribute('idref', 'biblio-xml')
+    itemref_biblio.setAttribute('idref', bib_id)
     itemref_biblio.setAttribute('linear', 'yes')
     itemref_tables = mydoc.createElement('itemref')
-    itemref_tables.setAttribute('idref', 'tables-xml')
+    itemref_tables.setAttribute('idref', tab_id)
     itemref_tables.setAttribute('linear', 'no')
     spine.appendChild(itemref_synop)
     spine.appendChild(itemref_main)

@@ -10,11 +10,17 @@ class OPSContent(object):
     def __init__(self, documentstring, outdirect, metadata, backdata):
         self.inputstring = documentstring
         self.doc = minidom.parse(self.inputstring)
+        #Get string from outdirect sans "journal."
+        self.jid = outdirect.split('journal.')[1] #journal id string
+        self.syn_frag = 'synop.{0}.xml'.format(self.jid) + '#{0}'
+        self.main_frag = 'main.{0}.xml'.format(self.jid) + '#{0}'
+        self.bib_frag = 'biblio.{0}.xml'.format(self.jid) + '#{0}'
+        self.tab_frag = 'tables.{0}.xml'.format(self.jid) + '#{0}'
         self.outdir = os.path.join(outdirect, 'OPS')
-        self.outputs = {'Synopsis': os.path.join(outdirect, 'OPS', 'synop.xml'), 
-                        'Main': os.path.join(outdirect, 'OPS', 'main.xml'), 
-                        'Biblio': os.path.join(outdirect, 'OPS', 'biblio.xml'), 
-                        'Tables': os.path.join(outdirect, 'OPS', 'tables.xml')}
+        self.outputs = {'Synopsis': os.path.join(outdirect, 'OPS', 'synop.{0}.xml'.format(self.jid)), 
+                        'Main': os.path.join(outdirect, 'OPS', 'main.{0}.xml'.format(self.jid)), 
+                        'Biblio': os.path.join(outdirect, 'OPS', 'biblio.{0}.xml'.format(self.jid)), 
+                        'Tables': os.path.join(outdirect, 'OPS', 'tables.{0}.xml'.format(self.jid))}
         self.metadata = metadata
         self.backdata = backdata
         
@@ -61,14 +67,14 @@ class OPSContent(object):
                     affiliation_index.append(aff)
                 sup = synop.createElement('sup')
                 aref = synop.createElement('a')
-                aref.setAttribute('href', u'synop.xml#{0}'.format(aff))
+                aref.setAttribute('href', self.syn_frag.format(aff))
                 aref.appendChild(synop.createTextNode(str(affiliation_index.index(aff) + 1)))
                 sup.appendChild(aref)
                 author_container.appendChild(sup)
             for contact in author.contact:
                 sup = synop.createElement('sup')
                 aref = synop.createElement('a')
-                aref.setAttribute('href', u'synop.xml#{0}'.format(contact))
+                aref.setAttribute('href', self.syn_frag.format(contact))
                 #character = con_char[ccnt]
                 #aref.appendChild(synop.createTextNode(character))
                 aref.appendChild(synop.createTextNode('*'))
@@ -822,7 +828,7 @@ class OPSContent(object):
                 #Create a link to the HTML table version
                 if tables:
                     h_link = doc.createElement('a')
-                    h_link.setAttribute('href', 'tables.xml#h{0}'.format(name))
+                    h_link.setAttribute('href', self.tab_frag.format(name))
                     h_link.appendChild(doc.createTextNode('HTML version of this table'))
                     tab_parent.insertBefore(h_link, tab_sibling)
                 
@@ -872,7 +878,7 @@ class OPSContent(object):
                         
                 #Place a link in the table document that directs back to the main
                 m_link = doc.createElement('a')
-                m_link.setAttribute('href', 'main.xml#{0}'.format(tab_id))
+                m_link.setAttribute('href', self.main_frag.format(tab_id))
                 m_link.appendChild(doc.createTextNode('Back to the text'))
                 m_link_p = doc.createElement('p')
                 m_link_p.appendChild(m_link)
@@ -1242,14 +1248,14 @@ class OPSContent(object):
         or under all Nodes in a NodeList.'''
         
         #We need mappings for local files to ref-type attribute values
-        ref_map = {u'bibr': u'biblio.xml#', 
-                   u'fig': u'main.xml#', 
-                   u'supplementary-material': u'main.xml#', 
-                   u'table': u'main.xml#', 
-                   u'aff': u'synop.xml#', 
-                   u'sec': u'main.xml#', 
-                   u'table-fn': u'tables.xml#', 
-                   u'boxed-text': u'main.xml#'}
+        ref_map = {u'bibr': self.bib_frag, 
+                   u'fig': self.main_frag, 
+                   u'supplementary-material': self.main_frag,
+                   u'table': self.main_frag, 
+                   u'aff': self.syn_frag, 
+                   u'sec': self.main_frag, 
+                   u'table-fn': self.tab_frag, 
+                   u'boxed-text': self.main_frag}
         
         try:
             xref_nodes = topnode.getElementsByTagName('xref')
@@ -1266,7 +1272,7 @@ class OPSContent(object):
                 rid = xref_node.getAttribute('rid')
                 xref_node.removeAttribute('rid')
                 #Set the href attribute
-                href = '{0}{1}'.format(ref_map[ref_type], rid)
+                href = ref_map[ref_type].format(rid)
                 xref_node.setAttribute('href', href)
                 
     

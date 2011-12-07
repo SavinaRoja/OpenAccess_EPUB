@@ -27,6 +27,10 @@ class tocNCX(object):
         for element in ncx_subelements:
             self.ncx.appendChild(self.toc.createElement(element))
         self.head, self.doctitle, self.docauthor, self.navmap = self.ncx.childNodes
+        #Add a label to navMap
+        lbl = self.toc.createElement('navLabel')
+        lbl.appendChild(self.makeText('Table of Contents'))
+        self.navmap.appendChild(lbl)
         #Create some optional subelements
         self.lof = self.toc.createElement('navList')
         self.lof.setAttribute('class', 'lof')
@@ -55,12 +59,12 @@ those conforming to the relaxed constraints of OPS 2.0'''))
         self.articles += [article]
         front = article.front
         body = article.body
+        ids = front.article_meta.identifiers
+        for (_data, _id) in ids:
+            if _id == 'doi':
+                self.jid = _data.split('journal.')[1]
         #If we are only packing one article...
         if not self.collection_mode:
-            #Using the body node, construct the navMap and other lists
-            lbl = self.toc.createElement('navLabel')
-            lbl.appendChild(self.makeText('Table of Contents'))
-            self.navmap.appendChild(lbl)
             self.structureParse(article.body)
             if self.lof.childNodes:
                 self.makeFiguresList()
@@ -73,11 +77,8 @@ those conforming to the relaxed constraints of OPS 2.0'''))
             self.makeDocTitle()
         #If we are packing arbitrarily many articles...
         else:
-            #Place the article title into <docTitle>
-            titletext = 'Custom Collection'
-            tocname = u'NCX For: {0}'.format(titletext)
-            self.doctitle.appendChild(self.makeText(tocname))
-            #For <docAuthor>, I guess 
+            titletext = utils.serializeText(front.article_meta.article_title, stringlist = [])
+            nav = self.navMap.appendChild(self.toc.createElement('navPoint'))
     
     def structureParse(self, srcnode, dstnode = None, depth = 0, first = True):
         '''The structure of an article's <body> content can be analyzed in 
@@ -97,7 +98,7 @@ those conforming to the relaxed constraints of OPS 2.0'''))
             navlbl = nav.appendChild(self.toc.createElement('navLabel'))
             navlbl.appendChild(self.makeText('Title Page'))
             navcon = nav.appendChild(self.toc.createElement('content'))
-            navcon.setAttribute('src','synop.xml#title')
+            navcon.setAttribute('src','synop.{0}.xml#title'.format(self.jid))
         #Tag name strings we check for to determine structures and features
         tagnamestrs = [u'sec', u'fig', u'table-wrap']
         #Do the recursive parsing
@@ -130,7 +131,7 @@ those conforming to the relaxed constraints of OPS 2.0'''))
                         navlblstr = utils.serializeText(title_node, stringlist = [])
                     navlbl.appendChild(self.makeText(navlblstr))
                     navcon = nav.appendChild(self.toc.createElement('content'))
-                    navcon.setAttribute('src', 'main.xml#{0}'.format(id))
+                    navcon.setAttribute('src', 'main.{0}.xml#{1}'.format(self.jid, id))
                     self.structureParse(child, nav, depth, first = False)
     
     def makeDocTitle(self):
