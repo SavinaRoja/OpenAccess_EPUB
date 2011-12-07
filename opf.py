@@ -4,7 +4,7 @@ import utils
 import dublincore
 from xml.dom.minidom import getDOMImplementation
 
-class contentOPF(object):
+class ContentOPF(object):
     '''A class to represent the OPF document.'''
     
     def __init__(self, location, collection_mode = False):
@@ -98,6 +98,7 @@ class contentOPF(object):
         os.chdir(current_dir)
     
     def write(self):
+        self.makeManifest()
         filename = os.path.join(self.location, 'OPS', 'content.opf')
         with open(filename, 'w') as output:
             output.write(self.toc.toprettyxml(encoding = 'utf-8'))
