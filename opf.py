@@ -2,11 +2,17 @@ import os
 import os.path
 import utils
 import dublincore
+from xml.dom.minidom import getDOMImplementation
+
+class contentOPF(object):
+    '''A class to represent the OPF document.'''
+    
+    def __init__(self):
+        pass
 
 def generateOPF(article, dirname):
     '''Creates the content.opf document from an Article instance issued as 
     input'''
-    from xml.dom.minidom import getDOMImplementation
     
     #Initiate a DOMImplementation for the OPF
     impl = getDOMImplementation()
