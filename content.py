@@ -814,7 +814,7 @@ class OPSContent(object):
                     except xml.dom.NotFoundErr:
                         pass
                     if tab_first:
-                        table.setAttribute('id', 'h{0}'.format(name))
+                        table.setAttribute('id', tab_id)
                         tab_first = False
                     #Unfortunately, this XHTML Table Model is allowed to have
                     #unorthodox elements... the fooNodeHandler methods may be necessary
@@ -828,7 +828,7 @@ class OPSContent(object):
                 #Create a link to the HTML table version
                 if tables:
                     h_link = doc.createElement('a')
-                    h_link.setAttribute('href', self.tab_frag.format(name))
+                    h_link.setAttribute('href', self.tab_frag.format(tab_id))
                     h_link.appendChild(doc.createTextNode('HTML version of this table'))
                     tab_parent.insertBefore(h_link, tab_sibling)
                 
