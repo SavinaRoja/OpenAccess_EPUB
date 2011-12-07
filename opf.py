@@ -7,8 +7,43 @@ from xml.dom.minidom import getDOMImplementation
 class contentOPF(object):
     '''A class to represent the OPF document.'''
     
-    def __init__(self):
-        pass
+    def __init__(self, collection_mode = False):
+        #Create a DOMImplementation for the OPF
+        impl = getDOMImplementation()
+        self.opf = impl.createDocument(None, 'package', None)
+        #Grab the root <package> node
+        self.package = mydoc.lastChild
+        #Set attributes for this node, including namespace declarations
+        self.package.setAttribute('version', '2.0')
+        self.package.setAttribute('unique-identifier', 'PrimaryID')
+        self.package.setAttribute('xmlns:opf', 'http://www.idpf.org/2007/opf')
+        self.package.setAttribute('xmlns:dc', 'http://purl.org/dc/elements/1.1/')
+        self.package.setAttribute('xmlns', 'http://www.idpf.org/2007/opf')
+        self.package.setAttribute('xmlns:oebpackage', 'http://openebook.org/namespaces/oeb-package/1.0/')
+        #Create the sub elements for <package>
+        opf_subelements = ['metadata', 'manifest', 'spine', 'guide']
+        for element in opf_subelements:
+            self.package.appendChild(self.opf.createElement(element))
+        self.metadata, self.manifest, self.spine, self.guide = self.package.childNodes
+        
+        #Make a list of articles, even if only one expected
+        self.articles = []
+        
+    def takeArticle(self, article):
+        '''Handles the input from an article. The OPF Package processes the 
+        article for metadata and specific filename-ID associations. Other jobs 
+        are independent of article material and are handled elsewhere.'''
+        if not self.collection_mode:
+            #Add the Article to the list
+            self.articles += [article]
+            #Easy accession of metadata
+            ameta = article.front.article_meta
+            jmeta = article.front.journal_meta
+            #Utilize the methods in the dublincore module to translate metadata
+            dublincore.generateDCMetadata(self.opf, self.metadata, 
+                                          self.ameta, self.jmeta)
+            
+            
 
 def generateOPF(article, dirname):
     '''Creates the content.opf document from an Article instance issued as 
