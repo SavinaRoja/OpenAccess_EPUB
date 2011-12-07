@@ -8,7 +8,7 @@ def alreadyExists(dc_term, dc_string, parent):
     the metadata which contains the specified string'''
     terms = parent.getElementsByTagName(dc_term)
     for term in terms:
-        term_str = utils.serializeText(term, stringlist = [])
+        term_str = serializeText(term, stringlist = [])
         if term_str == dc_string:
             return True
         else:
