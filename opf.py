@@ -134,7 +134,7 @@ medium, provided the original author and source are credited.'''
         self.makeManifest()
         filename = os.path.join(self.location, 'OPS', 'content.opf')
         with open(filename, 'w') as output:
-            output.write(self.toc.toprettyxml(encoding = 'utf-8'))
+            output.write(self.opf.toprettyxml(encoding = 'utf-8'))
 
 def generateOPF(article, dirname):
     '''Creates the content.opf document from an Article instance issued as 
