@@ -918,12 +918,9 @@ class OPSContent(object):
                         
                 parent = boxed_text.parentNode
                 boxed_text.tagName = 'blockquote'
-                try:
-                    boxed_text_title = boxed_text.getElementsByTagName('title')[0]
-                except IndexError:
-                    pass
-                else:
-                    boxed_text_title.tagName = u'b'
+                boxed_text_titles = boxed_text.getElementsByTagName('title')
+                for title in boxed_text.getElementsByTagName('title'):
+                    title.tagName = u'b'
     
     def supplementaryMaterialNodeHandler(self, topnode, doc):
         '''Handles conversion of <supplementary-material> tags under the 
