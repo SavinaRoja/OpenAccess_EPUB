@@ -153,8 +153,6 @@ def makeCollectionEPUB(documents, cache_dir, outdirect, log_to):
     if settings.cleanup:
         shutil.rmtree(outdirect)
     
-    
-    
 def main():
     '''Main Script'''
     
@@ -194,7 +192,7 @@ def main():
     logging.basicConfig(filename = logname, level = logging.DEBUG)
     logging.info('OpenAccess_EPUB Log v.{0}'.format(__version__))
     
-    if args.batch:
+    if args.batch: #Batch Mode
         download = False
         files = os.listdir(args.batch)
         for file in files:
@@ -209,7 +207,7 @@ def main():
                     dirExists(output_name, args.batch)
                 makeEPUB(document, xml_local, args.cache, output_name, args.log_to)
     
-    if args.collection:
+    if args.collection: #Collection Mode
         t = 'Collection-{0}'.format(datetime.datetime(1,1,1).now().isoformat())
         output_name = os.path.join(args.output, t)
         with open(args.collection, 'r') as collection:
@@ -228,7 +226,7 @@ def main():
             documents += [(document, xml_local)]
         makeCollectionEPUB(documents, args.cache, output_name, args.log_to)
     
-    else:
+    else: #Single Input Mode
         #Determination of input type and processing
         if 'http://www' in args.input:
             download = True
@@ -239,25 +237,25 @@ def main():
         else:
             download = False
             document, xml_local = localInput(args.input)
-    
-    #For now PloS naming will be maintained
-    #The name of the processing directory and the .epub should be a string like
-    #journal.pcbi.1002211
-    #or if already re-named, it will assume the xml name
-    input_name = os.path.splitext(os.path.split(xml_local)[1])[0]
-    output_name = os.path.join(args.output, input_name)
-    
-    if os.path.isdir(output_name):
-        dirExists(output_name, args.batch)
-    
-    makeEPUB(document, xml_local, args.cache, output_name, args.log_to)
+            
+        #For now PloS naming will be maintained
+        #The name of the processing directory and the .epub should be a string like
+        #journal.pcbi.1002211
+        #or if already re-named, it will assume the xml name
+        input_name = os.path.splitext(os.path.split(xml_local)[1])[0]
+        output_name = os.path.join(args.output, input_name)
         
-    if download and not settings.save_xml:
-        os.remove(xml_local)
+        if os.path.isdir(output_name):
+            dirExists(output_name, args.batch)
+            
+        makeEPUB(document, xml_local, args.cache, output_name, args.log_to)
+        
+        if download and not settings.save_xml:
+            os.remove(xml_local)
     
-    newname = u'{0}.log'.format(input_name)
-    newname =  os.path.join(args.log_to, newname)
-    os.rename(logname, newname)
+            newname = u'{0}.log'.format(input_name)
+            newname =  os.path.join(args.log_to, newname)
+            os.rename(logname, newname)
     
 if __name__ == '__main__':
     main()

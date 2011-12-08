@@ -37,8 +37,9 @@ def dc_rights(mydoc, parent, artmeta, copyright_text = ''):
     newchild = mydoc.createElement('dc:rights')
     if not copyright_text:
         copyright_text = serializeText(artmeta.art_copyright_statement, stringlist = [])
-    newchild.appendChild(mydoc.createTextNode(copyright_text))
-    parent.appendChild(newchild)
+    if not alreadyExists('dc:rights', copyright_text, parent):
+        newchild.appendChild(mydoc.createTextNode(copyright_text))
+        parent.appendChild(newchild)
 
 def dc_creator(mydoc, parent, artmeta):
     '''Create dc:creator node(s) for OPF'''
@@ -179,6 +180,14 @@ def dc_language(mydoc, parent):
     newchild.appendChild(mydoc.createTextNode('en')) # Presume en for now
     parent.appendChild(newchild)
 
+def dc_publisher(mydoc, parent):
+    '''Creates dc:publisher for OPF'''
+    pub_str = 'Public Library of Science'
+    if not alreadyExists('dc:publisher', pub_str, parent):
+        newchild = mydoc.createElement('dc:language')
+        newchild.appendChild(mydoc.createTextNode(pub_str))
+        parent.appendChild(newchild)
+
 def generateDCMetadata(mydoc, opfmetanode, artmeta, jrnmeta):
     '''The method for generating all the Dublin Core metadata tags 
     which are to be created in the OPF document under the metadata node.
@@ -199,3 +208,4 @@ def generateDCMetadata(mydoc, opfmetanode, artmeta, jrnmeta):
     dc_format(mydoc, parent) # Format is epub, independent of input
     dc_type(mydoc, parent)
     dc_language(mydoc, parent)
+    dc_publisher(mydoc, parent)

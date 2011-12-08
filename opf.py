@@ -75,6 +75,7 @@ class ContentOPF(object):
         dublincore.dc_format(self.opf, self.metadata)
         dublincore.dc_language(self.opf, self.metadata)
         dublincore.dc_type(self.opf, self.metadata)
+        dublincore.dc_publisher(self.opf, self.metadata)
         #I want to be fair here with regards to copyright statements. All PLoS 
         #articles are Creative Commons, which allows free use, modification, 
         #and reproduction, so long as sources are attributed. Attribution to 
@@ -86,7 +87,7 @@ class ContentOPF(object):
         #The CCAL terms for the original content should be respected.
         cp_text = '''This is a collection of open-access articles published by 
 PLoS and distributed under the terms of the Creative Commons Attribution 
-License, which permits unrestricted us, distribution, and reproduction in any 
+License, which permits unrestricted use, distribution, and reproduction in any 
 medium, provided the original author and source are credited.'''
         dublincore.dc_rights(self.opf, self.metadata, ameta, copyright_text = cp_text)
         title = 'A Collection of open-access PLoS Journal articles'
