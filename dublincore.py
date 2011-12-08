@@ -176,9 +176,10 @@ def dc_type(mydoc, parent):
 
 def dc_language(mydoc, parent):
     '''Creates dc:language for OPF'''
-    newchild = mydoc.createElement('dc:language')
-    newchild.appendChild(mydoc.createTextNode('en')) # Presume en for now
-    parent.appendChild(newchild)
+    if not alreadyExists('dc:language', 'en', parent):
+        newchild = mydoc.createElement('dc:language')
+        newchild.appendChild(mydoc.createTextNode('en')) # Presume en for now
+        parent.appendChild(newchild)
 
 def dc_publisher(mydoc, parent):
     '''Creates dc:publisher for OPF'''
