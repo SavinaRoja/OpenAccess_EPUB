@@ -43,7 +43,9 @@ def urlInput(input, xml_dir):
         _rep = '&representation=XML'
         access = '{0}://{1}{2}{3}{4}'.format(address.scheme, address.netloc, 
                                     _fetch, _id, _rep)
+        print(access)
         open_xml = urllib2.urlopen(access)
+        
     except:
         print('Invalid Link: Enter a corrected link or use local file')
         sys.exit(1)
@@ -111,8 +113,9 @@ def makeEPUB(document, xml_local, cache_dir, outdirect, log_to):
     if not os.path.isdir(settings.base_epub):
         utils.makeEPUBBase(settings.base_epub, settings.css_location)
     shutil.copytree(settings.base_epub, outdirect)
-    utils.fetchPLoSImages(document.getDOI(), cache_dir, outdirect, settings.caching)
-    content.OPSContent(xml_local, outdirect, document.front, document.back)
+    DOI = document.getDOI()
+    utils.fetchPLoSImages(DOI, cache_dir, outdirect, settings.caching)
+    content.OPSContent(xml_local, DOI, outdirect, document.front, document.back)
     toc = tocncx.TocNCX()
     toc.takeArticle(document)
     toc.write(outdirect)
@@ -134,8 +137,9 @@ def makeCollectionEPUB(documents, cache_dir, outdirect, log_to):
     mytoc = tocncx.TocNCX(collection_mode = True)
     myopf = opf.ContentOPF(outdirect, collection_mode = True)
     for (doc, xml) in documents:
-        utils.fetchPLoSImages(doc.getDOI(), cache_dir, outdirect, settings.caching)
-        content.OPSContent(xml, outdirect, doc.front, doc.back)
+        DOI = doc.getDOI()
+        utils.fetchPLoSImages(DOI, cache_dir, outdirect, settings.caching)
+        content.OPSContent(xml, DOI, outdirect, doc.front, doc.back)
         mytoc.takeArticle(doc)
         myopf.takeArticle(doc)
         
@@ -211,15 +215,15 @@ def main():
             inputs = collection.readlines()
         documents = []
         for input in inputs:
-            if 'http://www' in args.input:
+            if 'http://www' in input:
                 download = True
-                document, xml_local = urlInput(args.input, args.save_xml)
-            elif args.input[:4] == 'doi:':
+                document, xml_local = urlInput(input.rstrip('\n'), args.save_xml)
+            elif input[:4] == 'doi:':
                 download = True
-                document, xml_local = doiInput(args.input, args.save_xml)
+                document, xml_local = doiInput(input.rstrip('\n'), args.save_xml)
             else:
                 download = False
-                document, xml_local = localInput(args.input)
+                document, xml_local = localInput(input.rstrip('\n'))
             documents += [(document, xml_local)]
         makeCollectionEPUB(documents, args.cache, output_name, args.log_to)
     

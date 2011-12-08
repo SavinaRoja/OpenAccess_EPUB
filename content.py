@@ -7,11 +7,11 @@ import utils
 class OPSContent(object):
     '''A class for instantiating content xml documents in the OPS Preferred
     Vocabulary'''
-    def __init__(self, documentstring, outdirect, metadata, backdata):
+    def __init__(self, documentstring, doi, outdirect, metadata, backdata):
         self.inputstring = documentstring
         self.doc = minidom.parse(self.inputstring)
         #Get string from outdirect sans "journal."
-        self.jid = outdirect.split('journal.')[1] #journal id string
+        self.jid = doi.split('journal.')[1] #journal id string
         self.syn_frag = 'synop.{0}.xml'.format(self.jid) + '#{0}'
         self.main_frag = 'main.{0}.xml'.format(self.jid) + '#{0}'
         self.bib_frag = 'biblio.{0}.xml'.format(self.jid) + '#{0}'

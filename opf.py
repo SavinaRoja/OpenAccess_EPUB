@@ -32,6 +32,7 @@ class ContentOPF(object):
         self.location = location
         #Make a list of articles, even if only one expected
         self.articles = []
+        self.collection_mode = collection_mode
         
     def takeArticle(self, article):
         '''Handles the input from an article. The OPF Package processes the 
@@ -63,9 +64,9 @@ class ContentOPF(object):
             dublincore.dc_creator(self.opf, self.metadata, ameta)
             dublincore.dc_contributor(self.opf, self.metadata, ameta)
             dublincore.dc_subject(self.opf, self.metadata, ameta)
-            self.collectionMetadata()
+            self.collectionMetadata(ameta)
             
-    def collectionMetadata(self):
+    def collectionMetadata(self, ameta):
         '''Some of the Dublin Core metata items are nonsensical in the case of 
         a Collection and they are ignored. Some are of interest, but are 
         non-trivial to provide, and may require manual editing by the user. 
@@ -87,9 +88,9 @@ class ContentOPF(object):
 PLoS and distributed under the terms of the Creative Commons Attribution 
 License, which permits unrestricted us, distribution, and reproduction in any 
 medium, provided the original author and source are credited.'''
-        dublincore.dc_rights(self.opf, self.metadata, copyright_text = cp_text)
+        dublincore.dc_rights(self.opf, self.metadata, ameta, copyright_text = cp_text)
         title = 'A Collection of open-access PLoS Journal articles'
-        dublincore.dc_type(self.opf, self.metadata, titletext = title)
+        dublincore.dc_title(self.opf, self.metadata, ameta, title_text = title)
         
     def addToSpine(self, id_string, tables):
         idref = '{0}-' + '{0}-xml'.format(id_string)
@@ -100,7 +101,7 @@ medium, provided the original author and source are credited.'''
         for r, i, l in [(syn_ref, 'synop', 'yes'), (main_ref, 'main', 'yes'), 
                         (bib_ref, 'biblio', 'yes'), (tab_ref, 'tables', 'no')]:
             r.setAttribute('linear', l)
-            r.setAttribute(idref.format(i))
+            r.setAttribute('idref', idref.format(i))
         if tables:
             self.spine.appendChild(tab_ref)
     
