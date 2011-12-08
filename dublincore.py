@@ -29,9 +29,9 @@ def dc_title(mydoc, parent, artmeta, title_text = ''):
     newchild = mydoc.createElement('dc:title')
     if not title_text:
         title_text = serializeText(artmeta.article_title, stringlist = [])
-        if not alreadyExists('dc:title', title_text, parent):
-            newchild.appendChild(mydoc.createTextNode(title_text))
-            parent.appendChild(newchild)
+    if not alreadyExists('dc:title', title_text, parent):
+        newchild.appendChild(mydoc.createTextNode(title_text))
+        parent.appendChild(newchild)
 
 def dc_rights(mydoc, parent, artmeta, copyright_text = ''):
     '''Create dc:rights node for OPF'''
