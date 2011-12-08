@@ -133,6 +133,7 @@ def makeCollectionEPUB(documents, cache_dir, outdirect, log_to):
     Article objects have been instantiated and tupled to their local xml files 
     and now we may generate the file.
     '''
+    print(u'Processing output to {0}.epub'.format(outdirect))
     shutil.copytree(settings.base_epub, outdirect)
     mytoc = tocncx.TocNCX(collection_mode = True)
     myopf = opf.ContentOPF(outdirect, collection_mode = True)

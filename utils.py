@@ -191,13 +191,19 @@ def fetchPLoSImages(doidata, cache_dir, output_dir, caching):
             cached = True
             logging.info('Cached images found')
             print('Cached images found. Transferring from cache...')
-            shutil.copytree(art_cache_images, output_dir_images)
+            try:
+                shutil.copytree(art_cache_images, output_dir_images)
+            except OSError: #images directory already exists
+                pass
         else:
             logging.info('Cached images not found')
     
     if not cached:
         model_images = os.path.join(cache_dir, 'model', 'images')
-        shutil.copytree(model_images, output_dir_images)
+        try:
+            shutil.copytree(model_images, output_dir_images)
+        except OSError: # images directory already exists
+            pass
         print('Downloading images, this may take some time...')
         if publisher == 'PLoS':
             PLOSSTRING = 'article/fetchObject.action?uri=info%3Adoi%2F'
