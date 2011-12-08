@@ -494,7 +494,7 @@ class OPSContent(object):
                 name = fig_id.split('-')[-1]
                 startpath = os.getcwd()
                 os.chdir(self.outdir)
-                for path, _subdirs, filenames in os.walk('images'):
+                for path, _subdirs, filenames in os.walk('images-{0}'.format(self.jid)):
                     for filename in filenames:
                         if os.path.splitext(filename)[0] == name:
                             img_src = os.path.join(path, filename)
@@ -606,7 +606,7 @@ class OPSContent(object):
                     img = None
                     startpath = os.getcwd()
                     os.chdir(self.outdir)
-                    for path, _subdirs, filenames in os.walk('images'):
+                    for path, _subdirs, filenames in os.walk('images-{0}'.format(self.jid)):
                         for filename in filenames:
                             if os.path.splitext(filename)[0] == name:
                                 img = os.path.join(path, filename)
@@ -681,7 +681,7 @@ class OPSContent(object):
                         img = None
                         startpath = os.getcwd()
                         os.chdir(self.outdir)
-                        for path, _subdirs, filenames in os.walk('images'):
+                        for path, _subdirs, filenames in os.walk('images-{0}'.format(self.jid)):
                             for filename in filenames:
                                 if os.path.splitext(filename)[0] == name:
                                     img = os.path.join(path, filename)
@@ -743,7 +743,7 @@ class OPSContent(object):
                 name = tab_id.split('-')[-1]
                 startpath = os.getcwd()
                 os.chdir(self.outdir)
-                for path, _subdirs, filenames in os.walk('images'):
+                for path, _subdirs, filenames in os.walk('images-{0}'.format(self.jid)):
                     for filename in filenames:
                         if os.path.splitext(filename)[0] == name:
                             img_src = os.path.join(path, filename)
@@ -1445,7 +1445,7 @@ class OPSContent(object):
                 img = None
                 startpath = os.getcwd()
                 os.chdir(self.outdir)
-                for path, _subdirs, filenames in os.walk('images'):
+                for path, _subdirs, filenames in os.walk('images-{0}'.format(self.jid)):
                     for filename in filenames:
                         if os.path.splitext(filename)[0] == name:
                             img = os.path.join(path, filename)
