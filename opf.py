@@ -67,8 +67,8 @@ class ContentOPF(object):
             self.collectionMetadata(ameta)
             
     def collectionMetadata(self, ameta):
-        '''Some of the Dublin Core metata items are nonsensical in the case of 
-        a Collection and they are ignored. Some are of interest, but are 
+        '''Some of the Dublin Core metadata items are nonsensical in the case 
+        of a Collection and they are ignored. Some are of interest, but are 
         non-trivial to provide, and may require manual editing by the user. 
         This method provides provisional support for certain dc:terms that are 
         sensible, and independent of article content.'''
@@ -127,6 +127,10 @@ medium, provided the original author and source are credited.'''
                     new.setAttribute('media-type', mimetypes[ext])
                     if filename == 'toc.ncx':
                         new.setAttribute('id', 'ncx')
+                    elif ext == 'png':
+                        id = os.path.dirname(path)
+                        id = id[7:]
+                        new.setAttribute('id', '{0}-{1}'.format(id, filename.replace('.', '-')))
                     else:
                         new.setAttribute('id', filename.replace('.', '-'))
         os.chdir(current_dir)

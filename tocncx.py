@@ -70,11 +70,6 @@ those conforming to the relaxed constraints of OPS 2.0'''))
                 self.makeFiguresList()
             if self.lot.childNodes:
                 self.makeTablesList()
-            #Set the metas with self.setMetas()
-            self.setMetas()
-            #Set the docAuthor and docTitle nodes
-            self.makeDocAuthor()
-            self.makeDocTitle()
         #If we are packing arbitrarily many articles...
         else:
             titletext = utils.serializeText(front.article_meta.article_title, stringlist = [])
@@ -91,11 +86,6 @@ those conforming to the relaxed constraints of OPS 2.0'''))
                 self.makeFiguresList()
             if self.lot.childNodes:
                 self.makeTablesList()
-            #Set the metas with self.setMetas()
-            self.setMetas()
-            #Set the docAuthor and docTitle nodes
-            self.makeDocAuthor()
-            self.makeDocTitle()
     
     def structureParse(self, srcnode, dstnode = None, depth = 0, first = True):
         '''The structure of an article's <body> content can be analyzed in 
@@ -181,6 +171,9 @@ those conforming to the relaxed constraints of OPS 2.0'''))
             self.docauthor.appendChild(self.makeText(authlabel))
     
     def write(self, location):
+        self.setMetas()
+        self.makeDocAuthor()
+        self.makeDocTitle()
         filename = os.path.join(location, 'OPS', 'toc.ncx')
         with open(filename, 'w') as output:
             output.write(self.toc.toprettyxml(encoding = 'utf-8'))
