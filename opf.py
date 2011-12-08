@@ -121,7 +121,7 @@ medium, provided the original author and source are credited.'''
                 for filename in filenames:
                     name, ext = os.path.splitext(filename)
                     ext = ext[1:]
-                    new = self.manifest.appendChild(mydoc.createElement('item'))
+                    new = self.manifest.appendChild(self.opf.createElement('item'))
                     new.setAttribute('href', os.path.join(path, filename))
                     new.setAttribute('media-type', mimetypes[ext])
                     if filename == 'toc.ncx':
