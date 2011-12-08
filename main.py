@@ -10,7 +10,6 @@ import shutil
 import urllib2
 import urlparse
 import logging
-import datetime
 
 #OpenAccess_EPUB Modules
 import utils
@@ -159,8 +158,6 @@ def main():
     parser = argparse.ArgumentParser(description = 'OpenAccess_EPUB Parser')
     parser.add_argument('--version', action='version', version='OpenAccess_EPUB {0}'.format(__version__))
     #parser.add_argument('-q', '--quiet', action = 'store_true', default = False)
-    parser.add_argument('-i', '--input', action = 'store', 
-                        help = 'Input may be a path to a local directory, a URL to a PLoS journal article, or a PLoS DOI string')
     parser.add_argument('-o', '--output', action = 'store', default = settings.default_output, 
                         help = 'Use to specify a desired output directory')
     parser.add_argument('-s', '--save-xml', action = 'store', default = settings.xml_location, 
@@ -169,9 +166,12 @@ def main():
                         help = 'Use to specify a non-default log directory')
     parser.add_argument('-c', '--cache', action = 'store', default = settings.cache_location, 
                         help = 'Use to specify a non-default cache directory')
-    parser.add_argument('-b', '--batch', action = 'store', default = False, 
+    modes = parser.add_mutually_exclusive_group()
+    modes.add_argument('-i', '--input', action = 'store', 
+                        help = 'Input may be a path to a local directory, a URL to a PLoS journal article, or a PLoS DOI string')
+    modes.add_argument('-b', '--batch', action = 'store', default = False, 
                         help = 'Use to specify a batch directory; each article inside will be processed.')
-    parser.add_argument('-C', '--collection', action = 'store', default = False, 
+    modes.add_argument('-C', '--collection', action = 'store', default = False, 
                         help = 'Use to create an ePub file containing multiple resources.')
     args = parser.parse_args()
     
@@ -208,8 +208,10 @@ def main():
                 makeEPUB(document, xml_local, args.cache, output_name, args.log_to)
     
     if args.collection: #Collection Mode
-        t = 'Collection-{0}'.format(datetime.datetime(1,1,1).now().isoformat())
+        t = os.path.splitext(os.path.split(args.collection)[1])[0]
         output_name = os.path.join(args.output, t)
+        if os.path.isdir(output_name):
+            dirExists(output_name, args.batch)
         with open(args.collection, 'r') as collection:
             inputs = collection.readlines()
         documents = []
