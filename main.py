@@ -10,6 +10,7 @@ import shutil
 import urllib2
 import urlparse
 import logging
+import datetime
 
 #OpenAccess_EPUB Modules
 import utils
@@ -122,7 +123,33 @@ def makeEPUB(document, xml_local, cache_dir, outdirect, log_to):
     #taken whenever modifying this code
     if settings.cleanup:
         shutil.rmtree(outdirect)
-
+    
+def makeCollectionEPUB(documents, cache_dir, outdirect, log_to):
+    '''Encapsulates the processing workf-flow for the creation of 
+    \"collection\", or \"omnibus\" ePubs from multiple PLoS journal articles. 
+    Article objects have been instantiated and tupled to their local xml files 
+    and now we may generate the file.
+    '''
+    shutil.copytree(settings.base_epub, outdirect)
+    mytoc = tocncx.TocNCX(collection_mode = True)
+    myopf = opf.ContentOPF(outdirect, collection_mode = True)
+    for (doc, xml) in documents:
+        utils.fetchPLoSImages(doc.getDOI(), cache_dir, outdirect, settings.caching)
+        content.OPSContent(xml, outdirect, doc.front, doc.back)
+        mytoc.takeArticle(doc)
+        myopf.takeArticle(doc)
+        
+    mytoc.write(outdirect)
+    myopf.write()
+    utils.epubZip(outdirect)
+    
+    #WARNING: shutil.rmtree() is a recursive deletion function, care should be 
+    #taken whenever modifying this code
+    if settings.cleanup:
+        shutil.rmtree(outdirect)
+    
+    
+    
 def main():
     '''Main Script'''
     
@@ -177,20 +204,24 @@ def main():
                     dirExists(output_name, args.batch)
                 makeEPUB(document, xml_local, args.cache, output_name, args.log_to)
     
-    #if args.collection:
-    #    shutil.copytree(settings.base_epub, outdirect)
-    #    with open(args.collection, 'r') as collection:
-    #        inputs = collection.readlines()
-    #    for input in inputs:
-    #        if 'http://www' in args.input:
-    #            download = True
-    #            document, xml_local = urlInput(args.input, args.save_xml)
-    #        elif args.input[:4] == 'doi:':
-    #            download = True
-    #            document, xml_local = doiInput(args.input, args.save_xml)
-    #        else:
-    #            download = False
-    #            document, xml_local = localInput(args.input)
+    if args.collection:
+        t = 'Collection-{0}'.format(datetime.datetime(1,1,1).now().isoformat())
+        output_name = os.path.join(args.output, t)
+        with open(args.collection, 'r') as collection:
+            inputs = collection.readlines()
+        documents = []
+        for input in inputs:
+            if 'http://www' in args.input:
+                download = True
+                document, xml_local = urlInput(args.input, args.save_xml)
+            elif args.input[:4] == 'doi:':
+                download = True
+                document, xml_local = doiInput(args.input, args.save_xml)
+            else:
+                download = False
+                document, xml_local = localInput(args.input)
+            documents += [(document, xml_local)]
+        makeCollectionEPUB(documents, args.cache, output_name, args.log_to)
     
     else:
         #Determination of input type and processing
