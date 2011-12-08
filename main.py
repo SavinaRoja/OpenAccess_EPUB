@@ -118,7 +118,9 @@ def makeEPUB(document, xml_local, cache_dir, outdirect, log_to):
     toc = tocncx.TocNCX()
     toc.takeArticle(document)
     toc.write(outdirect)
-    opf.generateOPF(document, outdirect)
+    myopf = opf.ContentOPF(outdirect)
+    myopf.takeArticle(document)
+    myopf.write()
     utils.epubZip(outdirect)
     
     #WARNING: shutil.rmtree() is a recursive deletion function, care should be 
