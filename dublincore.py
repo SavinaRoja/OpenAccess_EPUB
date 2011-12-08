@@ -29,8 +29,9 @@ def dc_title(mydoc, parent, artmeta, title_text = ''):
     newchild = mydoc.createElement('dc:title')
     if not title_text:
         title_text = serializeText(artmeta.article_title, stringlist = [])
-    newchild.appendChild(mydoc.createTextNode(title_text))
-    parent.appendChild(newchild)
+        if not alreadyExists('dc:title', title_text, parent):
+            newchild.appendChild(mydoc.createTextNode(title_text))
+            parent.appendChild(newchild)
 
 def dc_rights(mydoc, parent, artmeta, copyright_text = ''):
     '''Create dc:rights node for OPF'''
@@ -56,7 +57,7 @@ def dc_contributor(mydoc, parent, artmeta):
     for contr in artmeta.art_edits:
         newchild = mydoc.createElement('dc:contributor')
         newchild.appendChild(mydoc.createTextNode(contr.get_name()))
-        if not alreadyExists('dc:contibutor', contr.get_name(), parent):
+        if not alreadyExists('dc:contributor', contr.get_name(), parent):
             newchild.setAttribute('opf:role', 'edt')
             newchild.setAttribute('opf:file-as', contr.get_fileas_name())
             parent.appendChild(newchild)
@@ -155,8 +156,9 @@ def dc_subject(mydoc, parent, artmeta):
 def dc_format(mydoc, parent):
     '''Create dc:format node(s) for OPF'''
     newchild = mydoc.createElement('dc:format')
-    newchild.appendChild(mydoc.createTextNode('application/epub+zip'))
-    parent.appendChild(newchild)
+    if not alreadyExists('dc:format', 'application/epub+zip', parent):
+        newchild.appendChild(mydoc.createTextNode('application/epub+zip'))
+        parent.appendChild(newchild)
 
 def dc_type(mydoc, parent):
     '''Creates dc:type node for OPF'''
@@ -164,9 +166,10 @@ def dc_type(mydoc, parent):
     #http://dublincore.org/documents/dcmi-type-vocabulary/
     #This is implemented here:
     newchild = mydoc.createElement('dc:type')
-    datastring = 'text'
-    newchild.appendChild(mydoc.createTextNode(datastring))
-    parent.appendChild(newchild)
+    type_str = 'text'
+    if not alreadyExists('dc:type', type_str, parent):
+        newchild.appendChild(mydoc.createTextNode(type_str))
+        parent.appendChild(newchild)
     
     #An alternative implementation might utilize the "heading" subject group:
     #newchild = mydoc.createElement('dc:type')
@@ -176,17 +179,17 @@ def dc_type(mydoc, parent):
 
 def dc_language(mydoc, parent):
     '''Creates dc:language for OPF'''
+    newchild = mydoc.createElement('dc:language')
+    newchild.appendChild(mydoc.createTextNode('en')) # Presume en for now
     if not alreadyExists('dc:language', 'en', parent):
-        newchild = mydoc.createElement('dc:language')
-        newchild.appendChild(mydoc.createTextNode('en')) # Presume en for now
         parent.appendChild(newchild)
 
 def dc_publisher(mydoc, parent):
     '''Creates dc:publisher for OPF'''
     pub_str = 'Public Library of Science'
+    newchild = mydoc.createElement('dc:publisher')
+    newchild.appendChild(mydoc.createTextNode(pub_str))
     if not alreadyExists('dc:publisher', pub_str, parent):
-        newchild = mydoc.createElement('dc:language')
-        newchild.appendChild(mydoc.createTextNode(pub_str))
         parent.appendChild(newchild)
 
 def generateDCMetadata(mydoc, opfmetanode, artmeta, jrnmeta):
