@@ -452,11 +452,13 @@ class OPSContent(object):
                     'named-content': self.namedContentNodeHandler(topnode), 
                     'inline-formula': self.inlineFormulaNodeHandler(topnode, doc), 
                     'disp-formula': self.dispFormulaNodeHandler(topnode, doc), 
+                    'disp-quote': self.dispQuoteNodeHandler(topnode, doc), 
                     'ext-link': self.extLinkNodeHandler(topnode), 
                     'sc': self.smallCapsNodeHandler(topnode), 
                     'list': self.listNodeHandler(topnode, doc), 
                     'graphic': self.graphicNodeHandler(topnode), 
-                    'email': self.emailNodeHandler(topnode)}
+                    'email': self.emailNodeHandler(topnode), 
+                    'fn': self.fnNodeHandler(topnode)}
         
         for tagname in handlers:
             if tagname not in ignorelist:
@@ -1084,17 +1086,29 @@ class OPSContent(object):
                     except xml.dom.NotFoundErr:
                         pass
                     
-                    parent = disp.parentNode
-                    grandparent = parent.parentNode
-                    disp_index = parent.childNodes.index(disp)
-                    parent_sibling = parent.nextSibling
+                    disp.tagName = u'span'
+                    disp.setAttribute('class', 'disp-quote')
+                    disp_ps = disp.getElementsByTagName('p')
+                    first = True
+                    for disp_p in disp_ps:
+                        if not first:
+                            disp.insertBefore(doc.createElement('br'), disp_p)
+                        for child in disp_p.childNodes:
+                            disp.insertBefore(child, disp_p)
+                        disp.removeChild(disp_p)
+                        first = False
+                        
+                    #parent = disp.parentNode
+                    #grandparent = parent.parentNode
+                    #disp_index = parent.childNodes.index(disp)
+                    #parent_sibling = parent.nextSibling
                     
-                    disp_p = doc.createElement('p')
-                    grandparent.insertBefore(disp_p, parent_sibling)
-                    new_p = doc.createElement('p')
-                    grandparent.insertBefore(new_p, parent_sibling)
-                    for each in parent.childNodes[disp_index + 1:]:
-                        new_p.appendChild(each)
+                    #disp_p = doc.createElement('p')
+                    #grandparent.insertBefore(disp_p, parent_sibling)
+                    #new_p = doc.createElement('p')
+                    #grandparent.insertBefore(new_p, parent_sibling)
+                    #for each in parent.childNodes[disp_index + 1:]:
+                    #    new_p.appendChild(each)
                         
                     #Now that we have modified the structure, modify the tag
                     #and it's children:
@@ -1311,6 +1325,38 @@ class OPSContent(object):
                 address = utils.getTagText(email)
                 href = u'mailto:{0}'.format(address)
                 email.setAttribute('href', href)
+    
+    def fnNodeHandler(self, topnode):
+        '''Handles conversion of <fn> tags where encountered under the 
+        provided topnode. These are used for footnotes, so the general idea is 
+        to convert their tagname and give them a class attribute'''
+        keep_attrs = ['id']
+        
+        try:
+            fns = topnode.getElementsByTagName('fn')
+        except AttributeError:
+            for item in fns:
+                self.fnNodeHandler(item)
+        else:
+            for fn in fns:
+                fn.tagName = u'span'
+                #Handle the potential attributes
+                attrs = {'fn-type': None, 'id': None, 'symbol': None, 
+                         'xml:lang': None}
+                for attr in attrs:
+                    if attr not in keep_attrs:
+                        try:
+                            fn.removeAttribute(attr)
+                        except xml.dom.NotFoundErr:
+                            pass
+                #Assign the class attribute to "footnote"
+                fn.setAttribute('class', 'footnote')
+                #If there is a <p> tag inside, take it's children and remove <p>
+                fn_ps = fn.getElementsByTagName('p')
+                for fn_p in fn_ps:
+                    for child in fn_p.childNodes:
+                        fn.insertBefore(child, fn_p)
+                    fn.removeChild(fn_p)
     
     def extLinkNodeHandler(self, topnode):
         '''Handles conversion of <ext-link> tags. These tags are utilized for 
