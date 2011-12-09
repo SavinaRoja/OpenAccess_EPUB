@@ -56,8 +56,14 @@ class ContentOPF(object):
             if _id == 'doi':
                 aid = _data.split('journal.')[1]
         aid_dashed = aid.replace('.', '-')
+        #If there are tables, make tables xml file
         tables = article.body.getElementsByTagName('table')
-        self.addToSpine(aid_dashed, tables)
+        #If there are refs, make biblio xml file
+        if article.back:
+            refs = article.back.getElementsByTagName('ref')
+        else:
+            refs = None
+        self.addToSpine(aid_dashed, tables, refs)
         
         if not self.collection_mode:
             #Utilize the methods in the dublincore module to translate metadata
@@ -100,16 +106,18 @@ medium, provided the original author and source are credited.'''
         title = 'A Collection of open-access PLoS Journal articles'
         dublincore.dc_title(self.opf, self.metadata, ameta, title_text = title)
         
-    def addToSpine(self, id_string, tables):
+    def addToSpine(self, id_string, tables, refs):
         idref = '{0}-' + '{0}-xml'.format(id_string)
         syn_ref = self.spine.appendChild(self.opf.createElement('itemref'))
         main_ref = self.spine.appendChild(self.opf.createElement('itemref'))
-        bib_ref = self.spine.appendChild(self.opf.createElement('itemref'))
+        bib_ref = self.opf.createElement('itemref')
         tab_ref = self.opf.createElement('itemref')
         for r, i, l in [(syn_ref, 'synop', 'yes'), (main_ref, 'main', 'yes'), 
                         (bib_ref, 'biblio', 'yes'), (tab_ref, 'tables', 'no')]:
             r.setAttribute('linear', l)
             r.setAttribute('idref', idref.format(i))
+        if refs:
+            self.spine.appendChild(bib_ref)
         if tables:
             self.spine.appendChild(tab_ref)
     
