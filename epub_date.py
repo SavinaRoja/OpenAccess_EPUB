@@ -18,6 +18,10 @@ class DateInfo(object):
         self.month = 0
         self.day = 0
         
+        self.monthlist = ['January', 'February', 'March', 'April', 'May', 
+                          'June', 'July', 'August', 'September', 'October', 
+                          'November', 'December']
+        
         self.parse(datenode)
         try:
             self.date = datetime.date(self.year, self.month, self.day)
@@ -26,6 +30,7 @@ class DateInfo(object):
                 pass
             else:
                 raise ValueError('day is out of range for month')
+        
     def parse(self, datenode):
         """Handle the node contents
         datenode -- the XML Element containing the date info
@@ -48,14 +53,14 @@ class DateInfo(object):
                 self.month = int(datenode.getElementsByTagName('month')[0].firstChild.data)
             except IndexError:
                 pass
+            except ValueError:
+                data = datenode.getElementsByTagName('month')[0].firstChild.data
+                self.month = self.monthlist.index(data) + 1
         
         self.year = int(datenode.getElementsByTagName('year')[0].firstChild.data)
     
     def niceString(self):
-        monthlist = ['January', 'February', 'March', 'April', 'May', 'June', 
-                  'July', 'August', 'September', 'October', 'November', 
-                  'December']
-        retstr = '{0} {1}, {2}'.format(monthlist[self.month - 1], self.day,
+        retstr = '{0} {1}, {2}'.format(self.monthlist[self.month - 1], self.day,
                                        self.year)
         return retstr
     
