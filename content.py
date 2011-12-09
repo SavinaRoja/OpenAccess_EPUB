@@ -345,8 +345,12 @@ class OPSContent(object):
         ref_par.setAttribute('id', fromnode.getAttribute('id'))
         #Pull the label node into a node_list
         label = fromnode.getElementsByTagName('label')
-        #Collect the citation tag and its citation type
-        citation = fromnode.getElementsByTagName('citation')[0]
+        try:
+            #Collect the citation tag and its citation type
+            citation = fromnode.getElementsByTagName('citation')[0]
+        except IndexError:
+            #The article may have used <nlm-citation>
+            citation = fromnode.getElementsByTagName('nlm-citation')[0]
         citation_type = citation.getAttribute('citation-type')
         
         #Format the reference string if it is a Journal citation type
