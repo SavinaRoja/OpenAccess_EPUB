@@ -1,4 +1,5 @@
-import os
+from main import __version__
+import datetime
 import os.path
 import utils
 import dublincore
@@ -33,6 +34,11 @@ class ContentOPF(object):
         #Make a list of articles, even if only one expected
         self.articles = []
         self.collection_mode = collection_mode
+        #Here we create a custom collection unique identifier string
+        #Consists of software name and version along with timestamp
+        t = datetime.datetime(1,1,1)
+        self.ccuid = 'OpenAccess_EPUBv{0}-{1}'.format(__version__, 
+                                                      t.utcnow().__str__())
         
     def takeArticle(self, article):
         '''Handles the input from an article. The OPF Package processes the 
@@ -76,6 +82,7 @@ class ContentOPF(object):
         dublincore.dc_language(self.opf, self.metadata)
         dublincore.dc_type(self.opf, self.metadata)
         dublincore.dc_publisher(self.opf, self.metadata)
+        dublincore.dc_identifier(self.opf, self.metadata, ameta, col_str = self.ccuid)
         #I want to be fair here with regards to copyright statements. All PLoS 
         #articles are Creative Commons, which allows free use, modification, 
         #and reproduction, so long as sources are attributed. Attribution to 

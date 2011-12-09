@@ -1,7 +1,7 @@
 from utils import serializeText
 
 # Currently, the Dublin Core will only be extended by the OPF Spec
-# See http://old.idpf.org/2007/opf/OPF_2.0_final_spec.html#Section2.2
+# See http://idpf.org/epub/20/spec/OPF_2.0.1_draft.htm
 
 def alreadyExists(dc_term, dc_string, parent):
     '''Method to determine if a specified Dublin Core Term already exists in 
@@ -14,14 +14,20 @@ def alreadyExists(dc_term, dc_string, parent):
         else:
             return False
 
-def dc_identifier(mydoc, parent, artmeta):
+def dc_identifier(mydoc, parent, artmeta, col_str = False):
     '''Create dc:identifer node for OPF'''
-    for (_data, _id) in artmeta.identifiers:
-        if _id == 'doi':
-            newchild = mydoc.createElement('dc:identifier')
-            newchild.appendChild(mydoc.createTextNode(_data))
+    newchild = mydoc.createElement('dc:identifier')
+    if not col_str:
+        for (_data, _id) in artmeta.identifiers:
+            if _id == 'doi':
+                newchild.appendChild(mydoc.createTextNode(_data))
+                newchild.setAttribute('id', 'PrimaryID')
+                newchild.setAttribute('opf:scheme', 'DOI') #Extended by OPF
+                parent.appendChild(newchild)
+    else:
+        if not alreadyExists('dc:identifier', col_str, parent):
+            newchild.appendChild(mydoc.createTextNode(col_str))
             newchild.setAttribute('id', 'PrimaryID')
-            newchild.setAttribute('opf:scheme', 'DOI') #Extended by OPF
             parent.appendChild(newchild)
 
 def dc_title(mydoc, parent, artmeta, title_text = ''):
