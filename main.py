@@ -225,8 +225,11 @@ def main():
                 download = True
                 document, xml_local = doiInput(input.rstrip('\n'), args.save_xml)
             else:
-                download = False
-                document, xml_local = localInput(input.rstrip('\n'))
+                if not input:
+                    pass
+                else:
+                    download = False
+                    document, xml_local = localInput(input.rstrip('\n'))
             documents += [(document, xml_local)]
         makeCollectionEPUB(documents, args.cache, output_name, args.log_to)
     
