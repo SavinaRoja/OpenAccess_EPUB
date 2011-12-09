@@ -1001,9 +1001,9 @@ class OPSContent(object):
                             'pmed': 'http://www.plosmedicine.org/', 
                             'pntd': 'http://www.plosntds.org/'}
                 try:
-                    jrn = attrs['id'].split('.')[0].split('-')[0]
+                    jrn = attrs['xlink:href'].split('journal.')[1].split('.')[0]
                 except KeyError:
-                    print('supplementary-tag tag found without attribute \"id\"')
+                    print('supplementary-tag tag found without attribute \"xlink:href\"')
                 else:
                     fetch = 'article/fetchSingleRepresentation.action?uri='
                     try:
@@ -1488,9 +1488,9 @@ class OPSContent(object):
                             item.removeChild(divtitle)
                         else:
                             divtitle.tagName = taglist[depth]
-                            depth += 1
-                            self.divTitleFormat(item, depth)
-                            depth -= 1
+                        depth += 1
+                        self.divTitleFormat(item, depth)
+                        depth -= 1
 
     def initiateDocument(self, titlestring):
         '''A method for conveniently initiating a new xml.DOM Document'''

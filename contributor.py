@@ -67,8 +67,12 @@ class Contributor:
             names = self.givenname.split(' ')
             initials = ''
             for name in names:
-                initials += name[0]
-            return(u'{0}, {1}'.format(self.surname, initials))
+                try:
+                    initials += name[0]
+                except IndexError:
+                    return(self.surname)
+                else:
+                    return(u'{0}, {1}'.format(self.surname, initials))
         else:
             return(serializeText(self.collab, stringlist = []))
 

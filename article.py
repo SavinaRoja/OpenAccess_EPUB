@@ -153,6 +153,7 @@ class Back(object):
     '''The back element for an article, contains footnotes, funding, competing 
     and interests'''
     def __init__(self, node):
+        self.node = node
         self.footnotes = node.getElementsByTagName('fn')
         self.funding = u''
         self.competing_interests = u''

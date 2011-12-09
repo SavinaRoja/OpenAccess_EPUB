@@ -60,7 +60,7 @@ class ContentOPF(object):
         tables = article.body.getElementsByTagName('table')
         #If there are refs, make biblio xml file
         if article.back:
-            refs = article.back.getElementsByTagName('ref')
+            refs = article.back.node.getElementsByTagName('ref')
         else:
             refs = None
         self.addToSpine(aid_dashed, tables, refs)
