@@ -26,7 +26,12 @@ class OPSContent(object):
         
         self.createSynopsis(self.metadata, self.backdata)
         self.createMain(self.doc)
-        self.createBiblio(self.doc)
+        try:
+            back = self.doc.getElementsByTagName('back')[0]
+        except IndexError:
+            pass
+        else:
+            self.createBiblio(self.doc, back)
         
     def createSynopsis(self, meta, back):
         '''Create an output file containing a representation of the article 
@@ -202,7 +207,7 @@ class OPSContent(object):
         synbody.appendChild(copp)
         
         #Create a node for the Funding text
-        if back.funding:
+        if back and back.funding:
             fundp = synop.createElement('p')
             fundp.setAttribute('id', 'funding')
             fundbold = synop.createElement('b')
@@ -212,7 +217,7 @@ class OPSContent(object):
             synbody.appendChild(fundp)
         
         #Create a node for the Competing Interests text
-        if back.competing_interests:
+        if back and back.competing_interests:
             compip = synop.createElement('p')
             compip.setAttribute('id', 'competing-interests')
             compibold = synop.createElement('b')
@@ -227,21 +232,6 @@ class OPSContent(object):
         correspondence_nodes = meta.article_meta.correspondences
         
         # PLoS does not appear to list more than one correspondence... >.<
-        corr_line.setAttribute('id', art_corresps[0].rid)
-        for correspondence in correspondence_nodes:
-            corr_line.childNodes += correspondence.childNodes
-        #corr_line.appendChild(synop.createTextNode(corresp_text))
-        
-        #Handle conversion of ext-link to <a>
-        ext_links = synop.getElementsByTagName('ext-link')
-        for ext_link in ext_links:
-            ext_link.tagName = u'a'
-            ext_link.removeAttribute('ext-link-type')
-            href = ext_link.getAttribute('xlink:href')
-            ext_link.removeAttribute('xlink:href')
-            ext_link.removeAttribute('xlink:type')
-            ext_link.setAttribute('href', href)
-        
         # If they did, this approach might be used
         #for item in art_corresps:
         #    sup = synop.createElement('sup')
@@ -254,7 +244,26 @@ class OPSContent(object):
         #    if item.email:
         #        add = synop.createTextNode('E-mail: {0} '.format(item.email))
         #        corr_line.appendChild(add)
-        synbody.appendChild(corr_line)
+        try:
+            corr_line.setAttribute('id', art_corresps[0].rid)
+        except IndexError:
+            pass
+        else:
+            for correspondence in correspondence_nodes:
+                corr_line.childNodes += correspondence.childNodes
+            #corr_line.appendChild(synop.createTextNode(corresp_text))
+            synbody.appendChild(corr_line)
+        
+        #Handle conversion of ext-link to <a>
+        ext_links = synop.getElementsByTagName('ext-link')
+        for ext_link in ext_links:
+            ext_link.tagName = u'a'
+            ext_link.removeAttribute('ext-link-type')
+            href = ext_link.getAttribute('xlink:href')
+            ext_link.removeAttribute('xlink:href')
+            ext_link.removeAttribute('xlink:type')
+            ext_link.setAttribute('href', href)
+        
         
         self.postNodeHandling(synbody, synop)
         
@@ -300,7 +309,7 @@ class OPSContent(object):
         with open(self.outputs['Main'],'wb') as out:
             out.write(main.toprettyxml(encoding = 'utf-8'))
         
-    def createBiblio(self, doc):
+    def createBiblio(self, doc, back):
         '''Create an output file containing the article bibliography'''
         #Initiate the document, returns the document and its body element
         biblio, bibbody = self.initiateDocument('Bibliography file')
