@@ -153,11 +153,6 @@ class OPSContent(object):
         
         #Create a node for the Editor
         ped = synop.createElement('p')
-        ped.setAttribute('id', 'editor')
-        bed = synop.createElement('b')
-        editor_line = synop.createTextNode('Editor: ')
-        bed.appendChild(editor_line)
-        ped.appendChild(bed)
         first = True
         for editor in meta.article_meta.art_edits:
             name = editor.get_name()
@@ -168,11 +163,17 @@ class OPSContent(object):
                     if item.rid == aff:
                         address = item.address
                         if first:
+                            ped.setAttribute('id', 'editor')
+                            bed = synop.createElement('b')
+                            editor_line = synop.createTextNode('Editor: ')
+                            bed.appendChild(editor_line)
+                            ped.appendChild(bed)
                             ped.appendChild(synop.createTextNode(u'{0}'.format(address)))
                             first = False
                         else:
                             ped.appendChild(synop.createTextNode(u'; {0}'.format(address)))
-        synbody.appendChild(ped)
+        if ped.childNodes:
+            synbody.appendChild(ped)
         
         #Create a node for the dates
         datep = synop.createElement('p')
