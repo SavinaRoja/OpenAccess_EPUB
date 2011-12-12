@@ -636,6 +636,44 @@ class OPSContent(object):
                 parent.removeChild(if_node)
     
     def dispFormulaNodeHandler(self, topnode, doc):
+        
+        try:
+            disp_formulas = topnode.getElementsByTagName('disp-formula')
+        except AttributeError:
+            for item in topnode:
+                self.dispFormulaNodeHandler(item, doc)
+        else:
+            for disp in disp_formulas:
+                attrs = {'id': None, 'alternate-form-of': None}
+                for attr in attrs:
+                    attrs[attr] = disp.getAttribute(attr)
+                
+                try:
+                    graphic = disp.getElementsByTagName('graphic')[0]
+                except IndexError:
+                    logging.error('disp-formula element does not contain graphic element')
+                else:
+                    graphic_xlink_href = graphic.getAttribute('xlink:href')
+                    if not graphic_xlink_href:
+                        logging.error('graphic xlink:href attribute not present for disp-formula')
+                    else:
+                        name = graphic_xlink_href.split('.')[-1]
+                        img = None
+                        startpath = os.getcwd()
+                        os.chdir(self.outdir)
+                        for path, _subdirs, filenames in os.walk('images-{0}'.format(self.jid)):
+                            for filename in filenames:
+                                if os.path.splitext(filename)[0] == name:
+                                    img = os.path.join(path, filename)
+                        os.chdir(startpath)
+                        
+                        disp.tagName = u'img'
+                        disp.removeChild(graphic)
+                        disp.setAttribute('src', img)
+                        disp.setAttribute('alt', 'A display formula')
+                        disp.setAttribute('class', 'disp-formula')
+                        
+    def dispFormulaNodeHandler2(self, topnode, doc):
         '''Handles <disp-formula> nodes for ePub formatting. This method works 
         similarly to inlineFormulaNodeHandler but must change the structure of 
         the DOM in order to handle out-of-line formatting. This creates a 
