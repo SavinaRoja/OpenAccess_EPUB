@@ -40,24 +40,19 @@ class OPSContent(object):
         #Initiate the document, returns the document and its body element
         synop, synbody = self.initiateDocument('Synopsis file')
         
-        #Create and place the title in the body element
-        art_title = meta.article_meta.article_title
-        titlenode = synop.createElement('h1')
-        titlenode.childNodes = art_title.childNodes
-        titlenode.setAttribute('id', 'title')
-        #for item in art_title.childNodes:
-        #    titlenode.appendChild(item.cloneNode(deep = True))
-        synbody.appendChild(titlenode)
+        #Create the title for the article
+        title = synbody.appendChild(synop.createElement('h1'))
+        title.setAttribute('id', 'title')
+        title.setAttribute('class', 'article-title')
+        title.childNodes = meta.article_meta.article_title.childNodes
         
+        #Affiliation index to be generated as authors parsed
         affiliation_index = []
-        #corresp_dict = {}
         
         #Create authors
         authors = meta.article_meta.art_auths
-        author_container = synop.createElement('h2')
+        auth_node = synbody.appendChild(synop.createElement('h2'))
         first = True
-        #con_char = [u'*', u'\u2020', u'\u2021']
-        #ccnt = 0
         for author in authors:
             if not first:
                 author_container.appendChild(synop.createTextNode(', '))
@@ -66,41 +61,32 @@ class OPSContent(object):
             name = author.get_name()
             affs = author.affiliation
             contact = author.contact
-            author_container.appendChild(synop.createTextNode(name))
+            auth_node.appendChild(synop.createTextNode(name))
             for aff in affs:
                 if aff not in affiliation_index:
                     affiliation_index.append(aff)
-                sup = synop.createElement('sup')
-                aref = synop.createElement('a')
+                sup = auth_node.appendChild(synop.createElement('sup'))
+                aref = sup.appendChild(synop.createElement('a'))
                 aref.setAttribute('href', self.syn_frag.format(aff))
                 aref.appendChild(synop.createTextNode(str(affiliation_index.index(aff) + 1)))
-                sup.appendChild(aref)
-                author_container.appendChild(sup)
             for contact in author.contact:
-                sup = synop.createElement('sup')
-                aref = synop.createElement('a')
+                sup = auth_node.appendChild(synop.createElement('sup'))
+                aref = sup.appendChild(aref = synop.createElement('a'))
                 aref.setAttribute('href', self.syn_frag.format(contact))
-                #character = con_char[ccnt]
-                #aref.appendChild(synop.createTextNode(character))
                 aref.appendChild(synop.createTextNode('*'))
-                sup.appendChild(aref)
-                author_container.appendChild(sup)
-                #corresp_dict[contact] = character
-                #ccnt += 1
-                
-        synbody.appendChild(author_container)
         
         #Create a node for the affiliation text
-        aff_line = synop.createElement('p')
+        aff_node = synop.createElement('p')
         art_affs = meta.article_meta.art_affs
-        for item in art_affs:
-            if 'aff' in item.rid:
-                sup = synop.createElement('sup')
-                sup.setAttribute('id', item.rid)
-                sup.appendChild(synop.createTextNode(str(art_affs.index(item) + 1)))
-                aff_line.appendChild(sup)
-                aff_line.appendChild(synop.createTextNode(item.address))
-        synbody.appendChild(aff_line)
+        if art_affs:
+            for item in art_affs:
+                if 'aff' in item.rid:
+                    sup = synop.createElement('sup')
+                    sup.setAttribute('id', item.rid)
+                    sup.appendChild(synop.createTextNode(str(art_affs.index(item) + 1)))
+                    aff_line.appendChild(sup)
+                    aff_line.appendChild(synop.createTextNode(item.address))
+            synbody.appendChild(aff_line)
         
         #Create the Abstract if it exists
         try:
@@ -108,9 +94,8 @@ class OPSContent(object):
         except KeyError:
             pass
         else:
-            abstitle = synop.createElement('h2')
+            abstitle = synbody.appendChild(synop.createElement('h2'))
             abstitle.appendChild(synop.createTextNode('Abstract'))
-            synbody.appendChild(abstitle)
             synbody.appendChild(abstract)
             abstract.tagName = 'div'
             abstract.setAttribute('id', 'abstract')
@@ -122,7 +107,30 @@ class OPSContent(object):
             for para in abstract.getElementsByTagName('p'):
                 para.tagName = 'big'
             self.postNodeHandling(abstract, synop)
-            
+        
+        #Create the Author's Summary if it exists
+        try:
+            summary = meta.article_meta.abstracts['summary']
+        except KeyError:
+            pass
+        else:
+            summary_title = synbody.appendChild(synop.createElement('h2'))
+            summary_title.appendChild(synop.createTextNode('Author Summary'))
+            for title in summary.getElementsByTagName('title'):
+                if utils.serializeText(title, stringlist = []) == 'Author Summary':
+                    summary.removeChild(title)
+            synbody.appendChild(summary)
+            summary.tagName = 'div'
+            summary.setAttribute('id', 'author-summary')
+            summary.setAttribute('class', 'author-summary')
+            for title in abstract.getElementsByTagName('title'):
+                title.tagName = 'h3'
+            for sec in abstract.getElementsByTagName('sec'):
+                sec.tagName = 'div'
+            for para in abstract.getElementsByTagName('p'):
+                para.tagName = 'big'
+            self.postNodeHandling(abstract, synop)
+        
         #Create the Editor's abstract if it exists
         try:
             editor_abs = meta.article_meta.abstracts['editor']
@@ -636,7 +644,7 @@ class OPSContent(object):
                 parent.removeChild(if_node)
     
     def dispFormulaNodeHandler(self, topnode, doc):
-        
+        '''Handles disp-formula nodes'''
         try:
             disp_formulas = topnode.getElementsByTagName('disp-formula')
         except AttributeError:
@@ -672,82 +680,6 @@ class OPSContent(object):
                         disp.setAttribute('src', img)
                         disp.setAttribute('alt', 'A display formula')
                         disp.setAttribute('class', 'disp-formula')
-                        
-    def dispFormulaNodeHandler2(self, topnode, doc):
-        '''Handles <disp-formula> nodes for ePub formatting. This method works 
-        similarly to inlineFormulaNodeHandler but must change the structure of 
-        the DOM in order to handle out-of-line formatting. This creates a 
-        somewhat delicate situation as different contexts may call for unique 
-        handling. Consider the handling of disp-formulas within table elements 
-        to be a special case and provide unique handling there. It may be 
-        possible to resolve this more elegantly later with the use of CSS.'''
-        
-        try:
-            disp_formulas = topnode.getElementsByTagName('disp-formula')
-        except AttributeError:
-            for item in topnode:
-                self.dispFormulaNodeHandler(item, doc)
-        else:
-            for disp_node in disp_formulas:
-                #Gather some needed structural elements
-                parent = disp_node.parentNode
-                sibling = disp_node.nextSibling #None if the last child
-                grandparent = parent.parentNode
-                parent_sibling = parent.nextSibling #None if the last child
-                
-                attrs = {'id': None, 'alternate-form-of': None}
-                
-                #Collect the attributes
-                for attr in attrs:
-                    attrs[attr] = disp_node.getAttribute(attr)
-                
-                #To break things up, we must add all the elements that come 
-                #after the disp-formula to a new parent, <p>, tag
-                if sibling: #Do this only if there are sibling(s)
-                    new_parent = doc.createElement('p')
-                    disp_index = parent.childNodes.index(disp_node)
-                    for child in parent.childNodes[(disp_index + 1):]:
-                        new_parent.appendChild(child)
-                else:
-                    new_parent = None
-                
-                if parent_sibling: #Insert formula paragraph tag before the parent siblings
-                    disp_p = doc.createElement('p')
-                    grandparent.insertBefore(disp_p, parent_sibling)
-                    if new_parent: #Insert the siblings under the new_parent before the parent siblings
-                        grandparent.insertBefore(new_parent, parent_sibling)
-                else: #Simply add to the end if there are no parent siblings
-                    grandparent.appendChild(disp_p, parent_sibling)
-                    grandparent.appendChild(new_parent, parent_sibling)
-                
-                #Now that we have done necessary structural rearrangements, we
-                #must create an appropriate image element
-                try:
-                    graphic = disp_node.getElementsByTagName('graphic')[0]
-                except IndexError:
-                    logging.error('disp-formula element does not contain graphic element')
-                else:
-                    graphic_xlink_href = graphic.getAttribute('xlink:href')
-                    if not graphic_xlink_href:
-                        logging.error('graphic xlink:href attribute not present for disp-formula')
-                    else:
-                        name = graphic_xlink_href.split('.')[-1]
-                        img = None
-                        startpath = os.getcwd()
-                        os.chdir(self.outdir)
-                        for path, _subdirs, filenames in os.walk('images-{0}'.format(self.jid)):
-                            for filename in filenames:
-                                if os.path.splitext(filename)[0] == name:
-                                    img = os.path.join(path, filename)
-                        os.chdir(startpath)
-                        
-                        #Create an img node which we will append to disp_p
-                        img_node = doc.createElement('img')
-                        img_node.setAttribute('src', img)
-                        img_node.setAttribute('alt', 'A display formula')
-                        disp_p.appendChild(img_node)
-                        #Now remove the original <disp-formula> element
-                        parent.removeChild(disp_node)
     
     def tableWrapNodeHandler(self, topnode, doc, tabdoc):
         '''Handles conversion of <table-wrap> tags under the provided topnode. 
