@@ -55,7 +55,7 @@ class OPSContent(object):
         first = True
         for author in authors:
             if not first:
-                author_container.appendChild(synop.createTextNode(', '))
+                auth_node.appendChild(synop.createTextNode(', '))
             else:
                 first = False
             name = author.get_name()
@@ -71,7 +71,7 @@ class OPSContent(object):
                 aref.appendChild(synop.createTextNode(str(affiliation_index.index(aff) + 1)))
             for contact in author.contact:
                 sup = auth_node.appendChild(synop.createElement('sup'))
-                aref = sup.appendChild(aref = synop.createElement('a'))
+                aref = sup.appendChild(synop.createElement('a'))
                 aref.setAttribute('href', self.syn_frag.format(contact))
                 aref.appendChild(synop.createTextNode('*'))
         
@@ -84,9 +84,9 @@ class OPSContent(object):
                     sup = synop.createElement('sup')
                     sup.setAttribute('id', item.rid)
                     sup.appendChild(synop.createTextNode(str(art_affs.index(item) + 1)))
-                    aff_line.appendChild(sup)
-                    aff_line.appendChild(synop.createTextNode(item.address))
-            synbody.appendChild(aff_line)
+                    aff_node.appendChild(sup)
+                    aff_node.appendChild(synop.createTextNode(item.address))
+            synbody.appendChild(aff_node)
         
         #Create the Abstract if it exists
         try:
@@ -122,7 +122,7 @@ class OPSContent(object):
             synbody.appendChild(summary)
             summary.tagName = 'div'
             summary.setAttribute('id', 'author-summary')
-            summary.setAttribute('class', 'author-summary')
+            summary.setAttribute('class', 'abstract')
             for title in abstract.getElementsByTagName('title'):
                 title.tagName = 'h3'
             for sec in abstract.getElementsByTagName('sec'):
