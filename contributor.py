@@ -85,3 +85,9 @@ class Editor(Contributor):
     """Represents an editor."""
     def __init__(self, contribnode):
         Contributor.__init__(self, contribnode)
+        try:
+            self.role = contribnode.getElementsByTagName('role')[0]
+        except KeyError:
+            self.role = None
+        else:
+            self.role = serializeText(self.role, stringlist = [])
