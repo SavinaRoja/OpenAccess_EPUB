@@ -208,6 +208,7 @@ def main():
                 if os.path.isdir(output_name):
                     dirExists(output_name, args.batch)
                 makeEPUB(document, xml_local, args.cache, output_name, args.log_to)
+        sys.exit(0)
     
     if args.collection: #Collection Mode
         t = os.path.splitext(os.path.split(args.collection)[1])[0]
@@ -232,6 +233,7 @@ def main():
                     document, xml_local = localInput(input.rstrip('\n'))
             documents += [(document, xml_local)]
         makeCollectionEPUB(documents, args.cache, output_name, args.log_to)
+        sys.exit(0)
     
     else: #Single Input Mode
         #Determination of input type and processing
