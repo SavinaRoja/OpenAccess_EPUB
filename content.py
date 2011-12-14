@@ -11,7 +11,8 @@ class OPSContent(object):
         self.inputstring = documentstring
         self.doc = minidom.parse(self.inputstring)
         #Get string from outdirect sans "journal."
-        self.jid = doi.split('journal.')[1] #journal id string
+        self.doi = doi
+        self.jid = self.doi.split('journal.')[1] #journal id string
         self.syn_frag = 'synop.{0}.xml'.format(self.jid) + '#{0}'
         self.main_frag = 'main.{0}.xml'.format(self.jid) + '#{0}'
         self.bib_frag = 'biblio.{0}.xml'.format(self.jid) + '#{0}'
@@ -122,7 +123,7 @@ class OPSContent(object):
             synbody.appendChild(summary)
             summary.tagName = 'div'
             summary.setAttribute('id', 'author-summary')
-            summary.setAttribute('class', 'abstract')
+            summary.setAttribute('class', 'summary')
             for title in abstract.getElementsByTagName('title'):
                 title.tagName = 'h3'
             for sec in abstract.getElementsByTagName('sec'):
@@ -150,7 +151,7 @@ class OPSContent(object):
             editor_abs.tagName = 'div'
             editor_abs.removeAttribute('abstract-type')
             editor_abs.setAttribute('id','editor_abstract')
-            editor_abs.setAttribute('class', 'abstract')
+            editor_abs.setAttribute('class', 'editorsAbstract')
             for title in editor_abs.getElementsByTagName('title'):
                 title.tagName = 'h3'
             for sec in editor_abs.getElementsByTagName('sec'):
@@ -159,32 +160,44 @@ class OPSContent(object):
                 para.tagName = 'big'
             self.postNodeHandling(editor_abs, synop)
         
-        #Create a node for the Editor
-        ped = synop.createElement('p')
-        first = True
+        #We can create the <div class="articleInfo">
+        #We will put metadata in it.
+        articleInfo = synbody.appendChild(synop.createElement('div'))
+        articleInfo.setAttribute('class', 'articleInfo')
+        articleInfo.setAttribute('id', 'articleInfo')
+        
+        #Citation text should be first, but I am unsure of PLoS's rules for it
+        #For now I will just place the DOI
+        citation = articleInfo.appendChild(synop.createElement('p'))
+        label = citation.appendChild(synop.createElement('b'))
+        label.appendChild(synop.createTextNode('Citation: '))
+        citation.appendChild(synop.createTextNode('doi:{0}'.format(self.doi)))
+        
+        #Handle Editors
         for editor in meta.article_meta.art_edits:
             name = editor.get_name()
+            role = editor.role
             affs = editor.affiliation
+            ped = articleInfo.appendChild(synop.createElement('p'))
+            label = ped.appendChild(synop.createElement('b'))
+            if role:
+                label.appendChild(synop.createTextNode('{0}: '.format(role)))
+            else:
+                label.appendChild(synop.createTextNode('Editor: '))
             ped.appendChild(synop.createTextNode(u'{0}, '.format(name)))
+            first_aff = True
             for aff in affs:
                 for item in meta.article_meta.art_affs:
                     if item.rid == aff:
                         address = item.address
-                        if first:
-                            ped.setAttribute('id', 'editor')
-                            bed = synop.createElement('b')
-                            editor_line = synop.createTextNode('Editor: ')
-                            bed.appendChild(editor_line)
-                            ped.appendChild(bed)
+                        if first_aff:
                             ped.appendChild(synop.createTextNode(u'{0}'.format(address)))
-                            first = False
+                            first_aff = False
                         else:
                             ped.appendChild(synop.createTextNode(u'; {0}'.format(address)))
-        if ped.childNodes:
-            synbody.appendChild(ped)
         
         #Create a node for the dates
-        datep = synop.createElement('p')
+        datep = articleInfo.appendChild(synop.createElement('p'))
         datep.setAttribute('id', 'dates')
         hist = meta.article_meta.history
         dates = meta.article_meta.art_dates
@@ -196,63 +209,41 @@ class OPSContent(object):
             datelist = [('Published', dates['epub'])]
         
         for _bold, _data in datelist:
-            bold = synop.createElement('b')
+            bold = datep.appendChild(synop.createElement('b'))
             bold.appendChild(synop.createTextNode('{0} '.format(_bold)))
-            datep.appendChild(bold)
             datestring = _data.niceString()
             datep.appendChild(synop.createTextNode('{0} '.format(datestring)))
-        synbody.appendChild(datep)
         
         #Create a node for the Copyright text:
-        copp = synop.createElement('p')
+        copp = articleInfo.appendChild(synop.createElement('p'))
         copp.setAttribute('id', 'copyright')
-        copybold = synop.createElement('b')
+        copybold = copp.appendChild(synop.createElement('b'))
         copybold.appendChild(synop.createTextNode('Copyright: '))
-        copp.appendChild(copybold)
         copystr = u'{0} {1}'.format(u'\u00A9', 
                                     meta.article_meta.art_copyright_year)
         copp.appendChild(synop.createTextNode(copystr))
         copp.childNodes += meta.article_meta.art_copyright_statement.childNodes
-        synbody.appendChild(copp)
         
         #Create a node for the Funding text
         if back and back.funding:
-            fundp = synop.createElement('p')
+            fundp = articleInfo.appendChild(synop.createElement('p'))
             fundp.setAttribute('id', 'funding')
-            fundbold = synop.createElement('b')
+            fundbold = fundp.appendChild(synop.createElement('b'))
             fundbold.appendChild(synop.createTextNode('Funding: '))
-            fundp.appendChild(fundbold)
             fundp.appendChild(synop.createTextNode(back.funding))
-            synbody.appendChild(fundp)
         
         #Create a node for the Competing Interests text
         if back and back.competing_interests:
-            compip = synop.createElement('p')
+            compip = articleInfo.appendChild(synop.createElement('p'))
             compip.setAttribute('id', 'competing-interests')
-            compibold = synop.createElement('b')
+            compibold = compip.appendChild(synop.createElement('b'))
             compibold.appendChild(synop.createTextNode('Competing Interests: '))
-            compip.appendChild(compibold)
             compip.appendChild(synop.createTextNode(back.competing_interests))
-            synbody.appendChild(compip)
         
         #Create a node for the correspondence text
-        corr_line = synop.createElement('p')
+        corr_line = articleInfo.appendChild(synop.createElement('p'))
         art_corresps = meta.article_meta.art_corresps
         correspondence_nodes = meta.article_meta.correspondences
-        
-        # PLoS does not appear to list more than one correspondence... >.<
-        # If they did, this approach might be used
-        #for item in art_corresps:
-        #    sup = synop.createElement('sup')
-        #    sup.setAttribute('id', item.rid)
-        #    sup.appendChild(synop.createTextNode(corresp_dict[item.rid]))
-        #    corr_line.appendChild(sup)
-        #    if item.address:
-        #        add = synop.createTextNode('Address: {0} '.format(item.address))
-        #        corr_line.appendChild(add)
-        #    if item.email:
-        #        add = synop.createTextNode('E-mail: {0} '.format(item.email))
-        #        corr_line.appendChild(add)
         try:
             corr_line.setAttribute('id', art_corresps[0].rid)
         except IndexError:
@@ -261,7 +252,6 @@ class OPSContent(object):
             for correspondence in correspondence_nodes:
                 corr_line.childNodes += correspondence.childNodes
             #corr_line.appendChild(synop.createTextNode(corresp_text))
-            synbody.appendChild(corr_line)
         
         #Handle conversion of ext-link to <a>
         ext_links = synop.getElementsByTagName('ext-link')
@@ -272,7 +262,6 @@ class OPSContent(object):
             ext_link.removeAttribute('xlink:href')
             ext_link.removeAttribute('xlink:type')
             ext_link.setAttribute('href', href)
-        
         
         self.postNodeHandling(synbody, synop)
         
