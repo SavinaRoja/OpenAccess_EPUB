@@ -3,21 +3,29 @@ blockquote
 {
 background-color:#80C0FF;
 }
-div.abstract
+div.abstract,
+div.editorsAbstract,
+div.summary,
+div.articleInfo
 {
 padding:0 10px;
 margin:20px 0 40px 0;
 border-left:5px solid #CCE3F6;
 }
+div.articleInfo
+{
+border-top: 1px dashed;
+border-bottom: 1px dashed;
+}
 span.footnote
 {
-display:block
+display:block;
 }
 span.disp-quote
 {
-display:block
+display:block;
 }
 img.disp-formula
 {
-display:block
+display:block;
 }
