@@ -99,6 +99,16 @@ those conforming to the relaxed constraints of OPS 2.0'''))
                 self.makeFiguresList()
             if self.lot.childNodes:
                 self.makeTablesList()
+            if front.article_meta.author_notes_contributions:
+                anc = nav.appendChild(self.toc.createElement('navPoint'))
+                anc.setAttribute('id', 'contributions')
+                anc.setAttribute('playOrder', str(self.playOrder))
+                self.playOrder += 1
+                anc_lbl = anc.appendChild(self.toc.createElement('navLabel'))
+                anc_lbl.appendChild(self.makeText('Author Contributions'))
+                anc_con = anc.appendChild(self.toc.createElement('content'))
+                src_str = 'main.{0}.xml#contributions'.format(self.jid)
+                anc_con.setAttribute('src', src_str)
     
     def structureParse(self, srcnode, dstnode = None, depth = 0, first = True):
         '''The structure of an article's <body> content can be analyzed in 
