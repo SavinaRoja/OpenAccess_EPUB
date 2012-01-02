@@ -231,7 +231,7 @@ def main():
             if 'http://www' in i:
                 download = True
                 document, xml_local = urlInput(i.rstrip('\n'), args.save_xml)
-            elif input[:4] == 'doi:':
+            elif i[:4] == 'doi:':
                 download = True
                 document, xml_local = doiInput(i.rstrip('\n'), args.save_xml)
             else:
