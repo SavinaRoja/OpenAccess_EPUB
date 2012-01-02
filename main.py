@@ -22,6 +22,7 @@ from article import Article
 
 settings = Settings()
 
+
 def initCache(cache_loc):
     '''Initiates the cache if it does not exist'''
     os.mkdir(cache_loc)
@@ -33,6 +34,7 @@ def initCache(cache_loc):
     os.mkdir(os.path.join(cache_loc, 'model', 'images', 'equations'))
     os.mkdir(os.path.join(cache_loc, 'model', 'images', 'supplementary'))
 
+
 def urlInput(input, xml_dir):
     '''Handles input in URL form to instantiate the document'''
     try:
@@ -40,15 +42,13 @@ def urlInput(input, xml_dir):
         _fetch = '/article/fetchObjectAttachment.action?uri='
         _id = address.path.split('/')[2]
         _rep = '&representation=XML'
-        access = '{0}://{1}{2}{3}{4}'.format(address.scheme, address.netloc, 
+        access = '{0}://{1}{2}{3}{4}'.format(address.scheme, address.netloc,
                                     _fetch, _id, _rep)
         print(access)
         open_xml = urllib2.urlopen(access)
-        
     except:
         print('Invalid Link: Enter a corrected link or use local file')
         sys.exit(1)
-    
     else:
         filename = open_xml.headers['Content-disposition'].split('\"')[1]
         filename = os.path.join(xml_dir, filename)
@@ -56,6 +56,7 @@ def urlInput(input, xml_dir):
             xml_file.write(open_xml.read())
         document = Article(filename)
         return(document, filename)
+
 
 def doiInput(input, xml_dir):
     '''Handles input in DOI form to instantiate the document'''
@@ -66,15 +67,13 @@ def doiInput(input, xml_dir):
         _fetch = '/article/fetchObjectAttachment.action?uri='
         _id = address.path.split('/')[2]
         _rep = '&representation=XML'
-        access = '{0}://{1}{2}{3}{4}'.format(address.scheme, address.netloc, 
+        access = '{0}://{1}{2}{3}{4}'.format(address.scheme, address.netloc,
                                     _fetch, _id, _rep)
         open_xml = urllib2.urlopen(access)
-        
     except:
-        print('Invalid DOI Link: Make sure that the address and format are correct')
+        print('Invalid DOI Link: Check for correct address and format')
         print('A valid entry looks like: \"doi:10.1371/journal.pcbi.1002222\"')
         sys.exit(1)
-    
     else:
         filename = open_xml.headers['Content-Disposition'].split('\"')[1]
         filename = os.path.join(xml_dir, filename)
@@ -83,11 +82,13 @@ def doiInput(input, xml_dir):
         document = Article(filename)
         return(document, filename)
 
+
 def localInput(input):
     '''Handles input in the form of local file to instantiate the document'''
     xml_local = input
     document = Article(xml_local)
     return(document, xml_local)
+
 
 def dirExists(outdirect, batch):
     if not batch:
@@ -100,12 +101,13 @@ def dirExists(outdirect, batch):
             sys.exit()
     else:
         shutil.rmtree(outdirect)
-    
+
+
 def makeEPUB(document, xml_local, cache_dir, outdirect, log_to):
     '''
-    Encapsulates the primary processing work-flow. Before this method is 
-    called, pre-processing has occurred to define important directory and file 
-    locations. The document has been processed for metadata and now it is time 
+    Encapsulates the primary processing work-flow. Before this method is
+    called, pre-processing has occurred to define important directory and file
+    locations. The document has been processed for metadata and now it is time
     to generate the ePub content.
     '''
     print(u'Processing output to {0}.epub'.format(outdirect))
@@ -114,7 +116,7 @@ def makeEPUB(document, xml_local, cache_dir, outdirect, log_to):
     shutil.copytree(settings.base_epub, outdirect)
     DOI = document.getDOI()
     utils.fetchPLoSImages(DOI, cache_dir, outdirect, settings.caching)
-    content.OPSContent(xml_local, DOI, outdirect, document.front, document.back)
+    content.OPSContent(xml_local, DOI, outdirect, document)
     toc = tocncx.TocNCX()
     toc.takeArticle(document)
     toc.write(outdirect)
@@ -122,16 +124,15 @@ def makeEPUB(document, xml_local, cache_dir, outdirect, log_to):
     myopf.takeArticle(document)
     myopf.write()
     utils.epubZip(outdirect)
-    
     #WARNING: shutil.rmtree() is a recursive deletion function, care should be 
     #taken whenever modifying this code
     if settings.cleanup:
         shutil.rmtree(outdirect)
     
 def makeCollectionEPUB(documents, cache_dir, outdirect, log_to):
-    '''Encapsulates the processing workf-flow for the creation of 
-    \"collection\", or \"omnibus\" ePubs from multiple PLoS journal articles. 
-    Article objects have been instantiated and tupled to their local xml files 
+    '''Encapsulates the processing workf-flow for the creation of
+    \"collection\", or \"omnibus\" ePubs from multiple PLoS journal articles.
+    Article objects have been instantiated and tupled to their local xml files
     and now we may generate the file.
     '''
     print(u'Processing output to {0}.epub'.format(outdirect))
@@ -141,7 +142,7 @@ def makeCollectionEPUB(documents, cache_dir, outdirect, log_to):
     for (doc, xml) in documents:
         DOI = doc.getDOI()
         utils.fetchPLoSImages(DOI, cache_dir, outdirect, settings.caching)
-        content.OPSContent(xml, DOI, outdirect, doc.front, doc.back)
+        content.OPSContent(xml, DOI, outdirect, doc)
         mytoc.takeArticle(doc)
         myopf.takeArticle(doc)
         
