@@ -124,11 +124,12 @@ def makeEPUB(document, xml_local, cache_dir, outdirect, log_to):
     myopf.takeArticle(document)
     myopf.write()
     utils.epubZip(outdirect)
-    #WARNING: shutil.rmtree() is a recursive deletion function, care should be 
+    #WARNING: shutil.rmtree() is a recursive deletion function, care should be
     #taken whenever modifying this code
     if settings.cleanup:
         shutil.rmtree(outdirect)
-    
+
+
 def makeCollectionEPUB(documents, cache_dir, outdirect, log_to):
     '''Encapsulates the processing workf-flow for the creation of
     \"collection\", or \"omnibus\" ePubs from multiple PLoS journal articles.
@@ -137,49 +138,56 @@ def makeCollectionEPUB(documents, cache_dir, outdirect, log_to):
     '''
     print(u'Processing output to {0}.epub'.format(outdirect))
     shutil.copytree(settings.base_epub, outdirect)
-    mytoc = tocncx.TocNCX(collection_mode = True)
-    myopf = opf.ContentOPF(outdirect, collection_mode = True)
+    mytoc = tocncx.TocNCX(collection_mode=True)
+    myopf = opf.ContentOPF(outdirect, collection_mode=True)
     for (doc, xml) in documents:
         DOI = doc.getDOI()
         utils.fetchPLoSImages(DOI, cache_dir, outdirect, settings.caching)
         content.OPSContent(xml, DOI, outdirect, doc)
         mytoc.takeArticle(doc)
         myopf.takeArticle(doc)
-        
     mytoc.write(outdirect)
     myopf.write()
     utils.epubZip(outdirect)
-    
-    #WARNING: shutil.rmtree() is a recursive deletion function, care should be 
+    #WARNING: shutil.rmtree() is a recursive deletion function, care should be
     #taken whenever modifying this code
     if settings.cleanup:
         shutil.rmtree(outdirect)
-    
+
+
 def main():
     '''Main Script'''
-    
-    parser = argparse.ArgumentParser(description = 'OpenAccess_EPUB Parser')
-    parser.add_argument('--version', action='version', version='OpenAccess_EPUB {0}'.format(__version__))
-    #parser.add_argument('-q', '--quiet', action = 'store_true', default = False)
-    parser.add_argument('-o', '--output', action = 'store', default = settings.default_output, 
-                        help = 'Use to specify a desired output directory')
-    parser.add_argument('-s', '--save-xml', action = 'store', default = settings.xml_location, 
-                        help = 'Use to specify a directory for storing downloaded xml files')
-    parser.add_argument('-l', '--log-to', action = 'store', default = settings.log_location, 
-                        help = 'Use to specify a non-default log directory')
-    parser.add_argument('-c', '--cache', action = 'store', default = settings.cache_location, 
-                        help = 'Use to specify a non-default cache directory')
+    parser = argparse.ArgumentParser(description='OpenAccess_EPUB Parser')
+    parser.add_argument('--version', action='version',
+                        version='OpenAccess_EPUB {0}'.format(__version__))
+    #parser.add_argument('-q', '--quiet', action='store_true', default=False)
+    parser.add_argument('-o', '--output', action='store',
+                        default=settings.default_output,
+                        help='Use to specify a desired output directory')
+    parser.add_argument('-s', '--save-xml', action='store',
+                        default=settings.xml_location,
+                        help='''Use to specify a directory for storing \
+                                downloaded xml files''')
+    parser.add_argument('-l', '--log-to', action='store',
+                        default=settings.log_location,
+                        help='Use to specify a non-default log directory')
+    parser.add_argument('-c', '--cache', action='store',
+                        default=settings.cache_location,
+                        help='Use to specify a non-default cache directory')
     modes = parser.add_mutually_exclusive_group()
-    modes.add_argument('-i', '--input', action = 'store', 
-                        help = 'Input may be a path to a local directory, a URL to a PLoS journal article, or a PLoS DOI string')
-    modes.add_argument('-b', '--batch', action = 'store', default = False, 
-                        help = 'Use to specify a batch directory; each article inside will be processed.')
-    modes.add_argument('-C', '--collection', action = 'store', default = False, 
-                        help = 'Use to create an ePub file containing multiple resources.')
+    modes.add_argument('-i', '--input', action='store',
+                        help='''Input may be a path to a local directory, a \
+                              URL to a PLoS journal article, or a PLoS DOI \
+                              string''')
+    modes.add_argument('-b', '--batch', action='store', default=False,
+                        help='''Use to specify a batch directory; each \
+                                article inside will be processed.''')
+    modes.add_argument('-C', '--collection', action='store', default=False,
+                        help='''Use to create an ePub file containing \
+                                multiple resources.''')
     args = parser.parse_args()
-    
     #Check for directory existence, create if not found
-    #This will break if the path has no immediate parent directory, this could 
+    #This will break if the path has no immediate parent directory, this could
     #be fixed but I am not sure if it should
     if not os.path.isdir(args.log_to):
         os.mkdir(args.log_to)
@@ -189,13 +197,12 @@ def main():
         os.mkdir(args.save_xml)
     if not os.path.isdir(args.output):
         os.mkdir(args.output)
-    
     #Initiate logging settings
     logname = os.path.join(args.log_to, 'temp.log')
-    logging.basicConfig(filename = logname, level = logging.DEBUG)
+    logging.basicConfig(filename=logname, level=logging.DEBUG)
     logging.info('OpenAccess_EPUB Log v.{0}'.format(__version__))
-    
-    if args.batch: #Batch Mode
+    #Batch Mode
+    if args.batch:
         download = False
         files = os.listdir(args.batch)
         for file in files:
@@ -203,15 +210,16 @@ def main():
                 pass
             else:
                 filename = os.path.join(args.batch, file)
-                document, xml_local = localInput(filename)
+                doc, xml_local = localInput(filename)
                 input_name = os.path.splitext(os.path.split(xml_local)[1])[0]
                 output_name = os.path.join(args.output, input_name)
                 if os.path.isdir(output_name):
                     dirExists(output_name, args.batch)
-                makeEPUB(document, xml_local, args.cache, output_name, args.log_to)
+                makeEPUB(doc, xml_local, args.cache, output_name, args.log_to)
         sys.exit(0)
-    
-    if args.collection: #Collection Mode
+
+    #Collection Mode
+    if args.collection:
         t = os.path.splitext(os.path.split(args.collection)[1])[0]
         output_name = os.path.join(args.output, t)
         if os.path.isdir(output_name):
@@ -219,24 +227,25 @@ def main():
         with open(args.collection, 'r') as collection:
             inputs = collection.readlines()
         documents = []
-        for input in inputs:
-            if 'http://www' in input:
+        for i in inputs:
+            if 'http://www' in i:
                 download = True
-                document, xml_local = urlInput(input.rstrip('\n'), args.save_xml)
+                document, xml_local = urlInput(i.rstrip('\n'), args.save_xml)
             elif input[:4] == 'doi:':
                 download = True
-                document, xml_local = doiInput(input.rstrip('\n'), args.save_xml)
+                document, xml_local = doiInput(i.rstrip('\n'), args.save_xml)
             else:
-                if not input:
+                if not i:
                     pass
                 else:
                     download = False
-                    document, xml_local = localInput(input.rstrip('\n'))
+                    document, xml_local = localInput(i.rstrip('\n'))
             documents += [(document, xml_local)]
         makeCollectionEPUB(documents, args.cache, output_name, args.log_to)
         sys.exit(0)
-    
-    else: #Single Input Mode
+
+    #Single Input Mode
+    else:
         #Determination of input type and processing
         if 'http://www' in args.input:
             download = True
@@ -247,25 +256,20 @@ def main():
         else:
             download = False
             document, xml_local = localInput(args.input)
-            
         #For now PloS naming will be maintained
-        #The name of the processing directory and the .epub should be a string like
+        #The name of the directory and the .epub should be a string like
         #journal.pcbi.1002211
         #or if already re-named, it will assume the xml name
         input_name = os.path.splitext(os.path.split(xml_local)[1])[0]
         output_name = os.path.join(args.output, input_name)
-        
         if os.path.isdir(output_name):
             dirExists(output_name, args.batch)
-            
         makeEPUB(document, xml_local, args.cache, output_name, args.log_to)
-        
         if download and not settings.save_xml:
             os.remove(xml_local)
-    
             newname = u'{0}.log'.format(input_name)
-            newname =  os.path.join(args.log_to, newname)
+            newname = os.path.join(args.log_to, newname)
             os.rename(logname, newname)
-    
+
 if __name__ == '__main__':
     main()
