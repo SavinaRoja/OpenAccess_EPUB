@@ -26,7 +26,7 @@ class OPSContent(object):
         self.backdata = document.back
         
         self.createSynopsis(self.metadata, self.backdata)
-        self.createMain(self.doc)
+        self.createMain()
         try:
             back = self.doc.getElementsByTagName('back')[0]
         except IndexError:
@@ -268,36 +268,31 @@ class OPSContent(object):
         with open(self.outputs['Synopsis'],'wb') as out:
             out.write(synop.toprettyxml(encoding = 'utf-8'))
 
-    def createMain(self, doc):
+    def createMain(self):
         '''Create an output file containing the main article body content'''
+        doc = self.doc
         #Initiate the document, returns the document and its body element
         main, mainbody = self.initiateDocument('Main file')
-        
         body = doc.getElementsByTagName('body')[0]
-        
         #Here we copy the entirety of the body element over to our main document
         for item in body.childNodes:
-            mainbody.appendChild(item.cloneNode(deep = True))
-        
+            mainbody.appendChild(item.cloneNode(deep=True))
         #Process figures
         self.figNodeHandler(mainbody, main) #Convert <fig> to <img>
-        
         #Process tables
         tab_doc, tab_docbody = self.initiateDocument('HTML Versions of Tables')
         self.tableWrapNodeHandler(mainbody, main, tab_docbody) #Convert <table-wrap>
         self.postNodeHandling(tab_docbody, tab_doc)
-        
         #Process boxed-text
         self.boxedTextNodeHandler(mainbody)
-        
         #Process supplementary-materials
         self.supplementaryMaterialNodeHandler(mainbody, main)
-        
+        #Process Author Contributions
+        self.authorContributions(mainbody, main)
         #General processing
-        self.postNodeHandling(mainbody, main, ignorelist = [])
+        self.postNodeHandling(mainbody, main, ignorelist=[])
         #Conversion of existing <div><title/></div> to <div><h#/></div>
         self.divTitleFormat(mainbody, depth = 0) #Convert <title> to <h#>...
-        
         #If any tables were in the article, make the tables.xml
         if tab_docbody.getElementsByTagName('table'):
             with open(self.outputs['Tables'],'wb') as output:
@@ -332,11 +327,24 @@ class OPSContent(object):
         
         with open(self.outputs['Biblio'],'wb') as out:
             out.write(biblio.toprettyxml(encoding = 'utf-8'))
+
+    def authorContributions(self, topnode, doc):
+        '''Takes the optional Author Contributions element from metadata and
+           adds it to the document, it belongs between Acknowledgments and
+           References.'''
+        anc = self.metadata.article_meta.author_notes_contributions
+        if anc:
+            topnode.appendChild(anc)
+            anc.tagName = 'div'
+            anc.removeAttribute('fn-type')
+            anc.setAttribute('class', 'contributions')
+            anc_title = doc.createElement('h2')
+            anc_title.appendChild(doc.createTextNode('Author Contibutions'))
+            anc.insertBefore(anc_title, anc.firstChild)
             
     def parseRef(self, fromnode, doc):
-        '''Interprets the references in the article back reference list into 
+        '''Interprets the references in the article back reference list into
         comprehensible xml'''
-        
         #Create a paragraph tag to contain the reference text data
         ref_par = doc.createElement('p')
         #Set the fragment identifier for the paragraph tag
@@ -1334,10 +1342,10 @@ class OPSContent(object):
             for ext_link in ext_links:
                 ext_link.tagName = u'a' #convert to <a>
                 #Handle the potential attributes
-                attrs = {'ext-link-type': None, 'id': None, 
-                         'xlink:actuate': None, 'xlink:href': None, 
-                         'xlink:role': None, 'xlink:show': None, 
-                         'xlink:title': None, 'xlink:type': None, 
+                attrs = {'ext-link-type': None, 'id': None,
+                         'xlink:actuate': None, 'xlink:href': None,
+                         'xlink:role': None, 'xlink:show': None,
+                         'xlink:title': None, 'xlink:type': None,
                          'xmlns:xlink': None}
                 
                 for attr in attrs:
@@ -1358,9 +1366,9 @@ class OPSContent(object):
                         logging.info('<ext-link> attribute \"xlink:type\" = {0}'.format(attrs['xlink:type']))
     
     def listNodeHandler(self, topnode, doc):
-        '''Handles conversion of <list> tags which are used to represent data 
-        in either a linked fashion with or without linear order. Finds all 
-        <list> elements under the provided Node; also works on NodeLists by 
+        '''Handles conversion of <list> tags which are used to represent data
+        in either a linked fashion with or without linear order. Finds all
+        <list> elements under the provided Node; also works on NodeLists by
         calling itself on each element in the list'''
         
         types = {'order': 'ol', 'bullet': 'ul', 'alpha-lower': 'ol', 
