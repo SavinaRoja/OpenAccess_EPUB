@@ -337,7 +337,7 @@ class OPSContent(object):
             topnode.appendChild(anc)
             anc.tagName = 'div'
             anc.removeAttribute('fn-type')
-            anc.setAttribute('class', 'contributions')
+            anc.setAttribute('id', 'contributions')
             anc_title = doc.createElement('h2')
             anc_title.appendChild(doc.createTextNode('Author Contibutions'))
             anc.insertBefore(anc_title, anc.firstChild)

@@ -70,6 +70,19 @@ those conforming to the relaxed constraints of OPS 2.0'''))
                 self.makeFiguresList()
             if self.lot.childNodes:
                 self.makeTablesList()
+            #Add a reference to the Author Contributions if they exist
+            if front.article_meta.author_notes_contributions:
+                anc = self.navmap.appendChild(self.toc.createElement('navPoint'))
+                anc.setAttribute('id', 'contributions')
+                anc.setAttribute('playOrder', str(self.playOrder))
+                self.playOrder += 1
+                anc_lbl = anc.appendChild(self.toc.createElement('navLabel'))
+                anc_lbl.appendChild(self.makeText('Author Contributions'))
+                anc_con = anc.appendChild(self.toc.createElement('content'))
+                src_str = 'main.{0}.xml#contributions'.format(self.jid)
+                anc_con.setAttribute('src', src_str)
+
+                
         #If we are packing arbitrarily many articles...
         else:
             titletext = utils.serializeText(front.article_meta.article_title, stringlist = [])
