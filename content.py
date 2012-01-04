@@ -122,7 +122,7 @@ class OPSContent(object):
                     summary.removeChild(title)
             synbody.appendChild(summary)
             summary.tagName = 'div'
-            summar.removeAttribute('abstract-type')
+            summary.removeAttribute('abstract-type')
             summary.setAttribute('id', 'author-summary')
             summary.setAttribute('class', 'summary')
             for title in abstract.getElementsByTagName('title'):
@@ -514,7 +514,18 @@ class OPSContent(object):
                 fig_uri = fig_node.getElementsByTagName('uri')
                 #Document location information
                 fig_parent = fig_node.parentNode
+                orig_parent = fig_node.parentNode
                 fig_sibling = fig_node.nextSibling
+                
+                #There is a bizarre circumstance where some figures are placed
+                #In an invalid position for ePub xml
+                #Here is a fix for it
+                if fig_parent.tagName == 'body':
+                    fig_div = doc.createElement('div')
+                    fig_parent.insertBefore(fig_div, fig_node)
+                    fig_div.appendChild(fig_node)
+                    fig_parent = fig_div  # this equates to fig_node.parentNode
+                
                 #This should provide the fragment identifier
                 fig_id = fig_node.getAttribute('id')
                 
@@ -578,7 +589,7 @@ class OPSContent(object):
                         bold_label_text.appendChild(doc.createTextNode(fig_label_text + '.'))
                         fig_caption_node.insertBefore(bold_label_text, fig_caption_node.firstChild)
                     #Place after the image node
-                    fig_parent.insertBefore(fig_caption_node, fig_sibling)
+                    orig_parent.insertBefore(fig_caption_node, fig_sibling)
                 
                 #Handle email
                 for email in fig_email:
