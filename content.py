@@ -287,6 +287,8 @@ class OPSContent(object):
         self.boxedTextNodeHandler(mainbody)
         #Process supplementary-materials
         self.supplementaryMaterialNodeHandler(mainbody, main)
+        #Process Acknowledgments
+        self.acknowledgments(mainbody, main)
         #Process Author Contributions
         self.authorContributions(mainbody, main)
         #General processing
@@ -327,6 +329,19 @@ class OPSContent(object):
         
         with open(self.outputs['Biblio'],'wb') as out:
             out.write(biblio.toprettyxml(encoding = 'utf-8'))
+
+    def acknowledgments(self, topnode, doc):
+        '''Takes the optional acknowledgments element from the back data
+        and adds it to the document, it belongs right after Supporting
+        Information and before Author Contributions'''
+        ack = self.backdata.ack
+        if ack:
+            topnode.appendChild(ack)
+            ack.tagName = 'div'
+            ack.setAttribute('id', 'acknowledgments')
+            ack_title = doc.createElement('h2')
+            ack_title.appendChild(doc.createTextNode('Acknowledgments'))
+            ack.insertBefore(ack_title, ack.firstChild)
 
     def authorContributions(self, topnode, doc):
         '''Takes the optional Author Contributions element from metadata and
