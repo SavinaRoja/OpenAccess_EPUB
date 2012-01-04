@@ -29,3 +29,8 @@ img.disp-formula
 {
 display:block;
 }
+b.disp-formula-label
+{
+display:block;
+text-align:right;
+}

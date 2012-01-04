@@ -709,6 +709,13 @@ class OPSContent(object):
                         disp.setAttribute('src', img)
                         disp.setAttribute('alt', 'A display formula')
                         disp.setAttribute('class', 'disp-formula')
+                        
+                        #Convert <label> to <b class="disp-form-label">
+                        #Also move it up a level, after the formula
+                        for item in disp.getElementsByTagName('label'):
+                            disp.parentNode.insertBefore(item, disp.nextSibling)
+                            item.tagName = 'b'
+                            item.setAttribute('class', 'disp-formula-label')
     
     def tableWrapNodeHandler(self, topnode, doc, tabdoc):
         '''Handles conversion of <table-wrap> tags under the provided topnode. 
