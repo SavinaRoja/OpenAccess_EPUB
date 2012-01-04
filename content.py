@@ -122,6 +122,7 @@ class OPSContent(object):
                     summary.removeChild(title)
             synbody.appendChild(summary)
             summary.tagName = 'div'
+            summar.removeAttribute('abstract-type')
             summary.setAttribute('id', 'author-summary')
             summary.setAttribute('class', 'summary')
             for title in abstract.getElementsByTagName('title'):
@@ -334,14 +335,19 @@ class OPSContent(object):
         '''Takes the optional acknowledgments element from the back data
         and adds it to the document, it belongs right after Supporting
         Information and before Author Contributions'''
-        ack = self.backdata.ack
-        if ack:
-            topnode.appendChild(ack)
-            ack.tagName = 'div'
-            ack.setAttribute('id', 'acknowledgments')
-            ack_title = doc.createElement('h2')
-            ack_title.appendChild(doc.createTextNode('Acknowledgments'))
-            ack.insertBefore(ack_title, ack.firstChild)
+        try:
+            ack = self.backdata.ack
+        except AttributeError:
+            #An article that has no <back> element
+            pass
+        else:
+            if ack:
+                topnode.appendChild(ack)
+                ack.tagName = 'div'
+                ack.setAttribute('id', 'acknowledgments')
+                ack_title = doc.createElement('h2')
+                ack_title.appendChild(doc.createTextNode('Acknowledgments'))
+                ack.insertBefore(ack_title, ack.firstChild)
 
     def authorContributions(self, topnode, doc):
         '''Takes the optional Author Contributions element from metadata and
