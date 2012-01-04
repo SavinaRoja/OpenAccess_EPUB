@@ -59,6 +59,7 @@ those conforming to the relaxed constraints of OPS 2.0'''))
         self.articles += [article]
         front = article.front
         body = article.body
+        back = article.back
         ids = front.article_meta.identifiers
         for (_data, _id) in ids:
             if _id == 'doi':
@@ -70,6 +71,17 @@ those conforming to the relaxed constraints of OPS 2.0'''))
                 self.makeFiguresList()
             if self.lot.childNodes:
                 self.makeTablesList()
+            #Add a reference to the Acknowledgments if they exist
+            if back.ack:
+                ack = self.navmap.appendChild(self.toc.createElement('navPoint'))
+                ack.setAttribute('id', 'acknowledgments')
+                ack.setAttribute('playOrder', str(self.playOrder))
+                self.playOrder += 1
+                ack_lbl = ack.appendChild(self.toc.createElement('navLabel'))
+                ack_lbl.appendChild(self.makeText('Acknowledgments'))
+                ack_con = ack.appendChild(self.toc.createElement('content'))
+                src_str = 'main.{0}.xml#acknowledgments'.format(self.jid)
+                ack_con.setAttribute('src', src_str)
             #Add a reference to the Author Contributions if they exist
             if front.article_meta.author_notes_contributions:
                 anc = self.navmap.appendChild(self.toc.createElement('navPoint'))
@@ -99,6 +111,16 @@ those conforming to the relaxed constraints of OPS 2.0'''))
                 self.makeFiguresList()
             if self.lot.childNodes:
                 self.makeTablesList()
+            if back.ack:
+                ack = self.nav.appendChild(self.toc.createElement('navPoint'))
+                ack.setAttribute('id', 'acknowledgments')
+                ack.setAttribute('playOrder', str(self.playOrder))
+                self.playOrder += 1
+                ack_lbl = ack.appendChild(self.toc.createElement('navLabel'))
+                ack_lbl.appendChild(self.makeText('Acknowledgments'))
+                ack_con = ack.appendChild(self.toc.createElement('content'))
+                src_str = 'main.{0}.xml#acknowledgments'.format(self.jid)
+                ack_con.setAttribute('src', src_str)
             if front.article_meta.author_notes_contributions:
                 anc = nav.appendChild(self.toc.createElement('navPoint'))
                 anc.setAttribute('id', 'contributions')
