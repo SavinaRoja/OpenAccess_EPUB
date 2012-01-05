@@ -28,6 +28,7 @@ def initCache(cache_loc):
     os.mkdir(cache_loc)
     os.mkdir(os.path.join(cache_loc, 'model'))
     os.mkdir(os.path.join(cache_loc, 'PLoS'))
+    os.mkdir(os.path.join(cache_loc, 'Frontiers'))
     os.mkdir(os.path.join(cache_loc, 'model', 'images'))
     os.mkdir(os.path.join(cache_loc, 'model', 'images', 'figures'))
     os.mkdir(os.path.join(cache_loc, 'model', 'images', 'tables'))
@@ -38,14 +39,24 @@ def initCache(cache_loc):
 def urlInput(input, xml_dir):
     '''Handles input in URL form to instantiate the document'''
     try:
-        address = urlparse.urlparse(input)
-        _fetch = '/article/fetchObjectAttachment.action?uri='
-        _id = address.path.split('/')[2]
-        _rep = '&representation=XML'
-        access = '{0}://{1}{2}{3}{4}'.format(address.scheme, address.netloc,
+        if '%2F10.1371%2F' in input:  # This is a PLoS page
+            publisher = 'PLoS'
+            address = urlparse.urlparse(input)
+            _fetch = '/article/fetchObjectAttachment.action?uri='
+            print(address.path)
+            _id = address.path.split('/')[2]
+            _rep = '&representation=XML'
+            access = '{0}://{1}{2}{3}{4}'.format(address.scheme, address.netloc,
                                     _fetch, _id, _rep)
-        print(access)
-        open_xml = urllib2.urlopen(access)
+            print('Opening {0}'.format(access.__str__()))
+            open_xml = urllib2.urlopen(access)
+        elif '/10.3389/' in input:  # This is a Frontiers page
+            publisher = 'Frontiers'
+            print('OpenAccess_EPUB does not yet support Frontiers')
+            sys.exit(0)
+        else:  # We don't know how to handle this input
+            print('Invalid Link: Bad URL or unsupported publisher')
+            sys.exit(1)
     except:
         print('Invalid Link: Enter a corrected link or use local file')
         sys.exit(1)
