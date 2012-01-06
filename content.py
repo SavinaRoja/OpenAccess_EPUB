@@ -8,6 +8,7 @@ class OPSContent(object):
     '''A class for instantiating content xml documents in the OPS Preferred
     Vocabulary'''
     def __init__(self, documentstring, doi, outdirect, document):
+        print('Generating OPS content...')
         self.inputstring = documentstring
         self.doc = minidom.parse(self.inputstring)
         #Get string from outdirect sans "journal."
@@ -301,22 +302,8 @@ class OPSContent(object):
         
         #Generate an articleInfo segment for the author notes current affs
         anca = meta.article_meta.author_notes_current_affs
-        ref = 1
-        while anca.get('fn{0}'.format(str(ref))):
-            id = 'fn{0}'.format(str(ref))
+        for id in sorted(anca.iterkeys()):
             label, data = anca[id]
-            ref += 1
-            cap = articleInfo.appendChild(data)
-            cap.setAttribute('id', id)
-            cab = cap.insertBefore(synop.createElement('b'), cap.firstChild)
-            cab.appendChild(synop.createTextNode(label))
-            
-        #This segment does the same as above, but for an antiquated naming scheme
-        ref = 1
-        while anca.get('n{0}'.format(str(ref))):
-            id = 'n{0}'.format(str(ref))
-            label, data = anca[id]
-            ref += 1
             cap = articleInfo.appendChild(data)
             cap.setAttribute('id', id)
             cab = cap.insertBefore(synop.createElement('b'), cap.firstChild)
