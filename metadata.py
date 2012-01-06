@@ -84,6 +84,7 @@ class ArticleMeta(object):
         self.art_dates = {}
         self.author_notes_contributions = None
         self.author_notes_current_affs = {}
+        self.author_notes_other = {}
         self.art_copyright_year = None
         self.art_copyright_statement = None
         self.art_eloc_id = None
@@ -181,9 +182,22 @@ class ArticleMeta(object):
                 self.author_notes_contributions = fn
             elif fn.getAttribute('fn-type') == u'current-aff':
                 id = fn.getAttribute('id')
-                lbl = getTagText(fn.getElementsByTagName('label')[0])
-                dat = getTagText(fn.getElementsByTagName('p')[0])
+                try:
+                    lbl = getTagText(fn.getElementsByTagName('label')[0])
+                except IndexError:
+                    lbl = u''
+                try:
+                    dat = fn.getElementsByTagName('p')[0].cloneNode(deep=True)
+                except IndexError:
+                    dat = None
                 self.author_notes_current_affs[id] = (lbl, dat)
+            elif fn.getAttribute('fn-type') == u'other':
+                id = fn.getAttribute('id')
+                try:
+                    dat = fn.getElementsByTagName('p')[0].cloneNode(deep=True)
+                except IndexError:
+                    dat = None
+                self.author_notes_other[id] = dat
     
     def identify(self, node):
         """pull everything from the xml node"""
