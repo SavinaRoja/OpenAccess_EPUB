@@ -144,7 +144,6 @@ class Back(object):
         self.footnotes = node.getElementsByTagName('fn')
         self.funding = u''
         self.competing_interests = u''
-        self.ack = u''
         for item in self.footnotes:
             if item.getAttribute('fn-type') == u'conflict':
                 text = utils.serializeText(item, stringlist=[])
@@ -156,6 +155,12 @@ class Back(object):
         try:
             ack_node = node.getElementsByTagName('ack')[0]
         except IndexError:
-            pass
+            self.ack = None
         else:
             self.ack = ack_node
+        try:
+            gloss = node.getElementsByTagName('glossary')[0]
+        except IndexError:
+            self.glossary = None
+        else:
+            self.glossary = gloss
