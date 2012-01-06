@@ -12,6 +12,7 @@ class Contributor:
         self.givenname = ''
         self.affiliation = []
         self.contact = []
+        self.footnotes = []
         
         try:
             namenode = contribnode.getElementsByTagName('name')[0]
@@ -40,6 +41,8 @@ class Contributor:
                 self.affiliation.append(ref.getAttribute('rid'))
             elif reftype == 'corresp':
                 self.contact.append(ref.getAttribute('rid'))
+            elif reftype == 'fn':
+                self.footnotes.append(ref.getAttribute('rid'))
 
     def __str__(self):
         out = 'Surname: {0}, Given Name: {1}, AffiliationID: {2}, Contact: {3}'
