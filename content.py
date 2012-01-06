@@ -306,11 +306,27 @@ class OPSContent(object):
             id = 'fn{0}'.format(str(ref))
             label, data = anca[id]
             ref += 1
-            cap = articleInfo.appendChild(synop.createElement('p'))
+            cap = articleInfo.appendChild(data)
             cap.setAttribute('id', id)
-            cab = cap.appendChild(synop.createElement('b'))
+            cab = cap.insertBefore(synop.createElement('b'), cap.firstChild)
             cab.appendChild(synop.createTextNode(label))
-            cap.appendChild(synop.createTextNode(' ' + data))
+            
+        #This segment does the same as above, but for an antiquated naming scheme
+        ref = 1
+        while anca.get('n{0}'.format(str(ref))):
+            id = 'n{0}'.format(str(ref))
+            label, data = anca[id]
+            ref += 1
+            cap = articleInfo.appendChild(data)
+            cap.setAttribute('id', id)
+            cab = cap.insertBefore(synop.createElement('b'), cap.firstChild)
+            cab.appendChild(synop.createTextNode(label))
+        
+        #If there are other footnotes in Author notes, eg. <fn fn-typ="other"
+        #Place them here.
+        ano = meta.article_meta.author_notes_other
+        for id in sorted(ano.iterkeys()):
+            cap = articleInfo.appendChild(ano[id])
         
         self.postNodeHandling(synbody, synop)
         
