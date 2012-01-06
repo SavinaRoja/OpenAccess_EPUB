@@ -292,6 +292,19 @@ class OPSContent(object):
             ext_link.removeAttribute('xlink:type')
             ext_link.setAttribute('href', href)
         
+        #Generate an articleInfo segment for the author notes current affs
+        anca = meta.article_meta.author_notes_current_affs
+        ref = 1
+        while anca.get('fn{0}'.format(str(ref))):
+            id = 'fn{0}'.format(str(ref))
+            label, data = anca[id]
+            ref += 1
+            cap = articleInfo.appendChild(synop.createElement('p'))
+            cap.setAttribute('id', id)
+            cab = cap.appendChild(synop.createElement('b'))
+            cab.appendChild(synop.createTextNode(label))
+            cap.appendChild(synop.createTextNode(' ' + data))
+        
         self.postNodeHandling(synbody, synop)
         
         with open(self.outputs['Synopsis'],'wb') as out:
