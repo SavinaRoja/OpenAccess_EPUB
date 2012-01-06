@@ -52,7 +52,7 @@ class OPSContent(object):
         
         #Create authors
         authors = meta.article_meta.art_auths
-        auth_node = synbody.appendChild(synop.createElement('h2'))
+        auth_node = synbody.appendChild(synop.createElement('h3'))
         first = True
         for author in authors:
             if not first:
@@ -105,8 +105,8 @@ class OPSContent(object):
                 title.tagName = 'h3'
             for sec in abstract.getElementsByTagName('sec'):
                 sec.tagName = 'div'
-            for para in abstract.getElementsByTagName('p'):
-                para.tagName = 'big'
+            #for para in abstract.getElementsByTagName('p'):
+            #    para.tagName = 'big'
             self.postNodeHandling(abstract, synop)
         
         #Create the Author's Summary if it exists
@@ -129,8 +129,8 @@ class OPSContent(object):
                 title.tagName = 'h3'
             for sec in abstract.getElementsByTagName('sec'):
                 sec.tagName = 'div'
-            for para in abstract.getElementsByTagName('p'):
-                para.tagName = 'big'
+            #for para in abstract.getElementsByTagName('p'):
+            #    para.tagName = 'big'
             self.postNodeHandling(abstract, synop)
         
         #Create the Editor's abstract if it exists
@@ -157,8 +157,8 @@ class OPSContent(object):
                 title.tagName = 'h3'
             for sec in editor_abs.getElementsByTagName('sec'):
                 sec.tagName = 'div'
-            for para in editor_abs.getElementsByTagName('p'):
-                para.tagName = 'big'
+            #for para in editor_abs.getElementsByTagName('p'):
+            #    para.tagName = 'big'
             self.postNodeHandling(editor_abs, synop)
         
         #We can create the <div class="articleInfo">
