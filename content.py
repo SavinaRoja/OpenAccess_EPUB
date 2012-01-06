@@ -75,6 +75,13 @@ class OPSContent(object):
                 aref = sup.appendChild(synop.createElement('a'))
                 aref.setAttribute('href', self.syn_frag.format(contact))
                 aref.appendChild(synop.createTextNode('*'))
+            #This is used for footnotes/ current affiliations
+            for fn in author.footnotes:
+                sup = auth_node.appendChild(synop.createElement('sup'))
+                aref = sup.appendChild(synop.createElement('a'))
+                aref.setAttribute('href', self.syn_frag.format(fn))
+                label, _d = meta.article_meta.author_notes_current_affs[fn]
+                aref.appendChild(synop.createTextNode(label))
         
         #Create a node for the affiliation text
         aff_node = synop.createElement('p')
