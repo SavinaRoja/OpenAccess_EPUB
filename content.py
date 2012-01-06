@@ -241,6 +241,34 @@ class OPSContent(object):
             compibold.appendChild(synop.createTextNode('Competing Interests: '))
             compip.appendChild(synop.createTextNode(back.competing_interests))
         
+        #Create a node for the Abbreviations if it exists, we will interpret
+        #the data in Back.glossary to generate this text
+        if back and back.glossary:
+            try:
+                title = back.glossary.getElementsByTagName('title')[0]
+            except IndexError:
+                pass
+            else:
+                if title.firstChild.data == 'Abbreviations':
+                    ap = articleInfo.appendChild(synop.createElement('p'))
+                    ap.setAttribute('id', 'abbreviations')
+                    apb = ap.appendChild(synop.createElement('b'))
+                    apb.appendChild(synop.createTextNode('Abbreviations: '))
+                    first = True
+                    for item in back.glossary.getElementsByTagName('def-item'):
+                        if first:
+                            first = False
+                        else:
+                            ap.appendChild(synop.createTextNode('; '))
+                        term = item.getElementsByTagName('term')[0]
+                        idef = item.getElementsByTagName('def')[0]
+                        defp = idef.getElementsByTagName('p')[0]
+                        for c in term.childNodes:
+                            ap.appendChild(c.cloneNode(deep=True))
+                        ap.appendChild(synop.createTextNode(','))
+                        for c in defp.childNodes:
+                            ap.appendChild(c.cloneNode(deep=True))
+        
         #Create a node for the correspondence text
         corr_line = articleInfo.appendChild(synop.createElement('p'))
         art_corresps = meta.article_meta.art_corresps
