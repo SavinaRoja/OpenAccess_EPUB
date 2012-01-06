@@ -83,6 +83,7 @@ class ArticleMeta(object):
         self.art_corresps = []
         self.art_dates = {}
         self.author_notes_contributions = None
+        self.author_notes_current_affs = {}
         self.art_copyright_year = None
         self.art_copyright_statement = None
         self.art_eloc_id = None
@@ -178,6 +179,11 @@ class ArticleMeta(object):
         for fn in an_fns:
             if fn.getAttribute('fn-type') == u'con':
                 self.author_notes_contributions = fn
+            elif fn.getAttribute('fn-type') == u'current-aff':
+                id = fn.getAttribute('id')
+                lbl = getTagText(fn.getElementsByTagName('label')[0])
+                dat = getTagText(fn.getElementsByTagName('p')[0])
+                self.author_notes_current_affs[id] = (lbl, dat)
     
     def identify(self, node):
         """pull everything from the xml node"""
