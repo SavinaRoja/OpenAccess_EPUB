@@ -283,7 +283,6 @@ class OPSContent(object):
         for id in sorted(ano.iterkeys()):
             cap = articleInfo.appendChild(ano[id])
             cap.setAttribute('id', id)
-            
         
         self.postNodeHandling(synbody, synop)
         
@@ -1326,14 +1325,16 @@ class OPSContent(object):
         or under all Nodes in a NodeList.'''
         
         #We need mappings for local files to ref-type attribute values
-        ref_map = {u'bibr': self.bib_frag, 
-                   u'fig': self.main_frag, 
+        ref_map = {u'bibr': self.bib_frag,
+                   u'fig': self.main_frag,
                    u'supplementary-material': self.main_frag,
-                   u'table': self.main_frag, 
-                   u'aff': self.syn_frag, 
-                   u'sec': self.main_frag, 
-                   u'table-fn': self.tab_frag, 
-                   u'boxed-text': self.main_frag}
+                   u'table': self.main_frag,
+                   u'aff': self.syn_frag,
+                   u'sec': self.main_frag,
+                   u'table-fn': self.tab_frag,
+                   u'boxed-text': self.main_frag,
+                   u'other': self.main_frag,
+                   u'disp-formula': self.main_frag}
         
         try:
             xref_nodes = topnode.getElementsByTagName('xref')
