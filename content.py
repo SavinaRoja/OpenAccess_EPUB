@@ -83,8 +83,6 @@ class OPSContent(object):
                 title.tagName = 'h3'
             for sec in abstract.getElementsByTagName('sec'):
                 sec.tagName = 'div'
-            #for para in abstract.getElementsByTagName('p'):
-            #    para.tagName = 'big'
             self.postNodeHandling(abstract, synop)
         
         #Create the Author's Summary if it exists
