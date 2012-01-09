@@ -155,8 +155,15 @@ those conforming to the relaxed constraints of OPS 2.0'''))
             navcon.setAttribute('src','synop.{0}.xml#title'.format(self.jid))
         #Tag name strings we check for to determine structures and features
         tagnamestrs = [u'sec', u'fig', u'table-wrap']
-        #Do the recursive parsing
+        #Pre-process step: give sec tags an id attribute if they lack it
         c = 0
+        for sec in srcnode.getElementsByTagName('sec'):
+            if not sec.getAttribute('id'):
+                id = 'OA-EPUB-{0}'.format(str(c))
+                c += 1
+                sec.setAttribute('id', id)
+        
+        #Do the recursive parsing
         for child in srcnode.childNodes:
             try:
                 tagname = child.tagName
@@ -174,9 +181,6 @@ those conforming to the relaxed constraints of OPS 2.0'''))
                         nav = self.toc.createElement('navTarget')
                         self.lot.appendChild(nav)
                     id = child.getAttribute('id')
-                    if not id:
-                        id = 'OA-EPUB-{0}'.format(str(c))
-                        c += 1
                     nav.setAttribute('id', id)
                     nav.setAttribute('playOrder', str(self.playOrder))
                     self.playOrder += 1
