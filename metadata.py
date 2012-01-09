@@ -193,6 +193,10 @@ class ArticleMeta(object):
                 self.author_notes_current_affs[id] = (lbl, dat)
             elif fn.getAttribute('fn-type') == u'other':
                 id = fn.getAttribute('id')
+                c = 0
+                if not id:
+                    id = 'author-notes-footnote-{0}'.format(str(c))
+                    c += 1
                 try:
                     dat = fn.getElementsByTagName('p')[0].cloneNode(deep=True)
                 except IndexError:
