@@ -281,7 +281,8 @@ class OPSContent(object):
         #Place them here.
         ano = meta.article_meta.author_notes_other
         for id in sorted(ano.iterkeys()):
-            cap = articleInfo.appendChild(ano[id][1])
+            cap = articleInfo.appendChild(ano[id])
+            cap.setAttribute('id', id)
             
         
         self.postNodeHandling(synbody, synop)
