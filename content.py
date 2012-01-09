@@ -1312,12 +1312,17 @@ class OPSContent(object):
                 self.secNodeHandler(item)
         else:
             #In this case, we can just modify them in situ
+            c = 0
             for sec_node in sec_nodes:
                 sec_node.tagName = u'div'
                 try:
                     sec_node.removeAttribute('sec-type')
                 except xml.dom.NotFoundErr:
                     pass
+                if not sec_node.getAttribute('id'):
+                    id = 'OA-EPUB-{0}'.format(str(c))
+                    c += 1
+                    sec_node.setAttribute('id', id)
     
     def xrefNodeHandler(self, topnode):
         '''Handles conversion of <xref> tags. These tags are utilized for 

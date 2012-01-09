@@ -156,6 +156,7 @@ those conforming to the relaxed constraints of OPS 2.0'''))
         #Tag name strings we check for to determine structures and features
         tagnamestrs = [u'sec', u'fig', u'table-wrap']
         #Do the recursive parsing
+        c = 0
         for child in srcnode.childNodes:
             try:
                 tagname = child.tagName
@@ -173,6 +174,9 @@ those conforming to the relaxed constraints of OPS 2.0'''))
                         nav = self.toc.createElement('navTarget')
                         self.lot.appendChild(nav)
                     id = child.getAttribute('id')
+                    if not id:
+                        id = 'OA-EPUB-{0}'.format(str(c))
+                        c += 1
                     nav.setAttribute('id', id)
                     nav.setAttribute('playOrder', str(self.playOrder))
                     self.playOrder += 1
