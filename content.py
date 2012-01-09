@@ -52,37 +52,7 @@ class OPSContent(object):
         affiliation_index = []
         
         #Create authors
-        authors = meta.article_meta.art_auths
-        auth_node = synbody.appendChild(synop.createElement('h3'))
-        first = True
-        for author in authors:
-            if not first:
-                auth_node.appendChild(synop.createTextNode(', '))
-            else:
-                first = False
-            name = author.get_name()
-            affs = author.affiliation
-            contact = author.contact
-            auth_node.appendChild(synop.createTextNode(name))
-            for aff in affs:
-                if aff not in affiliation_index:
-                    affiliation_index.append(aff)
-                sup = auth_node.appendChild(synop.createElement('sup'))
-                aref = sup.appendChild(synop.createElement('a'))
-                aref.setAttribute('href', self.syn_frag.format(aff))
-                aref.appendChild(synop.createTextNode(str(affiliation_index.index(aff) + 1)))
-            for contact in author.contact:
-                sup = auth_node.appendChild(synop.createElement('sup'))
-                aref = sup.appendChild(synop.createElement('a'))
-                aref.setAttribute('href', self.syn_frag.format(contact))
-                aref.appendChild(synop.createTextNode('*'))
-            #This is used for footnotes/ current affiliations
-            for fn in author.footnotes:
-                sup = auth_node.appendChild(synop.createElement('sup'))
-                aref = sup.appendChild(synop.createElement('a'))
-                aref.setAttribute('href', self.syn_frag.format(fn))
-                label, _d = meta.article_meta.author_notes_current_affs[fn]
-                aref.appendChild(synop.createTextNode(label))
+        self.synopsisAuthors(meta, synbody, synop)
         
         #Create a node for the affiliation text
         aff_node = synop.createElement('p')
@@ -313,7 +283,8 @@ class OPSContent(object):
         #Place them here.
         ano = meta.article_meta.author_notes_other
         for id in sorted(ano.iterkeys()):
-            cap = articleInfo.appendChild(ano[id])
+            cap = articleInfo.appendChild(ano[id][1])
+            
         
         self.postNodeHandling(synbody, synop)
         
@@ -381,6 +352,32 @@ class OPSContent(object):
         
         with open(self.outputs['Biblio'],'wb') as out:
             out.write(biblio.toprettyxml(encoding = 'utf-8'))
+
+    def synopsisAuthors(self, meta, topnode, doc):
+        '''Creates the text in synopsis for displaying the authors'''
+        authors = meta.article_meta.art_auths
+        auth_node = topnode.appendChild(doc.createElement('h3'))
+        first = True
+        for author in authors:
+            if not first:
+                auth_node.appendChild(doc.createTextNode(', '))
+            else:
+                first = False
+            name = author.get_name()
+            auth_node.appendChild(doc.createTextNode(name))
+            for xref in author.xrefs:
+                rid = xref.getAttribute('rid')
+                try:
+                    s = utils.getTagText(xref.getElementsByTagName('sup')[0])
+                except IndexError:
+                    s = u'!'
+                sup = auth_node.appendChild(doc.createElement('sup'))
+                a = sup.appendChild(doc.createElement('a'))
+                a.setAttribute('href', self.syn_frag.format(rid))
+                a.appendChild(doc.createTextNode(s))
+            
+            
+            
 
     def acknowledgments(self, topnode, doc):
         '''Takes the optional acknowledgments element from the back data
