@@ -215,7 +215,12 @@ those conforming to the relaxed constraints of OPS 2.0'''))
         if not self.collection_mode:
             article = self.articles[0]
             front = article.front
-            authortext = front.article_meta.art_auths[0].get_name()
+            #I have seen it happen where there is no author at all!
+            #10.1371/journal.pmed.0010023
+            try:
+                authortext = front.article_meta.art_auths[0].get_name()
+            except IndexError:
+                authortext = 'Anonymous'
             authlabel = u'Primary author: {0}'.format(authortext)
             self.docauthor.appendChild(self.makeText(authlabel))
         else:
