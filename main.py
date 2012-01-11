@@ -165,6 +165,19 @@ def makeCollectionEPUB(documents, cache_dir, outdirect, log_to):
     if settings.cleanup:
         shutil.rmtree(outdirect)
 
+def epubcheck(epubname):
+    '''This method takes the name of an epub file as an argument. This name is
+    the input for the java execution of a locally installed epubcheck-.jar. The
+    location of this .jar file is configured in settings.py.'''
+    r, e = os.path.splitext(epubname)
+    if not e:
+        print('Warning: Filename extension is empty, appending \'.epub\'...')
+        e = '.epub'
+        epubname = r + e
+    elif not e == '.epub':
+        print('Warning: Filename extension is not \'.epub\', appending it...')
+        epubname += '.epub'
+    os.execlp('java', 'OpenAccess_EPUB', '-jar', settings.epubcheck, epubname)
 
 def main():
     '''Main Script'''
@@ -253,6 +266,7 @@ def main():
                     document, xml_local = localInput(i.rstrip('\n'))
             documents += [(document, xml_local)]
         makeCollectionEPUB(documents, args.cache, output_name, args.log_to)
+        epubcheck('{0}.epub'.format(output_name))
         sys.exit(0)
 
     #Single Input Mode
@@ -281,6 +295,7 @@ def main():
             newname = u'{0}.log'.format(input_name)
             newname = os.path.join(args.log_to, newname)
             os.rename(logname, newname)
+        epubcheck('{0}.epub'.format(output_name))
 
 if __name__ == '__main__':
     main()
