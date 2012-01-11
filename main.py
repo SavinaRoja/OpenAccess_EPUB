@@ -153,7 +153,7 @@ def makeCollectionEPUB(documents, cache_dir, outdirect, log_to):
     myopf = opf.ContentOPF(outdirect, collection_mode=True)
     for (doc, xml) in documents:
         DOI = doc.getDOI()
-        utils.fetchPLoSImages(DOI, cache_dir, outdirect, settings.caching)
+        doc.fetchPLoSImages(cache_dir, outdirect, settings.caching)
         content.OPSContent(xml, DOI, outdirect, doc)
         mytoc.takeArticle(doc)
         myopf.takeArticle(doc)
