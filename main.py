@@ -1,6 +1,6 @@
 #! /usr/bin/python
 
-__version__ = '0.0.11'
+__version__ = '0.0.12'
 
 #Standard Library Modules
 import argparse
@@ -126,7 +126,7 @@ def makeEPUB(document, xml_local, cache_dir, outdirect, log_to):
         utils.makeEPUBBase(settings.base_epub, settings.css_location)
     shutil.copytree(settings.base_epub, outdirect)
     DOI = document.getDOI()
-    utils.fetchPLoSImages(DOI, cache_dir, outdirect, settings.caching)
+    document.fetchPLoSImages(cache_dir, outdirect, settings.caching)
     content.OPSContent(xml_local, DOI, outdirect, document)
     toc = tocncx.TocNCX()
     toc.takeArticle(document)
