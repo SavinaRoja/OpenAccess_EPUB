@@ -1,6 +1,6 @@
 #! /usr/bin/python
 
-__version__ = '0.0.12'
+__version__ = '0.0.13'
 
 #Standard Library Modules
 import argparse
@@ -75,8 +75,9 @@ def doiInput(input, xml_dir):
         doi_url = 'http://dx.doi.org/' + input[4:]
         page = urllib2.urlopen(doi_url)
         address = urlparse.urlparse(page.geturl())
+        path = address.path.replace(':', '%3A').replace('/', '%2F')
         _fetch = '/article/fetchObjectAttachment.action?uri='
-        _id = address.path.split('/')[2]
+        _id = path.split('article%2F')[1]
         _rep = '&representation=XML'
         access = '{0}://{1}{2}{3}{4}'.format(address.scheme, address.netloc,
                                     _fetch, _id, _rep)

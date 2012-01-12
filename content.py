@@ -697,7 +697,7 @@ class OPSContent(object):
                 #Collect the inline-graphic element, which we will try to use 
                 #in order to create an image node
                 if_inline_graphic = if_node.getElementsByTagName('inline-graphic')
-                
+                img = None
                 if if_inline_graphic:
                     ig_node = if_inline_graphic[0]
                     xlink_href_id = ig_node.getAttribute('xlink:href')
