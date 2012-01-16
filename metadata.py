@@ -446,10 +446,19 @@ class Publisher(object):
         '''Pulls info from the xml'''
         tmp = publisher_node.getElementsByTagName('publisher-name')[0]
         self.name = tmp.firstChild.data
-        tmp = publisher_node.getElementsByTagName('publisher-loc')[0]
-        self.location = tmp.firstChild.data
+        try:
+            pl = publisher_node.getElementsByTagName('publisher-loc')[0]
+        except IndexError:
+            self.location = None
+        else:
+            self.location = pl.firstChild.data
         
     def __str__(self):
-        pubstring = 'Publisher Name: {0}, Publisher Location: {1}'
-        retstr = pubstring.format(self.name, self.location)
-        return retstr
+        pubstr = ''
+        if self.name:
+            pubstr += 'Publisher Name: {0}'.format(self.name)
+        if pubstr and self.location:
+            pubstr += ', Publisher Location: {0}'.format(self.location)
+        elif not pubstr and self.location:
+            pubstr += 'Publisher Location: {0}'.format(self.location)
+        return(pubstr)
