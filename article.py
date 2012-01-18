@@ -121,7 +121,7 @@ class Article(object):
         return(titlestring)
 
     def fetchPLoSImages(self, cache_dir, output_dir, caching):
-        '''Fetch the images associated with the article.'''
+        '''Fetch the PLoS images associated with the article.'''
         import urllib2
         import logging
         import os.path
@@ -210,6 +210,10 @@ class Article(object):
         if not cached and caching:
             os.mkdir(art_cache)
             shutil.copytree(img_dir, art_cache_images)
+
+    def fetchFrontiersImages(self, cache_dir, output_dir, caching):
+        '''Fetch the Frontiers images associated with the article.'''
+        pass
 
 class Front(object):
     '''The metadata for an article, such as the name and issue of the journal
