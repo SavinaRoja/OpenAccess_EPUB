@@ -304,6 +304,8 @@ class OPSContent(object):
         tab_doc, tab_docbody = self.initiateDocument('HTML Versions of Tables')
         self.tableWrapNodeHandler(mainbody, main, tab_docbody) #Convert <table-wrap>
         self.postNodeHandling(tab_docbody, tab_doc)
+        #Process ref-list nodes
+        self.refListHandler(mainbody, main)
         #Process boxed-text
         self.boxedTextNodeHandler(mainbody)
         #Process supplementary-materials
@@ -332,21 +334,8 @@ class OPSContent(object):
         
         back = doc.getElementsByTagName('back')[0]
         
-        bib_title = doc.createElement('h2')
-        bib_title.appendChild(doc.createTextNode('References'))
-        bibbody.appendChild(bib_title)
-        
-        refs = back.getElementsByTagName('ref')
-        for item in refs:
-            bibbody.appendChild(self.parseRef(item, biblio))
-        
-        #for item in back.childNodes:
-        #    if not item.nodeType == item.TEXT_NODE:
-        #        if not item.tagName == u'fn-group':bold
-        #            bibbody.appendChild(item.cloneNode(deep = True))
-        
-        #The biblio is currently entirely rendered instead of copied, as such
-        #it has no need of postNodeHandling()
+        bibbody.appendChild(back.getElementsByTagName('ref-list')[0])
+        self.refListHandler(bibbody, biblio)
         
         with open(self.outputs['Biblio'],'wb') as out:
             out.write(biblio.toprettyxml(encoding = 'utf-8'))
@@ -474,6 +463,10 @@ class OPSContent(object):
                 ref_string += u'-{0}.'.format(utils.getTagData(lpage))
             else:
                 ref_string += u'.'
+            #Extract the optional <comment> data
+            comment = fromnode.getElementsByTagName('comment')
+            for c in comment:
+                ref_string += ' {0}'.format(utils.getTagData(c))
             
             ref_par.appendChild(doc.createTextNode(ref_string))
         
@@ -485,8 +478,8 @@ class OPSContent(object):
         return ref_par
             
     def refOther(self, node, stringlist = []):
-        '''Attempts to broadly handle Other citation types and produce a 
-        human intelligible string output'''
+        '''Attempts to broadly handle Other citation types and produce a
+        human-intelligible string output'''
         
         for item in node.childNodes:
             if item.nodeType == item.TEXT_NODE and not item.data == u'\n':
@@ -514,29 +507,68 @@ class OPSContent(object):
         simple access to the entire cohort of default nodeHandlers which may 
         be utilized after special cases have been handled. Passing a list of 
         string tagNames allows those tags to be ignored'''
-        handlers = {'bold': self.boldNodeHandler(topnode), 
-                    'italic': self.italicNodeHandler(topnode), 
-                    'monospace': self.monospaceNodeHandler(topnode), 
-                    'sub': self.subNodeHandler(topnode), 
-                    'sup': self.supNodeHandler(topnode), 
-                    'underline': self.underlineNodeHandler(topnode), 
-                    'xref': self.xrefNodeHandler(topnode), 
-                    'sec': self.secNodeHandler(topnode), 
-                    'named-content': self.namedContentNodeHandler(topnode), 
-                    'inline-formula': self.inlineFormulaNodeHandler(topnode, doc), 
-                    'disp-formula': self.dispFormulaNodeHandler(topnode, doc), 
-                    'disp-quote': self.dispQuoteNodeHandler(topnode, doc), 
-                    'ext-link': self.extLinkNodeHandler(topnode), 
-                    'sc': self.smallCapsNodeHandler(topnode), 
-                    'list': self.listNodeHandler(topnode, doc), 
-                    'graphic': self.graphicNodeHandler(topnode), 
-                    'email': self.emailNodeHandler(topnode), 
+        handlers = {'bold': self.boldNodeHandler(topnode),
+                    'italic': self.italicNodeHandler(topnode),
+                    'monospace': self.monospaceNodeHandler(topnode),
+                    'sub': self.subNodeHandler(topnode),
+                    'sup': self.supNodeHandler(topnode),
+                    'underline': self.underlineNodeHandler(topnode),
+                    'xref': self.xrefNodeHandler(topnode),
+                    'sec': self.secNodeHandler(topnode),
+                    #'ref-list': self.refListHandler(topnode, doc),
+                    'named-content': self.namedContentNodeHandler(topnode),
+                    'inline-formula': self.inlineFormulaNodeHandler(topnode, doc),
+                    'disp-formula': self.dispFormulaNodeHandler(topnode, doc),
+                    'disp-quote': self.dispQuoteNodeHandler(topnode, doc),
+                    'ext-link': self.extLinkNodeHandler(topnode),
+                    'sc': self.smallCapsNodeHandler(topnode),
+                    'list': self.listNodeHandler(topnode, doc),
+                    'graphic': self.graphicNodeHandler(topnode),
+                    'email': self.emailNodeHandler(topnode),
                     'fn': self.fnNodeHandler(topnode)}
         
         for tagname in handlers:
             if tagname not in ignorelist:
                 handlers[tagname]
     
+    def refListHandler(self, topnode, doc):
+        '''This method has two primary significant uses: it is used to generate
+        the bibliographical references section at the end of an article, and at
+        times when a Suggested Reading list is offered in the text. In the
+        latter case, it is typical to see fewer metadata items and the presence
+        of a <comment> tag to illustrate why it is recommended.
+        
+        Because the tags used to represent metadata by and large cannot be
+        interpreted in ePub, current practice involves removing the original
+        ref-list node and replacing it with a rendered string andlinks to
+        locate the resource online.'''
+        try:
+            ref_lists = topnode.getElementsByTagName('ref-list')
+        except AttributeError:
+            for item in topnode:
+                self.figNodeHandler(item, doc)
+        else:
+            for rl in ref_lists:
+                #We can mutate the title node to <h2>
+                try:
+                    title = rl.getElementsByTagName('title')[0]
+                except IndexError:
+                    pass
+                else:
+                    title.tagName = 'h2'
+                #Then we want to handle each ref in the ref-list
+                ref_ps = []
+                for ref in rl.getElementsByTagName('ref'):
+                    ref_ps.append(self.parseRef(ref, doc))
+                    rl.removeChild(ref)
+                #Now that we have our title text and a list of rendered
+                #paragraph tags from our ref tags, we mutate the original tag
+                rl.tagName = 'div'
+                rl.setAttribute('class', 'ref-list')
+                #Add all the ref paragraphs as children
+                for each in ref_ps:
+                    rl.appendChild(each)
+                
     def figNodeHandler(self, topnode, doc):
         '''Handles conversion of <fig> tags under the provided topnode. Also 
         handles Nodelists by calling itself on each Node in the NodeList.'''
