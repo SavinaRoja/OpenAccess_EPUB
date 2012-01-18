@@ -72,17 +72,16 @@ those conforming to the relaxed constraints of OPS 2.0'''))
             if self.lot.childNodes:
                 self.makeTablesList()
             #Add a reference to the Acknowledgments if they exist
-            if back:
-                if back.ack:
-                    ack = self.navmap.appendChild(self.toc.createElement('navPoint'))
-                    ack.setAttribute('id', 'acknowledgments')
-                    ack.setAttribute('playOrder', str(self.playOrder))
-                    self.playOrder += 1
-                    ack_lbl = ack.appendChild(self.toc.createElement('navLabel'))
-                    ack_lbl.appendChild(self.makeText('Acknowledgments'))
-                    ack_con = ack.appendChild(self.toc.createElement('content'))
-                    src_str = 'main.{0}.xml#acknowledgments'.format(self.jid)
-                    ack_con.setAttribute('src', src_str)
+            if back and back.ack:
+                ack = self.navmap.appendChild(self.toc.createElement('navPoint'))
+                ack.setAttribute('id', 'acknowledgments')
+                ack.setAttribute('playOrder', str(self.playOrder))
+                self.playOrder += 1
+                ack_lbl = ack.appendChild(self.toc.createElement('navLabel'))
+                ack_lbl.appendChild(self.makeText('Acknowledgments'))
+                ack_con = ack.appendChild(self.toc.createElement('content'))
+                src_str = 'main.{0}.xml#acknowledgments'.format(self.jid)
+                ack_con.setAttribute('src', src_str)
             #Add a reference to the Author Contributions if they exist
             if front.article_meta.author_notes_contributions:
                 anc = self.navmap.appendChild(self.toc.createElement('navPoint'))
@@ -94,7 +93,17 @@ those conforming to the relaxed constraints of OPS 2.0'''))
                 anc_con = anc.appendChild(self.toc.createElement('content'))
                 src_str = 'main.{0}.xml#contributions'.format(self.jid)
                 anc_con.setAttribute('src', src_str)
-
+            #Add a reference to the article References if they exist
+            if back and back.references:
+                ref = self.navmap.appendChild(self.toc.createElement('navPoint'))
+                ref.setAttribute('id', 'references')
+                ref.setAttribute('playOrder', str(self.playOrder))
+                self.playOrder += 1
+                ref_lbl = ref.appendChild(self.toc.createElement('navLabel'))
+                ref_lbl.appendChild(self.makeText('References'))
+                ref_con = ref.appendChild(self.toc.createElement('content'))
+                src_str = 'biblio.{0}.xml#references'.format(self.jid)
+                ref_con.setAttribute('src', src_str)
                 
         #If we are packing arbitrarily many articles...
         else:
@@ -112,17 +121,16 @@ those conforming to the relaxed constraints of OPS 2.0'''))
                 self.makeFiguresList()
             if self.lot.childNodes:
                 self.makeTablesList()
-            if back:
-                if back.ack:
-                    ack = nav.appendChild(self.toc.createElement('navPoint'))
-                    ack.setAttribute('id', 'acknowledgments')
-                    ack.setAttribute('playOrder', str(self.playOrder))
-                    self.playOrder += 1
-                    ack_lbl = ack.appendChild(self.toc.createElement('navLabel'))
-                    ack_lbl.appendChild(self.makeText('Acknowledgments'))
-                    ack_con = ack.appendChild(self.toc.createElement('content'))
-                    src_str = 'main.{0}.xml#acknowledgments'.format(self.jid)
-                    ack_con.setAttribute('src', src_str)
+            if back and back.ack:
+                ack = nav.appendChild(self.toc.createElement('navPoint'))
+                ack.setAttribute('id', 'acknowledgments')
+                ack.setAttribute('playOrder', str(self.playOrder))
+                self.playOrder += 1
+                ack_lbl = ack.appendChild(self.toc.createElement('navLabel'))
+                ack_lbl.appendChild(self.makeText('Acknowledgments'))
+                ack_con = ack.appendChild(self.toc.createElement('content'))
+                src_str = 'main.{0}.xml#acknowledgments'.format(self.jid)
+                ack_con.setAttribute('src', src_str)
             if front.article_meta.author_notes_contributions:
                 anc = nav.appendChild(self.toc.createElement('navPoint'))
                 anc.setAttribute('id', 'contributions')
@@ -133,6 +141,17 @@ those conforming to the relaxed constraints of OPS 2.0'''))
                 anc_con = anc.appendChild(self.toc.createElement('content'))
                 src_str = 'main.{0}.xml#contributions'.format(self.jid)
                 anc_con.setAttribute('src', src_str)
+            #Add a reference to the article References if they exist
+            if back and back.references:
+                ref = nav.appendChild(self.toc.createElement('navPoint'))
+                ref.setAttribute('id', 'references')
+                ref.setAttribute('playOrder', str(self.playOrder))
+                self.playOrder += 1
+                ref_lbl = ref.appendChild(self.toc.createElement('navLabel'))
+                ref_lbl.appendChild(self.makeText('References'))
+                ref_con = ref.appendChild(self.toc.createElement('content'))
+                src_str = 'biblio.{0}.xml#references'.format(self.jid)
+                ref_con.setAttribute('src', src_str)
     
     def structureParse(self, srcnode, dstnode = None, depth = 0, first = True):
         '''The structure of an article's <body> content can be analyzed in 
@@ -191,6 +210,8 @@ those conforming to the relaxed constraints of OPS 2.0'''))
                         navlblstr = 'Item title not found!'
                     else:
                         navlblstr = utils.serializeText(title_node, stringlist = [])
+                        if not navlblstr:
+                            navlblstr = id
                     navlbl.appendChild(self.makeText(navlblstr))
                     navcon = nav.appendChild(self.toc.createElement('content'))
                     navcon.setAttribute('src', 'main.{0}.xml#{1}'.format(self.jid, id))

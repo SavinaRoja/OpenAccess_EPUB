@@ -333,12 +333,15 @@ class OPSContent(object):
         biblio, bibbody = self.initiateDocument('Bibliography file')
         
         back = doc.getElementsByTagName('back')[0]
-        
-        bibbody.appendChild(back.getElementsByTagName('ref-list')[0])
-        self.refListHandler(bibbody, biblio)
-        
-        with open(self.outputs['Biblio'],'wb') as out:
-            out.write(biblio.toprettyxml(encoding = 'utf-8'))
+        try:
+            bibbody.appendChild(back.getElementsByTagName('ref-list')[0])
+        except IndexError:
+            pass
+        else:
+            self.refListHandler(bibbody, biblio)
+            bibbody.getElementsByTagName('div')[0].setAttribute('id', 'references')
+            with open(self.outputs['Biblio'],'wb') as out:
+                out.write(biblio.toprettyxml(encoding = 'utf-8'))
 
     def synopsisAuthors(self, meta, topnode, doc):
         '''Creates the text in synopsis for displaying the authors'''

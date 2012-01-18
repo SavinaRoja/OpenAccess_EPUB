@@ -245,7 +245,13 @@ class Back(object):
             elif item.getAttribute('fn-type') == u'financial-disclosure':
                 text = utils.serializeText(item, stringlist=[])
                 self.funding = text
-                
+        try:
+            ref_list = node.getElementsByTagName('ref-list')[0]
+        except IndexError:
+            self.references = None
+        else:
+            self.references = ref_list
+        
         try:
             ack_node = node.getElementsByTagName('ack')[0]
         except IndexError:
