@@ -109,34 +109,6 @@ class OPSContent(object):
             #    para.tagName = 'big'
             self.postNodeHandling(abstract, synop)
         
-        #Create the Editor's abstract if it exists
-        try:
-            editor_abs = meta.article_meta.abstracts['editor']
-        except KeyError:
-            pass
-        else:
-            for child in editor_abs.childNodes:
-                try:
-                    if child.tagName == u'title':
-                        title = child
-                        break
-                except AttributeError:
-                    pass
-            synbody.appendChild(title)
-            title.tagName = u'h2'
-            synbody.appendChild(editor_abs)
-            editor_abs.tagName = 'div'
-            editor_abs.removeAttribute('abstract-type')
-            editor_abs.setAttribute('id','editor_abstract')
-            editor_abs.setAttribute('class', 'editorsAbstract')
-            for title in editor_abs.getElementsByTagName('title'):
-                title.tagName = 'h3'
-            for sec in editor_abs.getElementsByTagName('sec'):
-                sec.tagName = 'div'
-            #for para in editor_abs.getElementsByTagName('p'):
-            #    para.tagName = 'big'
-            self.postNodeHandling(editor_abs, synop)
-        
         #We can create the <div class="articleInfo">
         #We will put metadata in it.
         articleInfo = synbody.appendChild(synop.createElement('div'))
@@ -284,6 +256,35 @@ class OPSContent(object):
             cap = articleInfo.appendChild(ano[id])
             cap.setAttribute('id', id)
         
+        #Create the Editor's abstract if it exists
+        try:
+            editor_abs = meta.article_meta.abstracts['editor']
+        except KeyError:
+            pass
+        else:
+            for child in editor_abs.childNodes:
+                try:
+                    if child.tagName == u'title':
+                        title = child
+                        break
+                except AttributeError:
+                    pass
+            synbody.appendChild(title)
+            title.tagName = u'h2'
+            synbody.appendChild(editor_abs)
+            editor_abs.tagName = 'div'
+            editor_abs.removeAttribute('abstract-type')
+            editor_abs.setAttribute('id','editor_abstract')
+            editor_abs.setAttribute('class', 'editorsAbstract')
+            for title in editor_abs.getElementsByTagName('title'):
+                title.tagName = 'h3'
+            for sec in editor_abs.getElementsByTagName('sec'):
+                sec.tagName = 'div'
+            #for para in editor_abs.getElementsByTagName('p'):
+            #    para.tagName = 'big'
+            self.postNodeHandling(editor_abs, synop)
+        
+        
         self.postNodeHandling(synbody, synop)
         
         with open(self.outputs['Synopsis'],'wb') as out:
@@ -417,6 +418,16 @@ class OPSContent(object):
             #The article may have used <nlm-citation>
             citation = fromnode.getElementsByTagName('nlm-citation')[0]
         citation_type = citation.getAttribute('citation-type')
+        #A list of known citation types used by PLoS
+        citation_types = ['book', 'confproc', 'gov', 'journal', 'other', 'web']
+        if citation_type not in citation_types:
+            print('Unkown citation-type value: {0}'.format(citation_type))
+        #Collect possible tag texts, then decide later how to format
+        tags = ['source', 'year', 'publisher-loc', 'publisher-name', 'comment',
+                'page-count', 'fpage', 'lpage', 'month', 'etal', 'volume',
+                'article-title', 'day', 'issue', 'edition', 'page-range',
+                'conf-date', 'conf-loc']
+        
         
         #Format the reference string if it is a Journal citation type
         if citation_type == u'journal':
@@ -425,11 +436,16 @@ class OPSContent(object):
             ref_string += u'{0}. '.format(utils.getTagData(label))
             #Collect the author names and construct a formatted string
             auths = fromnode.getElementsByTagName('name')
+            first = True
+            first_auth = None
             for auth in auths:
                 surname = auth.getElementsByTagName('surname')
                 given = auth.getElementsByTagName('given-names')
                 name_str = u'{0} {1}'.format(utils.getTagData(surname),
                                              utils.getTagData(given))
+                if first:
+                    first_auth = utils.getTagData(surname)
+                    first = False
                 if auth.nextSibling:
                     name_str += u', '
                 else:
@@ -444,7 +460,9 @@ class OPSContent(object):
             ref_string += u'({0}) '.format(utils.getTagData(year))
             #Extract the article title
             art_title = fromnode.getElementsByTagName('article-title')
-            ref_string += u'{0} '.format(utils.getTagData(art_title))
+            art_title = utils.getTagData(art_title)
+            art_title_link = art_title.replace(' ', '%20')
+            ref_string += u'{0} '.format(art_title)
             #Extract the source data
             source = fromnode.getElementsByTagName('source')
             ref_string += u'{0} '.format(utils.getTagData(source))
@@ -467,11 +485,42 @@ class OPSContent(object):
             else:
                 ref_string += u'.'
             #Extract the optional <comment> data
-            comment = fromnode.getElementsByTagName('comment')
-            for c in comment:
-                ref_string += ' {0}'.format(utils.getTagData(c))
-            
-            ref_par.appendChild(doc.createTextNode(ref_string))
+            try:
+                comment = fromnode.getElementsByTagName('comment')[0]
+            except IndexError:
+                comment = None
+            if comment:
+                comment_text = utils.getTagText(comment)
+                ref_string += u' {0}'.format(comment_text)
+            #If comment text is "doi:" then PLoS put in a direct dx.doi link
+                if comment_text =='doi:':
+                    ext_link = comment.getElementsByTagName('ext-link')[0]
+                    ext_link_text = utils.getTagText(ext_link)
+                    href = ext_link.getAttribute('xlink:href')
+                    ref_string += u'  '
+                    ref_par.appendChild(doc.createTextNode(ref_string))
+                    alink = doc.createElement('a')
+                    alink.appendChild(doc.createTextNode(ext_link_text))
+                    alink.setAttribute('href', href)
+                    ref_par.appendChild(alink)
+            else:
+                ref_string += u'  '
+                ref_par.appendChild(doc.createTextNode(ref_string))
+                alink = doc.createElement('a')
+                alink.appendChild(doc.createTextNode('Find This Article Online'))
+                j_title= self.metadata.journal_meta.title[0]
+                pj= {'PLoS Genetics': u'http://www.plosgenetics.org/{0}{1}{2}{3}',
+                     'PLoS ONE': u'http://www.plosone.org/{0}{1}{2}{3}',
+                     'PLoS Biology': u'http://www.plosbiology.org/{0}{1}{2}{3}',
+                     'PLoS Computational Biology': u'http://www.ploscompbiol.org/{0}{1}{2}{3}',
+                     'PLoS Pathogens': u'http://www.plospathogens.org/{0}{1}{2}{3}',
+                     'PLoS Medicine': u'http://www.plosmedicine.org/{0}{1}{2}{3}',
+                     'PLoS Neglected Tropical diseases': u'http://www.plosntds.org/{0}{1}{2}{3}'}
+                
+                find = pj[j_title].format(u'article/findArticle.action?author=',
+                                          first_auth, u'&title=', art_title_link)
+                alink.setAttribute('href', find)
+                ref_par.appendChild(alink)
         
         elif citation_type == u'other':
             ref_string = u'{0}. '.format(utils.getTagData(label))
