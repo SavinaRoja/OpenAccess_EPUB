@@ -1,21 +1,11 @@
-Introduction
-------------
-OpenAccess_EPUB is a I created with the broad goal of bringing OpenAccess (OA) 
-journal articles and content into the modern e-book format. EPUB was a natural 
-choice for format and so I began to develop a tool to translate from the XML 
-PLoS presented for its articles to the EPUB2 format.
+OpenAccess_EPUB is a project I started with the goal of bringing OpenAccess(OA)
+journal content into the world of ePub publishing. Right now it has focused
+extensively on PLoS and provides very decent conversion from their internal
+XML format (Journal Publishing Tag Set 2.0)
 
-The project is still quite new, and is still only geared at supporting PLoS 
-content. If more OA publishers expose suitable formats for translation, then 
-the project should naturally expand. A significant advantage of the EPUB 
-format is its increased accessibility for those with visual or reading 
-impairments, as well as providing certain enhancements over standard PDF.
-
-As I write this, PLoS publishes XML according to the Journal Publishing Tag
-Set 2.0, but plans to move in a few months to Tag Set 3.0. EPUB3 also recently 
-became the official current EPUB version. There are concerns about how widely 
-supported EPUB3 will be. So for some time, EPUB2 will be the primary focus for 
-conversion, and eventually they should both be options.
+Though the program currently only works for PLoS publications, I hope to soon
+begin developing the project for use with Frontiers. They use Journal
+Publishing Tag Set 1.0.
 
 Getting Started
 ---------------
