@@ -480,7 +480,7 @@ class OPSContent(object):
             src = cite_tags['source']  # src
             vol = cite_tags['volume']  # vol
             if cite_tags['issue']:  # If issue has a value, we add it to vol
-                vol += '({0})'.format(cite_tags['issue'])
+                vol += u'({0})'.format(cite_tags['issue'])
             if cite_tags['supplement']:
                 supp = cite_tags['supplement'] + ' '  # supp
             else:
@@ -492,46 +492,32 @@ class OPSContent(object):
                 pgs = fpage + lpage  # pgs
             com = cite_tags['comment']  # com
             srs = srs.format(src, vol, supp, pgs, com)
-            
             ref_par.appendChild(doc.createTextNode(srs))
-            
-            #Extract the optional <comment> data
-            #try:
-            #    comment = fromnode.getElementsByTagName('comment')[0]
-            #except IndexError:
-            #    comment = None
-            #if comment:
-            #    comment_text = utils.getTagText(comment)
-            #    ref_string += u' {0}'.format(comment_text)
-            #If comment text is "doi:" then PLoS put in a direct dx.doi link
-            #    if comment_text =='doi:':
-            #        ext_link = comment.getElementsByTagName('ext-link')[0]
-            #        ext_link_text = utils.getTagText(ext_link)
-            #        href = ext_link.getAttribute('xlink:href')
-            #        ref_string += u'  '
-            #        ref_par.appendChild(doc.createTextNode(ref_string))
-            #        alink = doc.createElement('a')
-            #        alink.appendChild(doc.createTextNode(ext_link_text))
-            #        alink.setAttribute('href', href)
-            #        ref_par.appendChild(alink)
-            #else:
-            #    ref_string += u'  '
-            #    ref_par.appendChild(doc.createTextNode(ref_string))
-            #    alink = doc.createElement('a')
-            #    alink.appendChild(doc.createTextNode('Find This Article Online'))
-            #    j_title= self.metadata.journal_meta.title[0]
-            #    pj= {'PLoS Genetics': u'http://www.plosgenetics.org/{0}{1}{2}{3}',
-            #         'PLoS ONE': u'http://www.plosone.org/{0}{1}{2}{3}',
-            #         'PLoS Biology': u'http://www.plosbiology.org/{0}{1}{2}{3}',
-            #         'PLoS Computational Biology': u'http://www.ploscompbiol.org/{0}{1}{2}{3}',
-            #         'PLoS Pathogens': u'http://www.plospathogens.org/{0}{1}{2}{3}',
-            #         'PLoS Medicine': u'http://www.plosmedicine.org/{0}{1}{2}{3}',
-            #         'PLoS Neglected Tropical diseases': u'http://www.plosntds.org/{0}{1}{2}{3}'}
-            #    
-            #    find = pj[j_title].format(u'article/findArticle.action?author=',
-            #                              first_auth, u'&title=', art_title_link)
-            #    alink.setAttribute('href', find)
-            #    ref_par.appendChild(alink)
+            if com == 'doi:':  # PLoS put in a direct dx.doi link
+                ext_link = citation.getElementsByTagName('ext-link')[0]
+                ext_link_text = utils.getTagText(ext_link)
+                href = ext_link.getAttribute('xlink:href')
+                alink = doc.createElement('a')
+                alink.appendChild(doc.createTextNode(ext_link_text))
+                alink.setAttribute('href', href)
+                ref_par.appendChild(alink)
+            else:
+                alink = doc.createElement('a')
+                alink.appendChild(doc.createTextNode('Find This Article Online'))
+                j_title = self.metadata.journal_meta.title[0]
+                pj= {'PLoS Genetics': u'http://www.plosgenetics.org/{0}{1}{2}{3}',
+                     'PLoS ONE': u'http://www.plosone.org/{0}{1}{2}{3}',
+                     'PLoS Biology': u'http://www.plosbiology.org/{0}{1}{2}{3}',
+                     'PLoS Computational Biology': u'http://www.ploscompbiol.org/{0}{1}{2}{3}',
+                     'PLoS Pathogens': u'http://www.plospathogens.org/{0}{1}{2}{3}',
+                     'PLoS Medicine': u'http://www.plosmedicine.org/{0}{1}{2}{3}',
+                     'PLoS Neglected Tropical Diseases':
+                     u'http://www.plosntds.org/{0}{1}{2}{3}'}
+                art_tit_form = utils.serializeText(art_tit, stringlist=[]).replace(' ', '%20')
+                href = pj[j_title].format(u'article/findArticle.action?author=',
+                                          first_auth, u'&title=', art_tit_form)
+                alink.setAttribute('href', href)
+                ref_par.appendChild(alink)
         
         elif citation_type == u'other':
             ref_string = u'{0}. '.format(utils.getTagData(label))
