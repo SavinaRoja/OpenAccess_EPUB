@@ -410,7 +410,7 @@ class OPSContent(object):
         #Set the fragment identifier for the paragraph tag
         ref_par.setAttribute('id', fromnode.getAttribute('id'))
         #Pull the label node into a node_list
-        label = fromnode.getElementsByTagName('label')
+        label = fromnode.getElementsByTagName('label')[0]
         try:
             #Collect the citation tag and its citation type
             citation = fromnode.getElementsByTagName('citation')[0]
@@ -423,11 +423,73 @@ class OPSContent(object):
         if citation_type not in citation_types:
             print('Unkown citation-type value: {0}'.format(citation_type))
         #Collect possible tag texts, then decide later how to format
+        #article-title is treated specially because of its potential complexity
         tags = ['source', 'year', 'publisher-loc', 'publisher-name', 'comment',
                 'page-count', 'fpage', 'lpage', 'month', 'etal', 'volume',
-                'article-title', 'day', 'issue', 'edition', 'page-range',
-                'conf-date', 'conf-loc']
+                'day', 'issue', 'edition', 'page-range',
+                'conf-date', 'conf-loc', 'supplement']
+        try:
+            art_tit = citation.getElementsByTagName('article-title')[0]
+        except IndexError:
+            art_tit = None
+        cite_tags = {}
+        for each in tags:
+            try:
+                t = citation.getElementsByTagName(each)[0]
+            except IndexError:
+                t = None
+            if t:
+                cite_tags[each] = utils.getTagText(t)
+            else:
+                cite_tags[each] = ''
         
+        if citation_type == u'journal':
+            #The base strings with some punctuation; to be formatted with data
+            frs = u'{0}. {1} ({2}) '  # first reference string
+            srs = u' {0} {1}: {2}{3}. {4}'  # second reference string
+            #A journal citation looks roughly like this
+            #Label. Authors (Year) Article Title. Source Volume: Supplement?
+            #Pages. Comment FIND ONLINE
+            lbl = utils.getTagText(label)  # lbl
+            auth = u''  # auth
+            first = True
+            first_auth = None
+            for name in citation.getElementsByTagName('name'):
+                surname = name.getElementsByTagName('surname')[0]
+                given = name.getElementsByTagName('given-names')[0]
+                if first:
+                    first_auth = utils.getTagText(surname)
+                    first = False
+                else:
+                    auth += ', '
+                auth += u'{0} {1}'.format(utils.getTagText(surname),
+                                          utils.getTagText(given))
+            year = cite_tags['year']  # year
+            #Format the first reference string with our data
+            frs = frs.format(lbl, auth, year)
+            #Append the first reference string to reference paragraph
+            ref_par.appendChild(doc.createTextNode(frs))
+            #Give all the article title children to reference paragraph
+            ref_par.childNodes += art_tit.childNodes
+            #Begin collecting data for second reference string
+            #ttl = cite_tags['article-title']  # ttl
+            src = cite_tags['source']  # src
+            vol = cite_tags['volume']  # vol
+            if cite_tags['issue']:  # If issue has a value, we add it to vol
+                vol += '({0})'.format(cite_tags['issue'])
+            if cite_tags['supplement']:
+                supp = cite_tags['supplement'] + ' '  # supp
+            else:
+                supp = ''  # supp
+            fpage, lpage = cite_tags['fpage'],cite_tags['lpage']
+            if fpage and lpage:
+                pgs = u'{0}-{1}'.format(fpage, lpage)  # pgs
+            else:
+                pgs = fpage + lpage  # pgs
+            com = cite_tags['comment']  # com
+            srs = srs.format(src, vol, supp, pgs, com)
+            ref_par.appendChild(doc.createTextNode(srs))
+            
         
         #Format the reference string if it is a Journal citation type
         if citation_type == u'journal':
