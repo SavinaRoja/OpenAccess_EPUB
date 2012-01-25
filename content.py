@@ -341,6 +341,7 @@ class OPSContent(object):
         else:
             self.refListHandler(bibbody, biblio)
             bibbody.getElementsByTagName('div')[0].setAttribute('id', 'references')
+            self.postNodeHandling(bibbody, biblio, ignorelist=[])
             with open(self.outputs['Biblio'],'wb') as out:
                 out.write(biblio.toprettyxml(encoding = 'utf-8'))
 
@@ -425,7 +426,7 @@ class OPSContent(object):
         #Collect possible tag texts, then decide later how to format
         #article-title is treated specially because of its potential complexity
         tags = ['source', 'year', 'publisher-loc', 'publisher-name', 'comment',
-                'page-count', 'fpage', 'lpage', 'month', 'etal', 'volume',
+                'page-count', 'fpage', 'lpage', 'month', 'volume',
                 'day', 'issue', 'edition', 'page-range',
                 'conf-date', 'conf-loc', 'supplement']
         try:
@@ -464,6 +465,9 @@ class OPSContent(object):
                     auth += ', '
                 auth += u'{0} {1}'.format(utils.getTagText(surname),
                                           utils.getTagText(given))
+            #If there is an <etal> tag, add it to the auth string
+            if citation.getElementsByTagName('etal'):
+                auth += ', et al.'
             year = cite_tags['year']  # year
             #Format the first reference string with our data
             frs = frs.format(lbl, auth, year)
@@ -488,101 +492,46 @@ class OPSContent(object):
                 pgs = fpage + lpage  # pgs
             com = cite_tags['comment']  # com
             srs = srs.format(src, vol, supp, pgs, com)
+            
             ref_par.appendChild(doc.createTextNode(srs))
             
-        
-        #Format the reference string if it is a Journal citation type
-        if citation_type == u'journal':
-            ref_string = u''
-            #Append the Label text
-            ref_string += u'{0}. '.format(utils.getTagData(label))
-            #Collect the author names and construct a formatted string
-            auths = fromnode.getElementsByTagName('name')
-            first = True
-            first_auth = None
-            for auth in auths:
-                surname = auth.getElementsByTagName('surname')
-                given = auth.getElementsByTagName('given-names')
-                name_str = u'{0} {1}'.format(utils.getTagData(surname),
-                                             utils.getTagData(given))
-                if first:
-                    first_auth = utils.getTagData(surname)
-                    first = False
-                if auth.nextSibling:
-                    name_str += u', '
-                else:
-                    name_str += u' '
-                ref_string += name_str
-            #Determine existence of <etal/> and append string if true
-            etal = fromnode.getElementsByTagName('etal')
-            if etal:
-                ref_string += u'et al. '
-            #Extract the year data
-            year = fromnode.getElementsByTagName('year')
-            ref_string += u'({0}) '.format(utils.getTagData(year))
-            #Extract the article title
-            art_title = fromnode.getElementsByTagName('article-title')
-            art_title = utils.getTagData(art_title)
-            art_title_link = art_title.replace(' ', '%20')
-            ref_string += u'{0} '.format(art_title)
-            #Extract the source data
-            source = fromnode.getElementsByTagName('source')
-            ref_string += u'{0} '.format(utils.getTagData(source))
-            #Extract the volume data
-            volume = fromnode.getElementsByTagName('volume')
-            ref_string += u'{0}'.format(utils.getTagData(volume))
-            #Issue data may be present, handle both options
-            issue = fromnode.getElementsByTagName('issue')
-            if issue:
-                ref_string += u'({0}): '.format(utils.getTagData(issue))
-            else:
-                ref_string += u': '
-            #Extract the fpage data
-            fpage = fromnode.getElementsByTagName('fpage')
-            ref_string += u'{0}'.format(utils.getTagData(fpage))
-            #lpage data may be present, handle both options
-            lpage = fromnode.getElementsByTagName('lpage')
-            if lpage:
-                ref_string += u'-{0}.'.format(utils.getTagData(lpage))
-            else:
-                ref_string += u'.'
             #Extract the optional <comment> data
-            try:
-                comment = fromnode.getElementsByTagName('comment')[0]
-            except IndexError:
-                comment = None
-            if comment:
-                comment_text = utils.getTagText(comment)
-                ref_string += u' {0}'.format(comment_text)
+            #try:
+            #    comment = fromnode.getElementsByTagName('comment')[0]
+            #except IndexError:
+            #    comment = None
+            #if comment:
+            #    comment_text = utils.getTagText(comment)
+            #    ref_string += u' {0}'.format(comment_text)
             #If comment text is "doi:" then PLoS put in a direct dx.doi link
-                if comment_text =='doi:':
-                    ext_link = comment.getElementsByTagName('ext-link')[0]
-                    ext_link_text = utils.getTagText(ext_link)
-                    href = ext_link.getAttribute('xlink:href')
-                    ref_string += u'  '
-                    ref_par.appendChild(doc.createTextNode(ref_string))
-                    alink = doc.createElement('a')
-                    alink.appendChild(doc.createTextNode(ext_link_text))
-                    alink.setAttribute('href', href)
-                    ref_par.appendChild(alink)
-            else:
-                ref_string += u'  '
-                ref_par.appendChild(doc.createTextNode(ref_string))
-                alink = doc.createElement('a')
-                alink.appendChild(doc.createTextNode('Find This Article Online'))
-                j_title= self.metadata.journal_meta.title[0]
-                pj= {'PLoS Genetics': u'http://www.plosgenetics.org/{0}{1}{2}{3}',
-                     'PLoS ONE': u'http://www.plosone.org/{0}{1}{2}{3}',
-                     'PLoS Biology': u'http://www.plosbiology.org/{0}{1}{2}{3}',
-                     'PLoS Computational Biology': u'http://www.ploscompbiol.org/{0}{1}{2}{3}',
-                     'PLoS Pathogens': u'http://www.plospathogens.org/{0}{1}{2}{3}',
-                     'PLoS Medicine': u'http://www.plosmedicine.org/{0}{1}{2}{3}',
-                     'PLoS Neglected Tropical diseases': u'http://www.plosntds.org/{0}{1}{2}{3}'}
-                
-                find = pj[j_title].format(u'article/findArticle.action?author=',
-                                          first_auth, u'&title=', art_title_link)
-                alink.setAttribute('href', find)
-                ref_par.appendChild(alink)
+            #    if comment_text =='doi:':
+            #        ext_link = comment.getElementsByTagName('ext-link')[0]
+            #        ext_link_text = utils.getTagText(ext_link)
+            #        href = ext_link.getAttribute('xlink:href')
+            #        ref_string += u'  '
+            #        ref_par.appendChild(doc.createTextNode(ref_string))
+            #        alink = doc.createElement('a')
+            #        alink.appendChild(doc.createTextNode(ext_link_text))
+            #        alink.setAttribute('href', href)
+            #        ref_par.appendChild(alink)
+            #else:
+            #    ref_string += u'  '
+            #    ref_par.appendChild(doc.createTextNode(ref_string))
+            #    alink = doc.createElement('a')
+            #    alink.appendChild(doc.createTextNode('Find This Article Online'))
+            #    j_title= self.metadata.journal_meta.title[0]
+            #    pj= {'PLoS Genetics': u'http://www.plosgenetics.org/{0}{1}{2}{3}',
+            #         'PLoS ONE': u'http://www.plosone.org/{0}{1}{2}{3}',
+            #         'PLoS Biology': u'http://www.plosbiology.org/{0}{1}{2}{3}',
+            #         'PLoS Computational Biology': u'http://www.ploscompbiol.org/{0}{1}{2}{3}',
+            #         'PLoS Pathogens': u'http://www.plospathogens.org/{0}{1}{2}{3}',
+            #         'PLoS Medicine': u'http://www.plosmedicine.org/{0}{1}{2}{3}',
+            #         'PLoS Neglected Tropical diseases': u'http://www.plosntds.org/{0}{1}{2}{3}'}
+            #    
+            #    find = pj[j_title].format(u'article/findArticle.action?author=',
+            #                              first_auth, u'&title=', art_title_link)
+            #    alink.setAttribute('href', find)
+            #    ref_par.appendChild(alink)
         
         elif citation_type == u'other':
             ref_string = u'{0}. '.format(utils.getTagData(label))
