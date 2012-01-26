@@ -422,7 +422,8 @@ class OPSContent(object):
             citation = fromnode.getElementsByTagName('nlm-citation')[0]
         citation_type = citation.getAttribute('citation-type')
         #A list of known citation types used by PLoS
-        citation_types = ['book', 'confproc', 'gov', 'journal', 'other', 'web']
+        citation_types = ['book', 'confproc', 'gov', 'journal', 'other', 'web',
+                          '']
         if citation_type not in citation_types:
             print('Unkown citation-type value: {0}'.format(citation_type))
         #Collect possible tag texts, then decide later how to format
