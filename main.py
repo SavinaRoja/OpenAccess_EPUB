@@ -1,6 +1,6 @@
 #! /usr/bin/python
 
-__version__ = '0.0.14'
+__version__ = '0.0.15'
 
 #Standard Library Modules
 import argparse
