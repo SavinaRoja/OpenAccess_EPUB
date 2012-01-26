@@ -430,7 +430,7 @@ class OPSContent(object):
         #article-title is treated specially because of its potential complexity
         tags = ['source', 'year', 'publisher-loc', 'publisher-name', 'comment',
                 'page-count', 'fpage', 'lpage', 'month', 'volume',
-                'day', 'issue', 'edition', 'page-range',
+                'day', 'issue', 'edition', 'page-range', 'conf-name',
                 'conf-date', 'conf-loc', 'supplement']
         try:
             art_tit = citation.getElementsByTagName('article-title')[0]
@@ -535,7 +535,65 @@ class OPSContent(object):
                     alink.setAttribute('href', href)
                     ref_par.appendChild(alink)
         elif citation_type == u'confproc':
-            pass
+            #The base strings with some punctuation; to be formatted with data
+            frs = u'{0}. {1} '  # first reference string
+            srs = u' {0} {1}{2}{3}'  # second reference string
+            #A confproc citation looks roughly like this
+            #Label. Editors Article Title. Conference Name; Conference Date;
+            #Conference Location. (Year) Comment.
+            lbl = utils.getTagText(label)  # lbl
+            auth = u''  # auth
+            first = True
+            for name in citation.getElementsByTagName('name'):
+                surname = name.getElementsByTagName('surname')[0]
+                try:
+                    given = name.getElementsByTagName('given-names')[0]
+                except IndexError:
+                    given = ''
+                if first:
+                    first = False
+                else:
+                    auth += ', '
+                auth += utils.getTagText(surname)
+                if given:
+                    auth += u' {0}'.format(utils.getTagText(given))
+            #If there is an <etal> tag, add it to the auth string
+            if citation.getElementsByTagName('etal'):
+                auth += ', et al.'
+            #Format the first reference string with our data
+            frs = frs.format(lbl, auth)
+            #Append the first reference string to reference paragraph
+            ref_par.appendChild(doc.createTextNode(frs))
+            #Give all the article title children to reference paragraph
+            if art_tit:
+                ref_par.childNodes += art_tit.childNodes
+            cname = cite_tags['conf-name']  # cname
+            if cname:
+                cname += '; '
+            cdate = cite_tags['conf-date']  # cdate
+            if cdate:
+                cdate += '; '
+            cloc = cite_tags['conf-loc']  # cloc
+            if cloc:
+                cloc += '; '
+            year = cite_tags['year']  # year
+            if year:
+                year = '({0}) '.format(year)
+            srs = srs.format(cname, cdate, cloc, year)
+            ref_par.appendChild(doc.createTextNode(srs))
+            try:
+                com = citation.getElementsByTagName('comment')[0]
+            except IndexError:
+                ref_par.appendChild(doc.createTextNode('.'))
+            else:
+                for ext_link in com.getElementsByTagName('ext-link'):
+                    ext_link.removeAttribute('ext-link-type')
+                    ext_link.removeAttribute('xlink:type')
+                    href = ext_link.getAttribute('xlink:href')
+                    ext_link.removeAttribute('xlink:href')
+                    ext_link.tagName = 'a'
+                    ext_link.setAttribute('href', href)
+                ref_par.childNodes += com.childNodes
         
         elif citation_type == u'other':
             ref_string = u'{0}. '.format(utils.getTagText(label))
