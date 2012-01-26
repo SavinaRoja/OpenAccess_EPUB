@@ -363,6 +363,8 @@ class OPSContent(object):
                     s = utils.getTagText(xref.getElementsByTagName('sup')[0])
                 except IndexError:
                     s = u'!'
+                if not s:
+                    s = u''
                 sup = auth_node.appendChild(doc.createElement('sup'))
                 a = sup.appendChild(doc.createElement('a'))
                 a.setAttribute('href', self.syn_frag.format(rid))
@@ -468,7 +470,7 @@ class OPSContent(object):
                     auth += ', '
                 auth += utils.getTagText(surname)
                 if given:
-                    auth += ' {0}'.format(utils.getTagText(given))
+                    auth += u' {0}'.format(utils.getTagText(given))
             #If there is an <etal> tag, add it to the auth string
             if citation.getElementsByTagName('etal'):
                 auth += ', et al.'
@@ -480,7 +482,8 @@ class OPSContent(object):
             #Append the first reference string to reference paragraph
             ref_par.appendChild(doc.createTextNode(frs))
             #Give all the article title children to reference paragraph
-            ref_par.childNodes += art_tit.childNodes
+            if art_tit:
+                ref_par.childNodes += art_tit.childNodes
             #Begin collecting data for second reference string
             src = cite_tags['source']  # src
             if src:
@@ -524,11 +527,12 @@ class OPSContent(object):
                      'PLoS Medicine': u'http://www.plosmedicine.org/{0}{1}{2}{3}',
                      'PLoS Neglected Tropical Diseases':
                      u'http://www.plosntds.org/{0}{1}{2}{3}'}
-                art_tit_form = utils.serializeText(art_tit, stringlist=[]).replace(' ', '%20')
-                href = pj[j_title].format(u'article/findArticle.action?author=',
-                                          first_auth, u'&title=', art_tit_form)
-                alink.setAttribute('href', href)
-                ref_par.appendChild(alink)
+                if art_tit:
+                    art_tit_form = utils.serializeText(art_tit, stringlist=[]).replace(' ', '%20')
+                    href = pj[j_title].format(u'article/findArticle.action?author=',
+                                              first_auth, u'&title=', art_tit_form)
+                    alink.setAttribute('href', href)
+                    ref_par.appendChild(alink)
         elif citation_type == u'confproc':
             pass
         
