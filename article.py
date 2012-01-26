@@ -128,8 +128,8 @@ class Article(object):
         import shutil
         from time import sleep
         
-        print('Processing images...')
         doi = self.getDOI()
+        print('Processing images for {0}...'.format(doi))
         o = doi.split('journal.')[1]
         img_dir = os.path.join(output_dir, 'OPS', 'images-{0}'.format(o))
         #Check cache to see if images already have been downloaded
