@@ -446,8 +446,8 @@ class OPSContent(object):
         
         if citation_type == u'journal':
             #The base strings with some punctuation; to be formatted with data
-            frs = u'{0}. {1} ({2}) '  # first reference string
-            srs = u' {0} {1}: {2}{3}. {4}'  # second reference string
+            frs = u'{0}. {1} {2} '  # first reference string
+            srs = u' {0} {1}{2}{3} {4}'  # second reference string
             #A journal citation looks roughly like this
             #Label. Authors (Year) Article Title. Source Volume: Supplement?
             #Pages. Comment FIND ONLINE
@@ -457,18 +457,24 @@ class OPSContent(object):
             first_auth = None
             for name in citation.getElementsByTagName('name'):
                 surname = name.getElementsByTagName('surname')[0]
-                given = name.getElementsByTagName('given-names')[0]
+                try:
+                    given = name.getElementsByTagName('given-names')[0]
+                except IndexError:
+                    given = ''
                 if first:
                     first_auth = utils.getTagText(surname)
                     first = False
                 else:
                     auth += ', '
-                auth += u'{0} {1}'.format(utils.getTagText(surname),
-                                          utils.getTagText(given))
+                auth += utils.getTagText(surname)
+                if given:
+                    auth += ' {0}'.format(utils.getTagText(given))
             #If there is an <etal> tag, add it to the auth string
             if citation.getElementsByTagName('etal'):
                 auth += ', et al.'
             year = cite_tags['year']  # year
+            if year:
+                year = '({0})'.format(year)
             #Format the first reference string with our data
             frs = frs.format(lbl, auth, year)
             #Append the first reference string to reference paragraph
@@ -476,11 +482,14 @@ class OPSContent(object):
             #Give all the article title children to reference paragraph
             ref_par.childNodes += art_tit.childNodes
             #Begin collecting data for second reference string
-            #ttl = cite_tags['article-title']  # ttl
             src = cite_tags['source']  # src
+            if src:
+                src += ' '
             vol = cite_tags['volume']  # vol
             if cite_tags['issue']:  # If issue has a value, we add it to vol
                 vol += u'({0})'.format(cite_tags['issue'])
+            if vol:
+                vol += ': '
             if cite_tags['supplement']:
                 supp = cite_tags['supplement'] + ' '  # supp
             else:
@@ -490,6 +499,8 @@ class OPSContent(object):
                 pgs = u'{0}-{1}'.format(fpage, lpage)  # pgs
             else:
                 pgs = fpage + lpage  # pgs
+            if pgs:
+                pgs += '.'
             com = cite_tags['comment']  # com
             srs = srs.format(src, vol, supp, pgs, com)
             ref_par.appendChild(doc.createTextNode(srs))
@@ -518,9 +529,11 @@ class OPSContent(object):
                                           first_auth, u'&title=', art_tit_form)
                 alink.setAttribute('href', href)
                 ref_par.appendChild(alink)
+        elif citation_type == u'confproc':
+            pass
         
         elif citation_type == u'other':
-            ref_string = u'{0}. '.format(utils.getTagData(label))
+            ref_string = u'{0}. '.format(utils.getTagText(label))
             ref_string += self.refOther(citation, stringlist = [])
             ref_par.appendChild(doc.createTextNode(ref_string[:-2]))
             
@@ -831,18 +844,21 @@ class OPSContent(object):
                                     img = os.path.join(path, filename)
                         os.chdir(startpath)
                         
-                        disp.tagName = u'img'
-                        disp.removeChild(graphic)
-                        disp.setAttribute('src', img)
-                        disp.setAttribute('alt', 'A display formula')
-                        disp.setAttribute('class', 'disp-formula')
-                        
                         #Convert <label> to <b class="disp-form-label">
                         #Also move it up a level, after the formula
                         for item in disp.getElementsByTagName('label'):
                             disp.parentNode.insertBefore(item, disp.nextSibling)
                             item.tagName = 'b'
                             item.setAttribute('class', 'disp-formula-label')
+                        
+                        img_node = doc.createElement('img')
+                        img_node.setAttribute('src', img)
+                        img_node.setAttribute('alt', 'A display formula')
+                        img_node.setAttribute('class', 'disp-formula')
+                        parent = disp.parentNode
+                        parent.insertBefore(img_node, disp)
+                        parent.removeChild(disp)
+                        
     
     def tableWrapNodeHandler(self, topnode, doc, tabdoc):
         '''Handles conversion of <table-wrap> tags under the provided topnode. 
@@ -932,7 +948,7 @@ class OPSContent(object):
                 if tab_label:
                     tab_header_b = doc.createElement('b')
                     for item in tab_label[0].childNodes:
-                        tab_header_b.appendChild(item.cloneNode(deep = True))
+                        tab_header_b.appendChild(item.cloneNode(deep=True))
                     tab_header_b.appendChild(doc.createTextNode(u'. '))
                     tab_header.appendChild(tab_header_b)
                 if tab_caption_title_node:
