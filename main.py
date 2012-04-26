@@ -64,7 +64,9 @@ def OAEParser():
 
 
 def initCache(cache_loc):
-    """Initiates the cache if it does not exist"""
+    """
+    Initiates the cache if it does not exist
+    """
     os.mkdir(cache_loc)
     os.mkdir(os.path.join(cache_loc, 'model'))
     os.mkdir(os.path.join(cache_loc, 'PLoS'))
@@ -77,7 +79,9 @@ def initCache(cache_loc):
 
 
 def urlInput(inpt, xml_dir):
-    """Handles input in URL form to instantiate the document"""
+    """
+    Handles input in URL form to instantiate the document
+    """
     try:
         if '%2F10.1371%2F' in inpt:  # This is a PLoS page
             publisher = 'PLoS'
@@ -110,7 +114,9 @@ def urlInput(inpt, xml_dir):
 
 
 def doiInput(input, xml_dir):
-    """Handles input in DOI form to instantiate the document"""
+    """
+    Handles input in DOI form to instantiate the document
+    """
     try:
         doi_url = 'http://dx.doi.org/' + input[4:]
         page = urllib2.urlopen(doi_url)
@@ -135,14 +141,19 @@ def doiInput(input, xml_dir):
         return(document, filename)
 
 
-def localInput(input):
+def localInput(inpt):
     """Handles input in the form of local file to instantiate the document"""
-    xml_local = input
+    xml_local = inpt
     document = Article(xml_local)
     return(document, xml_local)
 
 
 def dirExists(outdirect, batch):
+    """
+    Provides interaction with the user if the output directory already exists.
+    If running in batch mode, this interaction is ignored and the directory
+    is automatically deleted.
+    """
     if not batch:
         print(u'The directory {0} already exists.'.format(outdirect))
         r = raw_input('Replace? [y/n]')
@@ -186,7 +197,8 @@ def makeEPUB(document, xml_local, cache_dir, outdirect, log_to):
 
 
 def makeCollectionEPUB(documents, cache_dir, outdirect, log_to):
-    """"Encapsulates the processing workf-flow for the creation of
+    """"
+    Encapsulates the processing workf-flow for the creation of
     \"collection\", or \"omnibus\" ePubs from multiple PLoS journal articles.
     Article objects have been instantiated and tupled to their local xml files
     and now we may generate the file.
@@ -210,9 +222,11 @@ def makeCollectionEPUB(documents, cache_dir, outdirect, log_to):
         shutil.rmtree(outdirect)
 
 def epubcheck(epubname):
-    """This method takes the name of an epub file as an argument. This name is
+    """
+    This method takes the name of an epub file as an argument. This name is
     the input for the java execution of a locally installed epubcheck-.jar. The
-    location of this .jar file is configured in settings.py."""
+    location of this .jar file is configured in settings.py.
+    """
     r, e = os.path.splitext(epubname)
     if not e:
         print('Warning: Filename extension is empty, appending \'.epub\'...')
@@ -229,16 +243,14 @@ def main():
     This is the main code execution block.
     """
     args = OAEParser()
-    #Check for directory existence, create if not found
-    #This will break if the path has no immediate parent directory, this could
-    #be fixed but I am not sure if it should
-    if not os.path.isdir(args.log_to):
+    #Certain directories must be in place in order to run. Here we check them.
+    if not os.path.isdir(args.log_to):  # The logging directory
         os.mkdir(args.log_to)
-    if not os.path.isdir(args.cache):
+    if not os.path.isdir(args.cache):  # The cache directory
         initCache(args.cache)
-    if not os.path.isdir(args.save_xml):
+    if not os.path.isdir(args.save_xml):  # The directory for local XMLs
         os.mkdir(args.save_xml)
-    if not os.path.isdir(args.output):
+    if not os.path.isdir(args.output):  # The output directory
         os.mkdir(args.output)
     #Initiate logging settings
     logname = os.path.join(args.log_to, 'temp.log')
@@ -248,11 +260,11 @@ def main():
     if args.batch:
         download = False
         files = os.listdir(args.batch)
-        for file in files:
+        for f in files:
             if not os.path.splitext(file)[1] == '.xml':
                 pass
             else:
-                filename = os.path.join(args.batch, file)
+                filename = os.path.join(args.batch, f)
                 doc, xml_local = localInput(filename)
                 input_name = os.path.splitext(os.path.split(xml_local)[1])[0]
                 output_name = os.path.join(args.output, input_name)
