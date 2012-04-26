@@ -1,14 +1,17 @@
 """Handles metadata related tasks for the article"""
 import logging
 import epub_date
-import contributor, crossrefs
+import contributor
+import crossrefs
 import xml.dom
 from utils import *
 
+
 class FrontMatter(object):
-    """Article metadata"""
+    """
+    Article metadata
+    """
     def __init__(self, front):
-        
         #The front node may contain <journal-meta>,<article-meta>,<notes>
         journal_metanode = front.getElementsByTagName('journal-meta')[0]
         article_metanode = front.getElementsByTagName('article-meta')[0]
@@ -55,15 +58,15 @@ class ArticleMeta(object):
     #This is a NodeList of unknown length, iteration over it with a for-loop
     #is possible to act on each Node, or if empty it will evaluate false in an 
     #if-statement.
-    
+
     def __init__(self, node):
         self.identifiers = set()
-        self.article_categories = None 
+        self.article_categories = None
         self.article_title = None
         self.alt_titles = {}
         self.trans_titles = {}
         self.subtitles = []
-        self.title_fn = None 
+        self.title_fn = None
         self.publication_dates = None
         self.volume = None
         self.issue = None
@@ -71,13 +74,12 @@ class ArticleMeta(object):
         self.issue_titles = []
         # object for copyright-statement AND copyright-year
         self.copyright = None
-        
         self.history = {}
         self.abstracts = {}
         self.summary = None
-        self.art_auths = [] # A list of authors.
-        self.art_edits = [] # A list of editors.
-        self.art_other_contrib = [] # unclassified contributors
+        self.art_auths = []  # A list of authors.
+        self.art_edits = []  # A list of editors.
+        self.art_other_contrib = []  # unclassified contributors
         self.art_affs = []
         self.correspondences = []
         self.art_corresps = []
@@ -165,9 +167,11 @@ class ArticleMeta(object):
         return(dict)
     
     def makeAuthorNotes(self, node):
-        '''This method accepts the <author-notes> node as input and uses the 
+        """
+        This method accepts the <author-notes> node as input and uses the 
         contents to add to the local attributes \"art_corresps\" and 
-        \"author_notes_contributions\"'''
+        \"author_notes_contributions\"
+        """
         try:
             an_title = node.getElementsByTagName('title')[0]
         except IndexError:
@@ -285,14 +289,12 @@ class ArticleMeta(object):
         affs = node.getElementsByTagName('aff')
         for aff in affs:
             self.art_affs.append(crossrefs.Affiliation(aff))
-        
         try:
             author_notes = node.getElementsByTagName('author-notes')[0]
         except IndexError:
             pass
         else:
             self.makeAuthorNotes(author_notes)
-        
         copyright_year = node.getElementsByTagName('copyright-year')[0]
         self.art_copyright_year = copyright_year.firstChild.data
         cpright = node.getElementsByTagName('copyright-statement')[0]
@@ -304,14 +306,17 @@ class ArticleMeta(object):
         for entry in pub_dates:
             entry_date = epub_date.DateInfo(entry)
             self.art_dates[entry.getAttribute('pub-type')] = entry_date
-        
+
+
 class ArticleCategories(object):
-    '''A class representing the <article-categories> in the Journal Publishing 
-    Tag Set 2.0'''
+    """
+    "A class representing the <article-categories> in the Journal Publishing
+    Tag Set 2.0
+    """
     def __init__(self, node):
-        self.series_text = u'' #zero or one. Content: text with emphasis
-        self.series_titles = [] #zero or more. Content: text with emphasis
-        self.subj_groups = {} #zero or more. Content: subject
+        self.series_text = u''  # zero or one. Content: text with emphasis
+        self.series_titles = []  # zero or more. Content: text with emphasis
+        self.subj_groups = {}  # zero or more. Content: subject
         self.identify(node)
 
     def identify(self, node):
@@ -323,15 +328,15 @@ class ArticleCategories(object):
             pass
         else:
             self.series_text = getFormattedNode(series_text_node)
-            
+
         #Get the series-title nodes which may contain emphasis elements
         series_title_nodes = node.getElementsByTagName('series-title')
         for item in series_title_nodes:
             self.series_titles.append(getFormattedNode(item))
-            
-        #Subj-groups can be simple or complicated, specific to individual 
+
+        #Subj-groups can be simple or complicated, specific to individual
         #practice by publisher. PLoS appears to keep it simple, and uses either
-        #subj-group-type = "Discipline" or "Discipline-v2" These subject nodes 
+        #subj-group-type = "Discipline" or "Discipline-v2" These subject nodes
         #will be assigned to lists according to and key-accessible by subj-group-type
         subj_group_nodes = node.getElementsByTagName('subj-group')
         for each in subj_group_nodes:

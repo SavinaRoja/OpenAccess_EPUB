@@ -178,9 +178,9 @@ def makeEPUB(document, xml_local, cache_dir, outdirect, log_to):
         utils.makeEPUBBase(settings.base_epub, settings.css_location)
     shutil.copytree(settings.base_epub, outdirect)
     DOI = document.getDOI()
-    if DOI.split('/')[0] == '10.1371':
+    if DOI.split('/')[0] == '10.1371':  # PLoS's publisher DOI
         document.fetchPLoSImages(cache_dir, outdirect, settings.caching)
-    elif DOI.split('/')[0] == '10.3389':
+    elif DOI.split('/')[0] == '10.3389':  # Frontiers' publisher DOI
         document.fetchFrontiersImages(cache_dir, outdirect, settings.caching)
     content.OPSContent(xml_local, DOI, outdirect, document)
     toc = tocncx.TocNCX()
@@ -220,6 +220,7 @@ def makeCollectionEPUB(documents, cache_dir, outdirect, log_to):
     #taken whenever modifying this code
     if settings.cleanup:
         shutil.rmtree(outdirect)
+
 
 def epubcheck(epubname):
     """

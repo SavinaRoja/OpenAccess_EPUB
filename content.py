@@ -13,6 +13,7 @@ class OPSContent(object):
         self.doc = minidom.parse(self.inputstring)
         #Get string from outdirect sans "journal."
         self.doi = doi
+        print(self.doi)
         self.jid = self.doi.split('journal.')[1] #journal id string
         self.syn_frag = 'synop.{0}.xml'.format(self.jid) + '#{0}'
         self.main_frag = 'main.{0}.xml'.format(self.jid) + '#{0}'

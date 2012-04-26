@@ -1,6 +1,7 @@
 import utils
 import metadata
 import logging
+import sys
 import xml.dom.minidom as minidom
 
 
@@ -17,6 +18,20 @@ class Article(object):
     def __init__(self, xml_file):
         logging.info('Parsing file: {0}'.format(xml_file))
         doc = minidom.parse(xml_file)
+        dtds = {u'-//NLM//DTD Journal Publishing DTD v2.0 20040830//EN':
+                u'2.0',
+                u'-//NLM//DTD Journal Publishing DTD v2.3 20070202//EN':
+                u'2.3',
+                u'-//NLM//DTD Journal Publishing DTD v3.0 20080202//EN':
+                u'3.0'}
+        try:
+            self.dtd = dtds[doc.doctype.publicId]
+            dtdStatus = 'Article published with Journal Publishing DTD v{0}'
+            print(dtdStatus.format(self.dtd))
+        except KeyError:
+            print('The article\'s DOCTYPE declares an unsupported Journal \
+Publishing DTD: \n{0}'.format(doc.doctype.publicId))
+            sys.exit()
         self.root_tag = doc.documentElement
         #The potential Attributes of the <article> tag
         #article-type Type of Article
@@ -54,7 +69,7 @@ class Article(object):
         #zero_or_one = self.root_tag.getElementsByTagName('zero-or-one')
         #if zero_or_one:
         #    doStuffWith(zero_or_one[0])
-        ###
+
         #This tag is mandatory, bad input here deserves an error
         try:
             front_node = self.root_tag.getElementsByTagName('front')[0]
@@ -190,7 +205,7 @@ class Article(object):
                     if e.code == 503:  # Server overloaded
                         sleep(1)  # Wait one second
                         try:
-                            image = urllib2.urlopen(address)
+                            image = urllib2.urlopen(addr)
                         except:
                             break
                     elif e.code == 500:
