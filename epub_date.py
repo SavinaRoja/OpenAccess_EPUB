@@ -6,6 +6,7 @@ Citation elements also require date information
 
 import datetime
 
+
 class DateInfo(object):
     """Date with extra info
     datenode -- the XML Element containing the date info
@@ -17,11 +18,10 @@ class DateInfo(object):
         self.year = 0
         self.month = 0
         self.day = 0
-        
-        self.monthlist = ['January', 'February', 'March', 'April', 'May', 
-                          'June', 'July', 'August', 'September', 'October', 
+
+        self.monthlist = ['January', 'February', 'March', 'April', 'May',
+                          'June', 'July', 'August', 'September', 'October',
                           'November', 'December']
-        
         self.parse(datenode)
         try:
             self.date = datetime.date(self.year, self.month, self.day)
@@ -30,18 +30,18 @@ class DateInfo(object):
                 pass
             else:
                 raise ValueError('day is out of range for month')
-        
+
     def parse(self, datenode):
         """Handle the node contents
         datenode -- the XML Element containing the date info
         returns a 3-tuple: (year, month, day)
         """
-        
+
         if datenode.tagName == 'date':
             self.type = datenode.getAttribute('date-type')
         elif datenode.tagName == 'pub-date':
             self.type = datenode.getAttribute('pub-type')
-        
+
         try:
             self.season = datenode.getElementsByTagName('season')[0].firstChild.data
         except IndexError:
@@ -56,14 +56,14 @@ class DateInfo(object):
             except ValueError:
                 data = datenode.getElementsByTagName('month')[0].firstChild.data
                 self.month = self.monthlist.index(data) + 1
-        
+
         self.year = int(datenode.getElementsByTagName('year')[0].firstChild.data)
-    
+
     def niceString(self):
-        retstr = '{0} {1}, {2}'.format(self.monthlist[self.month - 1], self.day,
+        ret = '{0} {1}, {2}'.format(self.monthlist[self.month - 1], self.day,
                                        self.year)
-        return retstr
-    
+        return ret
+
     def dateString(self):
         newstring = '{0}'.format(self.year)
         if self.month:
