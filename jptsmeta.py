@@ -9,6 +9,9 @@ full extensibility in development, they are unique parameters. As a class for
 metadata, this class will handle everything except <body>
 """
 
+import utils
+
+
 class JPTSMeta(object):
     """
     This is the base class for the Journal Publishing Tag Set metadata.
@@ -96,32 +99,37 @@ class JPTSMeta20(JPTSMeta):
         #in a dictionary by their 'journal-id-type' attributes
         self.journal_id = {}
         for j in jm.getElementsByTagName('journal-id'):
-            self.journal_id[j.getAttribute('journal-id-type')] = j
+            text = utils.nodeText(j)
+            self.journal_id[j.getAttribute('journal-id-type')] = text
         #<journal-title> is zero or more and has no attributes
-        self.journal_title = jm.getElementsByTagName('journal-title')
+        self.journal_title = []
+        for jt in jm.getElementsByTagName('journal-title'):
+            self.journal_title.append(utils.nodeText(jt))
         #<abbrev-journal-title> is zero or more and has 'abbrev-type' attribute
         self.abbrev_journal_title = {}
         for a in jm.getElementsByTagName('abbrev-journal-title'):
-            self.abbrev_journal_title[a.getAttribute('abbrev-type')] = a
+            text = utils.nodeText(a)
+            self.abbrev_journal_title[a.getAttribute('abbrev-type')] = text
         #<issn> is one or more and has 'pub-type' attribute
         self.issn = {}
         for i in jm.getElementsByTagName('issn'):
-            self.issn[i.getAttribute('pub-type')] = i
+            self.issn[i.getAttribute('pub-type')] = utils.nodeText(i)
         #<publisher> is zero or one; If it exists, it will contain:
         #one <publisher-name> and zero or one <publisher-loc>
         if jm.getElementsByTagName('publisher'):
             self.publisher_name = jm.getElementsByTagName('publisher-name')[0]
+            self.publisher_name = utils.nodeText(self.publisher_name)
             ploc = jm.getElementsByTagName('publisher-loc')
             if ploc:
-                self.publisher_loc = ploc[0]
+                self.publisher_loc = utils.nodeText(ploc[0])
         else:
             self.publisher_name = None
             self.publisher_loc = None
         #<notes> is zero or one
         try:
-            self.notes = jm.getElementsByTagName('notes')[0]
+            self.jm_notes = jm.getElementsByTagName('notes')[0]
         except IndexError:
-            self.notes = None
+            self.jm_notes = None
     
     def parseArticleMetadata(self):
         """
