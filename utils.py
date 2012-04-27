@@ -236,8 +236,6 @@ def scrapePLoSIssueCollection(issue_url):
     instead of xml.dom.minidom because of malformed html/xml'''
     from BeautifulSoup import BeautifulStoneSoup
     import urllib2
-    import os
-    import os.path
     
     iu = urllib2.urlopen(issue_url)
     with open('temp','w') as temp:
