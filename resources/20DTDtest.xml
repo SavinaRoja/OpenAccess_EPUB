@@ -4,6 +4,22 @@
 <article xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:mml="http://www.w3.org/1998/Math/MathML" article-type="research-article" dtd-version="2.0" xml:lang="EN">
     <front>
         <journal-meta>
+            <journal-id journal-id-type="publisher-id">Lorem ipsum &amp 123</journal-id>
+            <journal-id journal-id-type="nlm-ta">dolor sit amet &amp 456</journal-id>
+            <journal-id journal-id-type="pmc">consectetur adipiscing &amp 789</journal-id>
+            <journal-title>This is title 1</journal-title>
+            <journal-title>This is title 2</journal-title>
+            <abbrev-journal-title abbrev-type="a">Title 1</abbrev-journal-title>
+            <abbrev-journal-title abbrev-type="b">Title 2</abbrev-journal-title>
+            <issn pub-type="epub">1932-6203</issn>
+            <issn pub-type="print">124*^23</issn>
+            <publisher>
+                <publisher-name>Public Library Science &amp Frontiers</publisher-name>
+                <publisher-loc>Atlantis, 189723, ~Univ~</publisher-loc>
+            </publisher>
+            <notes id="editor note" notes-type="note-in-proof">
+                <title>Editor's note</title>
+                <p>Notes can contain a lot of different things</p>
         </journal-meta>
         <article-meta>
         </article-meta>
