@@ -125,7 +125,7 @@ class JPTSMeta20(JPTSMeta):
         else:
             self.publisher_name = None
             self.publisher_loc = None
-        #<notes> is zero or one
+        #<notes> is zero or one and has attributes: 'id', and 'notes-type'
         try:
             self.jm_notes = jm.getElementsByTagName('notes')[0]
         except IndexError:
@@ -166,7 +166,59 @@ class JPTSMeta23(JPTSMeta):
         <journal-meta> stores information about the journal in which
         the article is found.
         """
-        return None
+        jm = self.journal_meta  # More compact
+        #There will be one or more <journal-id> elements, which will be indexed
+        #in a dictionary by their 'journal-id-type' attributes
+        self.journal_id = {}
+        for j in jm.getElementsByTagName('journal-id'):
+            text = utils.nodeText(j)
+            self.journal_id[j.getAttribute('journal-id-type')] = text
+        #<journal-title> is zero or more and has 'content-type' attribute
+        self.journal_title = {}
+        for jt in jm.getElementsByTagName('journal-title'):
+            text = utils.nodeText(jt)
+            self.journal_title[jt.getAttribute('content-type')] = text
+        #<journal-subtitle> is zero or more and has 'content-type' attribute
+        self.journal_subtitle = {}
+        for js in jm.getElementsByTagName('journal-subtitle'):
+            text = utils.nodeText(js)
+            self.journal_subtitle[js.getAttribute('content-type')] = text
+        #<trans-title> is zero or more and has the attributes: 'content-type',
+        #'id', and 'xml:lang'
+        #For now, these nodes will be simply be collected
+        self.trans_title = jm.getElementsByTagName('trans-title')
+        #<trans-subtitle> is zero or more and has the attributes:
+        #'content-type', 'id', and 'xml:lang'
+        #As with <trans-title>, these nodes will be simply be collected
+        self.trans_subtitle = jm.getElementsByTagName('trans-subtitle')
+        #<abbrev-journal-title> is zero or more and has 'abbrev-type' attribute
+        self.abbrev_journal_title = {}
+        for a in jm.getElementsByTagName('abbrev-journal-title'):
+            text = utils.nodeText(a)
+            self.abbrev_journal_title[a.getAttribute('abbrev-type')] = text
+        #<issn> is one or more and has 'pub-type' attribute
+        self.issn = {}
+        for i in jm.getElementsByTagName('issn'):
+            self.issn[i.getAttribute('pub-type')] = utils.nodeText(i)
+        #<publisher> is zero or one; it has 'content-type' attribute
+        #If it exists, it will contain: one <publisher-name> and zero or one 
+        #<publisher-loc>
+        publisher = jm.getElementsByTagName('publisher')
+        if publisher:
+            self.pub_content_type = publisher[0].getAttribute('content-type')
+            self.publisher_name = jm.getElementsByTagName('publisher-name')[0]
+            self.publisher_name = utils.nodeText(self.publisher_name)
+            ploc = jm.getElementsByTagName('publisher-loc')
+            if ploc:
+                self.publisher_loc = utils.nodeText(ploc[0])
+        else:
+            self.publisher_name = None
+            self.publisher_loc = None
+        #<notes> is zero or one and has attributes: 'id', and 'notes-type'
+        try:
+            self.jm_notes = jm.getElementsByTagName('notes')[0]
+        except IndexError:
+            self.jm_notes = None
     
     def parseArticleMetadata(self):
         """
