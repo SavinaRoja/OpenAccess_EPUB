@@ -13,7 +13,7 @@ def nodeText(node):
     parsing and original xml formatting. This function should strip such
     artifacts.
     """
-    return u''.format(node.firstChild.data.strip())
+    return u'{0}'.format(node.firstChild.data.strip())
 
 def makeEPUBBase(location, css_location):
     '''Contains the  functionality to create the ePub directory hierarchy from 
