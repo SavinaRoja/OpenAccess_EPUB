@@ -18,6 +18,8 @@ class JPTSMeta(object):
         self.publisher = publisher
         self.getTopElements()
         self.getFrontElements()
+        self.parseJournalMetadata()
+        self.parseArticleMetadata()
     
     def getTopElements(self):
         self.front = self.doc.getElementsByTagName('front')[0]  # Required
@@ -55,7 +57,25 @@ class JPTSMeta(object):
             self.notes = self.front.getElementsByTagName('notes')[0]
         except IndexError:
             self.notes = None
-        
+            
+    def parseJournalMetadata(self):
+        """
+        As the specifications for metadata under the <journal-meta> element
+        vary between version, this class will be overriddeby the derived
+        classes. <journal-meta> stores information about the journal in which
+        the article is found.
+        """
+        return None
+    
+    def parseArticleMetadata(self):
+        """
+        As the specifications for metadata under the <article-meta> element
+        vary between version, this class will be overriddeby the derived
+        classes. <article-meta> stores information about the article and the
+        issue of the journal in which it is found.
+        """
+        return None
+    
     def dtdVersion(self):
         return None
 
@@ -65,6 +85,50 @@ class JPTSMeta20(JPTSMeta):
     This is the derived class for version 2.0 of the Journal Publishing Tag Set
     metadata.
     """
+    
+    def parseJournalMetadata(self):
+        """
+        <journal-meta> stores information about the journal in which
+        the article is found.
+        """
+        jm = self.journal_meta  # More compact
+        #There will be one or more <journal-id> elements, which will be indexed
+        #in a dictionary by their 'journal-id-type' attributes
+        self.journal_ids = {}
+        for j in jm.getElementsByTagName('journal-id'):
+            self.journal_ids[j.getAttribute('journal-id-type')] = j
+        #<journal-title> is zero or more and has no attributes
+        self.journal_title = jm.getElementsByTagName('journal-title')
+        #<abbrev-journal-title> is zero or more and has 'abbrev-type' attribute
+        self.abbrev_journal_title = {}
+        for a in jm.getElementsByTagName('abbrev-journal-title'):
+            self.abbrev_journal_title[a.getAttribute('abbrev-type')] = a
+        #<issn> is one or more has 'pub-type' attribute
+        self.issn = {}
+        for i in jm.getElementsByTagName('issn'):
+            self.issn[i.getAttribute('pub-type')] = i
+        #<publisher> is zero or one; If it exists, it will contain:
+        #one <publisher-name> and zero or one <publisher-loc>
+        if jm.getElementsByTagName('publisher'):
+            self.publisher_name = jm.getElementsByTagName('publisher-name')[0]
+            ploc = jm.getElementsByTagName('publisher-loc')
+            if ploc:
+                self.publisher_loc = ploc[0]
+        else:
+            self.publisher_name = None
+            self.publisher_loc = None
+        #<notes> is zero or one
+        try:
+            self.notes = jm.getElementsByTagName('notes')[0]
+        except IndexError:
+            self.notes = None
+    
+    def parseArticleMetadata(self):
+        """
+        <article-meta> stores information about the article and the
+        issue of the journal in which it is found.
+        """
+        return None
     
     def dtdVersion(self):
         return '2.0'
@@ -89,6 +153,20 @@ class JPTSMeta23(JPTSMeta):
                 return fw
         return None
     
+    def parseJournalMetadata(self):
+        """
+        <journal-meta> stores information about the journal in which
+        the article is found.
+        """
+        return None
+    
+    def parseArticleMetadata(self):
+        """
+        <article-meta> stores information about the article and the
+        issue of the journal in which it is found.
+        """
+        return None
+    
     def dtdVersion(self):
         return '2.3'
 
@@ -110,6 +188,20 @@ class JPTSMeta30(JPTSMeta):
         for fw in floats_wrap:
             if fw.parentNode.tagName == u'article':
                 return fw
+        return None
+    
+    def parseJournalMetadata(self):
+        """
+        <journal-meta> stores information about the journal in which
+        the article is found.
+        """
+        return None
+    
+    def parseArticleMetadata(self):
+        """
+        <article-meta> stores information about the article and the
+        issue of the journal in which it is found.
+        """
         return None
     
     def dtdVersion(self): 
