@@ -1,9 +1,11 @@
-"""Handles metadata related tasks for the article"""
+"""
+Handles metadata related tasks for the article
+"""
+
 import logging
 import epub_date
 import contributor
 import crossrefs
-import xml.dom
 from utils import *
 
 
@@ -36,11 +38,14 @@ class FrontMatter(object):
         retstr = 'FrontMatter'
         return retstr
 
+
 class ArticleMeta(object):
-    '''Article Metadata: this class takes the <article-meta> element as input 
-    and holds representations of the data its children contain as local 
-    attributes. The specification for the <article-meta> tag can be found at: 
-    http://dtd.nlm.nih.gov/publishing/tag-library/2.0/n-p5c0.html'''
+    """
+    Article Metadata: this class takes the <article-meta> element as input
+    and holds representations of the data its children contain as local
+    attributes. The specification for the <article-meta> tag can be found at:
+    http://dtd.nlm.nih.gov/publishing/tag-library/2.0/n-p5c0.html
+    """
     
     #The elements contained in the article-meta may exist under certain defined
     #conditions: zero or one, zero or more, one of (options)...
@@ -109,12 +114,14 @@ class ArticleMeta(object):
         return(id_set)
     
     def makeTitles(self, node):
-        '''This method takes a title-group node as input and returns four 
+        """
+        This method takes a title-group node as input and returns four 
         units of data corresponding to four tags inside the title-group. 
         article-title is returned as a formatted Node, subtitle is returned as 
         a plain NodeList, trans-title is returned as a dictionary mapping 
         values of xml:lang to the Node, and alt-title is returned as a 
-        dictionary mapping values of alt-title-type to the Node.'''
+        dictionary mapping values of alt-title-type to the Node.
+        """
         #The article title is a required element, we will return a more nicely 
         #formatted version of it to the self.article_title attribute
         article_title_node = node.getElementsByTagName('article-title')[0]
