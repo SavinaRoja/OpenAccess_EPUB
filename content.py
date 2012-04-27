@@ -798,7 +798,7 @@ class OPSContent(object):
                 #Handle email
                 for email in fig_email:
                     email.tagName = 'a'
-                    text = each.getTagData
+                    text = email.getTagData
                     email.setAttribute('href','mailto:{0}'.format(text))
                     if fig_sibling:
                         fig_parent.insertBefore(email, fig_sibling)
