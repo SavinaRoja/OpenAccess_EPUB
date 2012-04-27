@@ -4,6 +4,29 @@
 <article xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:mml="http://www.w3.org/1998/Math/MathML" article-type="research-article" dtd-version="2.0" xml:lang="EN">
     <front>
         <journal-meta>
+            <journal-id journal-id-type="publisher-id">£ Lorem ipsum &amp; 123</journal-id>
+            <journal-id journal-id-type="nlm-ta">dolor sit amet &amp; 456</journal-id>
+            <journal-id journal-id-type="pmc">consectetur adipiscing &amp; 789</journal-id>
+            <journal-title content-type="journal">This is title 1</journal-title>
+            <journal-title content-type="sub-comittee">This is title 2</journal-title>
+            <journal-subtitle content-type="subjournal">Subtitle 1</journal-subtitle>
+            <journal-subtitle content-type="sub-sub-comittee">Subtitle 2</journal-subtitle>
+            <trans-title content-type="journal" id="algun1" xml:lang="es">Esto es titulo numero 1</trans-title>
+            <trans-title content-type="sub-comittee" id="algun2" xml:lang="es">Esto es titulo numero 2</trans-title>
+            <trans-subtitle content-type="subjournal" id="tsalgun1" xml:lang="es">Subtitulo 1</trans-subtitle>
+            <trans-subtitle content-type="sub-sub-committee" id="tsalgun2" xml:lang="es">Subtitulo 2</trans-subtitle>
+            <abbrev-journal-title abbrev-type="a">Title 1</abbrev-journal-title>
+            <abbrev-journal-title abbrev-type="b">Title 2</abbrev-journal-title>
+            <issn pub-type="epub">1932-6203</issn>
+            <issn pub-type="ppub">124*^23</issn>
+            <publisher content-type="lorem">
+                <publisher-name>Public Library Science &amp; Frontiers</publisher-name>
+                <publisher-loc>Atlantis, 189723, ~Univ~</publisher-loc>
+            </publisher>
+            <notes id="editor note" notes-type="note-in-proof">
+                <title>Editor's note</title>
+                <p>Notes can contain a lot of different things</p>
+            </notes>
         </journal-meta>
         <article-meta>
         </article-meta>
