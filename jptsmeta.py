@@ -94,9 +94,9 @@ class JPTSMeta20(JPTSMeta):
         jm = self.journal_meta  # More compact
         #There will be one or more <journal-id> elements, which will be indexed
         #in a dictionary by their 'journal-id-type' attributes
-        self.journal_ids = {}
+        self.journal_id = {}
         for j in jm.getElementsByTagName('journal-id'):
-            self.journal_ids[j.getAttribute('journal-id-type')] = j
+            self.journal_id[j.getAttribute('journal-id-type')] = j
         #<journal-title> is zero or more and has no attributes
         self.journal_title = jm.getElementsByTagName('journal-title')
         #<abbrev-journal-title> is zero or more and has 'abbrev-type' attribute
