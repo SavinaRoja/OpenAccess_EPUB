@@ -6,7 +6,7 @@ import xml.dom.minidom as minidom
 
 
 class Article(object):
-    '''
+    """
     A journal article; the top-level element (document element) of the
     Journal Publishing DTD, which contains all the metadata and content for
     the article.
@@ -14,10 +14,14 @@ class Article(object):
     http://dtd.nlm.nih.gov/publishing/tag-library/3.0/n-3q20.html
     2.0 Tagset:
     http://dtd.nlm.nih.gov/publishing/tag-library/2.0/n-9kc0.html
-    '''
+    2.3 Tagset:
+    http://dtd.nlm.nih.gov/publishing/tag-library/2.3/n-zxc2.html
+    """
     def __init__(self, xml_file):
         logging.info('Parsing file: {0}'.format(xml_file))
         doc = minidom.parse(xml_file)
+        #Here we check the doctype for the DTD under which the article was
+        #published. This affects how we will parse metadata and content.
         dtds = {u'-//NLM//DTD Journal Publishing DTD v2.0 20040830//EN':
                 u'2.0',
                 u'-//NLM//DTD Journal Publishing DTD v2.3 20070202//EN':
@@ -33,6 +37,9 @@ class Article(object):
 Publishing DTD: \n{0}'.format(doc.doctype.publicId))
             sys.exit()
         self.root_tag = doc.documentElement
+        #Now we want to know who the publisher is
+        self.publisher = self.identifyPublisher()
+        print(self.publisher)
         #The potential Attributes of the <article> tag
         #article-type Type of Article
         #dtd-version Version of the Tag Set (DTD)
@@ -82,11 +89,11 @@ Publishing DTD: \n{0}'.format(doc.doctype.publicId))
         body_node = self.root_tag.getElementsByTagName('body')
         back_node = self.root_tag.getElementsByTagName('back')
         #This tag is new to 3.0, I don't know what to expect of it yet
-        floats_group_node = self.root_tag.getElementsByTagName('floats-group')
+        #flts_group_node = self.root_tag.getElementsByTagName('floats-group')
         #These tags are zero or more, and mutually exclusive
         sub_article_nodes = self.root_tag.getElementsByTagName('sub-article')
-        if not sub_article_nodes:
-            response_nodes = self.root_tag.getElementsByTagName('response')
+        #if not sub_article_nodes:
+        #    response_nodes = self.root_tag.getElementsByTagName('response')
         #To make our lives easier (I hope), we can instantiate special classes
         #for Front and Back nodes.
         self.front = Front(front_node)
@@ -100,15 +107,53 @@ Publishing DTD: \n{0}'.format(doc.doctype.publicId))
         else:
             self.body = None
 
+    def identifyPublisher(self):
+        """
+        This method determines the publisher of the document based on an
+        an internal declaration. For both JP-DTDv2.0 and JP-DTDv2.3, there are
+        two important signifiers of publisher, <publisher> under <journal-meta>
+        and <article-id pub-id-type="doi"> under <article-meta>.
+        """
+        pubs = {u'Frontiers Research Foundation': u'Frontiers',
+                u'Public Library of Science': u'PLoS'}
+        dois = {u'10.3389': u'Frontiers',
+                u'10.1371': u'PLoS'}
+        if self.dtd in ['2.0', '2.3']:
+            #The publisher node will be the primary mode of identification
+            publisher = self.root_tag.getElementsByTagName('publisher')
+            pubname = False
+            if publisher:
+                pubname = publisher[0].getElementsByTagName('publisher-name')[0]
+                pubname = pubname.firstChild.data
+                try:
+                    return pubs[pubname]
+                except KeyError:
+                    print('Strange publisher name: {0}'.format(pubname))
+                    print('Falling back to article-id DOI')
+                    pubname = False
+            if not pubname:  # If pubname is undeclared, check article-id
+                art_IDs = self.root_tag.getElementsByTagName('article-id')
+                for aid in art_IDs:
+                    if aid.getAttribute('pub-id-type') == u'doi':
+                        idstring = aid.firstChild.data
+                        pub_doi = idstring.split('/')[0]
+                try:
+                    return dois[pub_doi]
+                except KeyError:
+                    print('Unable to identify publisher by DOI, aborting!')
+                    sys.exit()
+
     def validateAttrs(self):
-        '''Most of the time, attributes are not required nor do they have fixed
-         values. But in this case, there are some mandatory requirements.'''
+        """
+        Most of the time, attributes are not required nor do they have fixed
+        values. But in this case, there are some mandatory requirements.
+        """
         #I would love to check xml:lang against RFC 4646:
         # http://www.ietf.org/rfc/rfc4646.txt
         #I don't know a good tool for it though, so it gets a pass for now.
         mandates = [('xmlns:mml', 'http://www.w3.org/1998/Math/MathML'),
                     ('xmlns:xlink', 'http://www.w3.org/1999/xlink'),
-                    ('dtd-version', '3.0'),
+                    #('dtd-version', '3.0'),
                     ('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance')]
         attr_err = 'Article attribute {0} has improper value: {1}'
         for _key, _val in mandates:
@@ -138,11 +183,11 @@ Publishing DTD: \n{0}'.format(doc.doctype.publicId))
     def fetchPLoSImages(self, cache_dir, output_dir, caching):
         '''Fetch the PLoS images associated with the article.'''
         import urllib2
-        import logging
+
         import os.path
         import shutil
         from time import sleep
-        
+
         doi = self.getDOI()
         print('Processing images for {0}...'.format(doi))
         o = doi.split('journal.')[1]

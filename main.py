@@ -87,7 +87,6 @@ def urlInput(inpt, xml_dir):
             publisher = 'PLoS'
             address = urlparse.urlparse(inpt)
             _fetch = '/article/fetchObjectAttachment.action?uri='
-            print(address.path)
             _id = address.path.split('/')[2]
             _rep = '&representation=XML'
             access = '{0}://{1}{2}{3}{4}'.format(address.scheme, address.netloc,
