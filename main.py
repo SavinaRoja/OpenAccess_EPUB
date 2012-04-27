@@ -84,7 +84,6 @@ def urlInput(inpt, xml_dir):
     """
     try:
         if '%2F10.1371%2F' in inpt:  # This is a PLoS page
-            publisher = 'PLoS'
             address = urlparse.urlparse(inpt)
             _fetch = '/article/fetchObjectAttachment.action?uri='
             _id = address.path.split('/')[2]
@@ -94,14 +93,14 @@ def urlInput(inpt, xml_dir):
             print('Opening {0}'.format(access.__str__()))
             open_xml = urllib2.urlopen(access)
         elif '/10.3389/' in inpt:  # This is a Frontiers page
-            publisher = 'Frontiers'
-            print('OpenAccess_EPUB does not yet support Frontiers')
-            sys.exit(0)
+            print('Frontiers articles are not supported for URL input.')
+            print('Please download the XML file manually and use it as a \
+local input.')
+            sys.exit(1)
         else:  # We don't know how to handle this input
             print('Invalid Link: Bad URL or unsupported publisher')
             sys.exit(1)
     except:
-        print('Invalid Link: Enter a corrected link or use local file')
         sys.exit(1)
     else:
         filename = open_xml.headers['Content-disposition'].split('\"')[1]
