@@ -5,6 +5,16 @@ from collections import namedtuple
 
 Identifier = namedtuple('Identifer', 'id, type')
 
+def nodeText(node):
+    """
+    This is to be used when a node may only contain text, numbers or special
+    characters. This function will return the text contained in the node.
+    Sometimes this text data contains spurious newlines and spaces due to
+    parsing and original xml formatting. This function should strip such
+    artifacts.
+    """
+    return u''.format(node.firstChild.data.strip())
+
 def makeEPUBBase(location, css_location):
     '''Contains the  functionality to create the ePub directory hierarchy from 
     scratch. Typical practice will not require this method, but use this to 
