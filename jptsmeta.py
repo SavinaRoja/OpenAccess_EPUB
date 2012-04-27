@@ -17,6 +17,7 @@ class JPTSMeta(object):
         self.doc = document
         self.publisher = publisher
         self.getTopElements()
+        self.getFrontElements()
     
     def getTopElements(self):
         self.front = self.doc.getElementsByTagName('front')[0]  # Required
@@ -42,6 +43,19 @@ class JPTSMeta(object):
     def getTopFloats_Group(self):
         return None
     
+    def getFrontElements(self):
+        """
+        The structure of elements under <front> is the same for all versions
+        (2.0, 2.3, 3.0). <journal-meta> and <article-meta> are required,
+        <notes> is zero or one.
+        """
+        self.journal_meta = self.front.getElementsByTagName('journal-meta')[0]
+        self.article_meta = self.front.getElementsByTagName('article-meta')[0]
+        try:
+            self.notes = self.front.getElementsByTagName('notes')[0]
+        except IndexError:
+            self.notes = None
+        
     def dtdVersion(self):
         return None
 
