@@ -772,13 +772,13 @@ class OPSContent(object):
                 #See http://idpf.org/epub/20/spec/OPS_2.0.1_draft.htm#Section2.3.4
                 if fig_long_desc_text:
                     img_node.setAttribute('title', fig_long_desc_text)
-                
+
                 #Replace the fig_node with img_node
                 fig_parent.replaceChild(img_node, fig_node)
-                
+
                 #Handle the figure caption if it exists
                 if fig_caption:
-                    fig_caption_node = fig_caption[0] #Should only be one if nonzero
+                    fig_caption_node = fig_caption[0]  # Should only be one if nonzero
                     #We want to handle the <title> in our caption/div as a special case
                     #For this reason, figNodeHandler should be called before divTitleFormat
                     for _title in fig_caption_node.getElementsByTagName('title'):
@@ -1023,7 +1023,7 @@ class OPSContent(object):
                 #Handle email
                 for email in tab_email:
                     email.tagName = 'a'
-                    text = each.getTagData
+                    text = email.getTagData
                     email.setAttribute('href','mailto:{0}'.format(text))
                     if tab_sibling:
                         tab_parent.insertBefore(email, tab_sibling)
