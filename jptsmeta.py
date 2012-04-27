@@ -52,9 +52,6 @@ class JPTSMeta20(JPTSMeta):
     metadata.
     """
     
-    def getTopElements(self):
-        pass
-    
     def dtdVersion(self):
         return '2.0'
 
