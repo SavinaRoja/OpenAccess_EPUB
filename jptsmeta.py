@@ -103,7 +103,7 @@ class JPTSMeta20(JPTSMeta):
         self.abbrev_journal_title = {}
         for a in jm.getElementsByTagName('abbrev-journal-title'):
             self.abbrev_journal_title[a.getAttribute('abbrev-type')] = a
-        #<issn> is one or more has 'pub-type' attribute
+        #<issn> is one or more and has 'pub-type' attribute
         self.issn = {}
         for i in jm.getElementsByTagName('issn'):
             self.issn[i.getAttribute('pub-type')] = i
