@@ -143,7 +143,7 @@ class JPTSMeta(object):
     def parseArticleMetadata(self):
         """
         As the specifications for metadata under the <article-meta> element
-        vary between version, this class will be overriddeby the derived
+        vary between version, this class will be overridden by the derived
         classes. <article-meta> stores information about the article and the
         issue of the journal in which it is found.
         """
