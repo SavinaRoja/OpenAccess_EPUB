@@ -149,6 +149,19 @@ class JPTSMeta(object):
         """
         return None
     
+    def getArticleID(self):
+        """
+        <article-id> is an optional, 0 or more, sub-element of <article-meta>.
+        It can only contain text, numbers, or special characters. It has a
+        single potential attribute, 'pub-id-type', whose value is used as a
+        key to access the text data of its tag.
+        """
+        ids = {}
+        for j in self.article_meta.getElementsByTagName('article-id'):
+            text = utils.nodeText(j)
+            ids[j.getAttribute('pub-id-type')] = text
+        return ids
+    
     def dtdVersion(self):
         return None
 
@@ -187,7 +200,10 @@ class JPTSMeta20(JPTSMeta):
         <article-meta> stores information about the article and the
         issue of the journal in which it is found.
         """
-        return None
+        am = self.article_meta  # More compact
+        #There will be zero or more <article-id> elements whose text data will
+        #by indexed by their pub-id-type attribute values
+        self.article_id = self.getArticleID()
     
     def dtdVersion(self):
         return '2.0'
@@ -254,7 +270,10 @@ class JPTSMeta23(JPTSMeta):
         <article-meta> stores information about the article and the
         issue of the journal in which it is found.
         """
-        return None
+        am = self.article_meta  # More compact
+        #There will be zero or more <article-id> elements whose text data will
+        #by indexed by their pub-id-type attribute values
+        self.article_id = self.getArticleID()
     
     def dtdVersion(self):
         return '2.3'
@@ -321,7 +340,10 @@ trans, abbrev')
         <article-meta> stores information about the article and the
         issue of the journal in which it is found.
         """
-        return None
+        am = self.article_meta  # More compact
+        #There will be zero or more <article-id> elements whose text data will
+        #by indexed by their pub-id-type attribute values
+        self.article_id = self.getArticleID()
     
     def dtdVersion(self): 
         return '3.0'
