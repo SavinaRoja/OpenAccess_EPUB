@@ -1,12 +1,13 @@
 """
 This module contains classes representing metadata in the Journal Publishing
 Tag Set. There is a base class providing a baseline of functionality for the
-JPTS and derived classes for distinct version of the Tag Set. With this
+JPTS and derived classes for distinct versions of the Tag Set. With this
 implementation, the commonalities between versions may be presented in the base
 class while their differences may be presented in their derived classes. An
-important distinction is to be made between publisher and the DTD version; for
-full extensibility in development, they are unique parameters. As a class for
-metadata, this class will handle everything except <body>
+important distinction must to be made between publisher and the DTD version. For
+full extensibility in development, DTD and publisher parameters must be
+recognized for their distinct roles in the format of a document. As a class for
+metadata, this class will handle everything except <body>.
 """
 
 import utils
@@ -162,6 +163,29 @@ class JPTSMeta(object):
             ids[j.getAttribute('pub-id-type')] = text
         return ids
     
+    def getArticleCategories(self):
+        """
+        The <article-categories> tag is optional, zero or one, underneath the
+        <article-meta> tag. It's specification is the same in each DTD. It can
+        contain zero or more of each of the following elements in order:
+        <subj-group>, <series-title>, and <series-text>. Beyond this level of
+        detail, much is left up to the publisher. The <article-categories> node
+        will be captured if it exists and can be operated on publisher-wise as
+        needed.
+        """
+        try:
+            a = self.article_meta.getElementsByTagName('article-categories')[0]
+        except IndexError:
+            return None
+        else:
+            return a
+    
+    def getTitleGroup(self):
+        """
+        <title-group> is a required element underneath the <article-meta> tag.
+        """
+        return self.article_meta.getElementsByTagName('title-group')[0]
+    
     def dtdVersion(self):
         return None
 
@@ -204,6 +228,8 @@ class JPTSMeta20(JPTSMeta):
         #There will be zero or more <article-id> elements whose text data will
         #by indexed by their pub-id-type attribute values
         self.article_id = self.getArticleID()
+        self.article_categories = self.getArticleCategories()
+        self.title_group = self.getTitleGroup()
     
     def dtdVersion(self):
         return '2.0'
@@ -274,6 +300,8 @@ class JPTSMeta23(JPTSMeta):
         #There will be zero or more <article-id> elements whose text data will
         #by indexed by their pub-id-type attribute values
         self.article_id = self.getArticleID()
+        self.article_categories = self.getArticleCategories()
+        self.title_group = self.getTitleGroup()
     
     def dtdVersion(self):
         return '2.3'
@@ -344,6 +372,8 @@ trans, abbrev')
         #There will be zero or more <article-id> elements whose text data will
         #by indexed by their pub-id-type attribute values
         self.article_id = self.getArticleID()
+        self.article_categories = self.getArticleCategories()
+        self.title_group = self.getTitleGroup()
     
     def dtdVersion(self): 
         return '3.0'
