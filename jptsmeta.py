@@ -97,6 +97,49 @@ class JPTSMeta(object):
             issns[i.getAttribute('pub-type')] = text
         return issns
     
+    def getPublisher(self):
+        """
+        <publisher> under <journal-meta> is an optional tag, zero or one, which
+        under some DTD versions has the attribute 'content-type'. If it exists,
+        it contains one <publisher-name> element which contains only text,
+        numbers, or special characters. It also may include one <publisher-loc>
+        element which has text, numbers, special characters, and the address
+        linking elements <email>, <ext-link>, and <uri>. This function returns
+        the publisher information as a namedtuple for simple access.
+        """
+        pd = collections.namedtuple('Publisher', 'name, loc, content_type')
+        pub_node = self.journal_meta.getElementsByTagName('publisher')
+        if pub_node:
+            content_type = pub_node[0].getAttribute('content-type')
+            if not content_type:
+                content_type = None
+            name = pub_node[0].getElementsByTagName('publisher-name')[0]
+            name = utils.nodeText(name)
+            try:
+                loc = pub_node[0].getElementsByTagName('publisher-loc')[0]
+            except IndexError:
+                loc = None
+            else:
+                if self.dtdVersion() == '2.0':
+                    loc = utils.nodeText(loc)
+            return pd(name, loc, content_type)
+        else:
+            return pd(None, None, None)
+    
+    def getJournalMetaNotes(self):
+        """
+        The <notes> tag under the <journal-meta> is option, zero or one, and
+        has attributes 'id' and 'notes-type'. This tag has complex content and
+        unknown use cases. For now, this node will simply be collected but not
+        processed at this level.
+        """
+        try:
+            tag = self.journal_meta.getElementsByTagName('notes')[0]
+        except IndexError:
+            return None
+        else:
+            return tag
+    
     def parseArticleMetadata(self):
         """
         As the specifications for metadata under the <article-meta> element
@@ -136,22 +179,8 @@ class JPTSMeta20(JPTSMeta):
             self.abbrev_journal_title[a.getAttribute('abbrev-type')] = text
         #<issn> is one or more and has 'pub-type' attribute
         self.issn = self.getISSN()
-        #<publisher> is zero or one; If it exists, it will contain:
-        #one <publisher-name> and zero or one <publisher-loc>
-        if jm.getElementsByTagName('publisher'):
-            self.publisher_name = jm.getElementsByTagName('publisher-name')[0]
-            self.publisher_name = utils.nodeText(self.publisher_name)
-            ploc = jm.getElementsByTagName('publisher-loc')
-            if ploc:
-                self.publisher_loc = utils.nodeText(ploc[0])
-        else:
-            self.publisher_name = None
-            self.publisher_loc = None
-        #<notes> is zero or one and has attributes: 'id', and 'notes-type'
-        try:
-            self.jm_notes = jm.getElementsByTagName('notes')[0]
-        except IndexError:
-            self.jm_notes = None
+        self.publisher = self.getPublisher()  # publisher.loc is text
+        self.jm_notes = self.getJournalMetaNotes()
     
     def parseArticleMetadata(self):
         """
@@ -217,28 +246,8 @@ class JPTSMeta23(JPTSMeta):
             self.abbrev_journal_title[a.getAttribute('abbrev-type')] = text
         #<issn> is one or more and has 'pub-type' attribute
         self.issn = self.getISSN()
-        #<publisher> is zero or one; it has 'content-type' attribute
-        #If it exists, it will contain: one <publisher-name> and zero or one 
-        #<publisher-loc>
-        publisher = jm.getElementsByTagName('publisher')
-        if publisher:
-            self.pub_content_type = publisher[0].getAttribute('content-type')
-            self.publisher_name = jm.getElementsByTagName('publisher-name')[0]
-            self.publisher_name = utils.nodeText(self.publisher_name)
-            #Publisher location may contain <email>, <ext-link>, and <uri> in
-            #addition to text, numbers, and special characters
-            try:
-                ploc = jm.getElementsByTagName('publisher-loc')[0]
-            except IndexError:
-                self.publisher_loc = None
-        else:
-            self.publisher_name = None
-            self.publisher_loc = None
-        #<notes> is zero or one and has attributes: 'id', and 'notes-type'
-        try:
-            self.jm_notes = jm.getElementsByTagName('notes')[0]
-        except IndexError:
-            self.jm_notes = None
+        self.publisher = self.getPublisher()  # publisher.loc is a node
+        self.jm_notes = self.getJournalMetaNotes()
     
     def parseArticleMetadata(self):
         """
@@ -304,28 +313,8 @@ trans, abbrev')
         self.isbn = {}
         for i in jm.getElementsByTagName('isbn'):
             self.isbn[i.getAttribute('content-type')] = utils.nodeText(i)
-        #<publisher> is zero or one; it has 'content-type' attribute
-        #If it exists, it will contain: one <publisher-name> and zero or one 
-        #<publisher-loc>
-        publisher = jm.getElementsByTagName('publisher')
-        if publisher:
-            self.pub_content_type = publisher[0].getAttribute('content-type')
-            self.publisher_name = jm.getElementsByTagName('publisher-name')[0]
-            self.publisher_name = utils.nodeText(self.publisher_name)
-            #Publisher location may contain <email>, <ext-link>, and <uri> in
-            #addition to text, numbers, and special characters
-            try:
-                ploc = jm.getElementsByTagName('publisher-loc')[0]
-            except IndexError:
-                self.publisher_loc = None
-        else:
-            self.publisher_name = None
-            self.publisher_loc = None
-        #<notes> is zero or one and has attributes: 'id', and 'notes-type'
-        try:
-            self.jm_notes = jm.getElementsByTagName('notes')[0]
-        except IndexError:
-            self.jm_notes = None
+        self.publisher = self.getPublisher()
+        self.jm_notes = self.getJournalMetaNotes()
     
     def parseArticleMetadata(self):
         """
