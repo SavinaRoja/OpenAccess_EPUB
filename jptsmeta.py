@@ -10,6 +10,7 @@ metadata, this class will handle everything except <body>
 """
 
 import utils
+import collections
 
 
 class JPTSMeta(object):
@@ -208,9 +209,12 @@ class JPTSMeta23(JPTSMeta):
             self.pub_content_type = publisher[0].getAttribute('content-type')
             self.publisher_name = jm.getElementsByTagName('publisher-name')[0]
             self.publisher_name = utils.nodeText(self.publisher_name)
-            ploc = jm.getElementsByTagName('publisher-loc')
-            if ploc:
-                self.publisher_loc = utils.nodeText(ploc[0])
+            #Publisher location may contain <email>, <ext-link>, and <uri> in
+            #addition to text, numbers, and special characters
+            try:
+                ploc = jm.getElementsByTagName('publisher-loc')[0]
+            except IndexError:
+                self.publisher_loc = None
         else:
             self.publisher_name = None
             self.publisher_loc = None
@@ -255,7 +259,62 @@ class JPTSMeta30(JPTSMeta):
         <journal-meta> stores information about the journal in which
         the article is found.
         """
-        return None
+        jm = self.journal_meta  # More compact
+        #There will be one or more <journal-id> elements, which will be indexed
+        #in a dictionary by their 'journal-id-type' attributes
+        self.journal_id = {}
+        for j in jm.getElementsByTagName('journal-id'):
+            text = utils.nodeText(j)
+            self.journal_id[j.getAttribute('journal-id-type')] = text
+        #<journal-title-group> is zero or more and has 'content-type' attribute
+        #It contains zero or more of the following:
+        #  <journal-title> with 'xml:lang' and 'content-type' attributes
+        #  <journal-subtitle> with 'xml:lang' and 'content-type' attributes
+        #  <trans-title> with 'xml:lang', 'id', and 'content-type' attributes
+        #  <abbrev-journal-title> with 'xml:lang' and 'abbrev-type' attributes
+        #The following treatment produces a dictionary keyed by content type
+        #whose values are namedtuples containing lists of each element type
+        title_groups = jm.getElementsByTagName('journal-title-group')
+        tg = collections.namedtuple('Journal_Title_Group', 'title, subtitle, \
+trans, abbrev')
+        self.journal_title_group = {}
+        for group in title_groups:
+            g = []
+            for elem in ['journal-title', 'journal-subtitle', 'trans-title',
+                         'abbrev-journal-title']:
+                g.append(group.getElementsByTagName(elem))
+            g = tg(g[0], g[1], g[2], g[3])
+            self.journal_title_group[group.getAttribute('content-type')] = g
+        #<issn> is one or more and has 'pub-type' attribute
+        self.issn = {}
+        for i in jm.getElementsByTagName('issn'):
+            self.issn[i.getAttribute('pub-type')] = utils.nodeText(i)
+        #<isbn> is zero or more and has 'content-type' attribute
+        self.isbn = {}
+        for i in jm.getElementsByTagName('isbn'):
+            self.isbn[i.getAttribute('content-type')] = utils.nodeText(i)
+        #<publisher> is zero or one; it has 'content-type' attribute
+        #If it exists, it will contain: one <publisher-name> and zero or one 
+        #<publisher-loc>
+        publisher = jm.getElementsByTagName('publisher')
+        if publisher:
+            self.pub_content_type = publisher[0].getAttribute('content-type')
+            self.publisher_name = jm.getElementsByTagName('publisher-name')[0]
+            self.publisher_name = utils.nodeText(self.publisher_name)
+            #Publisher location may contain <email>, <ext-link>, and <uri> in
+            #addition to text, numbers, and special characters
+            try:
+                ploc = jm.getElementsByTagName('publisher-loc')[0]
+            except IndexError:
+                self.publisher_loc = None
+        else:
+            self.publisher_name = None
+            self.publisher_loc = None
+        #<notes> is zero or one and has attributes: 'id', and 'notes-type'
+        try:
+            self.jm_notes = jm.getElementsByTagName('notes')[0]
+        except IndexError:
+            self.jm_notes = None
     
     def parseArticleMetadata(self):
         """
