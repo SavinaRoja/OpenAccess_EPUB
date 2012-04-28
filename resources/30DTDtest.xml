@@ -4,6 +4,50 @@
 <article xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:mml="http://www.w3.org/1998/Math/MathML" article-type="research-article" dtd-version="2.0" xml:lang="EN">
     <front>
         <journal-meta>
+            <journal-id journal-id-type="publisher-id">£ Lorem ipsum &amp; 123</journal-id>
+            <journal-id journal-id-type="nlm-ta">dolor sit amet &amp; 456</journal-id>
+            <journal-id journal-id-type="pmc">consectetur adipiscing &amp; 789</journal-id>
+            <journal-title-group content-type="primary">
+                <journal-title xml:lang="en" content-type="specific">Specific Title</journal-title>
+                <journal-title xml:lang="en" content-type="general">General Title</journal-title>
+                <journal-subtitle xml:lang="en" content-type="specific">Specific Subtitle</journal-subtitle>
+                <journal-subtitle xml:lang="en" content-type="general">General Subtitle</journal-subtitle>
+                <trans-title xml:lang="es" id="ttes" content-type="especifico">Titulo Especifico</trans-title>
+                <trans-title xml:lang="es" id="tteg" content-type="general">Titulo General</trans-title>
+                <abbrev-journal-title xml:lang="en" abbrev-type="concat">Spec.</abbrev-journal-title>
+                <abbrev-journal-title xml:lang="en" abbrev-type="acronym">GT</abbrev-journal-title>
+            </journal-title-group>
+            <journal-title-group content-type="secondary">
+                <journal-title xml:lang="en" content-type="specific">Specific Title2</journal-title>
+                <journal-title xml:lang="en" content-type="general">General Title2</journal-title>
+                <journal-subtitle xml:lang="en" content-type="specific">Specific Subtitle2</journal-subtitle>
+                <journal-subtitle xml:lang="en" content-type="general">General Subtitle2</journal-subtitle>
+                <trans-title xml:lang="es" id="ttes2" content-type="especifico">Titulo Especifico2</trans-title>
+                <trans-title xml:lang="es" id="tteg2" content-type="general">Titulo General2</trans-title>
+                <abbrev-journal-title xml:lang="en" abbrev-type="concat">Spec.2</abbrev-journal-title>
+                <abbrev-journal-title xml:lang="en" abbrev-type="acronym">GT2</abbrev-journal-title>
+            </journal-title-group>
+            <journal-title content-type="sub-comittee">This is title 2</journal-title>
+            <journal-subtitle content-type="subjournal">Subtitle 1</journal-subtitle>
+            <journal-subtitle content-type="sub-sub-comittee">Subtitle 2</journal-subtitle>
+            <trans-title content-type="journal" id="algun1" xml:lang="es">Esto es titulo numero 1</trans-title>
+            <trans-title content-type="sub-comittee" id="algun2" xml:lang="es">Esto es titulo numero 2</trans-title>
+            <trans-subtitle content-type="subjournal" id="tsalgun1" xml:lang="es">Subtitulo 1</trans-subtitle>
+            <trans-subtitle content-type="sub-sub-committee" id="tsalgun2" xml:lang="es">Subtitulo 2</trans-subtitle>
+            <abbrev-journal-title abbrev-type="a">Title 1</abbrev-journal-title>
+            <abbrev-journal-title abbrev-type="b">Title 2</abbrev-journal-title>
+            <issn pub-type="epub">1932-6203</issn>
+            <issn pub-type="ppub">124*^23</issn>
+            <isbn content-type="10">0679726470</isbn>
+            <isbn content-type="13">978-3-16-148410-0</isbn>
+            <publisher content-type="lorem">
+                <publisher-name>Public Library Science &amp; Frontiers</publisher-name>
+                <publisher-loc>Atlantis, 189723, ~Univ~ <email>hqbovik@mailinator.com</email> Lorem <ext-link>internet</ext-link> ipsum <uri> http://www.google.com/</uri></publisher-loc>
+            </publisher>
+            <notes id="editor note" notes-type="note-in-proof">
+                <title>Editor's note</title>
+                <p>Notes can contain a lot of different things</p>
+            </notes>
         </journal-meta>
         <article-meta>
         </article-meta>
