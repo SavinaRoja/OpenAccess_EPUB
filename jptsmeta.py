@@ -65,7 +65,7 @@ class JPTSMeta(object):
     def parseJournalMetadata(self):
         """
         As the specifications for metadata under the <journal-meta> element
-        vary between version, this class will be overriddeby the derived
+        vary between version, this class will be overridden by the derived
         classes. <journal-meta> stores information about the journal in which
         the article is found.
         """
@@ -87,7 +87,7 @@ class JPTSMeta(object):
     def getISSN(self):
         """
         <issn> is a required, one or more, sub-element of <journal-meta>. It
-        can only contain text, numbers, or special characters. If has a single
+        can only contain text, numbers, or special characters. It has a single
         potential attribute, 'pub-type', whose value is used as a key to access
         the text data of its tag.
         """
@@ -313,7 +313,7 @@ trans, abbrev')
         self.isbn = {}
         for i in jm.getElementsByTagName('isbn'):
             self.isbn[i.getAttribute('content-type')] = utils.nodeText(i)
-        self.publisher = self.getPublisher()
+        self.publisher = self.getPublisher()  # publisher.loc is a node
         self.jm_notes = self.getJournalMetaNotes()
     
     def parseArticleMetadata(self):
