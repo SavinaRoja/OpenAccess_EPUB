@@ -71,6 +71,32 @@ class JPTSMeta(object):
         """
         return None
     
+    def getJournalID(self):
+        """
+        <journal-id> is a required, one or more, sub-element of <journal-meta>.
+        It can only contain text, numbers, or special characters. It has a
+        single potential attribute, 'journal-id-type', whose value is used as a
+        key to access the text data of its tag.
+        """
+        ids = {}
+        for j in self.journal_meta.getElementsByTagName('journal-id'):
+            text = utils.nodeText(j)
+            ids[j.getAttribute('journal-id-type')] = text
+        return ids
+    
+    def getISSN(self):
+        """
+        <issn> is a required, one or more, sub-element of <journal-meta>. It
+        can only contain text, numbers, or special characters. If has a single
+        potential attribute, 'pub-type', whose value is used as a key to access
+        the text data of its tag.
+        """
+        issns = {}
+        for i in self.journal_meta.getElementsByTagName('issn'):
+            text = utils.nodeText(i)
+            issns[i.getAttribute('pub-type')] = text
+        return issns
+    
     def parseArticleMetadata(self):
         """
         As the specifications for metadata under the <article-meta> element
@@ -98,10 +124,7 @@ class JPTSMeta20(JPTSMeta):
         jm = self.journal_meta  # More compact
         #There will be one or more <journal-id> elements, which will be indexed
         #in a dictionary by their 'journal-id-type' attributes
-        self.journal_id = {}
-        for j in jm.getElementsByTagName('journal-id'):
-            text = utils.nodeText(j)
-            self.journal_id[j.getAttribute('journal-id-type')] = text
+        self.journal_id = self.getJournalID()
         #<journal-title> is zero or more and has no attributes
         self.journal_title = []
         for jt in jm.getElementsByTagName('journal-title'):
@@ -112,9 +135,7 @@ class JPTSMeta20(JPTSMeta):
             text = utils.nodeText(a)
             self.abbrev_journal_title[a.getAttribute('abbrev-type')] = text
         #<issn> is one or more and has 'pub-type' attribute
-        self.issn = {}
-        for i in jm.getElementsByTagName('issn'):
-            self.issn[i.getAttribute('pub-type')] = utils.nodeText(i)
+        self.issn = self.getISSN()
         #<publisher> is zero or one; If it exists, it will contain:
         #one <publisher-name> and zero or one <publisher-loc>
         if jm.getElementsByTagName('publisher'):
@@ -170,10 +191,7 @@ class JPTSMeta23(JPTSMeta):
         jm = self.journal_meta  # More compact
         #There will be one or more <journal-id> elements, which will be indexed
         #in a dictionary by their 'journal-id-type' attributes
-        self.journal_id = {}
-        for j in jm.getElementsByTagName('journal-id'):
-            text = utils.nodeText(j)
-            self.journal_id[j.getAttribute('journal-id-type')] = text
+        self.journal_id = self.getJournalID()
         #<journal-title> is zero or more and has 'content-type' attribute
         self.journal_title = {}
         for jt in jm.getElementsByTagName('journal-title'):
@@ -198,9 +216,7 @@ class JPTSMeta23(JPTSMeta):
             text = utils.nodeText(a)
             self.abbrev_journal_title[a.getAttribute('abbrev-type')] = text
         #<issn> is one or more and has 'pub-type' attribute
-        self.issn = {}
-        for i in jm.getElementsByTagName('issn'):
-            self.issn[i.getAttribute('pub-type')] = utils.nodeText(i)
+        self.issn = self.getISSN()
         #<publisher> is zero or one; it has 'content-type' attribute
         #If it exists, it will contain: one <publisher-name> and zero or one 
         #<publisher-loc>
@@ -262,10 +278,7 @@ class JPTSMeta30(JPTSMeta):
         jm = self.journal_meta  # More compact
         #There will be one or more <journal-id> elements, which will be indexed
         #in a dictionary by their 'journal-id-type' attributes
-        self.journal_id = {}
-        for j in jm.getElementsByTagName('journal-id'):
-            text = utils.nodeText(j)
-            self.journal_id[j.getAttribute('journal-id-type')] = text
+        self.journal_id = self.getJournalID()
         #<journal-title-group> is zero or more and has 'content-type' attribute
         #It contains zero or more of the following:
         #  <journal-title> with 'xml:lang' and 'content-type' attributes
@@ -286,9 +299,7 @@ trans, abbrev')
             g = tg(g[0], g[1], g[2], g[3])
             self.journal_title_group[group.getAttribute('content-type')] = g
         #<issn> is one or more and has 'pub-type' attribute
-        self.issn = {}
-        for i in jm.getElementsByTagName('issn'):
-            self.issn[i.getAttribute('pub-type')] = utils.nodeText(i)
+        self.issn = self.getISSN()
         #<isbn> is zero or more and has 'content-type' attribute
         self.isbn = {}
         for i in jm.getElementsByTagName('isbn'):
