@@ -183,6 +183,8 @@ class JPTSMeta(object):
     def getTitleGroup(self):
         """
         <title-group> is a required element underneath the <article-meta> tag.
+        Below this level, each specification has its own way of constructing
+        its title elements.
         """
         return self.article_meta.getElementsByTagName('title-group')[0]
     
@@ -230,6 +232,28 @@ class JPTSMeta20(JPTSMeta):
         self.article_id = self.getArticleID()
         self.article_categories = self.getArticleCategories()
         self.title_group = self.getTitleGroup()
+        #self.title will be a namedtuple comprised of the elements under
+        #<title-group>. names will be set by their elements, and values will
+        #be set by the following types
+        #article_title : Node
+        #subtitle      : NodeList
+        #trans-title   : dictionary[xml:lang]
+        #alt-title     : dictionary[alt-title-type]
+        #fn_group      : Node
+        atg = collections.namedtuple('Article Title Group', 'article_title, subtitle, trans_title, alt_title, fn_group')
+        article = self.title_group.getElementsByTagName('article-title')[0]
+        subtitle = self.title_group.getElementsByTagName('subtitle')
+        trans = {}
+        for t in self.title_group.getElementsByTagName('trans-title'):
+            trans[t.getAttribute('xml:lang')] = t
+        alt = {}
+        for a in self.title_group.getElementsByTagName('alt-title'):
+            alt[a.getAttribute('alt-title-type')] = a
+        try:
+            fn = self.title_group.getElementsByTagName('fn-group')[0]
+        except IndexError:
+            fn = None
+        self.title = atg(article, subtitle, trans, alt, fn)
     
     def dtdVersion(self):
         return '2.0'
@@ -302,6 +326,51 @@ class JPTSMeta23(JPTSMeta):
         self.article_id = self.getArticleID()
         self.article_categories = self.getArticleCategories()
         self.title_group = self.getTitleGroup()
+        #v2.3 has rather more potential attributes, which adds complexity to
+        #The matter of indexing them, as is done in v2.0. I'm opting for making
+        #composite elements of Nodes with their attribute values for easier
+        #lookup
+        #self.title will be a namedtuple comprised of the elements under
+        #<title-group>. names will be set by their elements, and values will
+        #be set by the following types
+        #article_title  : Node
+        #subtitle       : NodeList
+        #trans-title    : [namedtuple(Node,attributes)]
+        #trans-subtitle : [namedtuple(Node,attributes)]
+        #alt-title      : dictionary[alt-title-type]
+        #fn_group       : Node
+        atg = collections.namedtuple('Article Title Group', 'article_title, subtitle, trans_title, trans_subtitle, alt_title, fn_group')
+        article = self.title_group.getElementsByTagName('article-title')[0]
+        subtitle = self.title_group.getElementsByTagName('subtitle')
+        #<trans-title> tags
+        trans_title = []
+        tt = collections.namedtuple('trans-title', 'Node, content-type, id, xml:lang')
+        for e in self.title_group.getElementsByTagName('trans-title'):
+            ct = e.getAttribute('content-type')
+            id = e.getAttribute('id')
+            xl = e.getAttribute('xml:lang')
+            new = tt(e, ct, id, xl)
+            trans_title.append(new)
+        #<trans-subtitle> tags
+        trans_sub = []
+        ts = collections.namedtuple('trans-subtitle', 'Node, content-type, id, xml:lang')
+        for e in self.title_group.getElementsByTagName('trans-subtitle'):
+            ct = e.getAttribute('content-type')
+            id = e.getAttribute('id')
+            xl = e.getAttribute('xml:lang')
+            new = ts(e, ct, id, xl)
+            trans_sub.append(new)
+        #<alt-title> tags
+        alt = {}
+        for a in self.title_group.getElementsByTagName('alt-title'):
+            alt[a.getAttribute('alt-title-type')] = a
+        #<fn-group> tag
+        try:
+            fn = self.title_group.getElementsByTagName('fn-group')[0]
+        except IndexError:
+            fn = None
+        #Set self.title now
+        self.title = atg(article, subtitle, trans_title, trans_sub, alt, fn)
     
     def dtdVersion(self):
         return '2.3'
