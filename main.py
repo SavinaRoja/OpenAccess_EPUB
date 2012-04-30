@@ -5,7 +5,7 @@ This is the main execution file for OpenAccess_EPUB. It provides the primary
 mode of execution and interaction.
 """
 
-__version__ = '0.0.16'
+__version__ = '0.1.0'
 
 #Standard Library Modules
 import argparse
