@@ -188,6 +188,20 @@ class JPTSMeta(object):
         """
         return self.article_meta.getElementsByTagName('title-group')[0]
     
+    def getContribGroup(self):
+        """
+        <contrib-group> is an optional, zero or more, element used to group
+        elements used to represent individuals who contributed independently
+        to the article. It is not to be confused with <collab>. Beneath this
+        element, it may contain <contrib> elements for individual authors or
+        editors. It may also contain many of the elements contained within
+        <contrib> elements. Should these elements exist, they are presumably
+        pertinent to all <contrib> members contained, and will be applied to
+        those elements unless overridden during their inspection. See
+        jptscontrib.py for further information.
+        """
+        return self.article_meta.getElementsByTagName('contrib-group')
+    
     def dtdVersion(self):
         return None
 
@@ -254,6 +268,7 @@ class JPTSMeta20(JPTSMeta):
         except IndexError:
             fn = None
         self.title = atg(article, subtitle, trans, alt, fn)
+        self.contrib_group = self.getContribGroup()
     
     def dtdVersion(self):
         return '2.0'
@@ -371,6 +386,7 @@ class JPTSMeta23(JPTSMeta):
             fn = None
         #Set self.title now
         self.title = atg(article, subtitle, trans_title, trans_sub, alt, fn)
+        self.contrib_group = self.getContribGroup()
     
     def dtdVersion(self):
         return '2.3'
