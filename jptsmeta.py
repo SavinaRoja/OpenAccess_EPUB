@@ -240,7 +240,7 @@ class JPTSMeta20(JPTSMeta):
         #trans-title   : dictionary[xml:lang]
         #alt-title     : dictionary[alt-title-type]
         #fn_group      : Node
-        atg = collections.namedtuple('Article Title Group', 'article_title, subtitle, trans_title, alt_title, fn_group')
+        atg = collections.namedtuple('Article_Title_Group', 'article_title, subtitle, trans_title, alt_title, fn_group')
         article = self.title_group.getElementsByTagName('article-title')[0]
         subtitle = self.title_group.getElementsByTagName('subtitle')
         trans = {}
@@ -339,12 +339,12 @@ class JPTSMeta23(JPTSMeta):
         #trans-subtitle : [namedtuple(Node,attributes)]
         #alt-title      : dictionary[alt-title-type]
         #fn_group       : Node
-        atg = collections.namedtuple('Article Title Group', 'article_title, subtitle, trans_title, trans_subtitle, alt_title, fn_group')
+        atg = collections.namedtuple('Article_Title_Group', 'article_title, subtitle, trans_title, trans_subtitle, alt_title, fn_group')
         article = self.title_group.getElementsByTagName('article-title')[0]
         subtitle = self.title_group.getElementsByTagName('subtitle')
         #<trans-title> tags
         trans_title = []
-        tt = collections.namedtuple('trans-title', 'Node, content-type, id, xml:lang')
+        tt = collections.namedtuple('trans_title', 'Node, content_type, id, xml_lang')
         for e in self.title_group.getElementsByTagName('trans-title'):
             ct = e.getAttribute('content-type')
             id = e.getAttribute('id')
@@ -353,7 +353,7 @@ class JPTSMeta23(JPTSMeta):
             trans_title.append(new)
         #<trans-subtitle> tags
         trans_sub = []
-        ts = collections.namedtuple('trans-subtitle', 'Node, content-type, id, xml:lang')
+        ts = collections.namedtuple('trans_subtitle', 'Node, content_type, id, xml_lang')
         for e in self.title_group.getElementsByTagName('trans-subtitle'):
             ct = e.getAttribute('content-type')
             id = e.getAttribute('id')
