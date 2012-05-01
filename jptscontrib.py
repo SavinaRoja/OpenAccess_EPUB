@@ -88,11 +88,18 @@ class ContribGroup(object):
         at = collections.namedtuple('Aff', 'Node, id, rid, content_type')
         afflist = []
         for aff in affs:
-            id = aff.getAttribute('id')
+            aid = aff.getAttribute('id')
             rid = aff.getAttribute('rid')
             ct = aff.getAttribute('content-type')
-            afflist.append(at(aff, id, rid, ct))
+            afflist.append(at(aff, aid, rid, ct))
         return afflist
+        
+    def getAuthorComment(self):
+        """
+        <author-comment> is an optional tag, 0 or more, that may contain a
+        <title> element, and 1 or more <p> elements. 
+        """
+        return self.getChildrenByTagName('author-comment')
         
         #One or more <contrib>
         #self.contrib = self.Node.getElementsByTagName('contrib')
@@ -109,3 +116,18 @@ class ContribGroup(object):
         
     def contributors(self):
         return self.contrib
+    
+class Contrib(ContribGroup):
+    """
+    <contrib> nodes are similar in specidifation to <contrib-group> nodes,
+    thus they inherit from the ContribGroup class. Aside from collecting
+    some different data during inspection, this class is set up to accept
+    default values for attributes it might inherit from its parent
+    <contrib-group> node.
+    """
+    
+    def getContrib(self):
+        """
+        <contrib> nodes do not contain further <contrib> nodes
+        """
+        return None
