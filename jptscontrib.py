@@ -40,6 +40,8 @@ class ContribGroup(object):
         self.contrib = self.getContrib()
         self.address = self.getAddress()  #NodeList
         self.aff = self.getAff()
+        self.author_comment = self.getAuthorComment()
+        self.bio = self.getBio()
     
     def getChildrenByTagName(self, searchterm):
         """
@@ -97,9 +99,17 @@ class ContribGroup(object):
     def getAuthorComment(self):
         """
         <author-comment> is an optional tag, 0 or more, that may contain a
-        <title> element, and 1 or more <p> elements. 
+        <title> element and 1 or more <p> elements. 
         """
         return self.getChildrenByTagName('author-comment')
+    
+    def getBio(self):
+        """
+        <bio> is an optional tag, 0 or more, that may contain a <title>
+        element and 1 or more <p> elements.
+        """
+        
+        return self.getChildrenByTagName('bio')
         
         #One or more <contrib>
         #self.contrib = self.Node.getElementsByTagName('contrib')
