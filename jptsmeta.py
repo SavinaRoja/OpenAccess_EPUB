@@ -215,6 +215,12 @@ class JPTSMeta(object):
         is important to make its attributes accessible. It's contents are
         diverse, but they include the address elements which may feature heavily.
         """
+        affs = self.getChildrenByTagName('aff', self.article_meta)
+        affsbyid = {}
+        for aff in affs:
+            aid = aff.getAttribute('id')
+            affsbyid[aid] = aff
+        return affs, affsbyid
     
     def getChildrenByTagName(self, searchterm, node):
         """
@@ -303,6 +309,7 @@ class JPTSMeta20(JPTSMeta):
         self.contrib = []
         for each in self.contrib_group:
             self.contrib += each.contributors()
+        self.affs, self.affs_by_id = self.getAff()
     
     def dtdVersion(self):
         return '2.0'
@@ -424,6 +431,7 @@ class JPTSMeta23(JPTSMeta):
         self.contrib = []
         for each in self.contrib_group:
             self.contrib += each.contributors()
+        self.affs, self.affs_by_id = self.getAff()
     
     def dtdVersion(self):
         return '2.3'
@@ -532,6 +540,7 @@ trans, abbrev')
         self.contrib = []
         for each in self.contrib_group:
             self.contrib += each.contributors()
+        self.affs, self.affs_by_id = self.getAff()
     
     def dtdVersion(self): 
         return '3.0'
