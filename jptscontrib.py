@@ -42,6 +42,12 @@ class ContribGroup(object):
         self.aff = self.getAff()
         self.author_comment = self.getAuthorComment()
         self.bio = self.getBio()
+        self.email = self.getEmail()
+        self.ext_link = self.getExtLink()
+        self.uri = self.getUri()
+        self.on_behalf_of = self.getOnBehalfOf()
+        self.role = self.getRole()
+        self.xref = self.getXref()
     
     def getChildrenByTagName(self, searchterm):
         """
@@ -108,8 +114,44 @@ class ContribGroup(object):
         <bio> is an optional tag, 0 or more, that may contain a <title>
         element and 1 or more <p> elements.
         """
-        
         return self.getChildrenByTagName('bio')
+    
+    def getEmail(self):
+        """
+        
+        """
+        return self.getChildrenByTagName('email')
+    
+    def getExtLink(self):
+        """
+        
+        """
+        return self.getChildrenByTagName('ext-link')
+    
+    def getUri(self):
+        """
+        
+        """
+        return self.getChildrenByTagName('uri')
+    
+    def getOnBehalfOf(self):
+        """
+        
+        """
+        return self.getChildrenByTagName('on-behalf-of')
+    
+    def getRole(self):
+        """
+        
+        """
+        return self.getChildrenByTagName('role')
+    
+    def getXref(self):
+        """
+        
+        """
+        return self.getChildrenByTagName('xref')
+        
         
         #One or more <contrib>
         #self.contrib = self.Node.getElementsByTagName('contrib')
@@ -129,7 +171,7 @@ class ContribGroup(object):
     
 class Contrib(ContribGroup):
     """
-    <contrib> nodes are similar in specidifation to <contrib-group> nodes,
+    <contrib> nodes are similar in specification to <contrib-group> nodes,
     thus they inherit from the ContribGroup class. Aside from collecting
     some different data during inspection, this class is set up to accept
     default values for attributes it might inherit from its parent
