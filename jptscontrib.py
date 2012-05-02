@@ -119,39 +119,53 @@ class ContribGroup(object):
     
     def getEmail(self):
         """
-        
+        <email> is an optional tag, 0 or more. It contains only text, numbers,
+        and special characters.
         """
         return self.getChildrenByTagName('email')
     
     def getExtLink(self):
         """
-        
+        <ext-link> is an optional tag, 0 or more. It contains text and emphasis
+        elements.
         """
         return self.getChildrenByTagName('ext-link')
     
     def getUri(self):
         """
-        
+        <uri> is an optional tag, 0 or more. It contains only text, numbers,
+        and special characters.
         """
         return self.getChildrenByTagName('uri')
     
     def getOnBehalfOf(self):
         """
-        
+        <on-behalf-of> is an optional tag, 0 or more. It contains text and
+        emphasis elements.
         """
         return self.getChildrenByTagName('on-behalf-of')
     
     def getRole(self):
         """
-        
+        <role> is an optional tag, 0 or more. It contains text and emphasis
+        elements.
         """
         return self.getChildrenByTagName('role')
     
     def getXref(self):
         """
-        
+        <xref> is an optional tag, 0 or more. It may contain text and emphasis
+        elements. It's attributes are \"id\", \"rid\", and \"ref-type\". This
+        method will return a list of namedtuple(Node, id, rid, ref_type)
         """
-        return self.getChildrenByTagName('xref')
+        xref = collections.namedtuple('Xref', 'Node, id, rid, ref_type')
+        xreflist = []
+        for x in self.getChildrenByTagName('xref'):
+            xid = x.getAttribute('id')
+            rid = x.getAttribute('rid')
+            rt = x.getAttribute('ref-type')
+            xreflist.append(xref(x, xid, rid, rt))
+        return xreflist
     
     def contributors(self):
         """
