@@ -12,6 +12,7 @@ metadata, this class will handle everything except <body>.
 
 import utils
 import collections
+import jptscontrib
 
 
 class JPTSMeta(object):
@@ -200,7 +201,10 @@ class JPTSMeta(object):
         those elements unless overridden during their inspection. See
         jptscontrib.py for further information.
         """
-        return self.article_meta.getElementsByTagName('contrib-group')
+        contrib_group_list = []
+        for each in self.article_meta.getElementsByTagName('contrib-group'):
+            contrib_group_list.append(jptscontrib.ContribGroup(each))
+        return contrib_group_list
     
     def dtdVersion(self):
         return None
@@ -269,6 +273,9 @@ class JPTSMeta20(JPTSMeta):
             fn = None
         self.title = atg(article, subtitle, trans, alt, fn)
         self.contrib_group = self.getContribGroup()
+        self.contrib = []
+        for each in self.contrib_group:
+            self.contrib += each.contributors()
     
     def dtdVersion(self):
         return '2.0'
@@ -387,6 +394,9 @@ class JPTSMeta23(JPTSMeta):
         #Set self.title now
         self.title = atg(article, subtitle, trans_title, trans_sub, alt, fn)
         self.contrib_group = self.getContribGroup()
+        self.contrib = []
+        for each in self.contrib_group:
+            self.contrib += each.contributors()
     
     def dtdVersion(self):
         return '2.3'

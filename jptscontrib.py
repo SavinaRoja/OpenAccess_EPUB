@@ -4,6 +4,7 @@ article contributions as defined in the Journal Publishing Tag Set.
 """
 
 import collections
+import utils
 
 
 class ContribGroup(object):
@@ -159,8 +160,11 @@ class ContribGroup(object):
         inside a list.
         """
         contriblist = []
+        inheritance = [self.address, self.aff, self.author_comment, self.bio,
+                      self.email, self.ext_link, self.uri, self.on_behalf_of,
+                      self.role, self.xref]
         for tag in self.contrib:
-            contriblist.append(Contrib(tag))
+            contriblist.append(Contrib(tag, inheritance))
         return contriblist
     
 class Contrib(ContribGroup):
@@ -172,7 +176,97 @@ class Contrib(ContribGroup):
     <contrib-group> node.
     """
     
+    def __init__(self, contribnode, inheritance):
+        super(Contrib, self).__init__(contribnode)
+        self.getAttributes()
+        self.anonymous = self.getAnonymous()
+        self.collab = self.getCollab()
+        self.name = self.getName()
+        self.degrees = self.getDegrees()
+        
+        #This list must directly correlate to the inheritance list
+        inheritors = [self.address, self.aff, self.author_comment, self.bio,
+                      self.email, self.ext_link, self.uri, self.on_behalf_of,
+                      self.role, self.xref]
+        i = 0
+        while i < len(inheritors):
+            if not inheritors[i]:
+                if inheritance[i]:
+                    inheritors[i] = inheritance[i]
+                    
+            i += 1
+        
+    def getAttributes(self):
+        self.attrs = {}
+        attrs = ['contrib-type', 'corresp', 'deceased', 'equal-contrib', 'id',
+                 'rid', 'xlink:actuate', 'xlink:href', 'xlink:role',
+                 'xlink:show', 'xlink:title', 'xlink;type', 'xlink:xlink']
+        for a in attrs:
+            self.attrs[a] = self.Node.getAttribute(a)
     
+    def getAnonymous(self):
+        """
+        <anonymous> is an optional element, and typically contains no content.
+        Additionally, it should be rare that it should be ever more than 0 or 1
+        but the JPTS does not restrict its value. For this reason, it will be
+        collected as a NodeList. It does not exist in v2.0.
+        """
+        return self.getChildrenByTagName('anonymous')
+    
+    def getCollab(self):
+        """
+        <collab> is an optional element, 0 or more, though again it should be
+        a rare case that multiple <collab> tags are listed under a single
+        <contrib>. This tag is used when authors work in collaboration, or a
+        group entity is to be identified as the author, such as a corporation
+        or academic institution.
+        """
+        return self.getChildrenByTagName('collab')
+    
+    def getName(self):
+        """
+        <name> is an optional element, 0 or more, but should rarely be multiple
+        within a single <contrib>. If multiple names are present, it shall be
+        considered the case that each name applies to a singular contributing
+        entity. For example, Pamela Isley might also be known as Paula Irving
+        or Poison Ivy. The content model of <name> requires a single <surname>
+        and 0 or one of the following: <given-name>, <prefix>, and <suffix>
+        (all of which are text, numbers, special characters). The possible
+        attributes are \"name-style\" and \"content-type\".
+        """
+        namelist = []
+        name = collections.namedtuple('Name', 'Node, surname, given, prefix, suffix, name_style, content_type')
+        for n in self.getChildrenByTagName('name'):
+            surname = utils.nodeText(n.getElementsByTagName('surname')[0])
+            try:
+                given = utils.nodeText(n.getElementsByTagName('given')[0])
+            except IndexError:
+                given = None
+            try:
+                prefix = utils.nodeText(n.getElementsByTagName('prefix')[0])
+            except IndexError:
+                prefix = None
+            try:
+                suffix = utils.nodeText(n.getElementsByTagName('suffix')[0])
+            except IndexError:
+                suffix = None
+            ns = n.getAttribute('name-style')
+            ct = n.getAttribute('content-type')
+            namelist.append(name(n, surname, given, prefix, suffix, ns, ct))
+        return namelist
+    
+    def getDegrees(self):
+        """
+        <degrees> is an optional element, 0 or more, under the <contrib> tag.
+        It may only contain text, numbers, or special characters, and is
+        intended to contain credential information that may be displayed with
+        the name. For multiple degrees, a publisher may hypothetically do
+        either of the following: <degrees>PhD, MD</degrees> or 
+        <degrees>PhD</degrees><degrees>MD</degrees>.
+        """
+        degreeslist = []
+        for degrees in self.getChildrenByTagName('degrees'):
+            degreeslist.append(utils.nodeText(degrees))
     
     def getContrib(self):
         """
