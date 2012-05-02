@@ -38,9 +38,9 @@ class ContribGroup(object):
         self.content_type = self.Node.getAttribute('content-type')
         self.id = self.Node.getAttribute('id')
         self.contrib = self.getContrib()
-        self.address = self.getAddress()  #NodeList
-        self.aff = self.getAff()
-        self.author_comment = self.getAuthorComment()
+        self.address = self.getAddress()  # NodeList
+        self.aff = self.getAff()  # List of named(Node, id, rid, content_type)
+        self.author_comment = self.getAuthorComment()  # NodeList
         self.bio = self.getBio()
         self.email = self.getEmail()
         self.ext_link = self.getExtLink()
@@ -101,7 +101,7 @@ class ContribGroup(object):
             ct = aff.getAttribute('content-type')
             afflist.append(at(aff, aid, rid, ct))
         return afflist
-        
+    
     def getAuthorComment(self):
         """
         <author-comment> is an optional tag, 0 or more, that may contain a
@@ -151,23 +151,17 @@ class ContribGroup(object):
         
         """
         return self.getChildrenByTagName('xref')
-        
-        
-        #One or more <contrib>
-        #self.contrib = self.Node.getElementsByTagName('contrib')
-        #Any number of the following
-        #self.aff = self.Node.getElementsByTagName('aff')
-        #self.author_comment = self.Node.getElementsByTagName('author-comment')
-        #self.bio = self.Node.getElementsByTagName('bio')
-        #self.email = self.Node.getElementsByTagName('email')
-        #self.ext_link = self.Node.getElementsByTagName('ext-link')
-        #self.uri = self.Node.getElementsByTagName('uri')
-        #self.on_behalf_of = self.Node.getElementsByTagName('on-behalf-of')
-        #self.role = self.Node.getElementsByTagName('role')
-        #self.xref = self.Node.getElementsByTagName('xref')
-        
+    
     def contributors(self):
-        return self.contrib
+        """
+        This method instantiates a Contrib class for each <contrib> element
+        contained in the <contrib-group> element. These instances are returned
+        inside a list.
+        """
+        contriblist = []
+        for tag in self.contrib:
+            contriblist.append(Contrib(tag))
+        return contriblist
     
 class Contrib(ContribGroup):
     """
@@ -177,6 +171,8 @@ class Contrib(ContribGroup):
     default values for attributes it might inherit from its parent
     <contrib-group> node.
     """
+    
+    
     
     def getContrib(self):
         """
