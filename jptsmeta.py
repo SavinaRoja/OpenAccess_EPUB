@@ -206,6 +206,33 @@ class JPTSMeta(object):
             contrib_group_list.append(jptscontrib.ContribGroup(each))
         return contrib_group_list
     
+    def getAff(self):
+        """
+        <aff> is an optional tag that can be contained in <article-meta>,
+        <collab>, <contrib>, <contrib-group>, <person-group>, and (in the case
+        of v2.3 and v3.0) <front-stub>. It's potential attributes are id, rid,
+        and content-type. It is commonly referred to by other elements, thus it
+        is important to make its attributes accessible. It's contents are
+        diverse, but they include the address elements which may feature heavily.
+        """
+    
+    def getChildrenByTagName(self, searchterm, node):
+        """
+        This method differs from getElementsByTagName() by only searching the
+        childNodes of the specified node. The node must also be specified along
+        with the searchterm.
+        """
+        nodelist = []
+        for c in node.childNodes:
+            try:
+                tag = c.tagName
+            except AttributeError:  # Text nodes have no tagName
+                pass
+            else:
+                if tag == searchterm:
+                    nodelist.append(c)
+        return nodelist
+    
     def dtdVersion(self):
         return None
 
@@ -369,18 +396,18 @@ class JPTSMeta23(JPTSMeta):
         tt = collections.namedtuple('trans_title', 'Node, content_type, id, xml_lang')
         for e in self.title_group.getElementsByTagName('trans-title'):
             ct = e.getAttribute('content-type')
-            id = e.getAttribute('id')
+            eid = e.getAttribute('id')
             xl = e.getAttribute('xml:lang')
-            new = tt(e, ct, id, xl)
+            new = tt(e, ct, eid, xl)
             trans_title.append(new)
         #<trans-subtitle> tags
         trans_sub = []
         ts = collections.namedtuple('trans_subtitle', 'Node, content_type, id, xml_lang')
         for e in self.title_group.getElementsByTagName('trans-subtitle'):
             ct = e.getAttribute('content-type')
-            id = e.getAttribute('id')
+            eid = e.getAttribute('id')
             xl = e.getAttribute('xml:lang')
-            new = ts(e, ct, id, xl)
+            new = ts(e, ct, eid, xl)
             trans_sub.append(new)
         #<alt-title> tags
         alt = {}
@@ -469,6 +496,42 @@ trans, abbrev')
         self.article_id = self.getArticleID()
         self.article_categories = self.getArticleCategories()
         self.title_group = self.getTitleGroup()
+        atg = collections.namedtuple('Article_Title_Group', 'article_title, subtitle, trans_title, trans_subtitle, alt_title, fn_group')
+        article = self.title_group.getElementsByTagName('article-title')[0]
+        subtitle = self.title_group.getElementsByTagName('subtitle')
+        #<trans-title> tags
+        trans_title = []
+        tt = collections.namedtuple('trans_title', 'Node, content_type, id, xml_lang')
+        for e in self.title_group.getElementsByTagName('trans-title'):
+            ct = e.getAttribute('content-type')
+            eid = e.getAttribute('id')
+            xl = e.getAttribute('xml:lang')
+            new = tt(e, ct, eid, xl)
+            trans_title.append(new)
+        #<trans-subtitle> tags
+        trans_sub = []
+        ts = collections.namedtuple('trans_subtitle', 'Node, content_type, id, xml_lang')
+        for e in self.title_group.getElementsByTagName('trans-subtitle'):
+            ct = e.getAttribute('content-type')
+            eid = e.getAttribute('id')
+            xl = e.getAttribute('xml:lang')
+            new = ts(e, ct, eid, xl)
+            trans_sub.append(new)
+        #<alt-title> tags
+        alt = {}
+        for a in self.title_group.getElementsByTagName('alt-title'):
+            alt[a.getAttribute('alt-title-type')] = a
+        #<fn-group> tag
+        try:
+            fn = self.title_group.getElementsByTagName('fn-group')[0]
+        except IndexError:
+            fn = None
+        #Set self.title now
+        self.title = atg(article, subtitle, trans_title, trans_sub, alt, fn)
+        self.contrib_group = self.getContribGroup()
+        self.contrib = []
+        for each in self.contrib_group:
+            self.contrib += each.contributors()
     
     def dtdVersion(self): 
         return '3.0'
