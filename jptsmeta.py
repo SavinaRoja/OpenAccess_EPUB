@@ -222,6 +222,18 @@ class JPTSMeta(object):
             affsbyid[aid] = aff
         return affs, affsbyid
     
+    def getAuthorNotes(self):
+        """
+        <author-notes> is an optional tag, 0 or 1, for each DTD and has the
+        same potential attributes, id and rid. It may include an optional
+        <title> element (<label> is included in v3.0), and one or more of any
+        of the following: <fn>, <corresp>, (<p> in v3.0).
+        """
+        try:
+            return self.article_meta.getElementsByTagName('author-notes')[0]
+        except IndexError:
+            return None
+    
     def getChildrenByTagName(self, searchterm, node):
         """
         This method differs from getElementsByTagName() by only searching the
@@ -310,6 +322,7 @@ class JPTSMeta20(JPTSMeta):
         for each in self.contrib_group:
             self.contrib += each.contributors()
         self.affs, self.affs_by_id = self.getAff()
+        self.author_notes = self.getAuthorNotes()
     
     def dtdVersion(self):
         return '2.0'
@@ -432,6 +445,7 @@ class JPTSMeta23(JPTSMeta):
         for each in self.contrib_group:
             self.contrib += each.contributors()
         self.affs, self.affs_by_id = self.getAff()
+        self.author_notes = self.getAuthorNotes()
     
     def dtdVersion(self):
         return '2.3'
@@ -541,6 +555,7 @@ trans, abbrev')
         for each in self.contrib_group:
             self.contrib += each.contributors()
         self.affs, self.affs_by_id = self.getAff()
+        self.author_notes = self.getAuthorNotes()
     
     def dtdVersion(self): 
         return '3.0'
