@@ -276,7 +276,7 @@ class JPTSMeta(object):
         """
         <volume-id> is an optional element, 0 or more, with the optional
         attributes pub-id-type and content-type (only in v2.3 and v3.0). It is
-        ssed to record a name or an identifier, such as a DOI, that describes
+        used to record a name or an identifier, such as a DOI, that describes
         an entire volume of a journal. This method will return the text data of
         the nodes in a dictionary keyed to pub-id-type values.
         """
@@ -284,7 +284,21 @@ class JPTSMeta(object):
         for vi in self.article_meta.getElementsByTagName('volume-id'):
             text = utils.nodeText(vi)
             vol_ids[vi.getAttribute('pub-id-type')] = text
-        return vol_ids{}
+        return vol_ids
+
+    def getIssueID(self):
+        """
+        <issue-id> is an optional element, 0 or more, with the optional
+        attributes pub-id-type and content-type (only in v2.3 and v3.0). It is
+        used to record a name or identifier, such as a DOI, that describes an
+        entire issue of a journal This method will return the text data of the
+        nodes in a dictionary keyed to pub-id-type values.
+        """
+        iss_ids = {}
+        for ii in self.article_meta.getElementsByTagName('issue-id'):
+            text = utils.nodeText(ii)
+            iss_ids[vi.getAttribute('pub-id-type')] = text
+        return iss_ids
 
     def getChildrenByTagName(self, searchterm, node):
         """
@@ -391,6 +405,7 @@ class JPTSMeta20(JPTSMeta):
             self.issue = None
         else:
             self.issue = utils.nodeText(vol)
+        self.issue_id = self.getIssueID()
 
     def dtdVersion(self):
         return '2.0'
@@ -528,6 +543,7 @@ class JPTSMeta23(JPTSMeta):
             self.volume = volume(text, seq, ct)
             self.volume_id = self.getVolumeID()
             self.issue = self.getIssue()
+            self.issue_id = self.getIssueID()
 
     def getVolume(self):
         """
@@ -673,6 +689,7 @@ class JPTSMeta30(JPTSMeta):
         self.volume = self.getVolume()
         self.volume_id = self.getVolumeID()
         self.issue = self.getIssue()
+        self.issue_id = self.getIssueID()
 
     def getVolume(self):
         """
