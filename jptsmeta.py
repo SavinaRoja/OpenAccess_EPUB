@@ -12,7 +12,6 @@ metadata, this class will handle everything except <body>.
 
 import utils
 import collections
-import datetime
 import jptscontrib
 
 
