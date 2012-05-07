@@ -376,6 +376,7 @@ class JPTSMeta20(JPTSMeta):
         self.affs, self.affs_by_id = self.getAff()
         self.author_notes = self.getAuthorNotes()
         self.pub_date = self.getPubDate()
+        #This segment gets None or a text value for self.volume
         try:
             vol = am.getElementsByTagName('volume')[0]
         except IndexError:
@@ -383,6 +384,13 @@ class JPTSMeta20(JPTSMeta):
         else:
             self.volume = utils.nodeText(vol)
         self.volume_id = self.getVolumeID()
+        #This segment gets None or a text value for self.issue
+        try:
+            iss = am.getElementsByTagName('issue')[0]
+        except IndexError:
+            self.issue = None
+        else:
+            self.issue = utils.nodeText(vol)
 
     def dtdVersion(self):
         return '2.0'
@@ -519,6 +527,7 @@ class JPTSMeta23(JPTSMeta):
             ct = vol.getAttribute('content-type')
             self.volume = volume(text, seq, ct)
             self.volume_id = self.getVolumeID()
+            self.issue = self.getIssue()
 
     def getVolume(self):
         """
@@ -535,6 +544,22 @@ class JPTSMeta23(JPTSMeta):
             seq = vol.getAttribute('seq')
             ct = vol.getAttribute('content-type')
             return volume(text, seq, ct)
+
+def getIssue(self):
+        """
+        This method operates on the optional, 0 or 1, element <issue>. Its
+        potential attributes, seq and content-type will be extracted.
+        """
+        issue = collections.namedtuple('Issue', 'value, seq, content_type')
+        try:
+            iss = self.article_meta.getElementsByTagName('issue')[0]
+        except IndexError:
+            return None
+        else:
+            text = utils.nodeText(iss)
+            seq = vol.getAttribute('seq')
+            ct = vol.getAttribute('content-type')
+            return issue(text, seq, ct)
 
     def dtdVersion(self):
         return '2.3'
@@ -647,6 +672,7 @@ class JPTSMeta30(JPTSMeta):
         self.pub_date = self.getPubDate()
         self.volume = self.getVolume()
         self.volume_id = self.getVolumeID()
+        self.issue = self.getIssue()
 
     def getVolume(self):
         """
@@ -664,6 +690,21 @@ class JPTSMeta30(JPTSMeta):
             ct = vol.getAttribute('content-type')
             return volume(text, seq, ct)
 
+def getIssue(self):
+        """
+        This method operates on the optional, 0 or 1, element <issue>. Its
+        potential attributes, seq and content-type will be extracted.
+        """
+        issue = collections.namedtuple('Issue', 'value, seq, content_type')
+        try:
+            iss = self.article_meta.getElementsByTagName('issue')[0]
+        except IndexError:
+            return None
+        else:
+            text = utils.nodeText(iss)
+            seq = vol.getAttribute('seq')
+            ct = vol.getAttribute('content-type')
+            return issue(text, seq, ct)
 
     def dtdVersion(self):
         return '3.0'
