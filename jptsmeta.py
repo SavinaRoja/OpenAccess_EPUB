@@ -362,6 +362,12 @@ class JPTSMeta20(JPTSMeta):
         self.affs, self.affs_by_id = self.getAff()
         self.author_notes = self.getAuthorNotes()
         self.pub_date = self.getPubDate()
+        try:
+            vol = am.getElementsByTagName('volume')[0]
+        except IndexError:
+            self.volume = None
+        else:
+            self.volume = utils.nodeText(vol)
 
     def dtdVersion(self):
         return '2.0'
@@ -486,6 +492,33 @@ class JPTSMeta23(JPTSMeta):
         self.affs, self.affs_by_id = self.getAff()
         self.author_notes = self.getAuthorNotes()
         self.pub_date = self.getPubDate()
+        self.volume = self.getVolume()
+        volume = collections.namedtuple('Volume', 'value, seq, content_type')
+        try:
+            vol = am.getElementsByTagName('volume')[0]
+        except IndexError:
+            self.volume = None
+        else:
+            text = utils.nodeText(vol)
+            seq = vol.getAttribute('seq')
+            ct = vol.getAttribute('content-type')
+            self.volume = volume(text, seq, ct)
+
+    def getVolume(self):
+        """
+        This method operates on the optional, 0 or 1, element <volume>. Its
+        potential attributes, seq and content-type will be extracted.
+        """
+        volume = collections.namedtuple('Volume', 'value, seq, content_type')
+        try:
+            vol = self.article_meta.getElementsByTagName('volume')[0]
+        except IndexError:
+            return None
+        else:
+            text = utils.nodeText(vol)
+            seq = vol.getAttribute('seq')
+            ct = vol.getAttribute('content-type')
+            return volume(text, seq, ct)
 
     def dtdVersion(self):
         return '2.3'
@@ -596,6 +629,24 @@ class JPTSMeta30(JPTSMeta):
         self.affs, self.affs_by_id = self.getAff()
         self.author_notes = self.getAuthorNotes()
         self.pub_date = self.getPubDate()
+        self.volume = self.getVolume()
+
+    def getVolume(self):
+        """
+        This method operates on the optional, 0 or 1, element <volume>. Its
+        potential attributes, seq and content-type will be extracted.
+        """
+        volume = collections.namedtuple('Volume', 'value, seq, content_type')
+        try:
+            vol = self.article_meta.getElementsByTagName('volume')[0]
+        except IndexError:
+            return None
+        else:
+            text = utils.nodeText(vol)
+            seq = vol.getAttribute('seq')
+            ct = vol.getAttribute('content-type')
+            return volume(text, seq, ct)
+
 
     def dtdVersion(self):
         return '3.0'
