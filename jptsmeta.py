@@ -272,6 +272,20 @@ class JPTSMeta(object):
             pub_dates[pub_type] = pd(k, year, month, day, season, pub_type)
         return pub_dates
 
+    def getVolumeID(self):
+        """
+        <volume-id> is an optional element, 0 or more, with the optional
+        attributes pub-id-type and content-type (only in v2.3 and v3.0). It is
+        ssed to record a name or an identifier, such as a DOI, that describes
+        an entire volume of a journal. This method will return the text data of
+        the nodes in a dictionary keyed to pub-id-type values.
+        """
+        vol_ids = {}
+        for vi in self.article_meta.getElementsByTagName('volume-id'):
+            text = utils.nodeText(vi)
+            vol_ids[vi.getAttribute('pub-id-type')] = text
+        return vol_ids{}
+
     def getChildrenByTagName(self, searchterm, node):
         """
         This method differs from getElementsByTagName() by only searching the
@@ -368,6 +382,7 @@ class JPTSMeta20(JPTSMeta):
             self.volume = None
         else:
             self.volume = utils.nodeText(vol)
+        self.volume_id = self.getVolumeID()
 
     def dtdVersion(self):
         return '2.0'
@@ -503,6 +518,7 @@ class JPTSMeta23(JPTSMeta):
             seq = vol.getAttribute('seq')
             ct = vol.getAttribute('content-type')
             self.volume = volume(text, seq, ct)
+            self.volume_id = self.getVolumeID()
 
     def getVolume(self):
         """
@@ -630,6 +646,7 @@ class JPTSMeta30(JPTSMeta):
         self.author_notes = self.getAuthorNotes()
         self.pub_date = self.getPubDate()
         self.volume = self.getVolume()
+        self.volume_id = self.getVolumeID()
 
     def getVolume(self):
         """
