@@ -4,14 +4,15 @@ Tag Set. There is a base class providing a baseline of functionality for the
 JPTS and derived classes for distinct versions of the Tag Set. With this
 implementation, the commonalities between versions may be presented in the base
 class while their differences may be presented in their derived classes. An
-important distinction must to be made between publisher and the DTD version. For
-full extensibility in development, DTD and publisher parameters must be
+important distinction must to be made between publisher and the DTD version.
+For full extensibility in development, DTD and publisher parameters must be
 recognized for their distinct roles in the format of a document. As a class for
 metadata, this class will handle everything except <body>.
 """
 
 import utils
 import collections
+import datetime
 import jptscontrib
 
 
@@ -26,7 +27,7 @@ class JPTSMeta(object):
         self.getFrontElements()
         self.parseJournalMetadata()
         self.parseArticleMetadata()
-    
+
     def getTopElements(self):
         self.front = self.doc.getElementsByTagName('front')[0]  # Required
         try:
@@ -44,13 +45,13 @@ class JPTSMeta(object):
                 self.response = None
         self.floats_wrap = self.getTopFloats_Wrap()  # relevant to v2.3
         self.floats_group = self.getTopFloats_Group()  # relevant to v3.0
-    
+
     def getTopFloats_Wrap(self):
         return None
-    
+
     def getTopFloats_Group(self):
         return None
-    
+
     def getFrontElements(self):
         """
         The structure of elements under <front> is the same for all versions
@@ -63,7 +64,7 @@ class JPTSMeta(object):
             self.notes = self.front.getElementsByTagName('notes')[0]
         except IndexError:
             self.notes = None
-            
+
     def parseJournalMetadata(self):
         """
         As the specifications for metadata under the <journal-meta> element
@@ -72,7 +73,7 @@ class JPTSMeta(object):
         the article is found.
         """
         return None
-    
+
     def getJournalID(self):
         """
         <journal-id> is a required, one or more, sub-element of <journal-meta>.
@@ -85,7 +86,7 @@ class JPTSMeta(object):
             text = utils.nodeText(j)
             ids[j.getAttribute('journal-id-type')] = text
         return ids
-    
+
     def getISSN(self):
         """
         <issn> is a required, one or more, sub-element of <journal-meta>. It
@@ -98,7 +99,7 @@ class JPTSMeta(object):
             text = utils.nodeText(i)
             issns[i.getAttribute('pub-type')] = text
         return issns
-    
+
     def getPublisher(self):
         """
         <publisher> under <journal-meta> is an optional tag, zero or one, which
@@ -127,7 +128,7 @@ class JPTSMeta(object):
             return pd(name, loc, content_type)
         else:
             return pd(None, None, None)
-    
+
     def getJournalMetaNotes(self):
         """
         The <notes> tag under the <journal-meta> is option, zero or one, and
@@ -141,7 +142,7 @@ class JPTSMeta(object):
             return None
         else:
             return tag
-    
+
     def parseArticleMetadata(self):
         """
         As the specifications for metadata under the <article-meta> element
@@ -150,7 +151,7 @@ class JPTSMeta(object):
         issue of the journal in which it is found.
         """
         return None
-    
+
     def getArticleID(self):
         """
         <article-id> is an optional, 0 or more, sub-element of <article-meta>.
@@ -163,7 +164,7 @@ class JPTSMeta(object):
             text = utils.nodeText(j)
             ids[j.getAttribute('pub-id-type')] = text
         return ids
-    
+
     def getArticleCategories(self):
         """
         The <article-categories> tag is optional, zero or one, underneath the
@@ -180,7 +181,7 @@ class JPTSMeta(object):
             return None
         else:
             return a
-    
+
     def getTitleGroup(self):
         """
         <title-group> is a required element underneath the <article-meta> tag.
@@ -188,7 +189,7 @@ class JPTSMeta(object):
         its title elements.
         """
         return self.article_meta.getElementsByTagName('title-group')[0]
-    
+
     def getContribGroup(self):
         """
         <contrib-group> is an optional, zero or more, element used to group
@@ -205,7 +206,7 @@ class JPTSMeta(object):
         for each in self.article_meta.getElementsByTagName('contrib-group'):
             contrib_group_list.append(jptscontrib.ContribGroup(each))
         return contrib_group_list
-    
+
     def getAff(self):
         """
         <aff> is an optional tag that can be contained in <article-meta>,
@@ -213,7 +214,8 @@ class JPTSMeta(object):
         of v2.3 and v3.0) <front-stub>. It's potential attributes are id, rid,
         and content-type. It is commonly referred to by other elements, thus it
         is important to make its attributes accessible. It's contents are
-        diverse, but they include the address elements which may feature heavily.
+        diverse, but they include the address elements which may feature
+        heavily.
         """
         affs = self.getChildrenByTagName('aff', self.article_meta)
         affsbyid = {}
@@ -221,7 +223,7 @@ class JPTSMeta(object):
             aid = aff.getAttribute('id')
             affsbyid[aid] = aff
         return affs, affsbyid
-    
+
     def getAuthorNotes(self):
         """
         <author-notes> is an optional tag, 0 or 1, for each DTD and has the
@@ -233,7 +235,44 @@ class JPTSMeta(object):
             return self.article_meta.getElementsByTagName('author-notes')[0]
         except IndexError:
             return None
-    
+
+    def getPubDate(self):
+        """
+        <pub-date> is a mandatory element, 1 or more, within the <article-meta>
+        element. It has a single attribute, pub-type, and its content model is:
+        (((day?, month?) | season)?, year)
+        This is common between DTD versions. This method returns a dictionary
+        of namedtuples whose keys are the values of the pub-type attribute.
+        """
+        pd = collections.namedtuple('Pub_Date', 'Node, year, month, day, season, pub_type')
+        pub_dates = {}
+        for k in self.article_meta.getElementsByTagName('pub-date'):
+            try:
+                s = k.getElementsByTagName('season')[0]
+            except IndexError:
+                season = ''
+                try:
+                    m = k.getElementsByTagName('month')[0]
+                except IndexError:
+                    month = 0
+                else:
+                    month = utils.nodeText(m)
+                try:
+                    d = k.getElementsByTagName('day')[0]
+                except IndexError:
+                    day = 0
+                else:
+                    day = utils.nodeText(d)
+            else:
+                season = utils.nodeText(s)
+                month = 0
+                day = 0
+            y = k.getElementsByTagName('year')[0]
+            year = utils.nodeText(y)
+            pub_type = k.getAttribute('pub-type')
+            pub_dates[pub_type] = pd(k, year, month, day, season, pub_type)
+        return pub_dates
+
     def getChildrenByTagName(self, searchterm, node):
         """
         This method differs from getElementsByTagName() by only searching the
@@ -250,7 +289,7 @@ class JPTSMeta(object):
                 if tag == searchterm:
                     nodelist.append(c)
         return nodelist
-    
+
     def dtdVersion(self):
         return None
 
@@ -260,7 +299,7 @@ class JPTSMeta20(JPTSMeta):
     This is the derived class for version 2.0 of the Journal Publishing Tag Set
     metadata.
     """
-    
+
     def parseJournalMetadata(self):
         """
         <journal-meta> stores information about the journal in which
@@ -283,7 +322,7 @@ class JPTSMeta20(JPTSMeta):
         self.issn = self.getISSN()
         self.publisher = self.getPublisher()  # publisher.loc is text
         self.jm_notes = self.getJournalMetaNotes()
-    
+
     def parseArticleMetadata(self):
         """
         <article-meta> stores information about the article and the
@@ -323,7 +362,8 @@ class JPTSMeta20(JPTSMeta):
             self.contrib += each.contributors()
         self.affs, self.affs_by_id = self.getAff()
         self.author_notes = self.getAuthorNotes()
-    
+        self.pub_date = self.getPubDate()
+
     def dtdVersion(self):
         return '2.0'
 
@@ -333,7 +373,7 @@ class JPTSMeta23(JPTSMeta):
     This is the derived class for version 2.3 of the Journal Publishing Tag Set
     metadata.
     """
-    
+
     def getTopFloats_Wrap(self):
         """
         <floats-wrap> may exist as a top level element for DTD v2.3. This
@@ -346,7 +386,7 @@ class JPTSMeta23(JPTSMeta):
             if fw.parentNode.tagName == u'article':
                 return fw
         return None
-    
+
     def parseJournalMetadata(self):
         """
         <journal-meta> stores information about the journal in which
@@ -383,7 +423,7 @@ class JPTSMeta23(JPTSMeta):
         self.issn = self.getISSN()
         self.publisher = self.getPublisher()  # publisher.loc is a node
         self.jm_notes = self.getJournalMetaNotes()
-    
+
     def parseArticleMetadata(self):
         """
         <article-meta> stores information about the article and the
@@ -446,7 +486,8 @@ class JPTSMeta23(JPTSMeta):
             self.contrib += each.contributors()
         self.affs, self.affs_by_id = self.getAff()
         self.author_notes = self.getAuthorNotes()
-    
+        self.pub_date = self.getPubDate()
+
     def dtdVersion(self):
         return '2.3'
 
@@ -456,20 +497,20 @@ class JPTSMeta30(JPTSMeta):
     This is the derived class for version 3.0 of the Journal Publishing Tag Set
     metadata.
     """
-    
+
     def getTopFloats_Group(self):
         """
         <floats-group> may exist as a top level element for DTD v3.0. This
         tag may only exist under <article>, <sub-article>, or <response>.
-        This function will only return a <floats-group> node underneath article,
-        the top level element.
+        This function will only return a <floats-group> node underneath
+        <article>, the top level element.
         """
         floats_wrap = self.doc.getElementsByTagName('floats-group')
         for fw in floats_wrap:
             if fw.parentNode.tagName == u'article':
                 return fw
         return None
-    
+
     def parseJournalMetadata(self):
         """
         <journal-meta> stores information about the journal in which
@@ -488,8 +529,7 @@ class JPTSMeta30(JPTSMeta):
         #The following treatment produces a dictionary keyed by content type
         #whose values are namedtuples containing lists of each element type
         title_groups = jm.getElementsByTagName('journal-title-group')
-        tg = collections.namedtuple('Journal_Title_Group', 'title, subtitle, \
-trans, abbrev')
+        tg = collections.namedtuple('Journal_Title_Group', 'title, subtitle, trans, abbrev')
         self.journal_title_group = {}
         for group in title_groups:
             g = []
@@ -506,7 +546,7 @@ trans, abbrev')
             self.isbn[i.getAttribute('content-type')] = utils.nodeText(i)
         self.publisher = self.getPublisher()  # publisher.loc is a node
         self.jm_notes = self.getJournalMetaNotes()
-    
+
     def parseArticleMetadata(self):
         """
         <article-meta> stores information about the article and the
@@ -556,6 +596,7 @@ trans, abbrev')
             self.contrib += each.contributors()
         self.affs, self.affs_by_id = self.getAff()
         self.author_notes = self.getAuthorNotes()
-    
-    def dtdVersion(self): 
+        self.pub_date = self.getPubDate()
+
+    def dtdVersion(self):
         return '3.0'
