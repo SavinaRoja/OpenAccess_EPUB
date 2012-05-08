@@ -667,6 +667,20 @@ class JPTSMeta20(JPTSMeta):
         self.uri = self.getURI()
         self.product = self.getProduct()
         self.supplementary_material = self.getSupplementaryMaterial()
+        self.history = self.getHistory()
+        self.copyright_statement = self.getCopyrightStatement()
+        self.copyright_year = self.getCopyrightYear()
+        self.license = self.getLicense()
+        self.self_uri = self.getSelfURI()
+        self.related_article = self.getRelatedArticle()
+        self.abstract = self.getAbstract()
+        self.trans_abstract = self.getTransAbstract()
+        self.kwd_group = self.getKwdGroup()
+        self.contract_num = self.getContractNum()
+        self.contract_sponsor = self.getContractSponsor()
+        self.conference = self.getConference()
+        self.counts = self.getCounts()
+        self.custom_meta_wrap= self.getCustomMetaWrap()
 
     def dtdVersion(self):
         return '2.0'
