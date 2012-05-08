@@ -328,23 +328,95 @@ class JPTSMeta(object):
 
     def getFPage(self):
         """
-        
+        <fpage> is a mandatory element if <elocation-id> is not included within
+        <article-meta>. There will be only one. Its only attribute in v2.0 is
+        seq, while v2.3 and v3.0 also provide content-type. Its only content
+        is text, numbers, and special characters.
         """
-        return None
+        fp = collections.namedtuple('fpage', 'text, seq')
+        fpage = self.getChildrenByTagName('fpage', self.article_meta)[0]
+        text = utils.nodeText(fpage)
+        seq = fpage.getAttribute('seq')
+        return fp(text, seq)
 
     def getLPage(self):
         """
-        
+        <lpage> is an optional, 0 or 1, element if <elocation-id> is not
+        present within <article-meta>. Its only attribute is content-type
+        with DTD versions 2.3 and 3.0. Its only content is text, numbers, and
+        special characters.
         """
-        return None
+        try:
+            lpage = self.getChildrenByTagName('lpage', self.article_meta)[0]
+        except IndexError:
+            return None
+        else:
+            return utils.nodeText(lpage)
 
     def getPageRange(self):
         """
+        <page-range> is an optional, 0 or 1, element if <elocation-id> is not
+        present within <article-meta>. Its only attribute is content-type with
+        DTD versions 2.3 and 3.0. It's only content is text, numbers, and
+        special characters. It should be noted, that <page-range> supplements
+        <fpage> and <lpage>, it does not replace them.
+        """
+        try:
+            pr = self.getChildrenByTagName('page-range', self.article_meta)[0]
+        except IndexError:
+            return None
+        else:
+            return utils.nodeText(pr)
+
+    def getElocationID(self):
+        """
+        <elocation-id> is an optional, 0 or 1, which is mutually exclusive with
+        <fpage>, <lpage>, and <page-range>. Its only attribute in v2.0 is seq,
+        while v2.3 and v3.0 also provide content-type. Its content is text,
+        numbers, and special characters.
+        """
+        try:
+            e = self.getChildrenByTagName('elocation-id', self.article_meta)[0]
+        except IndexError:
+            return None
+        else:
+            return utils.nodeText(e)
+
+    def getEmail(self):
+        """
+        <email> is an optional element, 0 or more, in <article-meta>. Its only
+        content is text, numbers, and special characters. It has attributes
+        common to each version of the JPTS, and content-type is provided by
+        v2.3 and v3.0. For now, this method will simply collect a list of
+        <email> nodes directly under <article-meta>.
+        """
+        return self.getChildrenByTagName('email', self.article_meta)
+
+    def getExtLink(self):
+        """
+        <ext-link> is an optional element, 0 or more, in <article-meta>. It may
+        contain text and various formatting and emphasis elements. It has
+        the following possible attributes: ext-link-type, id, xlink:actuate,
+        xlink:href, xlink:role, xlink:show, xlink:title, xlink:type, and
+        xmlns:xlink in v2.0 and v2.3. v3.0 add specific-use. For now, this
+        method will simply collect a list of <ext-link> nodes directly under
+        <article-meta>.
+        """
+        return self.getChildrenByTagName('ext-link', self.article_meta)
+
+    def getURI(self):
+        """
         
         """
         return None
 
-    def getElocationID(self):
+    def getProduct(self):
+        """
+        
+        """
+        return None
+
+    def getSupplementaryMaterial(self):
         """
         
         """
@@ -457,9 +529,16 @@ class JPTSMeta20(JPTSMeta):
             self.issue = utils.nodeText(iss)
         self.issue_id = self.getIssueID()
         self.supplement = self.getSupplement()
-        #The following logic for attribute options exists for each DTD
+        #Get values for elocation_id, fpage, lpage, and page_range
         self.elocation_id = self.getElocationID()
-        
+        if self.elocation_id:
+            self.fpage = None
+            self.lpage = None
+            self.page_range = None
+        else:
+            self.fpage = self.getFPage()
+            self.lpage = self.getLPage()
+            self.page_range = self.getPageRange()
 
     def dtdVersion(self):
         return '2.0'
@@ -589,6 +668,16 @@ class JPTSMeta23(JPTSMeta):
         self.issue = self.getIssue()
         self.issue_id = self.getIssueID()
         self.supplement = self.getSupplement()
+        #Get values for elocation_id, fpage, lpage, and page_range
+        self.elocation_id = self.getElocationID()
+        if self.elocation_id:
+            self.fpage = None
+            self.lpage = None
+            self.page_range = None
+        else:
+            self.fpage = self.getFPage()
+            self.lpage = self.getLPage()
+            self.page_range = self.getPageRange()
 
     def getVolume(self):
         """
@@ -736,6 +825,16 @@ class JPTSMeta30(JPTSMeta):
         self.issue = self.getIssue()
         self.issue_id = self.getIssueID()
         self.supplement = self.getSupplement()
+        #Get values for elocation_id, fpage, lpage, and page_range
+        self.elocation_id = self.getElocationID()
+        if self.elocation_id:
+            self.fpage = None
+            self.lpage = None
+            self.page_range = None
+        else:
+            self.fpage = self.getFPage()
+            self.lpage = self.getLPage()
+            self.page_range = self.getPageRange()
 
     def getVolume(self):
         """
