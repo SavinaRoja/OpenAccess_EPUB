@@ -430,7 +430,7 @@ class JPTSMeta20(JPTSMeta):
         except IndexError:
             self.issue = None
         else:
-            self.issue = utils.nodeText(vol)
+            self.issue = utils.nodeText(iss)
         self.issue_id = self.getIssueID()
         self.supplement = self.getSupplement()
 
