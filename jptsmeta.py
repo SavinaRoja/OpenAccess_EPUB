@@ -428,9 +428,14 @@ class JPTSMeta(object):
 
     def getSupplementaryMaterial(self):
         """
-        
+        <supplementary-material> is an optional element, 0 or more, in
+        <article-meta> to be used to 'alert to the existence of
+        supplementary material and so that it can be accessed from the
+        article'. The use cases will depend heavily on publishers and it will
+        take some effort to fully support. For now, the nodes will merely be
+        collected.
         """
-        return None
+        return self.getChildrenByTagName('supplementary-material', self.article_meta)
 
     def getChildrenByTagName(self, searchterm, node):
         """
