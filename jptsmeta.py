@@ -509,18 +509,6 @@ class JPTSMeta(object):
         """
         return None
 
-    def getGrantNum(self):
-        """
-        
-        """
-        return None
-
-    def getGrantSponsor(self):
-        """
-        
-        """
-        return None
-
     def getFundingGroup(self):
         """
         
@@ -680,7 +668,7 @@ class JPTSMeta20(JPTSMeta):
         self.contract_sponsor = self.getContractSponsor()
         self.conference = self.getConference()
         self.counts = self.getCounts()
-        self.custom_meta_wrap= self.getCustomMetaWrap()
+        self.custom_meta_wrap = self.getCustomMetaWrap()
 
     def dtdVersion(self):
         return '2.0'
@@ -825,6 +813,23 @@ class JPTSMeta23(JPTSMeta):
         self.uri = self.getURI()
         self.product = self.getProduct()
         self.supplementary_material = self.getSupplementaryMaterial()
+        self.history = self.getHistory()
+        self.copyright_statement = self.getCopyrightStatement()
+        self.copyright_year = self.getCopyrightYear()
+        self.license = self.getLicense()
+        self.permissions = self.getPermissions()
+        self.self_uri = self.getSelfURI()
+        self.related_article = self.getRelatedArticle()
+        self.abstract = self.getAbstract()
+        self.trans_abstract = self.getTransAbstract()
+        self.kwd_group = self.getKwdGroup()
+        self.contract_num = self.getContractNum()
+        self.contract_sponsor = self.getContractSponsor()
+        self.grant_num = self.getGrantNum()
+        self.grant_sponsor = self.getGrantSponsor()
+        self.conference = self.getConference()
+        self.counts = self.getCounts()
+        self.custom_meta_wrap = self.getCustomMetaWrap()
 
     def getVolume(self):
         """
@@ -857,6 +862,18 @@ class JPTSMeta23(JPTSMeta):
             seq = iss.getAttribute('seq')
             ct = iss.getAttribute('content-type')
             return issue(text, seq, ct)
+
+    def getGrantNum(self):
+        """
+        
+        """
+        return None
+
+    def getGrantSponsor(self):
+        """
+        
+        """
+        return None
 
     def dtdVersion(self):
         return '2.3'
