@@ -326,6 +326,30 @@ class JPTSMeta(object):
         else:
             return s
 
+    def getFPage(self):
+        """
+        
+        """
+        return None
+
+    def getLPage(self):
+        """
+        
+        """
+        return None
+
+    def getPageRange(self):
+        """
+        
+        """
+        return None
+
+    def getElocationID(self):
+        """
+        
+        """
+        return None
+
     def getChildrenByTagName(self, searchterm, node):
         """
         This method differs from getElementsByTagName() by only searching the
@@ -418,7 +442,7 @@ class JPTSMeta20(JPTSMeta):
         self.pub_date = self.getPubDate()
         #This segment gets None or a text value for self.volume
         try:
-            vol = getChildrenByTagName('volume', am)[0]
+            vol = self.getChildrenByTagName('volume', am)[0]
         except IndexError:
             self.volume = None
         else:
@@ -433,6 +457,9 @@ class JPTSMeta20(JPTSMeta):
             self.issue = utils.nodeText(iss)
         self.issue_id = self.getIssueID()
         self.supplement = self.getSupplement()
+        #The following logic for attribute options exists for each DTD
+        self.elocation_id = self.getElocationID()
+        
 
     def dtdVersion(self):
         return '2.0'
