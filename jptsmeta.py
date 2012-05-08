@@ -509,12 +509,6 @@ class JPTSMeta(object):
         """
         return None
 
-    def getFundingGroup(self):
-        """
-        
-        """
-        return None
-
     def getConference(self):
         """
         
@@ -1004,6 +998,17 @@ class JPTSMeta30(JPTSMeta):
         self.uri = self.getURI()
         self.product = self.getProduct()
         self.supplementary_material = self.getSupplementaryMaterial()
+        self.history = self.getHistory()
+        self.permissions = self.getPermissions()
+        self.self_uri = self.getSelfURI()
+        self.related_article = self.getRelatedArticle()
+        self.abstract = self.getAbstract()
+        self.trans_abstract = self.getTransAbstract()
+        self.kwd_group = self.getKwdGroup()
+        self.funding_group = self.getFundingGroup()
+        self.conference = self.getConference()
+        self.counts = self.getCounts()
+        self.custom_meta_wrap = self.getCustomMetaWrap()
 
     def getVolume(self):
         """
@@ -1036,6 +1041,12 @@ class JPTSMeta30(JPTSMeta):
             seq = iss.getAttribute('seq')
             ct = iss.getAttribute('content-type')
             return issue(text, seq, ct)
+
+    def getFundingGroup(self):
+        """
+        
+        """
+        return None
 
     def dtdVersion(self):
         return '3.0'
