@@ -406,15 +406,25 @@ class JPTSMeta(object):
 
     def getURI(self):
         """
-        
+        <uri> is an optional element, 0 or more, in <article-meta>. It may only
+        contain text, numbers, and special characters. It has the following
+        possible attributes: xlink:href, xlink:role, xlink:show, xlink:title,
+        xlink:type, and xmlns:xlink (in v2.0). v2.3. v3.0 add content-type. For
+        now, this method will simply collect a list of <uri> nodes directly
+        under <article-meta>.
         """
-        return None
+        return self.getChildrenByTagName('uri', self.article_meta)
 
     def getProduct(self):
         """
-        
+        <product> is an optional element, 0 or more, in <article-meta> that has
+        a huge range for potential content. Use cases are likely to depend
+        heavily on publishers. For now the nodes will be collected into a list.
+        The following attributes are possible: id (not in v2.0), product-type,
+        xlink:href, xlink:role, xlink:show, xlink:title, xlink:type,
+        and xmlns:xlink.
         """
-        return None
+        return self.getChildrenByTagName('product', self.article_meta)
 
     def getSupplementaryMaterial(self):
         """
@@ -539,6 +549,11 @@ class JPTSMeta20(JPTSMeta):
             self.fpage = self.getFPage()
             self.lpage = self.getLPage()
             self.page_range = self.getPageRange()
+        self.email = self.getEmail()
+        self.ext_link = self.getExtLink()
+        self.uri = self.getURI()
+        self.product = self.getProduct()
+        self.supplementary_material = self.getSupplementaryMaterial()
 
     def dtdVersion(self):
         return '2.0'
@@ -678,6 +693,11 @@ class JPTSMeta23(JPTSMeta):
             self.fpage = self.getFPage()
             self.lpage = self.getLPage()
             self.page_range = self.getPageRange()
+        self.email = self.getEmail()
+        self.ext_link = self.getExtLink()
+        self.uri = self.getURI()
+        self.product = self.getProduct()
+        self.supplementary_material = self.getSupplementaryMaterial()
 
     def getVolume(self):
         """
@@ -835,6 +855,11 @@ class JPTSMeta30(JPTSMeta):
             self.fpage = self.getFPage()
             self.lpage = self.getLPage()
             self.page_range = self.getPageRange()
+        self.email = self.getEmail()
+        self.ext_link = self.getExtLink()
+        self.uri = self.getURI()
+        self.product = self.getProduct()
+        self.supplementary_material = self.getSupplementaryMaterial()
 
     def getVolume(self):
         """
