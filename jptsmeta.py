@@ -437,6 +437,114 @@ class JPTSMeta(object):
         """
         return self.getChildrenByTagName('supplementary-material', self.article_meta)
 
+    def getHistory(self):
+        """
+        
+        """
+        return None
+
+    def getCopyrightStatement(self):
+        """
+        
+        """
+        return None
+
+    def getCopyrightYear(self):
+        """
+        
+        """
+        return None
+
+    def getLicense(self):
+        """
+        
+        """
+        return None
+
+    def getPermissions(self):
+        """
+        
+        """
+        return None
+
+    def getSelfURI(self):
+        """
+        
+        """
+        return None
+
+    def getRelatedArticle(self):
+        """
+        
+        """
+        return None
+
+    def getAbstract(self):
+        """
+        
+        """
+        return None
+
+    def getTransAbstract(self):
+        """
+        
+        """
+        return None
+
+    def getKwdGroup(self):
+        """
+        
+        """
+        return None
+
+    def getContractNum(self):
+        """
+        
+        """
+        return None
+
+    def getContractSponsor(self):
+        """
+        
+        """
+        return None
+
+    def getGrantNum(self):
+        """
+        
+        """
+        return None
+
+    def getGrantSponsor(self):
+        """
+        
+        """
+        return None
+
+    def getFundingGroup(self):
+        """
+        
+        """
+        return None
+
+    def getConference(self):
+        """
+        
+        """
+        return None
+
+    def getCounts(self):
+        """
+        
+        """
+        return None
+
+    def getCustomMetaWrap(self):
+        """
+        
+        """
+        return None
+
     def getChildrenByTagName(self, searchterm, node):
         """
         This method differs from getElementsByTagName() by only searching the
