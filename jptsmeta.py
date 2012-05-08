@@ -439,9 +439,45 @@ class JPTSMeta(object):
 
     def getHistory(self):
         """
-        
+        The <history> element is optional, 0 or 1, within <article-meta> and
+        will contain 1 or more <date> elements. This content describes dates
+        related to the processing history of the document. Based on the content
+        model for this element and the <date> elements it contains, the history
+        will be represented as a dictionary of dates keyed by date-type values.
         """
-        return None
+        dates = {}
+        d = collections.namedtuple('Date', 'year, month, day, season')
+        try:
+            h = self.getChildrenByTagName('history', self.article_meta)[0]
+        except IndexError:
+            return dates
+        else:
+            for k in h.getChildrenbyTagName('date'):
+                try:
+                    s = k.getElementsByTagName('season')[0]
+                except IndexError:
+                    season = ''
+                    try:
+                        m = k.getElementsByTagName('month')[0]
+                    except IndexError:
+                        month = 0
+                    else:
+                        month = utils.nodeText(m)
+                    try:
+                        d = k.getElementsByTagName('day')[0]
+                    except IndexError:
+                        day = 0
+                    else:
+                        day = utils.nodeText(d)
+                else:
+                    season = utils.nodeText(s)
+                    month = 0
+                    day = 0
+                y = k.getElementsByTagName('year')[0]
+                year = utils.nodeText(y)
+            dt = k.getAttribute('date-type')
+            dates[dt] = d(year, month, day, season)
+        return dates
 
     def getCopyrightStatement(self):
         """
