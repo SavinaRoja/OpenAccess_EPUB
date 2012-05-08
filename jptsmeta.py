@@ -297,7 +297,7 @@ class JPTSMeta(object):
         iss_ids = {}
         for ii in self.article_meta.getElementsByTagName('issue-id'):
             text = utils.nodeText(ii)
-            iss_ids[vi.getAttribute('pub-id-type')] = text
+            iss_ids[ii.getAttribute('pub-id-type')] = text
         return iss_ids
 
     def getIssueTitle(self):
@@ -309,8 +309,22 @@ class JPTSMeta(object):
         """
         issue_titles = []
         for it in self.article_meta.getElementsByTagName('issue-title'):
-            issue_title.append(utils.nodeText(it))
+            issue_titles.append(utils.nodeText(it))
         return issue_titles
+
+    def getSupplement(self):
+        """
+        <supplement> element exists as an optional element, 0 or 1, within
+        <article-meta>. It can also be found in other descendants of
+        <article-meta>; <product> and <related-article>. Its content is varied
+        and depends on DTD version. At this stage, we merely collect the node.
+        """
+        try:
+            s = self.getChildrenByTagName('supplement', self.article_meta)[0]
+        except IndexError:
+            return None
+        else:
+            return s
 
     def getChildrenByTagName(self, searchterm, node):
         """
@@ -418,6 +432,7 @@ class JPTSMeta20(JPTSMeta):
         else:
             self.issue = utils.nodeText(vol)
         self.issue_id = self.getIssueID()
+        self.supplement = self.getSupplement()
 
     def dtdVersion(self):
         return '2.0'
@@ -546,6 +561,7 @@ class JPTSMeta23(JPTSMeta):
         self.volume_id = self.getVolumeID()
         self.issue = self.getIssue()
         self.issue_id = self.getIssueID()
+        self.supplement = self.getSupplement()
 
     def getVolume(self):
         """
@@ -692,6 +708,7 @@ class JPTSMeta30(JPTSMeta):
         self.volume_id = self.getVolumeID()
         self.issue = self.getIssue()
         self.issue_id = self.getIssueID()
+        self.supplement = self.getSupplement()
 
     def getVolume(self):
         """
