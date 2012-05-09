@@ -568,9 +568,13 @@ class JPTSMeta(object):
 
     def getSelfURI(self):
         """
-        
+        The <self-uri> element is optional, 0 or more, within the
+        <article-meta> and may only contain text, numbers, or special
+        characters. Usage will vary by publisher, and any implementation at
+        that time should be determined by that publisher's usage. This method
+        will only collect the nodes.
         """
-        return None
+        return self.getChildrenByTagName('self-uri', self.article_meta)
 
     def getRelatedArticle(self):
         """
