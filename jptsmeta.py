@@ -650,9 +650,20 @@ class JPTSMeta(object):
 
     def getContractNum(self):
         """
-        
+        <contract-num> is an optional element, 0 or more, in <article-meta>
+        which may only contain text, numbers, or special characters, though it
+        may have various attributes. This method will return a list of tuples
+        containing the nodes, their text, and their salient attributes. If
+        necessary, more robust handling of all attributes may be added.
         """
-        return None
+        con_nums = []
+        cn = collections.namedtuple('Contract_Num', 'node, text, id, rid')
+        for c in self.getChildrenByTagName('contract-num', self.article_meta):
+            text = utils.nodeText(c)
+            cid = c.getAttribute('id')
+            crid = c.getAttribute('rid')
+            con_nums.append(cn(c, text, cid, crid))
+        return con_nums
 
     def getContractSponsor(self):
         """
