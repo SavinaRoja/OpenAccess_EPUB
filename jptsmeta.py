@@ -483,7 +483,9 @@ class JPTSMeta(object):
         """
         <copyright-statement> is an optional, 0 or 1, element in <article-meta>
         which can contain text, address linking elements, and formatting
-        elements. This method will return the node if it exists.
+        elements. This method will return the node if it exists. In version 2.3
+        it is best practice to put the <copyright-statement> element and its
+        information within the <permissions> tag.
         """
         try:
             cs = self.getChildrenByTagName('copyright-statement', self.article_meta)[0]
@@ -497,7 +499,8 @@ class JPTSMeta(object):
         <copyright-year> is an optional, 0 or 1, element in <article-meta>
         which may contain only text, numbers, and special characters. If the
         node exists, this method will return the text data it contains as a
-        string.
+        string. In version 2.3 it is best practice to put the <copyright-year>
+        element and its information within the <permissions> tag.
         """
         try:
             cy = self.getChildrenByTagName('copyright-year', self.article_meta)[0]
