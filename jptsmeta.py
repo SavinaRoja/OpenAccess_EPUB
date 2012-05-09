@@ -593,9 +593,21 @@ class JPTSMeta(object):
 
     def getAbstract(self):
         """
-        
+        <abstract> is an optional element, 0 or more, within <article-meta>.
+        Its potential attributes varies between DTD versions; abstract-type
+        and xml:lang are present in all versions, while id exists only in 2.3
+        and 3.0, only 3.0 has specific-use. The <abstract> nodes will be
+        collected along with the attribute values into a list of namedtuples.
         """
-        return None
+        abstracts = []
+        abs = collections.namedtuple('Abstract', 'node, type, xml_lang, id, specific_use')
+        for a in self.getChildrenByTagName('abstract', self.article_meta):
+            atyp = a.getAttribute('abstract-type')
+            lang = a.getAttribute('xml:lang')
+            abid = a.getAttribute('id')
+            spec = a.getAttribute('specific-use')
+            abstracts.append(abs(a, atyp, lang, abid, spec))
+        return abstracts
 
     def getTransAbstract(self):
         """
