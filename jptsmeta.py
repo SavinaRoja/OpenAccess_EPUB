@@ -675,9 +675,53 @@ class JPTSMeta(object):
 
     def getConference(self):
         """
-        
+        <conference> is an optional element, 0 or more, in <article-meta> which
+        is used to describe a conference at which the article was originally
+        presented. Technically, it would appear acceptable to name any number
+        of conferences.
         """
-        return None
+        conferences = []
+        conf = collections.namedtuple('Conference', 'date, name, acronym, num, loc, sponsor, theme')
+        for c in self.getChildrenByTagName('conference', self.article_meta):
+            date = utils.nodeText(c.getElementsByTagName('conf-date')[0])
+            try:
+                n = c.getElementsByTagName('conf-name')[0]
+            except IndexError:
+                name = None
+            else:
+                name = utils.nodeText(n)
+            try:
+                a = c.getElementsByTagName('conf-acronym')[0]
+            except IndexError:
+                acr = None
+            else:
+                acr = utils.nodeText(a)
+            if not name and not acronym:
+                print('Warning: Conference element provides no name or acronym')
+            try:
+                cn = c.getElementsByTagName('conf-num')[0]
+            except IndexError:
+                num = None
+            else:
+                num = utils.nodeText(cn)
+            try:
+                l = c.getElementsByTagName('conf-loc')[0]
+            except IndexError:
+                loc = None
+            else:
+                loc = utils.nodeText(l)
+            try:
+                s = c.getElementsByTagName('conf-sponsor')[0]
+            except IndexError:
+                spo = None
+            else:
+                spo = utils.nodeText(s)
+            try:
+                theme = c.getElementsByTagName('conf-theme')[0]
+            except IndexError:
+                theme = None
+            conferences.append(date, name, acr, num, loc, spo, theme)
+        return conferences
 
     def getCounts(self):
         """
