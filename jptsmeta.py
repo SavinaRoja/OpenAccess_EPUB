@@ -531,9 +531,40 @@ class JPTSMeta(object):
 
     def getPermissions(self):
         """
-        
+        The <permissions> element is not used in version 2.0. It is an optional
+        element, 0 or 1, in versions 2.3 and 3.0, where it may hold 0 or 1 of
+        each of the following, <copyright-statement>, <copyright-year>,
+        <copyright-holder>, and <license>. This method will return a namedtuple
+        to provide named access to each of these elements.
         """
-        return None
+        perm = collections.namedtuple('Permissions', 'statement, year, holder, license, license_type')
+        try:
+            p = self.getChildrenByTagName('permissions', self.article_meta)[0]
+        except IndexError:
+            return None
+        else:
+            try:
+                csnode = self.getChildrenByTagName('copyright-statement', p)[0]
+            except IndexError:
+                csnode = None
+            try:
+                cy = self.getChildrenByTagName('copyright-year', p)[0]
+            except IndexError:
+                cy = ''
+            else:
+                cy = utils.nodeText(cy)
+            try:
+                chnode = self.getChildrenByTagName('copyright-holder', p)[0]
+            except IndexError:
+                chnode = None
+            try:
+                lic = self.getChildrenByTagName('license', p)[0]
+            except IndexError:
+                lic = None
+                license_type = ''
+            else:
+                license_type = lic.getAttribute('license-type')
+        return perm(csnode, cy, chnode, lic, license_type)
 
     def getSelfURI(self):
         """
