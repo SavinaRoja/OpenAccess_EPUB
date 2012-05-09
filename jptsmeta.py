@@ -10,8 +10,8 @@ recognized for their distinct roles in the format of a document. As a class for
 metadata, this class will handle everything except <body>.
 """
 
+from collections import namedtuple
 import utils
-import collections
 import jptscontrib
 
 
@@ -109,7 +109,7 @@ class JPTSMeta(object):
         linking elements <email>, <ext-link>, and <uri>. This function returns
         the publisher information as a namedtuple for simple access.
         """
-        pd = collections.namedtuple('Publisher', 'name, loc, content_type')
+        pd = namedtuple('Publisher', 'name, loc, content_type')
         pub_node = self.journal_meta.getElementsByTagName('publisher')
         if pub_node:
             content_type = pub_node[0].getAttribute('content-type')
@@ -243,7 +243,7 @@ class JPTSMeta(object):
         This is common between DTD versions. This method returns a dictionary
         of namedtuples whose keys are the values of the pub-type attribute.
         """
-        pd = collections.namedtuple('Pub_Date', 'Node, year, month, day, season, pub_type')
+        pd = namedtuple('Pub_Date', 'Node, year, month, day, season, pub_type')
         pub_dates = {}
         for k in self.article_meta.getElementsByTagName('pub-date'):
             try:
@@ -333,7 +333,7 @@ class JPTSMeta(object):
         seq, while v2.3 and v3.0 also provide content-type. Its only content
         is text, numbers, and special characters.
         """
-        fp = collections.namedtuple('fpage', 'text, seq')
+        fp = namedtuple('fpage', 'text, seq')
         fpage = self.getChildrenByTagName('fpage', self.article_meta)[0]
         text = utils.nodeText(fpage)
         seq = fpage.getAttribute('seq')
@@ -446,7 +446,7 @@ class JPTSMeta(object):
         will be represented as a dictionary of dates keyed by date-type values.
         """
         dates = {}
-        d = collections.namedtuple('Date', 'year, month, day, season')
+        d = namedtuple('Date', 'year, month, day, season')
         try:
             h = self.getChildrenByTagName('history', self.article_meta)[0]
         except IndexError:
@@ -521,7 +521,7 @@ class JPTSMeta(object):
         license-type and the xlink/xmlns attributes. This will return a
         namedtuple of the node alongside it's license-type value.
         """
-        lic = collections.namedtuple('license', 'node, license_type')
+        lic = namedtuple('license', 'node, license_type')
         try:
             l = self.getChildrenByTagName('license', self.article_meta)[0]
         except IndexError:
@@ -537,7 +537,7 @@ class JPTSMeta(object):
         <copyright-holder>, and <license>. This method will return a namedtuple
         to provide named access to each of these elements.
         """
-        perm = collections.namedtuple('Permissions', 'statement, year, holder, license, license_type')
+        perm = namedtuple('Permissions', 'statement, year, holder, license, license_type')
         try:
             p = self.getChildrenByTagName('permissions', self.article_meta)[0]
         except IndexError:
@@ -600,7 +600,7 @@ class JPTSMeta(object):
         collected along with the attribute values into a list of namedtuples.
         """
         abstracts = []
-        abs = collections.namedtuple('Abstract', 'node, type, xml_lang, id, specific_use')
+        abs = namedtuple('Abstract', 'node, type, xml_lang, id, specific_use')
         for a in self.getChildrenByTagName('abstract', self.article_meta):
             atyp = a.getAttribute('abstract-type')
             lang = a.getAttribute('xml:lang')
@@ -616,7 +616,7 @@ class JPTSMeta(object):
         language.
         """
         trans_abstracts = []
-        tab = collections.namedtuple('Trans_Abstract', 'node, type, xml_lang, id, specific_use')
+        tab = namedtuple('Trans_Abstract', 'node, type, xml_lang, id, specific_use')
         for ta in self.getChildrenByTagName('trans-abstract', self.article_meta):
             atyp = ta.getAttribute('abstract-type')
             lang = ta.getAttribute('xml:lang')
@@ -639,7 +639,7 @@ class JPTSMeta(object):
         """
         kwd_groups = []  # There may be more than one
         all_kwds = []  # A list of all keywords
-        kwd = collections.namedtuple('Keyword', 'node, type, id')
+        kwd = namedtuple('Keyword', 'node, type, id')
         for kg in self.article_meta.getElementsbyTagName('kwd-group'):
             kwd_groups.append(kg)
             ktype = kg.getAttribute('keyword-group-type')
@@ -657,7 +657,7 @@ class JPTSMeta(object):
         necessary, more robust handling of all attributes may be added.
         """
         con_nums = []
-        cn = collections.namedtuple('Contract_Num', 'node, text, id, rid')
+        cn = namedtuple('Contract_Num', 'node, text, id, rid')
         for c in self.getChildrenByTagName('contract-num', self.article_meta):
             text = utils.nodeText(c)
             cid = c.getAttribute('id')
@@ -681,7 +681,7 @@ class JPTSMeta(object):
         of conferences.
         """
         conferences = []
-        conf = collections.namedtuple('Conference', 'date, name, acronym, num, loc, sponsor, theme')
+        conf = namedtuple('Conference', 'date, name, acronym, num, loc, sponsor, theme')
         for c in self.getChildrenByTagName('conference', self.article_meta):
             date = utils.nodeText(c.getElementsByTagName('conf-date')[0])
             try:
@@ -804,7 +804,7 @@ class JPTSMeta20(JPTSMeta):
         #trans-title   : dictionary[xml:lang]
         #alt-title     : dictionary[alt-title-type]
         #fn_group      : Node
-        atg = collections.namedtuple('Article_Title_Group', 'article_title, subtitle, trans_title, alt_title, fn_group')
+        atg = namedtuple('Article_Title_Group', 'article_title, subtitle, trans_title, alt_title, fn_group')
         article = self.title_group.getElementsByTagName('article-title')[0]
         subtitle = self.title_group.getElementsByTagName('subtitle')
         trans = {}
@@ -956,12 +956,12 @@ class JPTSMeta23(JPTSMeta):
         #trans-subtitle : [namedtuple(Node,attributes)]
         #alt-title      : dictionary[alt-title-type]
         #fn_group       : Node
-        atg = collections.namedtuple('Article_Title_Group', 'article_title, subtitle, trans_title, trans_subtitle, alt_title, fn_group')
+        atg = namedtuple('Article_Title_Group', 'article_title, subtitle, trans_title, trans_subtitle, alt_title, fn_group')
         article = self.title_group.getElementsByTagName('article-title')[0]
         subtitle = self.title_group.getElementsByTagName('subtitle')
         #<trans-title> tags
         trans_title = []
-        tt = collections.namedtuple('trans_title', 'Node, content_type, id, xml_lang')
+        tt = namedtuple('trans_title', 'Node, content_type, id, xml_lang')
         for e in self.title_group.getElementsByTagName('trans-title'):
             ct = e.getAttribute('content-type')
             eid = e.getAttribute('id')
@@ -970,7 +970,7 @@ class JPTSMeta23(JPTSMeta):
             trans_title.append(new)
         #<trans-subtitle> tags
         trans_sub = []
-        ts = collections.namedtuple('trans_subtitle', 'Node, content_type, id, xml_lang')
+        ts = namedtuple('trans_subtitle', 'Node, content_type, id, xml_lang')
         for e in self.title_group.getElementsByTagName('trans-subtitle'):
             ct = e.getAttribute('content-type')
             eid = e.getAttribute('id')
@@ -1038,7 +1038,7 @@ class JPTSMeta23(JPTSMeta):
         This method operates on the optional, 0 or 1, element <volume>. Its
         potential attributes, seq and content-type will be extracted.
         """
-        volume = collections.namedtuple('Volume', 'value, seq, content_type')
+        volume = namedtuple('Volume', 'value, seq, content_type')
         try:
             vol = self.getChildrenByTagName('volume', self.article_meta)[0]
         except IndexError:
@@ -1054,7 +1054,7 @@ class JPTSMeta23(JPTSMeta):
         This method operates on the optional, 0 or 1, element <issue>. Its
         potential attributes, seq and content-type will be extracted.
         """
-        issue = collections.namedtuple('Issue', 'value, seq, content_type')
+        issue = namedtuple('Issue', 'value, seq, content_type')
         try:
             iss = self.getChildrenByTagName('issue', self.article_meta)[0]
         except IndexError:
@@ -1118,7 +1118,7 @@ class JPTSMeta30(JPTSMeta):
         #The following treatment produces a dictionary keyed by content type
         #whose values are namedtuples containing lists of each element type
         title_groups = jm.getElementsByTagName('journal-title-group')
-        tg = collections.namedtuple('Journal_Title_Group', 'title, subtitle, trans, abbrev')
+        tg = namedtuple('Journal_Title_Group', 'title, subtitle, trans, abbrev')
         self.journal_title_group = {}
         for group in title_groups:
             g = []
@@ -1147,12 +1147,12 @@ class JPTSMeta30(JPTSMeta):
         self.article_id = self.getArticleID()
         self.article_categories = self.getArticleCategories()
         self.title_group = self.getTitleGroup()
-        atg = collections.namedtuple('Article_Title_Group', 'article_title, subtitle, trans_title, trans_subtitle, alt_title, fn_group')
+        atg = namedtuple('Article_Title_Group', 'article_title, subtitle, trans_title, trans_subtitle, alt_title, fn_group')
         article = self.title_group.getElementsByTagName('article-title')[0]
         subtitle = self.title_group.getElementsByTagName('subtitle')
         #<trans-title> tags
         trans_title = []
-        tt = collections.namedtuple('trans_title', 'Node, content_type, id, xml_lang')
+        tt = namedtuple('trans_title', 'Node, content_type, id, xml_lang')
         for e in self.title_group.getElementsByTagName('trans-title'):
             ct = e.getAttribute('content-type')
             eid = e.getAttribute('id')
@@ -1161,7 +1161,7 @@ class JPTSMeta30(JPTSMeta):
             trans_title.append(new)
         #<trans-subtitle> tags
         trans_sub = []
-        ts = collections.namedtuple('trans_subtitle', 'Node, content_type, id, xml_lang')
+        ts = namedtuple('trans_subtitle', 'Node, content_type, id, xml_lang')
         for e in self.title_group.getElementsByTagName('trans-subtitle'):
             ct = e.getAttribute('content-type')
             eid = e.getAttribute('id')
@@ -1223,7 +1223,7 @@ class JPTSMeta30(JPTSMeta):
         This method operates on the optional, 0 or 1, element <volume>. Its
         potential attributes, seq and content-type will be extracted.
         """
-        volume = collections.namedtuple('Volume', 'value, seq, content_type')
+        volume = namedtuple('Volume', 'value, seq, content_type')
         try:
             vol = self.getChildrenByTagName('volume', self.article_meta)[0]
         except IndexError:
@@ -1246,8 +1246,8 @@ class JPTSMeta30(JPTSMeta):
         kwd_groups = []  # There may be more than one
         all_kwds = []  # A list of all keywords
         all_cmpd_kwds = []
-        kwd = collections.namedtuple('Keyword', 'node, type, id')
-        cmpd_kwd = collections.namedtuple('Compound_Keyword', 'node, type, content_type, id')
+        kwd = namedtuple('Keyword', 'node, type, id')
+        cmpd_kwd = namedtuple('Compound_Keyword', 'node, type, content_type, id')
         for kg in self.article_meta.getElementsbyTagName('kwd-group'):
             kwd_groups.append(kg)
             ktype = kg.getAttribute('keyword-group-type')
@@ -1265,7 +1265,7 @@ class JPTSMeta30(JPTSMeta):
         This method operates on the optional, 0 or 1, element <issue>. Its
         potential attributes, seq and content-type will be extracted.
         """
-        issue = collections.namedtuple('Issue', 'value, seq, content_type')
+        issue = namedtuple('Issue', 'value, seq, content_type')
         try:
             iss = self.getChildrenByTagName('issue', self.article_meta)[0]
         except IndexError:
