@@ -481,9 +481,16 @@ class JPTSMeta(object):
 
     def getCopyrightStatement(self):
         """
-        
+        <copyright-statement> is an optional, 0 or 1, element in <article-meta>
+        which can contain text, address linking elements, and formatting
+        elements. This method will return the node if it exists.
         """
-        return None
+        try:
+            cs = self.getChildrenByTagName('copyright-statement', self.article_meta)[0]
+        except IndexError:
+            return None
+        else:
+            return cs
 
     def getCopyrightYear(self):
         """
