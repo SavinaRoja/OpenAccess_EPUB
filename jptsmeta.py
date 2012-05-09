@@ -667,9 +667,11 @@ class JPTSMeta(object):
 
     def getContractSponsor(self):
         """
-        
+        <contract-sponsor> is an optional element, 0 or more, in <article-meta>
+        which may have complex publisher-dependent content. This method will
+        return a list of the nodes.
         """
-        return None
+        return self.getChildrenByTagName('contract-sponsor', self.article_meta)
 
     def getConference(self):
         """
