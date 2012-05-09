@@ -494,15 +494,37 @@ class JPTSMeta(object):
 
     def getCopyrightYear(self):
         """
-        
+        <copyright-year> is an optional, 0 or 1, element in <article-meta>
+        which may contain only text, numbers, and special characters. If the
+        node exists, this method will return the text data it contains as a
+        string.
         """
-        return None
+        try:
+            cy = self.getChildrenByTagName('copyright-year', self.article_meta)[0]
+        except IndexError:
+            return None
+        else:
+            return utils.nodeText(cy)
 
     def getLicense(self):
         """
-        
+        <license> is an optional, 0 or 1, element in <article-meta> which may
+        have one or more <p> elements inside. In version 2.3 and, it is
+        not good practice for this element to be found under <article-meta> but
+        rather inside the <permissions> element. It does not exist outside the
+        <permissions> element in version 3.0. The usage will vary between
+        publishers, so it is best to keep aware that the license information
+        may be found in either location. The possible attributes are
+        license-type and the xlink/xmlns attributes. This will return a
+        namedtuple of the node alongside it's license-type value.
         """
-        return None
+        lic = collections.namedtuple('license', 'node, license_type')
+        try:
+            l = self.getChildrenByTagName('license', self.article_meta)[0]
+        except IndexError:
+            return None
+        else:
+            return lic(l, l.getAttribute('license-type'))
 
     def getPermissions(self):
         """
