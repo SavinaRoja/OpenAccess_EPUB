@@ -611,9 +611,19 @@ class JPTSMeta(object):
 
     def getTransAbstract(self):
         """
-        
+        <trans-abstract> is similar in all respects to <abstract> and is used
+        to store the abstract in a language other than the original publication
+        language.
         """
-        return None
+        trans_abstracts = []
+        tab = collections.namedtuple('Trans_Abstract', 'node, type, xml_lang, id, specific_use')
+        for ta in self.getChildrenByTagName('trans-abstract', self.article_meta):
+            atyp = ta.getAttribute('abstract-type')
+            lang = ta.getAttribute('xml:lang')
+            abid = ta.getAttribute('id')
+            spec = ta.getAttribute('specific-use')
+            trans_abstracts.append(abs(ta, atyp, lang, abid, spec))
+        return trans_abstracts
 
     def getKwdGroup(self):
         """
