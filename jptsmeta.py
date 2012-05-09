@@ -725,15 +725,37 @@ class JPTSMeta(object):
 
     def getCounts(self):
         """
-        
+        <counts> is an optional element, 0 or 1, in <article-meta>, which
+        provides a container for several <count>-type elements. Each of these
+        elements is empty, and has the attribute count.
         """
-        return None
+        counts = {'fig-count': None, 'table-count': None, 'equation-count':
+                  None, 'ref-count': None, 'page-count': None, 'word-count':
+                  None}
+        try:
+            cnode = self.article_meta.getElementsByTagName('counts')[0]
+        except IndexError:
+            return {}
+        for ckey in counts:
+            try:
+                _node = cnode.getElementsByTagName(ckey)
+            except IndexError:
+                pass
+            else:
+                counts[ckey] = _node.getAttibure('count')
+        return counts
 
     def getCustomMetaWrap(self):
         """
-        
+        <custom-meta-wrap> is an optional element, 0 or more, in <article-meta>
+        which is designed as a built-in structure for metadata not supported by
+        the DTD. <custom-meta> elements can be listed here, which in turn
+        contain pairs of <meta-name> and <meta-value>. Contents vary between
+        DTDs and I expect that there would be significant variation between
+        publishers. At this point, this method only endeavors to return a list
+        of the <custom-meta-wrap> nodes.
         """
-        return None
+        return self.getChildrenByTagName('custom-meta-wrap', self.article_meta)
 
     def getChildrenByTagName(self, searchterm, node):
         """
