@@ -578,9 +578,18 @@ class JPTSMeta(object):
 
     def getRelatedArticle(self):
         """
-        
+        <related-article> is an optional element, 0 or more, within
+        <article-meta>. This element is not likely to be critical to displaying
+        the article content, but is valuable as a link to other content. This
+        element allows for the inclusiong of various metadata about the related
+        content and should provide sufficient instruction (perhaps with some
+        implicit assumptions based on the publisher) to construct a link to
+        the resource. This element is of significant interest, but as the
+        content shall vary widely between publishers, and perhaps the related
+        content itself, the parsing of this element will not be executed at
+        this stage for now.
         """
-        return None
+        return self.getChildrenByTagName('related-article', self.article_meta)
 
     def getAbstract(self):
         """
