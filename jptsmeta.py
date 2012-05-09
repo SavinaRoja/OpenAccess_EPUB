@@ -627,9 +627,26 @@ class JPTSMeta(object):
 
     def getKwdGroup(self):
         """
-        
+        <kwd-group> is an optional element, 0 or more, in <article-meta> which
+        may contain 0 or 1 <title> elements and 1 or more <kwd> elements. Note
+        that this method is overridden in the derived JPTSMeta30 to account for
+        <compound-kwd> elements. The content of <kwd> elements includes text,
+        numbers, special characters, and emphasis elements. The potential
+        attributes are id, kwd-group-type, and xml:lang. This method will
+        return a list of <kwd-group> nodes, as well as a list of all <kwd>
+        nodes tupled to their id attribute values and an inherited type from
+        their parent <kwd-group> kwd-group-type attribute value
         """
-        return None
+        kwd_groups = []  # There may be more than one
+        all_kwds = []  # A list of all keywords
+        kwd = collections.namedtuple('Keyword', 'node, type, id')
+        for kg in self.article_meta.getElementsbyTagName('kwd-group'):
+            kwd_groups.append(kg)
+            ktype = kg.getAttribute('keyword-group-type')
+            for key in kg.getElementsByTagName('kwd'):
+                kid = key.getAttribute('id')
+                all_kwds.append(kwd(key, ktype, kid))
+        return kwd_groups, all_kwds
 
     def getContractNum(self):
         """
@@ -791,7 +808,7 @@ class JPTSMeta20(JPTSMeta):
         self.related_article = self.getRelatedArticle()
         self.abstract = self.getAbstract()
         self.trans_abstract = self.getTransAbstract()
-        self.kwd_group = self.getKwdGroup()
+        self.kwd_group, self.all_kwds = self.getKwdGroup()
         self.contract_num = self.getContractNum()
         self.contract_sponsor = self.getContractSponsor()
         self.conference = self.getConference()
@@ -950,7 +967,7 @@ class JPTSMeta23(JPTSMeta):
         self.related_article = self.getRelatedArticle()
         self.abstract = self.getAbstract()
         self.trans_abstract = self.getTransAbstract()
-        self.kwd_group = self.getKwdGroup()
+        self.kwd_group, self.all_kwds = self.getKwdGroup()
         self.contract_num = self.getContractNum()
         self.contract_sponsor = self.getContractSponsor()
         self.grant_num = self.getGrantNum()
@@ -1138,7 +1155,7 @@ class JPTSMeta30(JPTSMeta):
         self.related_article = self.getRelatedArticle()
         self.abstract = self.getAbstract()
         self.trans_abstract = self.getTransAbstract()
-        self.kwd_group = self.getKwdGroup()
+        self.kwd_group, self.all_kwds, self.all_cmpd_kwds = self.getKwdGroup()
         self.funding_group = self.getFundingGroup()
         self.conference = self.getConference()
         self.counts = self.getCounts()
@@ -1159,6 +1176,32 @@ class JPTSMeta30(JPTSMeta):
             seq = vol.getAttribute('seq')
             ct = vol.getAttribute('content-type')
             return volume(text, seq, ct)
+
+    def getKwdGroup(self):
+        """
+        <kwd-group> is an optional element, 0 or more, in <article-meta> which
+        may contain 0 or 1 <label> elements, 0 or 1 <title> elements, 1 or more
+        of any of <kwd> or <compound-kwd> elements. The content of <kwd>
+        elements includes text, numbers, special characters, and emphasis
+        elements. Please review the version 3.0 specification for <kwd-group>
+        for discussion of this element and explanation for this method's code.
+        """
+        kwd_groups = []  # There may be more than one
+        all_kwds = []  # A list of all keywords
+        all_cmpd_kwds = []
+        kwd = collections.namedtuple('Keyword', 'node, type, id')
+        cmpd_kwd = collections.namedtuple('Compound_Keyword', 'node, type, content_type, id')
+        for kg in self.article_meta.getElementsbyTagName('kwd-group'):
+            kwd_groups.append(kg)
+            ktype = kg.getAttribute('keyword-group-type')
+            for key in kg.getElementsByTagName('kwd'):
+                kid = key.getAttribute('id')
+                all_kwds.append(kwd(key, ktype, kid))
+            for cmpd in kg.getElementsByTagName('compound-kwd'):
+                kid = cmpd.getAttribute('id')
+                ct = cmpd.getAttribute('content-type')
+                all_cmpd_keywords.append(cmpd_kwd(cpmd, ktype, ct, kid))
+        return kwd_groups, all_kwds, all_cmpd_kwds
 
     def getIssue(self):
         """
