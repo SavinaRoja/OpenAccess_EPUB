@@ -247,7 +247,7 @@ class JPTSMeta(object):
         pub_dates = {}
         for k in self.article_meta.getElementsByTagName('pub-date'):
             try:
-                s = k.getElementsByTagName('season')[0]
+                s = k.getElementsByTagName(an 'season')[0]
             except IndexError:
                 season = ''
                 try:
@@ -1089,7 +1089,11 @@ class JPTSMeta23(JPTSMeta):
 
     def getGrantNum(self):
         """
-        
+        <grant-num> is an optional element, 0 or more, in <article-meta> which
+        contains the number of a grant which supported the work presented in
+        the article. Its content allows text, numbers, special characters, and
+        various kinds of formatting elements. It's attributes are id, rid, and
+        content-type in addition to the xlink: attributes and xmlns attributes.
         """
         return None
 
