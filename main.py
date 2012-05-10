@@ -18,7 +18,6 @@ import logging
 
 #OpenAccess_EPUB Modules
 import utils
-#import metadata
 import opf
 import tocncx
 import content
