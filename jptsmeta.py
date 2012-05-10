@@ -1320,7 +1320,12 @@ class JPTSMeta30(JPTSMeta):
 
     def getFundingGroup(self):
         """
-        
+        <funding-group> is an optional element, 0 or more, in <article-meta>.
+        This element takes the functional place of several elements in the
+        previous versions of the DTD. This element's content model actually
+        has some considerable depth, and allows for sensible presentation
+        of data about individual funding providers. At this time, I'm not going
+        to implement it until the need arises.
         """
         return None
 
