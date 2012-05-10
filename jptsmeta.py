@@ -1093,15 +1093,31 @@ class JPTSMeta23(JPTSMeta):
         contains the number of a grant which supported the work presented in
         the article. Its content allows text, numbers, special characters, and
         various kinds of formatting elements. It's attributes are id, rid, and
-        content-type in addition to the xlink: attributes and xmlns attributes.
+        content-type in addition to the xlink: attributes and xmlns: attribute.
         """
-        return None
+        grant_nums = []
+        gn = namedtuple('Grant_Num', 'node, id, rid, content_type')
+        for gnum in self.getChildrenByTagName('grant-num', self.article_meta):
+            gid = gnum.getAttribute('id')
+            grd = gnum.getAttribute('rid')
+            gct = gnum.getAttribute('content-type')
+            grant_nums.append(gn(gnum, gid, grd, gct))
+        return grant_nums
 
     def getGrantSponsor(self):
         """
-        
+        <grant-sponsor> is an optional element, 0 or more, in <article-meta>
+        which contains the name of a grant supplier for the work presented in
+        the article. It's content model is like that of <grant-num>.
         """
-        return None
+        grant_sponsors = []
+        gs = namedtuple('Grant_Sponsor', 'node, id, rid, content_type')
+        for gspo in self.getChildrenByTagName('grant-sponsor', self.article_meta):
+            gid = gspo.getAttribute('id')
+            grd = gspo.getAttribute('rid')
+            gct = gspo.getAttribute('content-type')
+            grant_sponsors.append(gs(gspo, gid, grd, gct))
+        return grant_sponsors
 
     def dtdVersion(self):
         return '2.3'
