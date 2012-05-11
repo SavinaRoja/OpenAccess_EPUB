@@ -58,7 +58,7 @@ Publishing DTD: \n{0}'.format(doc.doctype.publicId))
         elif self.dtd == u'3.0':
             self.metadata = jptsmeta.JPTSMeta30(doc, self.publisher)
         #The <article> tag has a handful of potential attributes, we can check
-        #to make sure the mandated ones are valid 
+        #to make sure the mandated ones are valid
         self.attrs = {'article-type': None, 'dtd-version': None,
                       'xml:lang': None, 'xmlns:mml': None,
                       'xmlns:xlink': None, 'xmlns:xsi': None}
@@ -66,21 +66,6 @@ Publishing DTD: \n{0}'.format(doc.doctype.publicId))
             #getAttribute() returns an empty string if the attribute DNE
             self.attrs[attr] = self.root_tag.getAttribute(attr)
         self.validateAttrs()  # Log errors for invalid attribute values
-        
-        #These tags are not mandatory, but rather expected...
-        body_node = self.root_tag.getElementsByTagName('body')
-        back_node = self.root_tag.getElementsByTagName('back')
-        #This tag is new to 3.0, I don't know what to expect of it yet
-        #flts_group_node = self.root_tag.getElementsByTagName('floats-group')
-        #These tags are zero or more, and mutually exclusive
-        sub_article_nodes = self.root_tag.getElementsByTagName('sub-article')
-        #if not sub_article_nodes:
-        #    response_nodes = self.root_tag.getElementsByTagName('response')
-        #We could do the same for Body, but it is not needed.
-        if body_node:
-            self.body = body_node[0]
-        else:
-            self.body = None
 
     def identifyPublisher(self):
         """
@@ -96,17 +81,17 @@ Publishing DTD: \n{0}'.format(doc.doctype.publicId))
         if self.dtd in ['2.0', '2.3']:
             #The publisher node will be the primary mode of identification
             publisher = self.root_tag.getElementsByTagName('publisher')
-            pubname = False
+            pname = False
             if publisher:
-                pubname = publisher[0].getElementsByTagName('publisher-name')[0]
-                pubname = pubname.firstChild.data
+                pname = publisher[0].getElementsByTagName('publisher-name')[0]
+                pname = pname.firstChild.data
                 try:
-                    return pubs[pubname]
+                    return pubs[pname]
                 except KeyError:
-                    print('Strange publisher name: {0}'.format(pubname))
+                    print('Strange publisher name: {0}'.format(pname))
                     print('Falling back to article-id DOI')
-                    pubname = False
-            if not pubname:  # If pubname is undeclared, check article-id
+                    pname = False
+            if not pname:  # If pname is undeclared, check article-id
                 art_IDs = self.root_tag.getElementsByTagName('article-id')
                 for aid in art_IDs:
                     if aid.getAttribute('pub-id-type') == u'doi':
@@ -170,7 +155,6 @@ Publishing DTD: \n{0}'.format(doc.doctype.publicId))
                 logging.info('Cached images not found')
         else:
             print('The publisher DOI does not correspond to PLoS')
-        
         if not cached:
             model_images = os.path.join(cache_dir, 'model', 'images')
             shutil.copytree(model_images, img_dir)
@@ -197,8 +181,8 @@ Publishing DTD: \n{0}'.format(doc.doctype.publicId))
             for g in graphics:
                 xlink_href = g.getAttribute('xlink:href')
                 tag = xlink_href.split('.')[-1]
-                type = tag[0]  # first character, either e, g, or t
-                if type == 'e':  # the case of an equation
+                typechar = tag[0]  # first character, either e, g, or t
+                if typechar == 'e':  # the case of an equation
                     rep = '&representation=PNG'
                 else:  # other cases: table and figure
                     rep = '&representation=PNG_L'
