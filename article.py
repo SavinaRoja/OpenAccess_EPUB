@@ -57,13 +57,8 @@ Publishing DTD: \n{0}'.format(doc.doctype.publicId))
             self.metadata = jptsmeta.JPTSMeta23(doc, self.publisher)
         elif self.dtd == u'3.0':
             self.metadata = jptsmeta.JPTSMeta30(doc, self.publisher)
-        #The potential Attributes of the <article> tag
-        #article-type Type of Article
-        #dtd-version Version of the Tag Set (DTD)
-        #xml:lang Language
-        #xmlns:mml MathML Namespace Declaration
-        #xmlns:xlink XLink Namespace Declaration
-        #xmlns:xsi XML Schema Namespace Declaration
+        #The <article> tag has a handful of potential attributes, we can check
+        #to make sure the mandated ones are valid 
         self.attrs = {'article-type': None, 'dtd-version': None,
                       'xml:lang': None, 'xmlns:mml': None,
                       'xmlns:xlink': None, 'xmlns:xsi': None}
@@ -71,16 +66,7 @@ Publishing DTD: \n{0}'.format(doc.doctype.publicId))
             #getAttribute() returns an empty string if the attribute DNE
             self.attrs[attr] = self.root_tag.getAttribute(attr)
         self.validateAttrs()  # Log errors for invalid attribute values
-
-
-        #This tag is mandatory, bad input here deserves an error
-        try:
-            front_node = self.root_tag.getElementsByTagName('front')[0]
-        except IndexError:
-            msg = '<front> element was not detected in the document'
-            logging.critical(msg)
-            print(msg)
-            sys.exit()
+        
         #These tags are not mandatory, but rather expected...
         body_node = self.root_tag.getElementsByTagName('body')
         back_node = self.root_tag.getElementsByTagName('back')

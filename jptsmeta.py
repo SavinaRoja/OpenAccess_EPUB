@@ -21,7 +21,7 @@ class JPTSMeta(object):
     """
     def __init__(self, document, publisher):
         self.doc = document
-        self.publisher = publisher
+        self.publisher_name = publisher
         self.getTopElements()
         self.getFrontElements()
         self.parseJournalMetadata()
