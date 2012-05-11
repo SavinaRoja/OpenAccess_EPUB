@@ -447,13 +447,13 @@ class JPTSMeta(object):
         will be represented as a dictionary of dates keyed by date-type values.
         """
         dates = {}
-        d = namedtuple('Date', 'year, month, day, season')
+        datetuple = namedtuple('Date', 'year, month, day, season')
         try:
             h = self.getChildrenByTagName('history', self.article_meta)[0]
         except IndexError:
             return dates
         else:
-            for k in h.getChildrenbyTagName('date'):
+            for k in self.getChildrenByTagName('date', h):
                 try:
                     s = k.getElementsByTagName('season')[0]
                 except IndexError:
@@ -476,8 +476,8 @@ class JPTSMeta(object):
                     day = 0
                 y = k.getElementsByTagName('year')[0]
                 year = utils.nodeText(y)
-            dt = k.getAttribute('date-type')
-            dates[dt] = d(year, month, day, season)
+                dt = k.getAttribute('date-type')
+                dates[dt] = datetuple(year, month, day, season)
         return dates
 
     def getCopyrightStatement(self):
@@ -641,7 +641,7 @@ class JPTSMeta(object):
         kwd_groups = []  # There may be more than one
         all_kwds = []  # A list of all keywords
         kwd = namedtuple('Keyword', 'node, type, id')
-        for kg in self.article_meta.getElementsbyTagName('kwd-group'):
+        for kg in self.article_meta.getElementsByTagName('kwd-group'):
             kwd_groups.append(kg)
             ktype = kg.getAttribute('keyword-group-type')
             for key in kg.getElementsByTagName('kwd'):
@@ -739,11 +739,11 @@ class JPTSMeta(object):
             return {}
         for ckey in counts:
             try:
-                _node = cnode.getElementsByTagName(ckey)
+                _node = cnode.getElementsByTagName(ckey)[0]
             except IndexError:
                 pass
             else:
-                counts[ckey] = _node.getAttibure('count')
+                counts[ckey] = _node.getAttribute('count')
         return counts
 
     def getCustomMetaWrap(self):
