@@ -152,10 +152,11 @@ def doiInput(input, xml_dir):
 
 
 def localInput(inpt):
-    """Handles input in the form of local file to instantiate the document"""
-    xml_local = inpt
-    document = Article(xml_local)
-    return(document, xml_local)
+    """
+    Handles input in the form of a local XML file to instantiate the document.
+    """
+    document = Article(inpt)
+    return document
 
 
 def dirExists(outdirect, batch):
