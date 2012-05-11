@@ -26,6 +26,7 @@ class JPTSMeta(object):
         self.getFrontElements()
         self.parseJournalMetadata()
         self.parseArticleMetadata()
+        self.parseBackData()
 
     def getTopElements(self):
         self.front = self.doc.getElementsByTagName('front')[0]  # Required
@@ -756,6 +757,17 @@ class JPTSMeta(object):
         of the <custom-meta-wrap> nodes.
         """
         return self.getChildrenByTagName('custom-meta-wrap', self.article_meta)
+
+    def parseBackData(self):
+        """
+        For each version of the JPTS, <back> contains "Ancillary or supporting
+        material that, although it is not included as part of the main
+        narrative flow of a journal article, is published with the article, for
+        example, an appendix, glossary, or bibliographic reference list."
+        The content elements are common between versions, except for <label>
+        which is optional, 0 or 1, only in version 3.0
+        """
+        return None
 
     def getChildrenByTagName(self, searchterm, node):
         """
