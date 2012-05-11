@@ -124,9 +124,7 @@ Publishing DTD: \n{0}'.format(doc.doctype.publicId))
 
     def getDOI(self):
         '''A method for returning the DOI identifier of an article'''
-        for (_data, _id) in self.front.article_meta.identifiers:
-            if _id == 'doi':
-                return(_data)
+        return self.metadata.article_id['doi']
 
     def fetchPLoSImages(self, cache_dir, output_dir, caching):
         '''Fetch the PLoS images associated with the article.'''
