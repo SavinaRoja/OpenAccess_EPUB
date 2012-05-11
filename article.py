@@ -1,5 +1,4 @@
 import utils
-import metadata
 import logging
 import sys
 import xml.dom.minidom as minidom
