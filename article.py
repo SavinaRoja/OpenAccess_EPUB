@@ -259,20 +259,6 @@ Publishing DTD: \n{0}'.format(doc.doctype.publicId))
         '''Fetch the Frontiers images associated with the article.'''
         pass
 
-class Front(object):
-    '''The metadata for an article, such as the name and issue of the journal
-    in which the article appears and the author(s) of the article'''
-
-    def __init__(self, node):
-        #Front may have no attributes
-        self.root_tag = node
-        #It must have a <journal-meta>
-        journalmetanode = self.root_tag.getElementsByTagName('journal-meta')[0]
-        self.journal_meta = metadata.JournalMeta(journalmetanode)
-        #It must have a <article-meta>
-        articlemetanode = self.root_tag.getElementsByTagName('article-meta')[0]
-        self.article_meta = metadata.ArticleMeta(articlemetanode)
-
 
 class Back(object):
     '''The back element for an article, contains footnotes, funding, competing
