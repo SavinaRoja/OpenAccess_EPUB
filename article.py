@@ -90,13 +90,6 @@ Publishing DTD: \n{0}'.format(doc.doctype.publicId))
         sub_article_nodes = self.root_tag.getElementsByTagName('sub-article')
         #if not sub_article_nodes:
         #    response_nodes = self.root_tag.getElementsByTagName('response')
-        #To make our lives easier (I hope), we can instantiate special classes
-        #for Front and Back nodes.
-        self.front = Front(front_node)
-        if back_node:
-            self.back = Back(back_node[0])
-        else:
-            self.back = None
         #We could do the same for Body, but it is not needed.
         if body_node:
             self.body = body_node[0]
