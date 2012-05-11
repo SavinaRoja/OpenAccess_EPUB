@@ -26,7 +26,7 @@ class OPSGenerator(object):
         doctype = impl.createDocumentType('html',
                                           '-//W3C//DTD XHTML 1.1//EN'
                                           'http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd')
-        doc = impl.createDocument(None, 'html', mytype)
+        doc = impl.createDocument(None, 'html', doctype)
         root = doc.lastChild
         root.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml')
         root.setAttribute('xml:lang', 'en-US')
@@ -54,3 +54,10 @@ class OPSGenerator(object):
         """
         with open(name, 'wb') as out:
             out.write(document.toprettyxml(encoding='utf-8'))
+
+    def expungeAttributes(self, node):
+        """
+        This method will remove all attributes of a any provided node.
+        """
+        while node.attributes.length:
+            node.removeAttribute(node.attributes.item(0).name)
