@@ -45,10 +45,12 @@ class Article(object):
             print('The article\'s DOCTYPE declares an unsupported Journal \
 Publishing DTD: \n{0}'.format(doc.doctype.publicId))
             sys.exit()
+        #Access the root tag of the document
         self.root_tag = doc.documentElement
-        #Now we want to know who the publisher is
+        #Determine the publisher
         self.publisher = self.identifyPublisher()
         print(self.publisher)
+        #Create instance of article metadata
         if self.dtd == u'2.0':
             self.metadata = jptsmeta.JPTSMeta20(doc, self.publisher)
         elif self.dtd == u'2.3':
@@ -69,28 +71,7 @@ Publishing DTD: \n{0}'.format(doc.doctype.publicId))
             #getAttribute() returns an empty string if the attribute DNE
             self.attrs[attr] = self.root_tag.getAttribute(attr)
         self.validateAttrs()  # Log errors for invalid attribute values
-        #The following, in order:
-        #<front> Front Matter
-        #<body> Body of the Article, zero or one
-        #<back> Back Matter, zero or one
-        #<floats-group> Floating Element Group, zero or one
-        #Any one of:
-        #    <sub-article> Sub-Article, zero or more
-        #    <response> Response, zero or more
-        #
-        #When getElementsByTagName() does not find any elements, it creates an
-        #empty NodeList. It will thus evaluate False in control flow, consider
-        #the following approaches: I have come to prefer the latter...
-        #
-        #try:
-        #    zero_or_one = self.root_tag.getElementsByTagName('zero-or-one')[0]
-        #except IndexError:
-        #    zero_or_one = None
-        #    logging.info('zero-or-one tag not found')
-        #----------------------------------------------------------------------
-        #zero_or_one = self.root_tag.getElementsByTagName('zero-or-one')
-        #if zero_or_one:
-        #    doStuffWith(zero_or_one[0])
+
 
         #This tag is mandatory, bad input here deserves an error
         try:
@@ -168,13 +149,11 @@ Publishing DTD: \n{0}'.format(doc.doctype.publicId))
         #I don't know a good tool for it though, so it gets a pass for now.
         mandates = [('xmlns:mml', 'http://www.w3.org/1998/Math/MathML'),
                     ('xmlns:xlink', 'http://www.w3.org/1999/xlink'),
-                    #('dtd-version', '3.0'),
                     ('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance')]
         attr_err = 'Article attribute {0} has improper value: {1}'
         for _key, _val in mandates:
             if not self.attrs[_key] == _val:
                 logging.error(attr_err.format(_key, self.attrs[_key]))
-
         if self.attrs['article-type'] not in utils.suggestedArticleTypes():
             art_type_err = 'article-type value is not a suggested value: {0}'
             logging.warning(art_type_err.format(self.attrs['article-type']))
