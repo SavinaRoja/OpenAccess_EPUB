@@ -258,39 +258,3 @@ Publishing DTD: \n{0}'.format(doc.doctype.publicId))
     def fetchFrontiersImages(self, cache_dir, output_dir, caching):
         '''Fetch the Frontiers images associated with the article.'''
         pass
-
-
-class Back(object):
-    '''The back element for an article, contains footnotes, funding, competing
-    and interests'''
-    def __init__(self, node):
-        self.node = node
-        self.footnotes = node.getElementsByTagName('fn')
-        self.funding = u''
-        self.competing_interests = u''
-        for item in self.footnotes:
-            if item.getAttribute('fn-type') == u'conflict':
-                text = utils.serializeText(item, stringlist=[])
-                self.competing_interests = text
-            elif item.getAttribute('fn-type') == u'financial-disclosure':
-                text = utils.serializeText(item, stringlist=[])
-                self.funding = text
-        try:
-            ref_list = node.getElementsByTagName('ref-list')[0]
-        except IndexError:
-            self.references = None
-        else:
-            self.references = ref_list
-        
-        try:
-            ack_node = node.getElementsByTagName('ack')[0]
-        except IndexError:
-            self.ack = None
-        else:
-            self.ack = ack_node
-        try:
-            gloss = node.getElementsByTagName('glossary')[0]
-        except IndexError:
-            self.glossary = None
-        else:
-            self.glossary = gloss
