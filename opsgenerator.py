@@ -55,44 +55,44 @@ class OPSGenerator(object):
         with open(name, 'wb') as out:
             out.write(document.toprettyxml(encoding='utf-8'))
 
-    def expungeAttributes(self, node):
+    def expungeAttributes(self, element):
         """
-        This method will remove all attributes of any provided node.
+        This method will remove all attributes of any provided element.
         """
-        while node.attributes.length:
-            node.removeAttribute(node.attributes.item(0).name)
+        while element.attributes.length:
+            element.removeAttribute(element.attributes.item(0).name)
 
     def getAllAttributes(self, node):
         """
-        This method will acquire all attributes of provided node and return a
+        This method will acquire all attributes of provided element and return a
         dictionary of the form attributes[name] = value.
         """
         attrs = {}
         i = 0
-        while i < node.attributes.length:
-            attr = node.attributes.item(i)
+        while i < element.attributes.length:
+            attr = element.attributes.item(i)
             attrs[attr.name] = attr.value
             i += 1
         return attrs
 
-    def getSomeAttributes(self, node, names=[]):
+    def getSomeAttributes(self, element, names=[]):
         """
         This method accepts a list of strings corresponding to attribute names.
         It returns a dictionary of the form attributes[name] = value.
         """
         attrs = {}
         for name in names:
-            attrs[name] = node.getAttribute('name')
+            attrs[name] = element.getAttribute('name')
         return attrs
 
-    def removeSomeAttributes(self, node, names=[]):
+    def removeSomeAttributes(self, element, names=[]):
         """
         This method will remove all attributes whose names are listed.
         """
         for name in names:
-            node.removeAttribute(name)
+            element.removeAttribute(name)
 
-    def renameAttributes(self, node, namepairs=[[]]):
+    def renameAttributes(self, element, namepairs=[[]]):
         """
         This method accepts a two-dimensional list, tuple, or a combination
         thereof, where the second dimension consists of pairs of attribute
@@ -102,7 +102,18 @@ class OPSGenerator(object):
         and 'fudge'.respectively.
         """
         for ori, new in namepairs:
-            val = node.getAttribute(ori)
+            val = element.getAttribute(ori)
             if val:
-                node.removeAttribute(ori)
-                node.setAttribute(new, val)
+                element.removeAttribute(ori)
+                element.setAttribute(new, val)
+
+    def removeNode(self, node, unlink=False):
+        """
+        This method will remove the specified node from its parentNode. If
+        it will no longer be needed, specify unlink=True to call its unlink()
+        method. This will clear memory faster.
+        """
+        parent = node.parentNode
+        parent.removeChild(node)
+        if unlink:
+            node.unlink()
