@@ -79,7 +79,9 @@ def initCache(cache_loc):
 
 def urlInput(inpt, xml_dir):
     """
-    Handles input in URL form to instantiate the document
+    Handles input in URL form to instantiate the document. There is support for
+    PLoS as well as some support for Frontiers. In order for it to work for
+    Frontiers, the user must specify a link directly to the XML file.
     """
     try:
         if '%2F10.1371%2F' in inpt:  # This is a PLoS page
@@ -87,15 +89,26 @@ def urlInput(inpt, xml_dir):
             _fetch = '/article/fetchObjectAttachment.action?uri='
             _id = address.path.split('/')[2]
             _rep = '&representation=XML'
-            access = '{0}://{1}{2}{3}{4}'.format(address.scheme, address.netloc,
-                                    _fetch, _id, _rep)
+            access = '{0}://{1}{2}{3}{4}'.format(address.scheme,
+                                                 address.netloc,
+                                                 _fetch, _id, _rep)
             print('Opening {0}'.format(access.__str__()))
             open_xml = urllib2.urlopen(access)
-        elif '/10.3389/' in inpt:  # This is a Frontiers page
-            print('Frontiers articles are not supported for URL input.')
-            print('Please download the XML file manually and use it as a \
-local input.')
-            sys.exit(1)
+        elif 'www.frontiersin.org' in inpt:  # This is a Frontiers page
+            try:
+                open_xml = urllib2.urlopen(inpt)
+                cd = open_xml.headers['Content-disposition']
+                filename = cd.split('filename= ')[1]
+            except:
+                print('Unable to get the XML file or filename, make sure that \
+you use a direct URL to the XML file.')
+                sys.exit(1)
+            else:
+                filename = os.path.join(xml_dir, filename)
+                with open(filename, 'wb') as xml_file:
+                    xml_fil.write(open_xml.read())
+                document = Article(filename)
+                return document, filename
         else:  # We don't know how to handle this input
             print('Invalid Link: Bad URL or unsupported publisher')
             sys.exit(1)
