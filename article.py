@@ -164,16 +164,6 @@ Publishing DTD: \n{0}'.format(doc.doctype.publicId))
             if _id == 'doi':
                 return(_data)
 
-    def titlestring(self):
-        '''Creates a string which may be used as the title if desired.'''
-        jmet = self.front.journal_meta
-        amet = self.front.article_meta
-        titlestring = u'{0}_{1}{2}'.format(jmet.identifier['pmc'],
-                                           amet.art_auths[0].get_surname(),
-                                           amet.art_dates['epub'].year)
-        titlestring = titlestring.replace(u' ', u'-')
-        return(titlestring)
-
     def fetchPLoSImages(self, cache_dir, output_dir, caching):
         '''Fetch the PLoS images associated with the article.'''
         import urllib2
