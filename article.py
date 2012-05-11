@@ -1,7 +1,8 @@
 import utils
 import logging
 import sys
-import xml.dom.minidom as minidom
+import xml.dom.minidom
+import jptsmeta
 
 
 class Article(object):
@@ -17,8 +18,17 @@ class Article(object):
     http://dtd.nlm.nih.gov/publishing/tag-library/2.3/n-zxc2.html
     """
     def __init__(self, xml_file):
+        """
+        The __init__() method has to do the following specific jobs. It must
+        parse the article using xml.dom.minidom. It must check the parsed
+        article to detect its DTD and version; it must also detect the
+        publisher using self.identifyPublisher(). It is responsible for
+        using this information to create an instance of a metadata class
+        such as found in jptsmeta.py to serve as the article's metadata
+        attribute.
+        """
         logging.info('Parsing file: {0}'.format(xml_file))
-        doc = minidom.parse(xml_file)
+        doc = xml.dom.minidom.parse(xml_file)
         #Here we check the doctype for the DTD under which the article was
         #published. This affects how we will parse metadata and content.
         dtds = {u'-//NLM//DTD Journal Publishing DTD v2.0 20040830//EN':
@@ -39,6 +49,12 @@ Publishing DTD: \n{0}'.format(doc.doctype.publicId))
         #Now we want to know who the publisher is
         self.publisher = self.identifyPublisher()
         print(self.publisher)
+        if self.dtd == u'2.0':
+            self.metadata = jptsmeta.JPTSMeta20(doc, self.publisher)
+        elif self.dtd == u'2.3':
+            self.metadata = jptsmeta.JPTSMeta23(doc, self.publisher)
+        elif self.dtd == u'3.0':
+            self.metadata = jptsmeta.JPTSMeta30(doc, self.publisher)
         #The potential Attributes of the <article> tag
         #article-type Type of Article
         #dtd-version Version of the Tag Set (DTD)
