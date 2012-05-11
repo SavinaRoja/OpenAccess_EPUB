@@ -24,7 +24,7 @@ class OPSGenerator(object):
         """
         impl = xml.dom.minidom.getDOMImplementation()
         doctype = impl.createDocumentType('html',
-                                          '-//W3C//DTD XHTML 1.1//EN'
+                                          '-//W3C//DTD XHTML 1.1//EN',
                                           'http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd')
         doc = impl.createDocument(None, 'html', doctype)
         root = doc.lastChild
@@ -57,7 +57,52 @@ class OPSGenerator(object):
 
     def expungeAttributes(self, node):
         """
-        This method will remove all attributes of a any provided node.
+        This method will remove all attributes of any provided node.
         """
         while node.attributes.length:
             node.removeAttribute(node.attributes.item(0).name)
+
+    def getAllAttributes(self, node):
+        """
+        This method will acquire all attributes of provided node and return a
+        dictionary of the form attributes[name] = value.
+        """
+        attrs = {}
+        i = 0
+        while i < node.attributes.length:
+            attr = node.attributes.item(i)
+            attrs[attr.name] = attr.value
+            i += 1
+        return attrs
+
+    def getSomeAttributes(self, node, names=[]):
+        """
+        This method accepts a list of strings corresponding to attribute names.
+        It returns a dictionary of the form attributes[name] = value.
+        """
+        attrs = {}
+        for name in names:
+            attrs[name] = node.getAttribute('name')
+        return attrs
+
+    def removeSomeAttributes(self, node, names=[]):
+        """
+        This method will remove all attributes whose names are listed.
+        """
+        for name in names:
+            node.removeAttribute(name)
+
+    def renameAttributes(self, node, namepairs=[[]]):
+        """
+        This method accepts a two-dimensional list, tuple, or a combination
+        thereof, where the second dimension consists of pairs of attribute
+        names. The former attribute name will be replaced witht the latter. For
+        example, namepairs = [['monty', 'python], ['vanilla', 'fudge']] would
+        change the names of the 'monty' and 'vanilla' attributes to 'python'
+        and 'fudge'.respectively.
+        """
+        for ori, new in namepairs:
+            val = node.getAttribute(ori)
+            if val:
+                node.removeAttribute(ori)
+                node.setAttribute(new, val)
