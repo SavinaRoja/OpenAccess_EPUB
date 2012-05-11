@@ -248,7 +248,7 @@ class JPTSMeta(object):
         pub_dates = {}
         for k in self.article_meta.getElementsByTagName('pub-date'):
             try:
-                s = k.getElementsByTagName(an 'season')[0]
+                s = k.getElementsByTagName('season')[0]
             except IndexError:
                 season = ''
                 try:

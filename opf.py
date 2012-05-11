@@ -1,4 +1,4 @@
-from main import __version__
+#from main import __version__
 import datetime
 import os.path
 import utils
@@ -37,7 +37,7 @@ class ContentOPF(object):
         #Here we create a custom collection unique identifier string
         #Consists of software name and version along with timestamp
         t = datetime.datetime(1,1,1)
-        self.ccuid = 'OpenAccess_EPUBv{0}-{1}'.format(__version__, 
+        self.ccuid = 'OpenAccess_EPUBv{0}-{1}'.format('__version__', 
                                                       t.utcnow().__str__())
         
     def takeArticle(self, article):

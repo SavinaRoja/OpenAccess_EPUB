@@ -323,11 +323,11 @@ def main():
             document, xml_local = doiInput(args.input, args.save_xml)
         else:
             download = False
-            document, xml_local = localInput(args.input)
-        #For now PloS naming will be maintained
-        #The name of the directory and the .epub should be a string like
-        #journal.pcbi.1002211
-        #or if already re-named, it will assume the xml name
+            xml_local = args.input
+            document = localInput(xml_local)
+        #Later code versions may support the manual naming of the output file
+        #as a commandline argument. For now, the name of the ePub file will be
+        #the same as the input xml file.
         input_name = os.path.splitext(os.path.split(xml_local)[1])[0]
         output_name = os.path.join(args.output, input_name)
         if os.path.isdir(output_name):
