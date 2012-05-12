@@ -6,6 +6,7 @@ from the OPSGenerator base class in opsgenerator.py
 import opsgenerator
 import os
 import os.path
+import utils
 import logging
 
 class OPSPLoS(opsgenerator.OPSGenerator):
@@ -35,6 +36,42 @@ class OPSPLoS(opsgenerator.OPSGenerator):
         self.setSomeAttributes(title, {'id': 'title',
                                        'class': 'article-title'})
         title.childNodes = self.metadata.title.article_title.childNodes
+        auths = []
+        edits = []
+        for contrib in self.metadata.contrib:
+            if contrib.attrs['contrib-type'] == 'author':
+                auths.append(contrib)
+            elif contrib.attrs['contrib-type'] == 'editor':
+                edits.append(contrib)
+            else:
+                if not contrib.attrs['contrib-type']:
+                    print('No contrib-type provided for contibutor!')
+                else:
+                    print('Unexpected value for contrib-type')
+        auth_el = self.appendNewElement('h3', body)
+        first = True
+        for auth in auths:
+            if not first:
+                self.appendNewText(', ', auth_el)
+            else:
+                first = False
+            if not auth.anonymous:
+                given = auth.name[0].given
+                surname = auth.name[0].surname
+                name = given + ' ' + surname
+            else:
+                name = 'Anonymous'
+            self.appendNewText(name, auth_el)
+            for x in auth.xref:
+                s = x.node.getElementsByTagName('sup')
+                if s:
+                    s = utils.nodeText(s[0])
+                else:
+                    s = u'!'
+                _sup = self.appendNewElement('sup', auth_el)
+                _a = self.appendNewElement('a', _sup)
+                _a.setAttribute('href', self.synop_frag.format(x.rid))
+                self.appendNewText(s, _a)
         print(self.doc.toprettyxml(encoding='utf-8'))
 
     def createMain(self):
