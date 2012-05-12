@@ -158,15 +158,18 @@ class OPSGenerator(object):
     def appendNewElement(self, newelement, parent):
         """
         A common idiom is to create an element and then immediately append it
-        to another. This method allows that to be done more concisely.
+        to another. This method allows that to be done more concisely. It
+        returns the newly created and appended element.
         """
         new = self.doc.createElement(newelement)
         parent.append(new)
+        return new
 
     def appendNewText(self, newtext, parent):
         """
         A common idiom is to create a new text node and then immediately append
-        it to another element. This method makes that more concise.
+        it to another element. This method makes that more concise. It does not
+        return the newly created and appended text node
         """
         new = self.doc.createTextNode(newtext)
         parent.append(new)
