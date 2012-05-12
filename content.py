@@ -1,3 +1,9 @@
+"""
+This module is officialy deprecated in favor of OPSGenerator derived classes.
+It is being kept around to serve as a model and will be deleted once they
+have reached a stage of relative completion.
+"""
+
 import xml.dom.minidom as minidom
 import xml.dom
 import logging
