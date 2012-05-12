@@ -18,6 +18,8 @@ class OPSPLoS(opsgenerator.OPSGenerator):
         print('Generating OPS content...')
         self.metadata = article.metadata
         self.doi = article.getDOI()
+        #From "10.1371/journal.pone.0035956" get "pone.0335956"
+        self.doi_frag = self.doi.split('journal.')[1]
         self.makeFragmentIdentifiers()
         self.ops_dir = os.path.join(output_dir, 'OPS')
 
@@ -25,13 +27,10 @@ class OPSPLoS(opsgenerator.OPSGenerator):
         """
         This will create useful fragment identifier strings.
         """
-        #PLoS formats its DOIs like "10.1371/journal.pone.0035956"
-        #I want the part that conveys journal and article, "pone.0335956"
-        aid = self.doi.split('journal.')[1]
-        self.synop_frag = 'synop.{0}.xml'.format(aid) + '#{0}'
-        self.main_frag = 'main.{0}.xml'.format(aid) + '#{0}'
-        self.biblio_frag = 'biblio.{0}.xml'.format(aid) + '#{0}'
-        self.tables_frag = 'tables.{0}.xml'.format(aid) + '#{0}'
+        self.synop_frag = 'synop.{0}.xml'.format(self.doi_frag) + '#{0}'
+        self.main_frag = 'main.{0}.xml'.format(self.doi_frag) + '#{0}'
+        self.biblio_frag = 'biblio.{0}.xml'.format(self.doi_frag) + '#{0}'
+        self.tables_frag = 'tables.{0}.xml'.format(self.doi_frag) + '#{0}'
 
     def announce(self):
         """
@@ -43,5 +42,6 @@ class OPSPLoS(opsgenerator.OPSGenerator):
 import article
 
 mydoc = article.Article('downloaded_xml_files/journal.pone.0035956.xml')
-myops = OPSPLoS(mydoc, 'test_output')
+myops = OPSPLoS(mydoc, os.path.join('output', 'journal.pone.0035956'))
 print(myops.doi)
+

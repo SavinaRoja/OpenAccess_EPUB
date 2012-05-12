@@ -19,6 +19,8 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
         print('Generating OPS content...')
         self.metadata = article.metadata
         self.doi = article.getDOI()
+        #From "10.3389/fimmu.2012.00104" get "fimmu.2012.00104"
+        self.doi_frag = self.doi.split('10.3389/')[1]
         self.makeFragmentIdentifiers()
         self.ops_dir = os.path.join(output_dir, 'OPS')
 
@@ -26,13 +28,10 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
         """
         This will create useful fragment identifier strings.
         """
-        #Frontiers formats its DOIs like "10.3389/fimmu.2012.00104"
-        #I want the part that conveys journal and article, "fimmu.2012.00104"
-        aid = self.doi.split('10.3389/')[1]
-        self.synop_frag = 'synop.{0}.xml'.format(aid) + '#{0}'
-        self.main_frag = 'main.{0}.xml'.format(aid) + '#{0}'
-        self.biblio_frag = 'biblio.{0}.xml'.format(aid) + '#{0}'
-        self.tables_frag = 'tables.{0}.xml'.format(aid) + '#{0}'
+        self.synop_frag = 'synop.{0}.xml'.format(self.doi_frag) + '#{0}'
+        self.main_frag = 'main.{0}.xml'.format(self.doi_frag) + '#{0}'
+        self.biblio_frag = 'biblio.{0}.xml'.format(self.doi_frag) + '#{0}'
+        self.tables_frag = 'tables.{0}.xml'.format(self.doi_frag) + '#{0}'
 
     def announce(self):
         """
@@ -43,6 +42,6 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
 import article
 
 mydoc = article.Article('downloaded_xml_files/fimmu-03-00104.xml')
-myops = OPSFrontiers(mydoc, 'test_output')
+myops = OPSFrontiers(mydoc, os.path.join('output', 'fimmu-03-00104'))
 print(myops.doi)
 
