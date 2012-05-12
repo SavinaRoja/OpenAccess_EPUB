@@ -23,13 +23,20 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
         self.doi_frag = self.doi.split('10.3389/')[1]
         self.makeFragmentIdentifiers()
         self.ops_dir = os.path.join(output_dir, 'OPS')
+        self.createSynopsis()
 
     def createSynopsis(self):
         """
         This method encapsulates the functions necessary to create the synopsis
         segment of the article.
         """
-        pass
+        self.doc = self.makeDocument('synop')
+        body = self.doc.getElementsByTagName('body')[0]
+        title = self.appendNewElement('h1', body)
+        self.setSomeAttributes(title, {'id': 'title',
+                                       'class': 'article-title'})
+        title.childNodes = self.metadata.title.article_title.childNodes
+        print(self.doc.toprettyxml(encoding='utf-8'))
 
     def createMain(self):
         """
@@ -73,4 +80,3 @@ import article
 mydoc = article.Article('downloaded_xml_files/fimmu-03-00104.xml')
 myops = OPSFrontiers(mydoc, os.path.join('output', 'fimmu-03-00104'))
 print(myops.doi)
-
