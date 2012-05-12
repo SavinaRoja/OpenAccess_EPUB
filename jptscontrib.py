@@ -17,7 +17,7 @@ class ContribGroup(object):
     <contrib> elements. Should these elements exist, they are presumably
     pertinent to all <contrib> members contained, and will be applied to
     those elements unless overridden during their inspection.
-    
+
     Description
         The following, in order:
             Contributor <contrib>, one or more
@@ -49,7 +49,7 @@ class ContribGroup(object):
         self.on_behalf_of = self.getOnBehalfOf()
         self.role = self.getRole()
         self.xref = self.getXref()
-    
+
     def getChildrenByTagName(self, searchterm):
         """
         Many of the elements that may exist under <contrib-node> can also
@@ -67,10 +67,10 @@ class ContribGroup(object):
                 if tag == searchterm:
                     nodelist.append(c)
         return nodelist
-    
+
     def getContrib(self):
         return self.Node.getElementsByTagName('contrib')
-        
+
     def getAddress(self):
         """
         The <address> element under <contrib-group> and <contrib> elements has
@@ -83,7 +83,7 @@ class ContribGroup(object):
         below the parent node.
         """
         return self.getChildrenByTagName('address')
-        
+
     def getAff(self):
         """
         The <aff> element under <contrib-group> and <contrib> elements has the
@@ -102,63 +102,63 @@ class ContribGroup(object):
             ct = aff.getAttribute('content-type')
             afflist.append(at(aff, aid, rid, ct))
         return afflist
-    
+
     def getAuthorComment(self):
         """
         <author-comment> is an optional tag, 0 or more, that may contain a
-        <title> element and 1 or more <p> elements. 
+        <title> element and 1 or more <p> elements.
         """
         return self.getChildrenByTagName('author-comment')
-    
+
     def getBio(self):
         """
         <bio> is an optional tag, 0 or more, that may contain a <title>
         element and 1 or more <p> elements.
         """
         return self.getChildrenByTagName('bio')
-    
+
     def getEmail(self):
         """
         <email> is an optional tag, 0 or more. It contains only text, numbers,
         and special characters.
         """
         return self.getChildrenByTagName('email')
-    
+
     def getExtLink(self):
         """
         <ext-link> is an optional tag, 0 or more. It contains text and emphasis
         elements.
         """
         return self.getChildrenByTagName('ext-link')
-    
+
     def getUri(self):
         """
         <uri> is an optional tag, 0 or more. It contains only text, numbers,
         and special characters.
         """
         return self.getChildrenByTagName('uri')
-    
+
     def getOnBehalfOf(self):
         """
         <on-behalf-of> is an optional tag, 0 or more. It contains text and
         emphasis elements.
         """
         return self.getChildrenByTagName('on-behalf-of')
-    
+
     def getRole(self):
         """
         <role> is an optional tag, 0 or more. It contains text and emphasis
         elements.
         """
         return self.getChildrenByTagName('role')
-    
+
     def getXref(self):
         """
         <xref> is an optional tag, 0 or more. It may contain text and emphasis
         elements. It's attributes are \"id\", \"rid\", and \"ref-type\". This
-        method will return a list of namedtuple(Node, id, rid, ref_type)
+        method will return a list of namedtuple(node, id, rid, ref_type)
         """
-        xref = collections.namedtuple('Xref', 'Node, id, rid, ref_type')
+        xref = collections.namedtuple('Xref', 'node, id, rid, ref_type')
         xreflist = []
         for x in self.getChildrenByTagName('xref'):
             xid = x.getAttribute('id')
@@ -166,7 +166,7 @@ class ContribGroup(object):
             rt = x.getAttribute('ref-type')
             xreflist.append(xref(x, xid, rid, rt))
         return xreflist
-    
+
     def contributors(self):
         """
         This method instantiates a Contrib class for each <contrib> element
@@ -180,7 +180,8 @@ class ContribGroup(object):
         for tag in self.contrib:
             contriblist.append(Contrib(tag, inheritance))
         return contriblist
-    
+
+
 class Contrib(ContribGroup):
     """
     <contrib> nodes are similar in specification to <contrib-group> nodes,
@@ -189,15 +190,13 @@ class Contrib(ContribGroup):
     default values for attributes it might inherit from its parent
     <contrib-group> node.
     """
-    
     def __init__(self, contribnode, inheritance):
-        super(Contrib, self).__init__(contribnode)
+        ContribGroup.__init__(self, contribnode)
         self.getAttributes()
         self.anonymous = self.getAnonymous()
         self.collab = self.getCollab()
         self.name = self.getName()
         self.degrees = self.getDegrees()
-        
         #This list must directly correlate to the inheritance list
         inheritors = [self.address, self.aff, self.author_comment, self.bio,
                       self.email, self.ext_link, self.uri, self.on_behalf_of,
@@ -207,9 +206,8 @@ class Contrib(ContribGroup):
             if not inheritors[i]:
                 if inheritance[i]:
                     inheritors[i] = inheritance[i]
-                    
             i += 1
-        
+
     def getAttributes(self):
         self.attrs = {}
         attrs = ['contrib-type', 'corresp', 'deceased', 'equal-contrib', 'id',
@@ -217,7 +215,7 @@ class Contrib(ContribGroup):
                  'xlink:show', 'xlink:title', 'xlink;type', 'xlink:xlink']
         for a in attrs:
             self.attrs[a] = self.Node.getAttribute(a)
-    
+
     def getAnonymous(self):
         """
         <anonymous> is an optional element, and typically contains no content.
@@ -226,7 +224,7 @@ class Contrib(ContribGroup):
         collected as a NodeList. It does not exist in v2.0.
         """
         return self.getChildrenByTagName('anonymous')
-    
+
     def getCollab(self):
         """
         <collab> is an optional element, 0 or more, though again it should be
@@ -236,7 +234,7 @@ class Contrib(ContribGroup):
         or academic institution.
         """
         return self.getChildrenByTagName('collab')
-    
+
     def getName(self):
         """
         <name> is an optional element, 0 or more, but should rarely be multiple
@@ -253,7 +251,7 @@ class Contrib(ContribGroup):
         for n in self.getChildrenByTagName('name'):
             surname = utils.nodeText(n.getElementsByTagName('surname')[0])
             try:
-                given = utils.nodeText(n.getElementsByTagName('given')[0])
+                given = utils.nodeText(n.getElementsByTagName('given-names')[0])
             except IndexError:
                 given = None
             try:
