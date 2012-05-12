@@ -28,7 +28,6 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
         #Frontiers formats its DOIs like "10.3389/fimmu.2012.00104"
         #I want the part that conveys journal and article, "fimmu.2012.00104"
         aid = self.doi.split('10.3389/')[1]
-        print(aid)
         self.synop_frag = 'synop.{0}.xml'.format(aid) + '#{0}'
         self.main_frag = 'main.{0}.xml'.format(aid) + '#{0}'
         self.biblio_frag = 'biblio.{0}.xml'.format(aid) + '#{0}'
