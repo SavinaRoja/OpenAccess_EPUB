@@ -22,6 +22,36 @@ class OPSPLoS(opsgenerator.OPSGenerator):
         self.doi_frag = self.doi.split('journal.')[1]
         self.makeFragmentIdentifiers()
         self.ops_dir = os.path.join(output_dir, 'OPS')
+        self.doc = self.makeDocument('synop')
+
+    def createSynopsis(self):
+        """
+        This method encapsulates the functions necessary to create the synopsis
+        segment of the article.
+        """
+        pass
+
+    def createMain(self):
+        """
+        This method encapsulates the functions necessary to create the main
+        segment of the article.
+        """
+        pass
+
+    def createBiblio(self):
+        """
+        This method encapsulates the functions necessary to create the biblio
+        segment of the article.
+        """
+        pass
+
+    def createTables(self):
+        """
+        This method encapsulates the functions necessary to create a file
+        containing html versions of all the tables in the article. If there
+        are no tables, the file is not created.
+        """
+        pass
 
     def makeFragmentIdentifiers(self):
         """
