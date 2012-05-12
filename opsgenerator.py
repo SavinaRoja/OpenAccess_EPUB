@@ -95,6 +95,14 @@ class OPSGenerator(object):
                     pass
         return attrs
 
+    def setSomeAttributes(self, element, attrs={}):
+        """
+        This method accepts a dictionary of attribute{name:value} format to
+        set an arbitrary number of attributes for an element.
+        """
+        for name in attrs:
+            element.setAttribute(name, attrs[name])
+
     def removeSomeAttributes(self, element, names=[]):
         """
         This method will remove all attributes whose names are listed.
@@ -106,7 +114,7 @@ class OPSGenerator(object):
         """
         This method accepts a two-dimensional list, tuple, or a combination
         thereof, where the second dimension consists of pairs of attribute
-        names. The former attribute name will be replaced witht the latter. For
+        names. The former attribute name will be replaced with the latter. For
         example, namepairs = [['monty', 'python], ['vanilla', 'fudge']] would
         change the names of the 'monty' and 'vanilla' attributes to 'python'
         and 'fudge'.respectively.
@@ -162,7 +170,7 @@ class OPSGenerator(object):
         returns the newly created and appended element.
         """
         new = self.doc.createElement(newelement)
-        parent.append(new)
+        parent.appendChild(new)
         return new
 
     def appendNewText(self, newtext, parent):
@@ -172,7 +180,7 @@ class OPSGenerator(object):
         return the newly created and appended text node
         """
         new = self.doc.createTextNode(newtext)
-        parent.append(new)
+        parent.appendChild(new)
 
     def announce(self):
         """
