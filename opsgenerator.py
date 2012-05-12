@@ -14,9 +14,9 @@ class OPSGenerator(object):
     This class provides several baseline features and functions required in
     order to produce OPS content.
     """
-    def __init__(self, document):
+    def __init__(self):
+        self.announce()
         self.doc = self.makeDocument('base')
-        print('Instantiating OPSGenerator')
 
     def makeDocument(self, titlestring):
         """
@@ -173,3 +173,9 @@ class OPSGenerator(object):
         """
         new = self.doc.createTextNode(newtext)
         parent.append(new)
+
+    def announce(self):
+        """
+        Announces initiation of the class.
+        """
+        print('Initiating OPSGenerator')
