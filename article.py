@@ -116,7 +116,7 @@ Publishing DTD: \n{0}'.format(doc.doctype.publicId))
                     ('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance')]
         attr_err = 'Article attribute {0} has improper value: {1}'
         for _key, _val in mandates:
-            if not self.attrs[_key] == _val:
+            if self.attrs[_key] and not self.attrs[_key] == _val:
                 logging.error(attr_err.format(_key, self.attrs[_key]))
         if self.attrs['article-type'] not in utils.suggestedArticleTypes():
             art_type_err = 'article-type value is not a suggested value: {0}'
