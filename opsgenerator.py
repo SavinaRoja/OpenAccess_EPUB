@@ -14,7 +14,8 @@ class OPSGenerator(object):
     This class provides several baseline features and functions required in
     order to produce OPS content.
     """
-    def __init__(self):
+    def __init__(self, document):
+        self.doc = self.makeDocument('base')
         print('Instantiating OPSGenerator')
 
     def makeDocument(self, titlestring):
@@ -50,7 +51,7 @@ class OPSGenerator(object):
 
     def writeDocument(self, name, document):
         """
-        This function will write an DOM document to an XML file.
+        This function will write a DOM document to an XML file.
         """
         with open(name, 'wb') as out:
             out.write(document.toprettyxml(encoding='utf-8'))
@@ -62,10 +63,10 @@ class OPSGenerator(object):
         while element.attributes.length:
             element.removeAttribute(element.attributes.item(0).name)
 
-    def getAllAttributes(self, node):
+    def getAllAttributes(self, element):
         """
-        This method will acquire all attributes of provided element and return a
-        dictionary of the form attributes[name] = value.
+        This method will acquire all attributes of the provided element and
+        return a dictionary of the form attributes[name] = value.
         """
         attrs = {}
         i = 0
@@ -117,3 +118,30 @@ class OPSGenerator(object):
         parent.removeChild(node)
         if unlink:
             node.unlink()
+
+    def elevateNode(self, node, adopt=''):
+        """
+        There are some cases where a little surgery must take place in the
+        manipulation of an XML document to produce valid ePub. This method
+        covers the case where a node must be placed at the same level of its
+        parent. All siblings that come after this node will be removed from
+        the parent node as well, they will be added as children to a new parent
+        node that will be of the same type as the first. For example:
+        <p>Monty Python's <flying>Circus</flying> is <b>great</b>!</p>
+        would be converted by elevateNode(flying_node) to:
+        <p>Monty Python's </p><flying>Circus</flying><p> is <b>great</b>!</p>
+        Take care when using this method and make sure it does what you want.
+        """
+        #These must be collected before modifying the xml
+        parent = node.parentNode
+        parent_sibling = parent.NextSibling
+        grandparent = parent.parentNode
+        node_index = parent.index(node)
+        #Now we make modifications
+        grandparent.insertBefore(node, parent_sibling)
+        if not adopt:
+            adopt = parent.tagName
+        adopt_element = self.doc.createElement(adopt)
+        grandparent.insertBefore(adopt_element, parent_sibling)
+        for child in parent.childNodes[node_index + 1:]:
+            adopt_element.appendChild(child)
