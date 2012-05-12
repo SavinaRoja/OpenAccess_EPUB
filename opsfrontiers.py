@@ -4,6 +4,9 @@ from the OPSGenerator base class in opsgenerator.py
 """
 
 import opsgenerator
+import os
+import os.path
+import logging
 
 
 class OPSFrontiers(opsgenerator.OPSGenerator):
@@ -20,7 +23,7 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
 
     def makeFragmentIdentifiers(self):
         """
-        This will create useful fragement identifier strings.
+        This will create useful fragment identifier strings.
         """
         #Frontiers formats its DOIs like "10.3389/fimmu.2012.00104"
         #I want the part that conveys journal and article, "fimmu.2012.00104"

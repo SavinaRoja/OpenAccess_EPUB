@@ -4,7 +4,9 @@ from the OPSGenerator base class in opsgenerator.py
 """
 
 import opsgenerator
-
+import os
+import os.path
+import logging
 
 class OPSPLoS(opsgenerator.OPSGenerator):
     """
