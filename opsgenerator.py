@@ -63,10 +63,11 @@ class OPSGenerator(object):
         while element.attributes.length:
             element.removeAttribute(element.attributes.item(0).name)
 
-    def getAllAttributes(self, element):
+    def getAllAttributes(self, element, remove=False):
         """
         This method will acquire all attributes of the provided element and
-        return a dictionary of the form attributes[name] = value.
+        return a dictionary of the form attributes[name] = value. If remove is
+        set to True, it will delete all the attributes once complete.
         """
         attrs = {}
         i = 0
@@ -74,16 +75,24 @@ class OPSGenerator(object):
             attr = element.attributes.item(i)
             attrs[attr.name] = attr.value
             i += 1
+        if remove:
+            self.expungeAttributes(element)
         return attrs
 
-    def getSomeAttributes(self, element, names=[]):
+    def getSomeAttributes(self, element, names=[], remove=False):
         """
         This method accepts a list of strings corresponding to attribute names.
-        It returns a dictionary of the form attributes[name] = value.
+        It returns a dictionary of the form attributes[name] = value. If remove
+        is set to True, it will delete the attributes after collection.
         """
         attrs = {}
         for name in names:
             attrs[name] = element.getAttribute('name')
+            if remove:
+                try:
+                    element.removeAttribute(name)
+                except xml.dom.NotFoundErr:
+                    pass
         return attrs
 
     def removeSomeAttributes(self, element, names=[]):
