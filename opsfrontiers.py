@@ -20,6 +20,7 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
         self.metadata = article.metadata
         self.doi = article.getDOI()
         self.makeFragmentIdentifiers()
+        self.ops_dir = os.path.join(output_dir, 'OPS')
 
     def makeFragmentIdentifiers(self):
         """

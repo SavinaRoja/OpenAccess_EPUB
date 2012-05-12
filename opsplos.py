@@ -11,7 +11,7 @@ import logging
 class OPSPLoS(opsgenerator.OPSGenerator):
     """
     This provides the full feature set to create OPS content for an ePub file
-    from a Frontiers journal article.
+    from a PLoS journal article.
     """
     def __init__(self, article, output_dir):
         opsgenerator.OPSGenerator.__init__(self)
@@ -19,10 +19,11 @@ class OPSPLoS(opsgenerator.OPSGenerator):
         self.metadata = article.metadata
         self.doi = article.getDOI()
         self.makeFragmentIdentifiers()
+        self.ops_dir = os.path.join(output_dir, 'OPS')
 
     def makeFragmentIdentifiers(self):
         """
-        This will create useful fragement identifier strings.
+        This will create useful fragment identifier strings.
         """
         #PLoS formats its DOIs like "10.1371/journal.pone.0035956"
         #I want the part that conveys journal and article, "pone.0335956"
