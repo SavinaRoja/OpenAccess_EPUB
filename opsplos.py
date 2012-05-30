@@ -9,6 +9,7 @@ import os.path
 import utils
 import logging
 
+
 class OPSPLoS(opsgenerator.OPSGenerator):
     """
     This provides the full feature set to create OPS content for an ePub file
@@ -111,9 +112,8 @@ class OPSPLoS(opsgenerator.OPSGenerator):
         print('Initiating OPSPLoS')
 
 
-import article
+#import article
 
-mydoc = article.Article('downloaded_xml_files/journal.pone.0035956.xml')
-myops = OPSPLoS(mydoc, os.path.join('output', 'journal.pone.0035956'))
-print(myops.doi)
-
+#mydoc = article.Article('downloaded_xml_files/journal.pone.0035956.xml')
+#myops = OPSPLoS(mydoc, os.path.join('output', 'journal.pone.0035956'))
+#print(myops.doi)

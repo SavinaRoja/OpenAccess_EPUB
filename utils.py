@@ -5,6 +5,7 @@ from collections import namedtuple
 
 Identifier = namedtuple('Identifer', 'id, type')
 
+
 def nodeText(node):
     """
     This is to be used when a node may only contain text, numbers or special
@@ -15,10 +16,12 @@ def nodeText(node):
     """
     return u'{0}'.format(node.firstChild.data.strip())
 
+
 def makeEPUBBase(location, css_location):
-    '''Contains the  functionality to create the ePub directory hierarchy from 
-    scratch. Typical practice will not require this method, but use this to 
-    replace the default base ePub directory if it is not present. It may also 
+    """
+    Contains the  functionality to create the ePub directory hierarchy from
+    scratch. Typical practice will not require this method, but use this to
+    replace the default base ePub directory if it is not present. It may also
     used as a primer on ePub directory construction:
     base_epub/
     base_epub/mimetype
@@ -30,8 +33,9 @@ def makeEPUBBase(location, css_location):
     base_epub/OPS/images/
     base_epub/OPS/images/equations/
     base_epub/OPS/images/figures/
-    base_epub/OPS/images/tables/'''
-    
+    base_epub/OPS/images/tables/
+    """
+
     #Create root directory
     rootname = location
     os.mkdir(rootname)
@@ -63,8 +67,10 @@ def makeEPUBBase(location, css_location):
             css_out.write(css_src.read())
 
 def createDCElement(document, name, data, attributes = None):
-    '''A convenience method for creating DC tag elements.
-    Used in content.opf'''
+    """
+    A convenience method for creating DC tag elements.
+    Used in content.opf
+    """
     newnode = document.createElement(name)
     newnode.appendChild(document.createTextNode(data))
     if attributes:

@@ -20,7 +20,8 @@ import logging
 import utils
 import opf
 import tocncx
-import content
+import opsfrontiers
+import opsplos
 import settings
 from article import Article
 
@@ -193,7 +194,7 @@ def makeEPUB(document, xml_local, cache_dir, outdirect, log_to):
         document.fetchPLoSImages(cache_dir, outdirect, settings.caching)
     elif DOI.split('/')[0] == '10.3389':  # Frontiers' publisher DOI
         document.fetchFrontiersImages(cache_dir, outdirect, settings.caching)
-    content.OPSContent(xml_local, DOI, outdirect, document)
+    opsfrontiers.OPSFrontiers(xml_local, DOI, outdirect, document)
     toc = tocncx.TocNCX()
     toc.takeArticle(document)
     toc.write(outdirect)

@@ -7,6 +7,18 @@ import opsgenerator
 import os
 import os.path
 import logging
+import utils
+
+
+class InputError(Exception):
+    """
+    This is a custom exception for unexpected input from a publisher.
+    """
+    def __init__(self, detail):
+        self.detail = detail
+
+    def __str__(self):
+        return self.detail
 
 
 class OPSFrontiers(opsgenerator.OPSGenerator):
@@ -32,10 +44,14 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
         """
         self.doc = self.makeDocument('synop')
         body = self.doc.getElementsByTagName('body')[0]
+
+        #Create the title for the article
         title = self.appendNewElement('h1', body)
         self.setSomeAttributes(title, {'id': 'title',
                                        'class': 'article-title'})
         title.childNodes = self.metadata.title.article_title.childNodes
+
+        #Get authors
         auths = []
         for contrib in self.metadata.contrib:
             if contrib.attrs['contrib-type'] == 'author':
@@ -45,11 +61,38 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
                     print('No contrib-type provided for contibutor!')
                 else:
                     print('Unexpected value for contrib-type')
-        #Create a <p> node to hold the affiliations text
-        affp = self.appendNewElement('p', body)
+
+        #Parse authors into formatted xml
+        auth_el = self.appendNewElement('h3', body)
+        first = True
+        for auth in auths:
+            if not first:
+                self.appendNewText(', ', auth_el)
+            else:
+                first = False
+            if not auth.anonymous:
+                given = auth.name[0].given
+                surname = auth.name[0].surname
+                name = given + ' ' + surname
+            else:
+                name = 'Anonymous'
+            self.appendNewText(name, auth_el)
+            for x in auth.xref:
+                s = x.node.getElementsByTagName('sup')
+                if s:
+                    s = utils.nodeText(s[0])
+                else:
+                    s = u'!'
+                _sup = self.appendNewElement('sup', auth_el)
+                _a = self.appendNewElement('a', _sup)
+                _a.setAttribute('href', self.synop_frag.format(x.rid))
+                self.appendNewText(s, _a)
+
+        #Create the affiliations text
         for aff in self.metadata.affs:
+            affp = self.appendNewElement('p', body)
             #Frontiers appears to include the following
-            #<sup>, <institution>. and <country>
+            #<sup>, <institution>, and <country>
             try:
                 sup = aff.getElementsByTagName('sup')[0]
             except IndexError:
@@ -59,7 +102,26 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
                 except IndexError:
                     raise InputError('Could not identify affiliation number!')
             else:
-                
+                sup_text = utils.nodeText(sup)
+            affp.setAttribute('id', aff.getAttribute('id'))
+            aff_sup = self.appendNewElement('sup', affp)
+            self.appendNewText(sup_text, aff_sup)
+            #These will be considered optional
+            try:
+                inst = aff.getElementsByTagName('institution')[0]
+            except IndexError:
+                pass
+            else:
+                inst = utils.nodeText(inst)
+                self.appendNewText(inst, affp)
+            try:
+                ctry = aff.getElementsByTagName('country')[0]
+            except IndexError:
+                pass
+            else:
+                ctry = utils.nodeText(ctry)
+                self.appendNewText(', ' + ctry, affp)
+
         #To the best of my knowledge, Frontiers only has one kind of abstract
         for abstract in self.metadata.abstract:
             if abstract.type:
@@ -69,7 +131,8 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
             abstract.node.setAttribute('id', 'abstract')
             self.expungeAttributes(abstract.node)
         #Finally, print this out or write to a document
-        print(self.doc.toprettyxml(encoding='utf-8'))
+        with open()
+        self.doc.toprettyxml(encoding='utf-8')
 
     def createMain(self):
         """
@@ -107,9 +170,3 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
         Announces the class initiation
         """
         print('Initiating OPSFrontiers')
-
-import article
-
-mydoc = article.Article('downloaded_xml_files/fimmu-03-00104.xml')
-myops = OPSFrontiers(mydoc, os.path.join('output', 'fimmu-03-00104'))
-print(myops.doi)
