@@ -106,7 +106,7 @@ you use a direct URL to the XML file.')
             else:
                 filename = os.path.join(xml_dir, filename)
                 with open(filename, 'wb') as xml_file:
-                    xml_fil.write(open_xml.read())
+                    xml_file.write(open_xml.read())
                 document = Article(filename)
                 return document, filename
         else:  # We don't know how to handle this input

@@ -41,26 +41,26 @@ class OPSContent(object):
             pass
         else:
             self.createBiblio(self.doc, back)
-        
+
     def createSynopsis(self, meta, back):
         '''Create an output file containing a representation of the article 
         synopsis'''
-        
+
         #Initiate the document, returns the document and its body element
         synop, synbody = self.initiateDocument('Synopsis file')
-        
+
         #Create the title for the article
         title = synbody.appendChild(synop.createElement('h1'))
         title.setAttribute('id', 'title')
         title.setAttribute('class', 'article-title')
         title.childNodes = meta.article_meta.article_title.childNodes
-        
+
         #Affiliation index to be generated as authors parsed
         affiliation_index = []
-        
+
         #Create authors
         self.synopsisAuthors(meta, synbody, synop)
-        
+
         #Create a node for the affiliation text
         aff_node = synop.createElement('p')
         art_affs = meta.article_meta.art_affs
@@ -73,7 +73,6 @@ class OPSContent(object):
                     aff_node.appendChild(sup)
                     aff_node.appendChild(synop.createTextNode(item.address))
             synbody.appendChild(aff_node)
-        
         #Create the Abstract if it exists
         try:
             abstract = meta.article_meta.abstracts['default']
@@ -505,7 +504,7 @@ class OPSContent(object):
                 supp = cite_tags['supplement'] + ' '  # supp
             else:
                 supp = ''  # supp
-            fpage, lpage = cite_tags['fpage'],cite_tags['lpage']
+            fpage, lpage = cite_tags['fpage'], cite_tags['lpage']
             if fpage and lpage:
                 pgs = u'{0}-{1}'.format(fpage, lpage)  # pgs
             else:
@@ -601,7 +600,7 @@ class OPSContent(object):
                     ext_link.tagName = 'a'
                     ext_link.setAttribute('href', href)
                 ref_par.childNodes += com.childNodes
-        
+
         elif citation_type == u'other':
             ref_string = u'{0}. '.format(utils.getTagText(label))
             ref_string += self.refOther(citation, stringlist = [])
@@ -631,13 +630,13 @@ class OPSContent(object):
             else:
                 self.refOther(item, stringlist)
         return u''.join(stringlist)
-    
-    def postNodeHandling(self, topnode, doc, ignorelist = []):
+
+    def postNodeHandling(self, topnode, doc, ignorelist=[]):
         '''A wrapper function for all of the node handlers. Conceptually,
-        this function should be called after special cases have been handled 
-        such as in figures, tables, and references. This function provides 
-        simple access to the entire cohort of default nodeHandlers which may 
-        be utilized after special cases have been handled. Passing a list of 
+        this function should be called after special cases have been handled
+        such as in figures, tables, and references. This function provides
+        simple access to the entire cohort of default nodeHandlers which may
+        be utilized after special cases have been handled. Passing a list of
         string tagNames allows those tags to be ignored'''
         handlers = {'bold': self.boldNodeHandler(topnode),
                     'italic': self.italicNodeHandler(topnode),

@@ -601,13 +601,13 @@ class JPTSMeta(object):
         collected along with the attribute values into a list of namedtuples.
         """
         abstracts = []
-        abs = namedtuple('Abstract', 'node, type, xml_lang, id, specific_use')
+        abst = namedtuple('Abstract', 'node, type, xml_lang, id, specific_use')
         for a in self.getChildrenByTagName('abstract', self.article_meta):
             atyp = a.getAttribute('abstract-type')
             lang = a.getAttribute('xml:lang')
             abid = a.getAttribute('id')
             spec = a.getAttribute('specific-use')
-            abstracts.append(abs(a, atyp, lang, abid, spec))
+            abstracts.append(abst(a, atyp, lang, abid, spec))
         return abstracts
 
     def getTransAbstract(self):

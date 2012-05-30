@@ -36,6 +36,39 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
         self.setSomeAttributes(title, {'id': 'title',
                                        'class': 'article-title'})
         title.childNodes = self.metadata.title.article_title.childNodes
+        auths = []
+        for contrib in self.metadata.contrib:
+            if contrib.attrs['contrib-type'] == 'author':
+                auths.append(contrib)
+            else:
+                if not contrib.attrs['contrib-type']:
+                    print('No contrib-type provided for contibutor!')
+                else:
+                    print('Unexpected value for contrib-type')
+        #Create a <p> node to hold the affiliations text
+        affp = self.appendNewElement('p', body)
+        for aff in self.metadata.affs:
+            #Frontiers appears to include the following
+            #<sup>, <institution>. and <country>
+            try:
+                sup = aff.getElementsByTagName('sup')[0]
+            except IndexError:
+                aff_id = aff.getAttribute('id')
+                try:
+                    sup_text = aff_id.split('aff')[1]
+                except IndexError:
+                    raise InputError('Could not identify affiliation number!')
+            else:
+                
+        #To the best of my knowledge, Frontiers only has one kind of abstract
+        for abstract in self.metadata.abstract:
+            if abstract.type:
+                print('abstract-type specified!: {0}'.format(abstract.type))
+            body.appendChild(abstract.node)
+            abstract.node.tagName = 'div'
+            abstract.node.setAttribute('id', 'abstract')
+            self.expungeAttributes(abstract.node)
+        #Finally, print this out or write to a document
         print(self.doc.toprettyxml(encoding='utf-8'))
 
     def createMain(self):

@@ -36,8 +36,7 @@ class OPSPLoS(opsgenerator.OPSGenerator):
         self.setSomeAttributes(title, {'id': 'title',
                                        'class': 'article-title'})
         title.childNodes = self.metadata.title.article_title.childNodes
-        auths = []
-        edits = []
+        auths, edits = [], []
         for contrib in self.metadata.contrib:
             if contrib.attrs['contrib-type'] == 'author':
                 auths.append(contrib)
