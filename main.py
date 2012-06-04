@@ -124,12 +124,12 @@ you use a direct URL to the XML file.')
         return(document, filename)
 
 
-def doiInput(input, xml_dir):
+def doiInput(inpt, xml_dir):
     """
     Handles input in DOI form to instantiate the document
     """
     try:
-        doi_url = 'http://dx.doi.org/' + input[4:]
+        doi_url = 'http://dx.doi.org/' + inpt[4:]
         page = urllib2.urlopen(doi_url)
         address = urlparse.urlparse(page.geturl())
         path = address.path.replace(':', '%3A').replace('/', '%2F')
@@ -194,7 +194,7 @@ def makeEPUB(document, xml_local, cache_dir, outdirect, log_to):
         document.fetchPLoSImages(cache_dir, outdirect, settings.caching)
     elif DOI.split('/')[0] == '10.3389':  # Frontiers' publisher DOI
         document.fetchFrontiersImages(cache_dir, outdirect, settings.caching)
-    opsfrontiers.OPSFrontiers(xml_local, DOI, outdirect, document)
+    opsfrontiers.OPSFrontiers(document, outdirect)
     toc = tocncx.TocNCX()
     toc.takeArticle(document)
     toc.write(outdirect)

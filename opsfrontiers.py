@@ -131,8 +131,9 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
             abstract.node.setAttribute('id', 'abstract')
             self.expungeAttributes(abstract.node)
         #Finally, print this out or write to a document
-        with open()
-        self.doc.toprettyxml(encoding='utf-8')
+        with open(os.path.join(self.ops_dir, self.synop_frag[:-4]), 'w') as op:
+            op.write(self.doc.toprettyxml(encoding='utf-8'))
+
 
     def createMain(self):
         """
