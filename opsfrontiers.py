@@ -130,24 +130,30 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
             abstract.node.tagName = 'div'
             abstract.node.setAttribute('id', 'abstract')
             self.expungeAttributes(abstract.node)
-        #Finally, print this out or write to a document
+
+        #Finally, write to a document
         with open(os.path.join(self.ops_dir, self.synop_frag[:-4]), 'w') as op:
             op.write(self.doc.toprettyxml(encoding='utf-8'))
-
 
     def createMain(self):
         """
         This method encapsulates the functions necessary to create the main
         segment of the article.
         """
-        pass
+
+        #Finally, write to a document
+        with open(os.path.join(self.ops_dir, self.main_frag[:-4]), 'w') as op:
+            op.write(self.doc.toprettyxml(encoding='utf-8'))
 
     def createBiblio(self):
         """
         This method encapsulates the functions necessary to create the biblio
         segment of the article.
         """
-        pass
+
+        #Finally, write to a document
+        with open(os.path.join(self.ops_dir, self.bib_frag[:-4]), 'w') as op:
+            op.write(self.doc.toprettyxml(encoding='utf-8'))
 
     def createTables(self):
         """
@@ -163,7 +169,7 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
         """
         self.synop_frag = 'synop.{0}.xml'.format(self.doi_frag) + '#{0}'
         self.main_frag = 'main.{0}.xml'.format(self.doi_frag) + '#{0}'
-        self.biblio_frag = 'biblio.{0}.xml'.format(self.doi_frag) + '#{0}'
+        self.bib_frag = 'biblio.{0}.xml'.format(self.doi_frag) + '#{0}'
         self.tables_frag = 'tables.{0}.xml'.format(self.doi_frag) + '#{0}'
 
     def announce(self):
