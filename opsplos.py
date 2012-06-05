@@ -10,6 +10,17 @@ import utils
 import logging
 
 
+class InputError(Exception):
+    """
+    This is a custom exception for unexpected input from a publisher.
+    """
+    def __init__(self, detail):
+        self.detail = detail
+
+    def __str__(self):
+        return self.detail
+
+
 class OPSPLoS(opsgenerator.OPSGenerator):
     """
     This provides the full feature set to create OPS content for an ePub file
@@ -119,10 +130,3 @@ class OPSPLoS(opsgenerator.OPSGenerator):
         Announces the class initiation
         """
         print('Initiating OPSPLoS')
-
-
-#import article
-
-#mydoc = article.Article('downloaded_xml_files/journal.pone.0035956.xml')
-#myops = OPSPLoS(mydoc, os.path.join('output', 'journal.pone.0035956'))
-#print(myops.doi)

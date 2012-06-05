@@ -35,7 +35,12 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
         self.doi_frag = self.doi.split('10.3389/')[1]
         self.makeFragmentIdentifiers()
         self.ops_dir = os.path.join(output_dir, 'OPS')
+        self.html_tables = []
         self.createSynopsis()
+        self.createMain()
+        self.createBiblio()
+        if self.html_tables:
+            self.createTables()
 
     def createSynopsis(self):
         """
@@ -144,6 +149,45 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
         with open(os.path.join(self.ops_dir, self.synop_frag[:-4]), 'w') as op:
             op.write(self.doc.toprettyxml(encoding='utf-8'))
 
+    def createMain(self):
+        """
+        This method encapsulates the functions necessary to create the main
+        segment of the article.
+        """
+
+        self.doc = self.makeDocument('main')
+        body = self.doc.getElementsByTagName('body')[0]
+
+        #Finally, write to a document
+        with open(os.path.join(self.ops_dir, self.main_frag[:-4]), 'w') as op:
+            op.write(self.doc.toprettyxml(encoding='utf-8'))
+
+    def createBiblio(self):
+        """
+        This method encapsulates the functions necessary to create the biblio
+        segment of the article.
+        """
+
+        self.doc = self.makeDocument('biblio')
+        body = self.doc.getElementsByTagName('body')[0]
+
+        #Finally, write to a document
+        with open(os.path.join(self.ops_dir, self.bib_frag[:-4]), 'w') as op:
+            op.write(self.doc.toprettyxml(encoding='utf-8'))
+
+    def createTables(self):
+        """
+        This method encapsulates the functions necessary to create a file
+        containing html versions of all the tables in the article. If there
+        are no tables, the file is not created.
+        """
+
+        self.doc = self.makeDocument('biblio')
+        body = self.doc.getElementsByTagName('body')[0]
+
+        with open(os.path.join(self.ops_dir, self.tab_frag[:-4]), 'w') as op:
+            op.write(self.doc.toprettyxml(encoding='utf-8'))
+
     def createArticleInfo(self, body):
         """
         The 'article info' section is a segment of metadata information about
@@ -152,6 +196,7 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
         various locations on a PDF, though typically on the first page. For an
         ebook, this shall be presented similar to the webpage.
         """
+        body.appendChild(self.doc.createElement('hr'))
         ainfo = self.appendNewElement('div', body)
         ainfo.setAttribute('id', 'articleInfo')
         if self.metadata.all_kwds:
@@ -288,34 +333,6 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
                 email.tagName = 'a'
                 mailto = 'mailto:{0}'.format(utils.nodeText(email))
                 email.setAttribute('href', mailto)
-
-    def createMain(self):
-        """
-        This method encapsulates the functions necessary to create the main
-        segment of the article.
-        """
-
-        #Finally, write to a document
-        with open(os.path.join(self.ops_dir, self.main_frag[:-4]), 'w') as op:
-            op.write(self.doc.toprettyxml(encoding='utf-8'))
-
-    def createBiblio(self):
-        """
-        This method encapsulates the functions necessary to create the biblio
-        segment of the article.
-        """
-
-        #Finally, write to a document
-        with open(os.path.join(self.ops_dir, self.bib_frag[:-4]), 'w') as op:
-            op.write(self.doc.toprettyxml(encoding='utf-8'))
-
-    def createTables(self):
-        """
-        This method encapsulates the functions necessary to create a file
-        containing html versions of all the tables in the article. If there
-        are no tables, the file is not created.
-        """
-        pass
 
     def makeFragmentIdentifiers(self):
         """

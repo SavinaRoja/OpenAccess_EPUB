@@ -218,7 +218,6 @@ class JPTSMeta(object):
         heavily.
         """
         affs = self.getChildrenByTagName('aff', self.article_meta)
-        print(affs)
         affsbyid = {}
         for aff in affs:
             aid = aff.getAttribute('id')

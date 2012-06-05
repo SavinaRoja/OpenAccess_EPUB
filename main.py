@@ -192,20 +192,21 @@ def makeEPUB(document, xml_local, cache_dir, outdirect, log_to):
     DOI = document.getDOI()
     if DOI.split('/')[0] == '10.1371':  # PLoS's publisher DOI
         document.fetchPLoSImages(cache_dir, outdirect, settings.caching)
+        opsplos.OPSPLoS(document, outdirect)
     elif DOI.split('/')[0] == '10.3389':  # Frontiers' publisher DOI
         document.fetchFrontiersImages(cache_dir, outdirect, settings.caching)
-    opsfrontiers.OPSFrontiers(document, outdirect)
-    toc = tocncx.TocNCX()
-    toc.takeArticle(document)
-    toc.write(outdirect)
-    myopf = opf.ContentOPF(outdirect)
-    myopf.takeArticle(document)
-    myopf.write()
-    utils.epubZip(outdirect)
+        opsfrontiers.OPSFrontiers(document, outdirect)
+    #toc = tocncx.TocNCX()
+    #toc.takeArticle(document)
+    #toc.write(outdirect)
+    #myopf = opf.ContentOPF(outdirect)
+    #myopf.takeArticle(document)
+    #myopf.write()
+    #utils.epubZip(outdirect)
     #WARNING: shutil.rmtree() is a recursive deletion function, care should be
     #taken whenever modifying this code
-    if settings.cleanup:
-        shutil.rmtree(outdirect)
+    #if settings.cleanup:
+    #    shutil.rmtree(outdirect)
 
 
 def makeCollectionEPUB(documents, cache_dir, outdirect, log_to):
