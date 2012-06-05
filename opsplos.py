@@ -72,7 +72,7 @@ class OPSPLoS(opsgenerator.OPSGenerator):
                 _a = self.appendNewElement('a', _sup)
                 _a.setAttribute('href', self.synop_frag.format(x.rid))
                 self.appendNewText(s, _a)
-        
+
         #Finally, write to a document
         with open(os.path.join(self.ops_dir, self.synop_frag[:-4]), 'w') as op:
             op.write(self.doc.toprettyxml(encoding='utf-8'))
