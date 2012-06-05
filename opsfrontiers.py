@@ -142,7 +142,7 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
 
         #Finally, write to a document
         with open(os.path.join(self.ops_dir, self.synop_frag[:-4]), 'w') as op:
-            op.write(self.doc.toxml(encoding='utf-8'))
+            op.write(self.doc.toprettyxml(encoding='utf-8'))
 
     def createArticleInfo(self, body):
         """

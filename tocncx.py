@@ -2,23 +2,26 @@ import utils
 import os.path
 from xml.dom.minidom import getDOMImplementation
 import main
-    
+
+
 class TocNCX(object):
-    '''A class to represent the Table of Contents NCX. Should be versatile in 
+    """
+    "A class to represent the Table of Contents NCX. Should be versatile in 
     use for all ePub creation modes. Should be kept in accordance with the 
-    Daisy Talking Book specification.'''
-    
+    Daisy Talking Book specification.
+    """
+
     def __init__(self, collection_mode = False):
         self.collection_mode = collection_mode
         #Make a DOM implementation of our file
         _publicId = '-//NISO//DTD ncx 2005-1//EN'
         _systemId = 'http://www.daisy.org/z3986/2005/ncx-2005-1.dtd'
-        
+
         impl = getDOMImplementation()
         mytype = impl.createDocumentType('ncx', _publicId, _systemId)
         self.toc = impl.createDocument(None, 'ncx', mytype)
-        
-        self.ncx = self.toc.lastChild #IGNORE:E1101
+
+        self.ncx = self.toc.lastChild  # IGNORE:E1101
         self.ncx.setAttribute('version', '2005-1')
         self.ncx.setAttribute('xml:lang', 'en-US')
         self.ncx.setAttribute('xmlns', 'http://www.daisy.org/z3986/2005/ncx/')
@@ -39,10 +42,10 @@ class TocNCX(object):
         self.lot.setAttribute('class', 'lot')
         self.lot.setAttribute('id', 'lot')
         #The <head> element requires some base content
-        self.head.appendChild(self.toc.createComment('''The following metadata 
-items, except for dtb:generator, are required for all NCX documents, including 
+        self.head.appendChild(self.toc.createComment('''The following metadata
+items, except for dtb:generator, are required for all NCX documents, including
 those conforming to the relaxed constraints of OPS 2.0'''))
-        metas = ['dtb:uid', 'dtb:depth','dtb:totalPageCount', 
+        metas = ['dtb:uid', 'dtb:depth', 'dtb:totalPageCount',
                  'dtb:maxPageNumber', 'dtb:generator']
         for meta in metas:
             meta_tag = self.toc.createElement('meta')
@@ -53,7 +56,7 @@ those conforming to the relaxed constraints of OPS 2.0'''))
         self.maxdepth = 0
         #List of articles included
         self.articles = []
-    
+
     def takeArticle(self, article):
         '''Process the contents of an article to build the NCX'''
         self.articles += [article]
@@ -66,7 +69,7 @@ those conforming to the relaxed constraints of OPS 2.0'''))
                 self.jid = _data.split('journal.')[1]
         #If we are only packing one article...
         if not self.collection_mode:
-            self.structureParse(article.body)
+            self.structureParse(body)
             if self.lof.childNodes:
                 self.makeFiguresList()
             if self.lot.childNodes:
@@ -104,7 +107,7 @@ those conforming to the relaxed constraints of OPS 2.0'''))
                 ref_con = ref.appendChild(self.toc.createElement('content'))
                 src_str = 'biblio.{0}.xml#references'.format(self.jid)
                 ref_con.setAttribute('src', src_str)
-                
+
         #If we are packing arbitrarily many articles...
         else:
             titletext = utils.serializeText(front.article_meta.article_title, stringlist = [])
@@ -116,7 +119,7 @@ those conforming to the relaxed constraints of OPS 2.0'''))
             navlbl.appendChild(self.makeText(titletext))
             navcon = nav.appendChild(self.toc.createElement('content'))
             navcon.setAttribute('src', 'synop.{0}.xml'.format(self.jid))
-            self.structureParse(article.body, nav, depth = 1)
+            self.structureParse(article.body, nav, depth=1)
             if self.lof.childNodes:
                 self.makeFiguresList()
             if self.lot.childNodes:
@@ -152,11 +155,12 @@ those conforming to the relaxed constraints of OPS 2.0'''))
                 ref_con = ref.appendChild(self.toc.createElement('content'))
                 src_str = 'biblio.{0}.xml#references'.format(self.jid)
                 ref_con.setAttribute('src', src_str)
-    
-    def structureParse(self, srcnode, dstnode = None, depth = 0, first = True):
-        '''The structure of an article's <body> content can be analyzed in 
-        terms of nested <sec> tags, along with features like <fig> and 
-        <table-wrap>.'''
+
+    def structureParse(self, srcnode, dstnode=None, depth=0, first=True):
+        """The structure of an article's <body> content can be analyzed in
+        terms of nested <sec> tags, along with features like <fig> and
+        <table-wrap>.
+        """
         depth += 1
         if depth > self.maxdepth:
             self.maxdepth = depth
@@ -171,22 +175,22 @@ those conforming to the relaxed constraints of OPS 2.0'''))
             navlbl = nav.appendChild(self.toc.createElement('navLabel'))
             navlbl.appendChild(self.makeText('Title Page'))
             navcon = nav.appendChild(self.toc.createElement('content'))
-            navcon.setAttribute('src','synop.{0}.xml#title'.format(self.jid))
+            navcon.setAttribute('src', 'synop.{0}.xml#title'.format(self.jid))
         #Tag name strings we check for to determine structures and features
         tagnamestrs = [u'sec', u'fig', u'table-wrap']
         #Pre-process step: give sec tags an id attribute if they lack it
         c = 0
         for sec in srcnode.getElementsByTagName('sec'):
             if not sec.getAttribute('id'):
-                id = 'OA-EPUB-{0}'.format(str(c))
+                sid = 'OA-EPUB-{0}'.format(str(c))
                 c += 1
-                sec.setAttribute('id', id)
-        
+                sec.setAttribute('id', sid)
+
         #Do the recursive parsing
         for child in srcnode.childNodes:
             try:
                 tagname = child.tagName
-            except AttributeError: #Text nodes have no attribute tagName
+            except AttributeError:  # Text nodes have no attribute tagName
                 pass
             else:
                 if tagname in tagnamestrs:
@@ -199,27 +203,29 @@ those conforming to the relaxed constraints of OPS 2.0'''))
                     elif tagname == u'table-wrap':
                         nav = self.toc.createElement('navTarget')
                         self.lot.appendChild(nav)
-                    id = child.getAttribute('id')
-                    nav.setAttribute('id', id)
+                    mid = child.getAttribute('id')
+                    nav.setAttribute('id', mid)
                     nav.setAttribute('playOrder', str(self.playOrder))
                     self.playOrder += 1
                     navlbl = nav.appendChild(self.toc.createElement('navLabel'))
                     try:
                         title_node = child.getElementsByTagName('title')[0]
-                    except IndexError: #For whatever reason, no title node
+                    except IndexError:  # For whatever reason, no title node
                         navlblstr = 'Item title not found!'
                     else:
-                        navlblstr = utils.serializeText(title_node, stringlist = [])
+                        navlblstr = utils.serializeText(title_node, stringlist=[])
                         if not navlblstr:
-                            navlblstr = id
+                            navlblstr = mid
                     navlbl.appendChild(self.makeText(navlblstr))
                     navcon = nav.appendChild(self.toc.createElement('content'))
-                    navcon.setAttribute('src', 'main.{0}.xml#{1}'.format(self.jid, id))
+                    navcon.setAttribute('src', 'main.{0}.xml#{1}'.format(self.jid, mid))
                     self.structureParse(child, nav, depth, first = False)
-    
+
     def makeDocTitle(self):
-        '''Fills in the <docTitle> node, works for both single and collection 
-        mode.'''
+        """
+        Fills in the <docTitle> node, works for both single and collection
+        mode.
+        """
         if not self.collection_mode:
             article = self.articles[0]
             front = article.front
@@ -229,10 +235,12 @@ those conforming to the relaxed constraints of OPS 2.0'''))
         else:
             tocname = u'NCX For: PLoS Article Collection'
             self.doctitle.appendChild(self.makeText(tocname))
-    
+
     def makeDocAuthor(self):
-        '''Fills in the <docAuthor> node, works for both single and collection 
-        mode.'''
+        """
+        Fills in the <docAuthor> node, works for both single and collection 
+        mode.
+        """
         if not self.collection_mode:
             article = self.articles[0]
             front = article.front
@@ -250,20 +258,20 @@ those conforming to the relaxed constraints of OPS 2.0'''))
             authortext = front.article_meta.art_auths[0].get_name()
             authlabel = u'Primary author of first paper: {0}'.format(authortext)
             self.docauthor.appendChild(self.makeText(authlabel))
-    
+
     def write(self, location):
         self.setMetas()
         self.makeDocAuthor()
         self.makeDocTitle()
         filename = os.path.join(location, 'OPS', 'toc.ncx')
         with open(filename, 'w') as output:
-            output.write(self.toc.toprettyxml(encoding = 'utf-8'))
-    
+            output.write(self.toc.toprettyxml('utf-8'))
+
     def makeText(self, textstring):
         text = self.toc.createElement('text')
         text.appendChild(self.toc.createTextNode(textstring))
         return text
-    
+
     def setMetas(self):
         '''Provides attribute values to the four required meta elements.'''
         metas = self.head.getElementsByTagName('meta')
@@ -284,18 +292,22 @@ those conforming to the relaxed constraints of OPS 2.0'''))
                 meta.setAttribute('content', content)
             else:
                 meta.setAttribute('content', '0')
-    
+
     def makeFiguresList(self):
-        '''Prepends the List of Figures with appropriate navLabel and adds the 
-        element to the ncx element'''
+        """
+        Prepends the List of Figures with appropriate navLabel and adds the
+        element to the ncx element
+        """
         navlbl = self.toc.createElement('navLabel')
         navlbl.appendChild(self.makeText('List of Figures'))
         self.lof.insertBefore(navlbl, self.lof.firstChild)
         self.ncx.appendChild(self.lof)
-    
+
     def makeTablesList(self):
-        '''Prepends the List of Tables with appropriate navLabel and adds the 
-        element to the ncx element'''
+        """
+        Prepends the List of Tables with appropriate navLabel and adds the
+        element to the ncx element
+        """
         navlbl = self.toc.createElement('navLabel')
         navlbl.appendChild(self.makeText('List of Tables'))
         self.lot.insertBefore(navlbl, self.lot.firstChild)
