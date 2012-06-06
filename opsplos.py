@@ -94,6 +94,9 @@ class OPSPLoS(opsgenerator.OPSGenerator):
         segment of the article.
         """
 
+        self.doc = self.makeDocument('main')
+        body = self.doc.getElementsByTagName('body')[0]
+
         #Finally, write to a document
         with open(os.path.join(self.ops_dir, self.main_frag[:-4]), 'w') as op:
             op.write(self.doc.toprettyxml(encoding='utf-8'))
@@ -103,6 +106,9 @@ class OPSPLoS(opsgenerator.OPSGenerator):
         This method encapsulates the functions necessary to create the biblio
         segment of the article.
         """
+
+        self.doc = self.makeDocument('biblio')
+        body = self.doc.getElementsByTagName('body')[0]
 
         #Finally, write to a document
         with open(os.path.join(self.ops_dir, self.bib_frag[:-4]), 'w') as op:
@@ -114,7 +120,12 @@ class OPSPLoS(opsgenerator.OPSGenerator):
         containing html versions of all the tables in the article. If there
         are no tables, the file is not created.
         """
-        pass
+
+        self.doc = self.makeDocument('tables')
+        body = self.doc.getElementsByTagName('body')[0]
+
+        with open(os.path.join(self.ops_dir, self.tab_frag[:-4]), 'w') as op:
+            op.write(self.doc.toprettyxml(encoding='utf-8'))
 
     def makeFragmentIdentifiers(self):
         """
