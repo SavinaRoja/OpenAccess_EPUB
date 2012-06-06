@@ -182,7 +182,7 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
         are no tables, the file is not created.
         """
 
-        self.doc = self.makeDocument('biblio')
+        self.doc = self.makeDocument('tables')
         body = self.doc.getElementsByTagName('body')[0]
 
         with open(os.path.join(self.ops_dir, self.tab_frag[:-4]), 'w') as op:
