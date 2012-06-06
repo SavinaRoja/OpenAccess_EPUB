@@ -29,6 +29,7 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
     def __init__(self, article, output_dir):
         opsgenerator.OPSGenerator.__init__(self)
         print('Generating OPS content...')
+        self.article = article.root_tag
         self.metadata = article.metadata
         self.doi = article.getDOI()
         #From "10.3389/fimmu.2012.00104" get "fimmu.2012.00104"
@@ -83,19 +84,15 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
                 name = 'Anonymous'
             self.appendNewText(name, auth_el)
             for x in auth.xref:
-                if x.ref_type == 'author-notes':
-                    _sup = self.appendNewElement('sup', auth_el)
-                    _a = self.appendNewElement('a', _sup)
-                    _a.setAttribute('href', self.synop_frag.format(x.rid))
-                    self.appendNewText(utils.nodeText(x.node), _a)
-                elif x.ref_type == 'aff':
-                    s = x.node.getElementsByTagName('sup')
-                    if s:
-                        s = utils.nodeText(s[0])
+                if x.ref_type in ['author-notes', 'aff']:
+                    try:
+                        sup_el = x.node.getElementsByTagName('sup')[0]
+                    except IndexError:
+                        s = utils.nodeText(x.node)
                     else:
-                        s = u'!'
-                    _sup = self.appendNewElement('sup', auth_el)
-                    _a = self.appendNewElement('a', _sup)
+                        s = utils.nodeText(sup_el)
+                    sup = self.appendNewElement('sup', auth_el)
+                    _a = self.appendNewElement('a', sup)
                     _a.setAttribute('href', self.synop_frag.format(x.rid))
                     self.appendNewText(s, _a)
 
@@ -145,6 +142,9 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
         #Refer to self.createArticleInfo()
         self.createArticleInfo(body)
 
+        #Post processing node conversion
+        self.convertEmphasisElements(body)
+
         #Finally, write to a document
         with open(os.path.join(self.ops_dir, self.synop_frag[:-4]), 'w') as op:
             op.write(self.doc.toprettyxml(encoding='utf-8'))
@@ -157,6 +157,18 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
 
         self.doc = self.makeDocument('main')
         body = self.doc.getElementsByTagName('body')[0]
+        #Here I make a complete copy of the article's body tag to the the main
+        #document's DOM
+        try:
+            article_body = self.article.getElementsByTagName('body')[0]
+        except IndexError:  # Article has no body...
+            return None
+        else:
+            for item in article_body.childNodes:
+                body.appendChild(item.cloneNode(deep=True))
+
+        #Handle node conversion
+        self.convertEmphasisElements(body)
 
         #Finally, write to a document
         with open(os.path.join(self.ops_dir, self.main_frag[:-4]), 'w') as op:

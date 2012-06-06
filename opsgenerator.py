@@ -182,6 +182,56 @@ class OPSGenerator(object):
         new = self.doc.createTextNode(newtext)
         parent.appendChild(new)
 
+    def convertEmphasisElements(self, node):
+        """
+        The Journal Publishing Tag Set defines the following elements as
+        emphasis elements: <bold>, <italic>, <monospace>, <overline>,
+        <sans-serif>, <sc>, <strike>, <underline>. These need to be converted
+        to appropriate OPS analogues. They have no defined attributes.
+
+        Like other node handlers, this method requires a node or list of nodes
+        to provide the scope of function, it will operate on all descendants
+        of the passed node(s).
+        """
+        for b in self.getDescendantsByTagName(node, 'bold'):
+            b.tagName = 'b'
+        for i in self.getDescendantsByTagName(node, 'italic'):
+            i.tagName = 'i'
+        for m in self.getDescendantsByTagName(node, 'monospace'):
+            m.tagName = 'span'
+            m.setAttribute('style', 'font-family:monospace')
+        for o in self.getDescendantsByTagName(node, 'overline'):
+            o.tagName = 'span'
+            o.setAttribute('style', 'text-decoration:overline')
+        for s in self.getDescendantsByTagName(node, 'sans-serif'):
+            s.tagName = 'span'
+            s.setAttribute('style', 'font-family:sans-serif')
+        for s in self.getDescendantsByTagName(node, 'sc'):
+            s.tagName = 'span'
+            s.setAttribute('style', 'font-variant:small-caps')
+        for s in self.getDescendantsByTagName(node, 'strike'):
+            s.tagName = 'span'
+            s.setAttribute('style', 'text-decoration:line-through')
+        for u in self.getDescendantsByTagName(node, 'underline'):
+            u.tagName = 'span'
+            u.setAttribute('style', 'text-decoration:underline')
+
+
+    def getDescendantsByTagName(self, inpt, tagname):
+        """
+        This function works for individual Nodes as well as NodeLists. It call
+        getElementsByTagName on a Node to get a NodeList of the specified
+        tagname, or it will call getElementsByTagName on each Node in a
+        NodeList to build a composite NodeList of the specified tagname.
+        """
+        el_list = []
+        try:
+            el_list = inpt.getElementsByTagName(tagname)
+        except AttributeError:
+            for n in inpt:
+                el_list += n.getElementsByTagName(tagname)
+        return el_list
+
     def announce(self):
         """
         Announces initiation of the class.
