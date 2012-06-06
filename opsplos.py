@@ -96,6 +96,18 @@ class OPSPLoS(opsgenerator.OPSGenerator):
 
         self.doc = self.makeDocument('main')
         body = self.doc.getElementsByTagName('body')[0]
+        #Here I make a complete copy of the article's body tag to the the main
+        #document's DOM
+        try:
+            article_body = self.article.getElementsByTagName('body')[0]
+        except IndexError:  # Article has no body...
+            return None
+        else:
+            for item in article_body.childNodes:
+                body.appendChild(item.cloneNode(deep=True))
+
+        #Handle node conversion
+        self.convertEmphasisElements(body)
 
         #Finally, write to a document
         with open(os.path.join(self.ops_dir, self.main_frag[:-4]), 'w') as op:
