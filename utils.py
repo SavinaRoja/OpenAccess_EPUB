@@ -2,6 +2,8 @@
 import os.path
 import zipfile
 from collections import namedtuple
+import urllib2
+import shutil
 
 Identifier = namedtuple('Identifer', 'id, type')
 
@@ -240,8 +242,6 @@ def initiateDocument(titlestring,
 def scrapePLoSIssueCollection(issue_url):
     '''Uses Beautiful Soup to scrape the PLoS page of an issue. It is used
     instead of xml.dom.minidom because of malformed html/xml'''
-    from BeautifulSoup import BeautifulStoneSoup
-    import urllib2
     
     iu = urllib2.urlopen(issue_url)
     with open('temp','w') as temp:
@@ -266,4 +266,47 @@ def scrapePLoSIssueCollection(issue_url):
             if href[:9] == '/article/':
                 id = href.split('10.1371%2F')[1].split(';')[0]
                 collection.write('doi:10.1371/{0}\n'.format(id))
-        
+
+def fetchFrontiersImages(doi, counts, cache_dir, output_dir, caching):
+    """
+    Using the power of web-scraping and, we will get the images from the
+    Frontiers pages. If run locally by Frontiers staffpersons, this method
+    should be avoidable.
+    """
+    fc = int(counts['fig-count'])
+    tc = int(counts['table-count'])
+    ec = int(counts['equation-count'])
+    if fc or tc or ec:
+        print('Processing images for {0}...'.format(doi))
+    else:
+        return None
+    #Check to see if this article's images have been cached
+    cached = False
+    s = os.path.split(doi)[1]
+    img_dir = os.path.join(output_dir, 'OPS', 'images-{0}'.format(s))
+    art_cache = os.path.join(cache_dir, 'Frontiers', s)
+    art_cache_images = os.path.join(art_cache, 'images')
+    if os.path.isdir(art_cache):
+        cached = True
+        print('Cached images found. Transferring from cache...')
+        shutil.copytree(art_cache_images, img_dir)
+    if not cached:
+        #We use the DOI of the article to locate the page.
+        doistr = 'http://dx.doi.org/{0}'.format(doi)
+        page = urllib2.urlopen(doistr)
+        full = page.geturl().split('/abstract')[0] + '/full'
+        page = urllib2.urlopen(full)
+        with open('temp', 'w') as temp:
+            temp.write(page.read())
+        with open('temp', 'r') as temp:
+            for l in temp.readlines():
+                if '/image_m/' in l:
+                    img_src = l.split('href=\"')[1].split(' name=\"')[0]
+                    src_root, img_name = img_src.split('/image_m/')
+        os.remove('temp')
+    for i in range(fc):
+        img_name = img_name[:-8] + 'g' str(i + 1).zfill(3) + '.jpg'
+    for i in range(tc):
+        img_name = img_name[:-8] + 't' str(i + 1).zfill(3) + '.jpg'
+    for i in range(ec):
+        img_name = img_name[:-8] + 'e' str(i + 1).zfill(3) + '.jpg'

@@ -57,6 +57,9 @@ Publishing DTD: \n{0}'.format(doc.doctype.publicId))
             self.metadata = jptsmeta.JPTSMeta23(doc, self.publisher)
         elif self.dtd == u'3.0':
             self.metadata = jptsmeta.JPTSMeta30(doc, self.publisher)
+        print(self.metadata.counts['fig-count'])
+        print(self.metadata.counts['table-count'])
+        print(self.metadata.counts['equation-count'])
         #The <article> tag has a handful of potential attributes, we can check
         #to make sure the mandated ones are valid
         self.attrs = {'article-type': None, 'dtd-version': None,
@@ -218,4 +221,6 @@ Publishing DTD: \n{0}'.format(doc.doctype.publicId))
 
     def fetchFrontiersImages(self, cache_dir, output_dir, caching):
         '''Fetch the Frontiers images associated with the article.'''
-        pass
+        doi = self.getDOI()
+        counts = self.metadata.counts
+        utils.fetchFrontiersImages(doi, counts, cache_dir, output_dir, caching)
