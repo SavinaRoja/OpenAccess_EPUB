@@ -144,6 +144,7 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
 
         #Post processing node conversion
         self.convertEmphasisElements(body)
+        self.convertAddressLinkingElements(body)
 
         #Finally, write to a document
         with open(os.path.join(self.ops_dir, self.synop_frag[:-4]), 'w') as op:
@@ -169,6 +170,7 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
 
         #Handle node conversion
         self.convertEmphasisElements(body)
+        self.convertAddressLinkingElements(body)
 
         #Finally, write to a document
         with open(os.path.join(self.ops_dir, self.main_frag[:-4]), 'w') as op:
@@ -222,7 +224,7 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
                 else:
                     self.appendNewText(', ', pk)
                 for cn in kwd.node.childNodes:
-                    pk.appendChild(cn.cloneNode(True))
+                    pk.appendChild(cn.cloneNode(deep=True))
         pc = self.appendNewElement('p', ainfo)
         bc = self.appendNewElement('b', pc)
         self.appendNewText('Citation: ', bc)
@@ -325,7 +327,7 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
         l = perm.license
         for p in l.getElementsByTagName('p'):
             for cn in p.childNodes:
-                pc.appendChild(cn.cloneNode(True))
+                pc.appendChild(cn.cloneNode(deep=True))
         for uri in pc.getElementsByTagName('uri'):
             uri.tagName = 'a'
             self.renameAttributes(uri, [['xlink:href', 'href']])
@@ -338,7 +340,7 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
             link_char = corr_p.firstChild.data[0]
             corr_p.firstChild.data = corr_p.firstChild.data[17:]
             for cn in corr_p.childNodes:
-                pc.appendChild(cn.cloneNode(True))
+                pc.appendChild(cn.cloneNode(deep=True))
             #The first character of the text in the <p> is the link char
             self.appendNewText(link_char + 'Correspondence: ', bc)
             for email in pc.getElementsByTagName('email'):
