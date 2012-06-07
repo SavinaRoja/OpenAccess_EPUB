@@ -328,19 +328,19 @@ def fetchFrontiersImages(doi, counts, cache_dir, output_dir, caching):
     for i in range(fc):
         img = img_name[:-9] + 'g' + str(i + 1).zfill(3) + '.jpg'
         fetch = src_root + '/image_m/' + img
-        img_file = os.path.join(img_dir, 'figures', img)
+        img_file = os.path.join(img_dir, 'figures', img[-8:])
         downloadImage(fetch, img_file)
         print('Downloaded image {0}'.format(img))
     for i in range(tc):
         img = img_name[:-9] + 't' + str(i + 1).zfill(3) + '.jpg'
         fetch = src_root + '/image_m/' + img
-        img_file = os.path.join(img_dir, 'tables', img)
+        img_file = os.path.join(img_dir, 'tables', img[-8:])
         downloadImage(fetch, img_file)
         print('Downloaded image {0}'.format(img))
     for i in range(ec):
         img = img_name[:-9] + 'e' + str(i + 1).zfill(3) + '.jpg'
         fetch = src_root + '/image_m/' + img
-        img_file = os.path.join(img_dir, 'equations', img)
+        img_file = os.path.join(img_dir, 'equations', img[-8:])
         downloadImage(fetch, img_file)
         print('Downloaded image {0}'.format(img))
     print("Done downloading images")
