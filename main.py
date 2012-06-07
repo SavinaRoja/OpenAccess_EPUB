@@ -340,7 +340,7 @@ def main():
             newname = u'{0}.log'.format(input_name)
             newname = os.path.join(args.log_to, newname)
             os.rename(logname, newname)
-        epubcheck('{0}.epub'.format(output_name))
+        #epubcheck('{0}.epub'.format(output_name))
 
 if __name__ == '__main__':
     main()
