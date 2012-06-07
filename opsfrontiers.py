@@ -171,6 +171,8 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
         #Handle node conversion
         self.convertFigElements(body)
         self.convertTableWrapElements(body)
+        self.convertSecElements(body)
+        self.recursiveConvertDivTitles(body, depth=0)
         self.convertEmphasisElements(body)
         self.convertAddressLinkingElements(body)
         self.convertXrefElements(body)
@@ -560,6 +562,39 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
             rid = x_attrs['rid']
             address = ref_map[ref_type].format(rid)
             x.setAttribute('href', address)
+
+    def convertSecElements(self, node):
+        """
+        <sec> elements must be converted to meaningful <div> nodes
+        """
+        for s in self.getDescendantsByTagName(node, 'sec'):
+            s.tagName = 'div'
+            self.renameAttributes(s, [['sec-type', 'class']])
+
+    def recursiveConvertDivTitles(self, node, depth=0):
+        """
+        A method for converting title tags to heading format tags
+        """
+        taglist = ['h2', 'h3', 'h4', 'h5', 'h6']
+        for i in node.childNodes:
+            try:
+                tag = i.tagName
+            except AttributeError:
+                pass  # Text nodes have no tagName attribute
+            else:
+                if i.tagName == u'div':
+                    try:
+                        divtitle = i.getElementsByTagName('title')[0]
+                    except IndexError:
+                        pass
+                    else:
+                        if not divtitle.childNodes:
+                            i.removeChild(divtitle)
+                        else:
+                            divtitle.tagName = taglist[depth]
+                        depth += 1
+                        self.recursiveConvertDivTitles(i, depth)
+                        depth -= 1
 
     def announce(self):
         """
