@@ -375,9 +375,6 @@ class OPSContent(object):
                 a = sup.appendChild(doc.createElement('a'))
                 a.setAttribute('href', self.syn_frag.format(rid))
                 a.appendChild(doc.createTextNode(s))
-            
-            
-            
 
     def acknowledgments(self, topnode, doc):
         '''Takes the optional acknowledgments element from the back data
