@@ -315,6 +315,7 @@ def fetchFrontiersImages(doi, counts, cache_dir, output_dir, caching):
             full = page.geturl()[:-8] + 'full'
         elif page.geturl()[-4:] == 'full':
             full = page.geturl()
+        print(full)
         page = urllib2.urlopen(full)
         with open('temp', 'w') as temp:
             temp.write(page.read())

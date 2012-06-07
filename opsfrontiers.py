@@ -169,6 +169,7 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
                 body.appendChild(item.cloneNode(deep=True))
 
         #Handle node conversion
+        self.convertFigElements(body)
         self.convertEmphasisElements(body)
         self.convertAddressLinkingElements(body)
 
@@ -390,6 +391,48 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
         self.main_frag = 'main.{0}.xml'.format(self.doi_frag) + '#{0}'
         self.bib_frag = 'biblio.{0}.xml'.format(self.doi_frag) + '#{0}'
         self.tables_frag = 'tables.{0}.xml'.format(self.doi_frag) + '#{0}'
+
+    def convertFigElements(self, node):
+        """
+        <fig> tags are not allowed in OPS documents, the tagname must be
+        converted to <img> and some conversion of the element's content model
+        should be employed to make nice figures.
+        """
+        for f in self.getDescendantsByTagName(node, 'fig'):
+            #We'll extract certain key data from the <fig> node in order to
+            #construct the desired representation. The original node and its
+            #descendants will be removed
+            #First collect all attributes
+            f_attrs = self.getAllAttributes(f, remove=False)
+            try:
+                label = f.getElementsByTagName('label')[0]
+            except IndexError:
+                label = ''
+            else:
+                label = utils.nodeText(label)
+            try:
+                caption = f.getElementsByTagName('caption')[0]
+            except IndexError:
+                caption = None
+            graphic = f.getElementsByTagName('graphic')[0]
+            graphic_xh = graphic.getAttribute('xlink:href')
+            #Now we can begin constructing our OPS representation
+            parent = f.parentNode
+            img = self.doc.createElement('img')
+            parent.insertBefore(img, f)
+            img.setAttribute('alt', 'A figure')
+            img.setAttribute('id', f_attrs['id'])
+            #Compute the image source
+            img_dir = 'images-' + self.doi_frag + '/figures/'
+            img_name = os.path.splitext(graphic_xh)[0] + '.jpg'
+            img.setAttribute('src', '{0}{1}'.format(img_dir, img_name))
+            #Now we can handle the caption
+            if caption:
+                div = self.doc.createElement('div')
+                parent.insertBefore(div, f)
+                div.setAttribute('class', 'caption')
+            # Remove the original <fig>
+            parent.removeChild(f)
 
     def announce(self):
         """
