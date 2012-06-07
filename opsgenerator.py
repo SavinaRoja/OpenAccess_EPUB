@@ -216,7 +216,6 @@ class OPSGenerator(object):
             u.tagName = 'span'
             u.setAttribute('style', 'text-decoration:underline')
 
-
     def getDescendantsByTagName(self, inpt, tagname):
         """
         This function works for individual Nodes as well as NodeLists. It call
