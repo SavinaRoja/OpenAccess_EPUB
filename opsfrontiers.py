@@ -170,8 +170,10 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
 
         #Handle node conversion
         self.convertFigElements(body)
+        self.convertTableWrapElements(body)
         self.convertEmphasisElements(body)
         self.convertAddressLinkingElements(body)
+        self.convertXrefElements(body)
 
         #Finally, write to a document
         with open(os.path.join(self.ops_dir, self.main_frag[:-4]), 'w') as op:
@@ -194,11 +196,13 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
         """
         This method encapsulates the functions necessary to create a file
         containing html versions of all the tables in the article. If there
-        are no tables, the file is not created.
+        are no tables, the file is not written.
         """
 
         self.doc = self.makeDocument('tables')
         body = self.doc.getElementsByTagName('body')[0]
+        for table in self.html_tables:
+            body.appendChild(table)
 
         with open(os.path.join(self.ops_dir, self.tab_frag[:-4]), 'w') as op:
             op.write(self.doc.toprettyxml(encoding='utf-8'))
@@ -390,7 +394,7 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
         self.synop_frag = 'synop.{0}.xml'.format(self.doi_frag) + '#{0}'
         self.main_frag = 'main.{0}.xml'.format(self.doi_frag) + '#{0}'
         self.bib_frag = 'biblio.{0}.xml'.format(self.doi_frag) + '#{0}'
-        self.tables_frag = 'tables.{0}.xml'.format(self.doi_frag) + '#{0}'
+        self.tab_frag = 'tables.{0}.xml'.format(self.doi_frag) + '#{0}'
 
     def convertFigElements(self, node):
         """
@@ -418,21 +422,144 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
             graphic_xh = graphic.getAttribute('xlink:href')
             #Now we can begin constructing our OPS representation
             parent = f.parentNode
+            parent.insertBefore(self.doc.createElement('hr'), f)
             img = self.doc.createElement('img')
             parent.insertBefore(img, f)
             img.setAttribute('alt', 'A figure')
             img.setAttribute('id', f_attrs['id'])
             #Compute the image source
             img_dir = 'images-' + self.doi_frag + '/figures/'
-            img_name = os.path.splitext(graphic_xh)[0] + '.jpg'
-            img.setAttribute('src', '{0}{1}'.format(img_dir, img_name))
-            #Now we can handle the caption
-            if caption:
+            img_name = os.path.splitext(graphic_xh)[0][-4:] + '.jpg'
+            img.setAttribute('src', img_dir + img_name)
+            #Now we can handle the caption and label
+            if caption or label:
                 div = self.doc.createElement('div')
                 parent.insertBefore(div, f)
                 div.setAttribute('class', 'caption')
-            # Remove the original <fig>
+                if label:
+                    cap_lbl = self.appendNewElement('b', div)
+                    self.appendNewText(label + '.', cap_lbl)
+                if caption:
+                    if caption.firstChild.tagName == 'p':
+                        for cn in caption.firstChild.childNodes:
+                            div.appendChild(cn.cloneNode(deep=True))
+                    else:
+                        for cn in caption.childNodes:
+                            div.appendChild(cn.cloneNode(deep=True))
+            #Remove the original <fig>
+            parent.insertBefore(self.doc.createElement('hr'), f)
             parent.removeChild(f)
+
+    def convertTableWrapElements(self, node):
+        """
+        <table-wrap> tags are not allowed in OPS documents. We want to do some
+        processing of them in order to make nice OPS.
+        """
+        for t in self.getDescendantsByTagName(node, 'table-wrap'):
+            #We'll extract certain key data from the <table-wrap> node in order
+            #to construct the desired representation. The original node and its
+            #descendants will be removed
+            #First collect all attributes
+            t_attrs = self.getAllAttributes(t, remove=False)
+            #Get the optional label as text
+            try:
+                label = t.getElementsByTagName('label')[0]
+            except IndexError:
+                label = ''
+            else:
+                label = utils.nodeText(label)
+            #Get the optional caption as xml or None
+            try:
+                caption = t.getElementsByTagName('caption')[0]
+            except IndexError:
+                caption = None
+            #Get the optional table-wrap-foot as xml or none
+            try:
+                t_foots = t.getElementsByTagName('table-wrap-foot')
+            except IndexError:
+                t_foots = []
+            #Now we can begin constructing our OPS representation
+            parent = t.parentNode
+            parent.insertBefore(self.doc.createElement('hr'), t)
+            img = self.doc.createElement('img')
+            parent.insertBefore(img, t)
+            img.setAttribute('alt', 'A table')
+            img.setAttribute('id', t_attrs['id'])
+            #Compute the image source
+            tid = t_attrs['id']
+            if tid[0] == 'T':
+                num = tid[1:]
+            else:
+                raise InputError('Unexpected table frag id in this article')
+            img_dir = 'images-' + self.doi_frag + '/tables/'
+            img_name = 't' + num.zfill(3) + '.jpg'
+            img.setAttribute('src', img_dir + img_name)
+            #Now we can handle the caption and label
+            if caption or label:
+                div = self.doc.createElement('div')
+                parent.insertBefore(div, t)
+                div.setAttribute('class', 'caption')
+                if label:
+                    cap_lbl = self.appendNewElement('b', div)
+                    self.appendNewText(label + '.', cap_lbl)
+                if caption:
+                    if caption.firstChild.tagName == 'p':
+                        for cn in caption.firstChild.childNodes:
+                            div.appendChild(cn.cloneNode(deep=True))
+                    else:
+                        for cn in caption.childNodes:
+                            div.appendChild(cn.cloneNode(deep=True))
+            #Add the html version of the table to the html tables list
+            #Note that <table-wrap_foot> nodes are given to the last table
+            #node before appending to the html_tables list
+            table = t.getElementsByTagName('table')[0]
+            table.setAttribute('id', t_attrs['id'])
+            for t_foot in t_foots:
+                t_foot.tagName = 'div'
+                t_foot.setAttribute('class', 'table-footnotes')
+                table.appendChild(t_foot)
+            #Create a link back to main text
+            l = self.appendNewElement('div', table)
+            p = self.appendNewElement('p', l)
+            a = self.appendNewElement('a', p)
+            a.setAttribute('href', self.main_frag.format(tid))
+            self.appendNewText('Back to the text', a)
+            self.html_tables.append(table)
+            #Create a link to the html version of the table
+            a = self.doc.createElement('a')
+            a.setAttribute('href', self.tab_frag.format(tid))
+            self.appendNewText('HTML version of this table', a)
+            parent.insertBefore(a, t)
+            #Remove the original <table-wrap>
+            parent.insertBefore(self.doc.createElement('hr'), t)
+            parent.removeChild(t)
+
+    def convertXrefElements(self, node):
+        """
+        xref elements are used for internal referencing to document components
+        such as figures, tables, equations, bibliography, or supplementary
+        materials. As <a> is the only appropiate hypertext linker, this method
+        converts xrefs to anchors with the appropriate address.
+        """
+        #This is a mapping of values of the ref-type attribute to the desired
+        #local file to be addressed
+        ref_map = {u'bibr': self.bib_frag,
+                   u'fig': self.main_frag,
+                   u'supplementary-material': self.main_frag,
+                   u'table': self.main_frag,
+                   u'aff': self.synop_frag,
+                   u'sec': self.main_frag,
+                   u'table-fn': self.tab_frag,
+                   u'boxed-text': self.main_frag,
+                   u'other': self.main_frag,
+                   u'disp-formula': self.main_frag}
+        for x in self.getDescendantsByTagName(node, 'xref'):
+            x.tagName = 'a'
+            x_attrs = self.getAllAttributes(x, remove=True)
+            ref_type = x_attrs['ref-type']
+            rid = x_attrs['rid']
+            address = ref_map[ref_type].format(rid)
+            x.setAttribute('href', address)
 
     def announce(self):
         """
