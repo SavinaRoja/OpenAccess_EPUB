@@ -294,27 +294,27 @@ def fetchFrontiersImages(doi, counts, cache_dir, output_dir, caching):
     fc = int(counts['fig-count'])
     tc = int(counts['table-count'])
     ec = int(counts['equation-count'])
-    if fc or tc or ec:
-        print('Processing images for {0}...'.format(doi))
-    else:
-        return None
-    #Check to see if this article's images have been cached
-    cached = False
+    print('Processing images for {0}...'.format(doi))
+
     s = os.path.split(doi)[1]
     img_dir = os.path.join(output_dir, 'OPS', 'images-{0}'.format(s))
+    #Check to see if this article's images have been cached
     art_cache = os.path.join(cache_dir, 'Frontiers', s)
     art_cache_images = os.path.join(art_cache, 'images')
     if os.path.isdir(art_cache):
-        cached = True
         print('Cached images found. Transferring from cache...')
         shutil.copytree(art_cache_images, img_dir)
-    if not cached:
+        return None
+    else:
         model_images = os.path.join(cache_dir, 'model', 'images')
         shutil.copytree(model_images, img_dir)
         #We use the DOI of the article to locate the page.
         doistr = 'http://dx.doi.org/{0}'.format(doi)
         page = urllib2.urlopen(doistr)
-        full = page.geturl().split('/abstract')[0] + '/full'
+        if page.geturl()[-8:] == 'abstract':
+            full = page.geturl()[:-8] + 'full'
+        elif page.geturl()[-4:] == 'full':
+            full = page.geturl()
         page = urllib2.urlopen(full)
         with open('temp', 'w') as temp:
             temp.write(page.read())
@@ -325,26 +325,26 @@ def fetchFrontiersImages(doi, counts, cache_dir, output_dir, caching):
                     src_root, img_name = img_src.split('/image_m/')
         os.remove('temp')
     for i in range(fc):
-        img_name = img_name[:-9] + 'g' + str(i + 1).zfill(3) + '.jpg'
-        fetch = src_root + '/image_m/' + img_name
-        img_file = os.path.join(img_dir, 'figures', img_name)
+        img = img_name[:-9] + 'g' + str(i + 1).zfill(3) + '.jpg'
+        fetch = src_root + '/image_m/' + img
+        img_file = os.path.join(img_dir, 'figures', img)
         downloadImage(fetch, img_file)
-        print('Downloaded image {0}'.format(img_name))
+        print('Downloaded image {0}'.format(img))
     for i in range(tc):
-        img_name = img_name[:-9] + 't' + str(i + 1).zfill(3) + '.jpg'
-        fetch = src_root + '/image_m/' + img_name
-        img_file = os.path.join(img_dir, 'tables', img_name)
+        img = img_name[:-9] + 't' + str(i + 1).zfill(3) + '.jpg'
+        fetch = src_root + '/image_m/' + img
+        img_file = os.path.join(img_dir, 'tables', img)
         downloadImage(fetch, img_file)
-        print('Downloaded image {0}'.format(img_name))
+        print('Downloaded image {0}'.format(img))
     for i in range(ec):
-        img_name = img_name[:-9] + 'e' + str(i + 1).zfill(3) + '.jpg'
-        fetch = src_root + '/image_m/' + img_name
-        img_file = os.path.join(img_dir, 'equations', img_name)
+        img = img_name[:-9] + 'e' + str(i + 1).zfill(3) + '.jpg'
+        fetch = src_root + '/image_m/' + img
+        img_file = os.path.join(img_dir, 'equations', img)
         downloadImage(fetch, img_file)
-        print('Downloaded image {0}'.format(img_name))
+        print('Downloaded image {0}'.format(img))
     print("Done downloading images")
     #If the images were not already cached, and caching is enabled...
     #We want to transfer the downloaded files to the cache
-    if not cached and caching:
+    if caching:
         os.mkdir(art_cache)
         shutil.copytree(img_dir, art_cache_images)
