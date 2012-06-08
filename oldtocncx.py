@@ -1,7 +1,6 @@
 import utils
 import os.path
 from xml.dom.minidom import getDOMImplementation
-import main
 
 
 class TocNCX(object):
@@ -11,7 +10,7 @@ class TocNCX(object):
     Daisy Talking Book specification.
     """
 
-    def __init__(self, collection_mode = False):
+    def __init__(self, version, collection_mode = False,):
         self.collection_mode = collection_mode
         #Make a DOM implementation of our file
         _publicId = '-//NISO//DTD ncx 2005-1//EN'
