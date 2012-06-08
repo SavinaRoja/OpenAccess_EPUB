@@ -70,6 +70,7 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
 
         #Parse authors into formatted xml
         auth_el = self.appendNewElement('h3', body)
+        auth_el.setAttribute('class', 'authors')
         first = True
         for auth in auths:
             if not first:
