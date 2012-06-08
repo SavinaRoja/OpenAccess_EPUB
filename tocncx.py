@@ -16,6 +16,7 @@ class TocNCX(object):
     """
 
     def __init__(self, version, collection_mode=False):
+        self.doi =''
         self.dois = []
         self.collection_mode = collection_mode
         self.version = version
@@ -33,7 +34,7 @@ class TocNCX(object):
         """
         publicId = '-//NISO//DTD ncx 2005-1//EN'
         systemId = 'http://www.daisy.org/z3986/2005/ncx-2005-1.dtd'
-        impl = xml.dom.minidom.getDOMImplementation
+        impl = xml.dom.minidom.getDOMImplementation()
         doctype = impl.createDocumentType('ncx', publicId, systemId)
         self.doc = impl.createDocument(None, 'ncx', doctype)
         self.ncx = self.doc.lastChild
@@ -43,49 +44,90 @@ class TocNCX(object):
         #Create the sub elements to <ncx>
         ncx_subelements = ['head', 'docTitle', 'docAuthor', 'navMap']
         for element in ncx_subelements:
-            self.ncx.appendChild(self.toc.createElement(element))
+            self.ncx.appendChild(self.doc.createElement(element))
         self.head, self.doctitle, self.docauthor, self.navmap = self.ncx.childNodes
         #Add a label with text 'Table of Contents' to navMap
         lbl = self.appendNewElement('navLabel', self.navmap)
         lbl.appendChild(self.makeText('Table of Contents'))
         #Create some optional subelements
         #These are not added to the document yet, as they may not be needed
-        self.lof = self.toc.createElement('navList')
+        self.lof = self.doc.createElement('navList')
         self.lof.setAttribute('class', 'lof')
         self.lof.setAttribute('id', 'lof')
-        self.lot = self.toc.createElement('navList')
+        self.lot = self.doc.createElement('navList')
         self.lot.setAttribute('class', 'lot')
         self.lot.setAttribute('id', 'lot')
         #The <head> element requires some basic content
-        self.head.appendChild(self.toc.createComment('''The following metadata
+        self.head.appendChild(self.doc.createComment('''The following metadata
 items, except for dtb:generator, are required for all NCX documents, including
 those conforming to the relaxed constraints of OPS 2.0'''))
         metas = ['dtb:uid', 'dtb:depth', 'dtb:totalPageCount',
                  'dtb:maxPageNumber', 'dtb:generator']
         for meta in metas:
-            meta_tag = self.toc.createElement('meta')
+            meta_tag = self.doc.createElement('meta')
             meta_tag.setAttribute('name', meta)
             self.head.appendChild(meta_tag)
 
     def makeText(self, textstring):
-        text = self.toc.createElement('text')
-        text.appendChild(self.toc.createTextNode(textstring))
+        text = self.doc.createElement('text')
+        text.appendChild(self.doc.createTextNode(textstring))
         return text
 
-    def parseArticle(self):
+    def parseArticle(self, article):
         """
-        pass
+        Process the contents of an article to build the NCX
         """
-        self.dois.append(doi)
+        self.doi = article.getDOI()
+        self.dois.append(self.doi)
+        self.article = article
+        self.a_doi = self.doi.split('/')[0]
+        body = article.body
+        self.articles.append(article)
+        #If we are only packing one article...
+        if body:
+            if not self.collection_mode:
+                self.structureParse(body)
+            #if self.lof.childNodes:
+            #    self.makeFiguresList()
+            #if self.lot.childNodes:
+            #    self.makeTablesList()
 
-    def indexTitlePage(self):
+    def navMapToTitlePage(self):
         """
-        This is used to create a reference in the navMap of the NCX file to the
-        titlepage of the article.
+        This decorates the structureParse method to create some elements which
+        do not require structure parsing in order to create.
         """
-        pass
+        #The title page element we will always expect, always in synop
+        nav = self.appendNewElement('navPoint', self.navmap)
+        nav.setAttribute('id', 'titlepage')
+        nav.setAttribute('playOrder', str(self.playOrder))
+        self.playOrder += 1
+        navlbl = self.appendNewElement('navLabel', nav)
+        navlbl.appendChild(self.makeText('Title Page'))
+        navcon = self.appendNewElement('content', nav)
+        navcon.setAttribute('src', 'synop.{0}.xml#title'.format(self.a_doi))
 
-    def structureParse(self, srcnode, dstnode=self.navmap, depth=0, first=True):
+    def navMaptToReferences(self):
+        """
+        The references page should be added if there are references
+        """
+        try:
+            back = self.article.root_tag.getElementsByTagName('back')[0]
+        except IndexError:
+            pass
+        else:
+            if back.getElementsByTagName('ref'):
+                nav = self.appendNewElement('navPoint', self.navmap)
+                nav.setAttribute('id', 'references')
+                nav.setAttribute('playOrder', str(self.playOrder))
+                self.playOrder += 1
+                navlbl = self.appendNewElement('navLabel', nav)
+                navlbl.appendChild(self.makeText('References'))
+                navcon = self.appendNewElement('content', nav)
+                artdoi = self.doi.split('/')[1]
+                navcon.setAttribute('src', 'biblio{0}.xml#references'.format(artdoi))
+
+    def structureParse(self, srcnode, dstnode=None, depth=0, first=True):
         """
         This recursive function travels the contents of an article's body node
         looking for <sec>, <fig>, and <table-wrap> tags. It only locates these
@@ -97,16 +139,8 @@ those conforming to the relaxed constraints of OPS 2.0'''))
         depth += 1
         if depth > self.maxdepth:
             self.maxdepth = depth
-        #We build the first structure element, it is not found in article.body
-        if first:
-            nav = dstnode.appendChild(self.toc.createElement('navPoint'))
-            nav.setAttribute('id', 'titlepage')
-            nav.setAttribute('playOrder', str(self.playOrder))
-            self.playOrder += 1
-            navlbl = nav.appendChild(self.toc.createElement('navLabel'))
-            navlbl.appendChild(self.makeText('Title Page'))
-            navcon = nav.appendChild(self.toc.createElement('content'))
-            navcon.setAttribute('src', 'synop.{0}.xml#title'.format(self.jid))
+        if not dstnode:
+            dstnode = self.navmap
         #Tag name strings we check for to determine structures and features
         tagnamestrs = [u'sec', u'fig', u'table-wrap']
         #Pre-process step: give sec tags an id attribute if they lack it
@@ -116,7 +150,6 @@ those conforming to the relaxed constraints of OPS 2.0'''))
                 sid = 'OA-EPUB-{0}'.format(str(c))
                 c += 1
                 sec.setAttribute('id', sid)
-
         #Do the recursive parsing
         for child in srcnode.childNodes:
             try:
@@ -126,19 +159,19 @@ those conforming to the relaxed constraints of OPS 2.0'''))
             else:
                 if tagname in tagnamestrs:
                     if tagname == u'sec':
-                        nav = self.toc.createElement('navPoint')
+                        nav = self.doc.createElement('navPoint')
                         dstnode.appendChild(nav)
                     elif tagname == u'fig':
-                        nav = self.toc.createElement('navTarget')
+                        nav = self.doc.createElement('navTarget')
                         self.lof.appendChild(nav)
                     elif tagname == u'table-wrap':
-                        nav = self.toc.createElement('navTarget')
+                        nav = self.doc.createElement('navTarget')
                         self.lot.appendChild(nav)
                     mid = child.getAttribute('id')
                     nav.setAttribute('id', mid)
                     nav.setAttribute('playOrder', str(self.playOrder))
                     self.playOrder += 1
-                    navlbl = nav.appendChild(self.toc.createElement('navLabel'))
+                    navlbl = nav.appendChild(self.doc.createElement('navLabel'))
                     try:
                         title_node = child.getElementsByTagName('title')[0]
                     except IndexError:  # For whatever reason, no title node
@@ -148,8 +181,8 @@ those conforming to the relaxed constraints of OPS 2.0'''))
                         if not navlblstr:
                             navlblstr = mid
                     navlbl.appendChild(self.makeText(navlblstr))
-                    navcon = nav.appendChild(self.toc.createElement('content'))
-                    navcon.setAttribute('src', 'main.{0}.xml#{1}'.format(self.jid, mid))
+                    navcon = nav.appendChild(self.doc.createElement('content'))
+                    navcon.setAttribute('src', 'main.{0}.xml#{1}'.format(self.a_doi, mid))
                     self.structureParse(child, nav, depth, first = False)
 
     def makeDocTitle(self):
@@ -219,4 +252,4 @@ those conforming to the relaxed constraints of OPS 2.0'''))
         self.makeDocTitle()
         filename = os.path.join(location, 'OPS', 'toc.ncx')
         with open(filename, 'w') as output:
-            output.write(self.toc.toprettyxml('utf-8'))
+            output.write(self.doc.toprettyxml(encoding='utf-8'))

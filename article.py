@@ -71,7 +71,7 @@ Publishing DTD: \n{0}'.format(doc.doctype.publicId))
             self.attrs[attr] = self.root_tag.getAttribute(attr)
         self.validateAttrs()  # Log errors for invalid attribute values
         try:
-            self.body = self.root_tag.getElementSbyTagNAme('body')[0]
+            self.body = self.root_tag.getElementsByTagName('body')[0]
         except IndexError:
             self.body = None
 

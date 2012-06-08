@@ -196,9 +196,9 @@ def makeEPUB(document, xml_local, cache_dir, outdirect, log_to):
     elif DOI.split('/')[0] == '10.3389':  # Frontiers' publisher DOI
         document.fetchFrontiersImages(cache_dir, outdirect, settings.caching)
         opsfrontiers.OPSFrontiers(document, outdirect)
-    #toc = tocncx.TocNCX()
-    #toc.takeArticle(document)
-    #toc.write(outdirect)
+    toc = tocncx.TocNCX(__version__)
+    toc.parseArticle(document)
+    toc.write(outdirect)
     #myopf = opf.ContentOPF(outdirect)
     #myopf.takeArticle(document)
     #myopf.write()
