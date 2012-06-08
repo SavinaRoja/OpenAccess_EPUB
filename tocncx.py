@@ -15,7 +15,8 @@ class TocNCX(object):
     This is the base class for the toc.ncx implementation.
     """
 
-    def __init__(self, version, collection_mode=False):
+    def __init__(self, version, doi, collection_mode=False):
+        self.doi = doi
         self.collection_mode = collection_mode
         self.version = version
         self.initNcxDocument()
@@ -25,8 +26,6 @@ class TocNCX(object):
         self.maxdepth = 0
         #List of articles included
         self.articles = []
-        #self.doi will be an empty string by default, replaced later
-        self.doi = ''
 
     def initNcxDocument(self):
         """
@@ -90,6 +89,11 @@ those conforming to the relaxed constraints of OPS 2.0'''))
         Fills in the <docAuthor> node.
         mode.
         """
+        #Technically, the best practice for this tag is to match its
+        #counterpart in the OPF file. This get's hazy with regards to multiple
+        #authors and especially in the case of multiple articles. Previously
+        #this employed the first author of the first article and, I will
+        #probably adjust it back to that eventually.
         authlabel = 'Paul Barton, Developer of OpenAccess_EPUB'
         self.docauthor.appendChild(self.makeText(authlabel))
 
