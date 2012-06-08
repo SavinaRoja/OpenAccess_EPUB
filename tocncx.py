@@ -15,8 +15,8 @@ class TocNCX(object):
     This is the base class for the toc.ncx implementation.
     """
 
-    def __init__(self, version, doi, collection_mode=False):
-        self.doi = doi
+    def __init__(self, version, collection_mode=False):
+        self.dois = []
         self.collection_mode = collection_mode
         self.version = version
         self.initNcxDocument()
@@ -72,6 +72,86 @@ those conforming to the relaxed constraints of OPS 2.0'''))
         text.appendChild(self.toc.createTextNode(textstring))
         return text
 
+    def parseArticle(self):
+        """
+        pass
+        """
+        self.dois.append(doi)
+
+    def indexTitlePage(self):
+        """
+        This is used to create a reference in the navMap of the NCX file to the
+        titlepage of the article.
+        """
+        pass
+
+    def structureParse(self, srcnode, dstnode=self.navmap, depth=0, first=True):
+        """
+        This recursive function travels the contents of an article's body node
+        looking for <sec>, <fig>, and <table-wrap> tags. It only locates these
+        tags when they are the children of <body> or another tag. This is as it
+        should be in properly formatted input.
+        """
+        #We only really care about the recursion depth because we need to list
+        #it in the NCX meta elements.
+        depth += 1
+        if depth > self.maxdepth:
+            self.maxdepth = depth
+        #We build the first structure element, it is not found in article.body
+        if first:
+            nav = dstnode.appendChild(self.toc.createElement('navPoint'))
+            nav.setAttribute('id', 'titlepage')
+            nav.setAttribute('playOrder', str(self.playOrder))
+            self.playOrder += 1
+            navlbl = nav.appendChild(self.toc.createElement('navLabel'))
+            navlbl.appendChild(self.makeText('Title Page'))
+            navcon = nav.appendChild(self.toc.createElement('content'))
+            navcon.setAttribute('src', 'synop.{0}.xml#title'.format(self.jid))
+        #Tag name strings we check for to determine structures and features
+        tagnamestrs = [u'sec', u'fig', u'table-wrap']
+        #Pre-process step: give sec tags an id attribute if they lack it
+        c = 0
+        for sec in srcnode.getElementsByTagName('sec'):
+            if not sec.getAttribute('id'):
+                sid = 'OA-EPUB-{0}'.format(str(c))
+                c += 1
+                sec.setAttribute('id', sid)
+
+        #Do the recursive parsing
+        for child in srcnode.childNodes:
+            try:
+                tagname = child.tagName
+            except AttributeError:  # Text nodes have no attribute tagName
+                pass
+            else:
+                if tagname in tagnamestrs:
+                    if tagname == u'sec':
+                        nav = self.toc.createElement('navPoint')
+                        dstnode.appendChild(nav)
+                    elif tagname == u'fig':
+                        nav = self.toc.createElement('navTarget')
+                        self.lof.appendChild(nav)
+                    elif tagname == u'table-wrap':
+                        nav = self.toc.createElement('navTarget')
+                        self.lot.appendChild(nav)
+                    mid = child.getAttribute('id')
+                    nav.setAttribute('id', mid)
+                    nav.setAttribute('playOrder', str(self.playOrder))
+                    self.playOrder += 1
+                    navlbl = nav.appendChild(self.toc.createElement('navLabel'))
+                    try:
+                        title_node = child.getElementsByTagName('title')[0]
+                    except IndexError:  # For whatever reason, no title node
+                        navlblstr = 'Item title not found!'
+                    else:
+                        navlblstr = utils.serializeText(title_node, stringlist=[])
+                        if not navlblstr:
+                            navlblstr = mid
+                    navlbl.appendChild(self.makeText(navlblstr))
+                    navcon = nav.appendChild(self.toc.createElement('content'))
+                    navcon.setAttribute('src', 'main.{0}.xml#{1}'.format(self.jid, mid))
+                    self.structureParse(child, nav, depth, first = False)
+
     def makeDocTitle(self):
         """
         Fills in the <docTitle> node, works for both single and collection
@@ -81,7 +161,7 @@ those conforming to the relaxed constraints of OPS 2.0'''))
             tocname = 'NCX For: Article Collection'
             self.doctitle.appendChild(self.makeText(tocname))
         else:
-            tocname = u'NCX For: '.format(self.doi)
+            tocname = u'NCX For: '.format(self.doi[0])
             self.doctitle.appendChild(self.makeText(tocname))
 
     def makeDocAuthor(self):
@@ -116,5 +196,27 @@ those conforming to the relaxed constraints of OPS 2.0'''))
         new = self.doc.createTextNode(newtext)
         parent.appendChild(new)
 
+    def setMetas(self):
+        """
+        After all the articles have been processed, this method provides values
+        to each of the meta items.
+        """
+        metas = self.head.getElementsByTagName('meta')
+        for meta in metas:
+            if meta.getAttribute('name') == 'dtb:depth':
+                meta.setAttribute('content', str(self.maxdepth - 1))
+            elif meta.getAttribute('name') == 'dtb:uid':
+                meta.setAttribute('content', ','.join(self.dois))
+            elif meta.getAttribute('name') == 'dtb:generator':
+                content = 'OpenAccess_EPUB {0}'.format(self.version)
+                meta.setAttribute('content', content)
+            else:
+                meta.setAttribute('content', '0')
 
-
+    def write(self, location):
+        self.setMetas()
+        self.makeDocAuthor()
+        self.makeDocTitle()
+        filename = os.path.join(location, 'OPS', 'toc.ncx')
+        with open(filename, 'w') as output:
+            output.write(self.toc.toprettyxml('utf-8'))

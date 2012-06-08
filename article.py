@@ -1,8 +1,12 @@
 import utils
 import logging
+import os.path
 import sys
+import shutil
 import xml.dom.minidom
 import jptsmeta
+import urllib2
+from time import sleep
 
 
 class Article(object):
@@ -66,6 +70,10 @@ Publishing DTD: \n{0}'.format(doc.doctype.publicId))
             #getAttribute() returns an empty string if the attribute DNE
             self.attrs[attr] = self.root_tag.getAttribute(attr)
         self.validateAttrs()  # Log errors for invalid attribute values
+        try:
+            self.body = self.root_tag.getElementSbyTagNAme('body')[0]
+        except IndexError:
+            self.body = None
 
     def identifyPublisher(self):
         """
@@ -127,12 +135,9 @@ Publishing DTD: \n{0}'.format(doc.doctype.publicId))
         return self.metadata.article_id['doi']
 
     def fetchPLoSImages(self, cache_dir, output_dir, caching):
-        '''Fetch the PLoS images associated with the article.'''
-        import urllib2
-
-        import os.path
-        import shutil
-        from time import sleep
+        """
+        Fetch the PLoS images associated with the article.
+        """
 
         doi = self.getDOI()
         print('Processing images for {0}...'.format(doi))
