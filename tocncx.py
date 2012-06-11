@@ -87,10 +87,10 @@ those conforming to the relaxed constraints of OPS 2.0'''))
         if body:
             if not self.collection_mode:
                 self.structureParse(body)
-            #if self.lof.childNodes:
-            #    self.makeFiguresList()
-            #if self.lot.childNodes:
-            #    self.makeTablesList()
+            if self.lof.childNodes:
+                self.makeFiguresList()
+            if self.lot.childNodes:
+                self.makeTablesList()
 
     def navMapToTitlePage(self):
         """
@@ -194,7 +194,7 @@ those conforming to the relaxed constraints of OPS 2.0'''))
             tocname = 'NCX For: Article Collection'
             self.doctitle.appendChild(self.makeText(tocname))
         else:
-            tocname = u'NCX For: '.format(self.doi[0])
+            tocname = u'NCX For: {0}'.format(self.doi)
             self.doctitle.appendChild(self.makeText(tocname))
 
     def makeDocAuthor(self):
@@ -246,7 +246,32 @@ those conforming to the relaxed constraints of OPS 2.0'''))
             else:
                 meta.setAttribute('content', '0')
 
+    def makeFiguresList(self):
+        """
+        Prepends the List of Figures with appropriate navLabel and adds the
+        element to the ncx element
+        """
+        navlbl = self.doc.createElement('navLabel')
+        navlbl.appendChild(self.makeText('List of Figures'))
+        self.lof.insertBefore(navlbl, self.lof.firstChild)
+        self.ncx.appendChild(self.lof)
+
+    def makeTablesList(self):
+        """
+        Prepends the List of Tables with appropriate navLabel and adds the
+        element to the ncx element
+        """
+        navlbl = self.doc.createElement('navLabel')
+        navlbl.appendChild(self.makeText('List of Tables'))
+        self.lot.insertBefore(navlbl, self.lot.firstChild)
+        self.ncx.appendChild(self.lot)
+
     def write(self, location):
+        """
+        This method defines how the document should be written. It calls the
+        necessary functions required to finalize the document and then writes
+        the file to disk.
+        """
         self.setMetas()
         self.makeDocAuthor()
         self.makeDocTitle()

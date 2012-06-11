@@ -88,14 +88,14 @@ class ContentOPF(object):
         dublincore.dc_language(self.opf, self.metadata)
         dublincore.dc_type(self.opf, self.metadata)
         dublincore.dc_publisher(self.opf, self.metadata)
-        dublincore.dc_identifier(self.opf, self.metadata, ameta, col_str = self.ccuid)
-        #I want to be fair here with regards to copyright statements. All PLoS 
-        #articles are Creative Commons, which allows free use, modification, 
-        #and reproduction, so long as sources are attributed. Attribution to 
-        #each article is tricky for collections within the ePub 2.0 spec and 
-        #deserves deeper discussion. At this stage, I feel the following 
-        #approach for dc:rights is acceptable, it acknowledges the CCAL 
-        #rights declared in the original articles, while not mandating that 
+        dublincore.dc_identifier(self.opf, self.metadata, ameta, col_str=self.ccuid)
+        #I want to be fair here with regards to copyright statements. All PLoS
+        #articles are Creative Commons, which allows free use, modification,
+        #and reproduction, so long as sources are attributed. Attribution to
+        #each article is tricky for collections within the ePub 2.0 spec and
+        #deserves deeper discussion. At this stage, I feel the following
+        #approach for dc:rights is acceptable, it acknowledges the CCAL
+        #rights declared in the original articles, while not mandating that
         #any custom modifications made by potential users do the same.
         #The CCAL terms for the original content should be respected.
         cp_text = '''This is a collection of open-access articles published by 
