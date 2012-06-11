@@ -183,7 +183,7 @@ those conforming to the relaxed constraints of OPS 2.0'''))
                     navlbl.appendChild(self.makeText(navlblstr))
                     navcon = nav.appendChild(self.doc.createElement('content'))
                     navcon.setAttribute('src', 'main.{0}.xml#{1}'.format(self.a_doi, mid))
-                    self.structureParse(child, nav, depth, first = False)
+                    self.structureParse(child, nav, depth, first=False)
 
     def makeDocTitle(self):
         """
