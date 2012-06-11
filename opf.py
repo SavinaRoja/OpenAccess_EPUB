@@ -137,3 +137,41 @@ class OPF(object):
         filename = os.path.join(self.location, 'OPS', 'content.opf')
         with open(filename, 'w') as output:
             output.write(self.opf.toprettyxml(encoding='utf-8'))
+
+
+class FrontiersOPF(OPF):
+    """
+    This is the OPF class intended for use with Frontiers articles. 
+    """
+
+    def singleMetadata(self, ameta):
+        """
+        This method handles the metadata for single article Frontiers ePubs.
+        """
+        pass
+
+    def collectionMetadata(self, ameta):
+        """
+        This method handles the metadata for a Frontiers article in a
+        collection.
+        """
+        pass
+
+
+class PLoSOPF(OPF):
+    """
+    This is the OPF class intended for use with Frontiers articles. 
+    """
+
+    def singleMetadata(self, ameta):
+        """
+        This method handles the metadata for single article PLoS ePubs.
+        """
+        pass
+
+    def collectionMetadata(self, ameta):
+        """
+        This method handles the metadata for a PLoS article in a collection.
+        """
+        pass
+
