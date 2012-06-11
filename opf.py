@@ -65,12 +65,14 @@ class OPF(object):
         self.doi = article.getDOI()
         self.dois.append(self.doi)
         self.article = article
-        self.a_doi = self.doi.split('/')[0]
+        self.a_doi = self.doi.split('/')[1]
+        self.a_doi_dashed = self.a_doi.replace('.', '-')
         self.articles.append(article)
         if not self.collection_mode:
             self.singleMetadata(article.metadata)
         else:
             self.collectionMetadata(article.metadata)
+        self.addToSpine()
 
     def singleMetadata(self, ameta):
         """
@@ -95,7 +97,8 @@ class OPF(object):
         """
         mimetypes = {'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 'xml':
                      'application/xhtml+xml', 'png': 'image/png', 'css':
-                     'text/css', 'ncx': 'application/x-dtbncx+xml'}
+                     'text/css', 'ncx': 'application/x-dtbncx+xml', 'gif':
+                     'image/gif'}
         current_dir = os.getcwd()
         os.chdir(self.location)
         for path, _subname, filenames in os.walk('OPS'):
@@ -104,7 +107,7 @@ class OPF(object):
                 for filename in filenames:
                     _name, ext = os.path.splitext(filename)
                     ext = ext[1:]
-                    new = self.manifest.appendChild(self.opf.createElement('item'))
+                    new = self.manifest.appendChild(self.doc.createElement('item'))
                     new.setAttribute('href', os.path.join(path, filename))
                     new.setAttribute('media-type', mimetypes[ext])
                     if filename == 'toc.ncx':
@@ -117,31 +120,36 @@ class OPF(object):
                         new.setAttribute('id', filename.replace('.', '-'))
         os.chdir(current_dir)
 
-    def addToSpine(self, id_string, tables, refs):
-        idref = '{0}-' + '{0}-xml'.format(id_string)
-        syn_ref = self.spine.appendChild(self.opf.createElement('itemref'))
-        main_ref = self.spine.appendChild(self.opf.createElement('itemref'))
-        bib_ref = self.opf.createElement('itemref')
-        tab_ref = self.opf.createElement('itemref')
+    def addToSpine(self):
+        idref = '{0}-' + '{0}-xml'.format(self.a_doi_dashed)
+        syn_ref = self.spine.appendChild(self.doc.createElement('itemref'))
+        main_ref = self.spine.appendChild(self.doc.createElement('itemref'))
+        bib_ref = self.doc.createElement('itemref')
+        tab_ref = self.doc.createElement('itemref')
         for r, i, l in [(syn_ref, 'synop', 'yes'), (main_ref, 'main', 'yes'),
                         (bib_ref, 'biblio', 'yes'), (tab_ref, 'tables', 'no')]:
             r.setAttribute('linear', l)
             r.setAttribute('idref', idref.format(i))
-        if refs:
-            self.spine.appendChild(bib_ref)
-        if tables:
+        try:
+            b = self.article.root_tag.getElementsByTagName('back')[0]
+        except IndexError:
+            pass
+        else:
+            if b.getElementsByTagName('ref'):
+                self.spine.appendChild(bib_ref)
+        if self.article.root_tag.getElementsByTagName('table-wrap'):
             self.spine.appendChild(tab_ref)
 
     def write(self):
         self.makeManifest()
         filename = os.path.join(self.location, 'OPS', 'content.opf')
         with open(filename, 'w') as output:
-            output.write(self.opf.toprettyxml(encoding='utf-8'))
+            output.write(self.doc.toprettyxml(encoding='utf-8'))
 
 
 class FrontiersOPF(OPF):
     """
-    This is the OPF class intended for use with Frontiers articles. 
+    This is the OPF class intended for use with Frontiers articles.
     """
 
     def singleMetadata(self, ameta):
@@ -160,7 +168,7 @@ class FrontiersOPF(OPF):
 
 class PLoSOPF(OPF):
     """
-    This is the OPF class intended for use with Frontiers articles. 
+    This is the OPF class intended for use with PLoS articles.
     """
 
     def singleMetadata(self, ameta):
@@ -174,4 +182,3 @@ class PLoSOPF(OPF):
         This method handles the metadata for a PLoS article in a collection.
         """
         pass
-

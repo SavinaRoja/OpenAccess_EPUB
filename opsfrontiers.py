@@ -206,6 +206,8 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
         body = self.doc.getElementsByTagName('body')[0]
         for table in self.html_tables:
             body.appendChild(table)
+        #Handle node conversion
+        self.convertEmphasisElements(body)
 
         with open(os.path.join(self.ops_dir, self.tab_frag[:-4]), 'w') as op:
             op.write(self.doc.toprettyxml(encoding='utf-8'))

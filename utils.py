@@ -324,6 +324,9 @@ def fetchFrontiersImages(doi, counts, cache_dir, output_dir, caching):
                 if '/image_m/' in l:
                     img_src = l.split('href=\"')[1].split(' name=\"')[0]
                     src_root, img_name = img_src.split('/image_m/')
+                if '/image_n/' in l:
+                    img_src = l.split('src=\"')[1].split(' alt=\"')[0]
+                    src_root, img_name = img_src.split('/image_n/')
         os.remove('temp')
     for i in range(fc):
         img = img_name[:-9] + 'g' + str(i + 1).zfill(3) + '.jpg'
@@ -338,9 +341,10 @@ def fetchFrontiersImages(doi, counts, cache_dir, output_dir, caching):
         downloadImage(fetch, img_file)
         print('Downloaded image {0}'.format(img))
     for i in range(ec):
-        img = img_name[:-9] + 'e' + str(i + 1).zfill(3) + '.jpg'
-        fetch = src_root + '/image_m/' + img
+        img = img_name[:-9] + 'e' + str(i + 1).zfill(3) + '.gif'
+        fetch = src_root + '/image_n/' + img
         img_file = os.path.join(img_dir, 'equations', img[-8:])
+        print(fetch)
         downloadImage(fetch, img_file)
         print('Downloaded image {0}'.format(img))
     print("Done downloading images")

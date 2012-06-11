@@ -204,9 +204,9 @@ def makeEPUB(document, xml_local, cache_dir, outdirect, log_to):
         toc.parseArticle(document)
         toc.write(outdirect)
         myopf = opf.FrontiersOPF(__version__, outdirect, False)
-    myopf.takeArticle(document)
+    myopf.parseArticle(document)
     myopf.write()
-    #utils.epubZip(outdirect)
+    utils.epubZip(outdirect)
     #WARNING: shutil.rmtree() is a recursive deletion function, care should be
     #taken whenever modifying this code
     #if settings.cleanup:
@@ -344,7 +344,7 @@ def main():
             newname = u'{0}.log'.format(input_name)
             newname = os.path.join(args.log_to, newname)
             os.rename(logname, newname)
-        #epubcheck('{0}.epub'.format(output_name))
+        epubcheck('{0}.epub'.format(output_name))
 
 if __name__ == '__main__':
     main()
