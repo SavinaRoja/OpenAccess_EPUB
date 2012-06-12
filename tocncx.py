@@ -80,7 +80,7 @@ those conforming to the relaxed constraints of OPS 2.0'''))
         self.doi = article.getDOI()
         self.dois.append(self.doi)
         self.article = article
-        self.a_doi = self.doi.split('/')[0]
+        self.a_doi = self.doi.split('/')[1]
         body = article.body
         self.articles.append(article)
         #If we are only packing one article...

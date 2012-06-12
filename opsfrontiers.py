@@ -190,6 +190,21 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
 
         self.doc = self.makeDocument('biblio')
         body = self.doc.getElementsByTagName('body')[0]
+        try:
+            back = self.article.getElementsByTagName('back')[0]
+        except IndexError:
+            return None
+        else:
+            refs = back.getElementsByTagName('ref')
+        if not refs:
+            return None
+        refnum = 1
+        for ref in refs:
+            p = self.appendNewElement('p', body)
+            self.appendNewText('{0}. '.format(refnum), p)
+            refnum += 1
+            p.setAttribute('id', ref.getAttribute('id'))
+            self.appendNewText(utils.serializeText(ref, []), p)
 
         #Finally, write to a document
         with open(os.path.join(self.ops_dir, self.bib_frag[:-4]), 'w') as op:
