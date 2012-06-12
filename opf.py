@@ -186,6 +186,42 @@ class FrontiersOPF(OPF):
                     file_as = ', '.join([surname, gi])
                 dc_creator = dc.creator(auth, file_as, self.doc)
                 self.metadata.appendChild(dc_creator)
+        #Make the dc:contributor elements for editors and reviewers
+        for fn in ameta.author_notes.getElementsByTagName('fn'):
+            if fn.getAttribute('fn-type') == 'edited-by':
+                p = fn.getElementsByTagName('p')[0]
+                if p.firstChild.data[:11] == 'Edited by: ':
+                    editor = p.firstChild.data[11:].split(',')[0]
+                    dc_contrib = [dc.contributor(editor, self.doc, role='edt')]
+                elif p.firstChild.data[:13] == 'Reviewed by: ':
+                    reviewers = p.firstChild.data[13:].split(';')
+                    dc_contrib = []
+                    for r in reviewers:
+                        r_text = r.split(',')[0].lstrip()
+                        dc_contrib.append(dc.contributor(r_text, self.doc, role='rev'))
+            for dc_c in dc_contrib:
+                self.metadata.appendChild(dc_c)
+        #Make the dc:date elements for important dates regarding the article
+        #Creation
+        try:
+            credate = ameta.history['accepted']
+        except KeyError:
+            pass
+        else:
+            y, m, d = credate.year, credate.month, credate.day
+            dc_date = dc.date(y, m, d, 'creation', self.doc)
+            self.metadata.appendChild(dc_date)
+        #Publication
+        try:
+            pubdate = ameta.pub_date['epub']
+        except KeyError:
+            pass
+        else:
+            y, m, d = pubdate.year, pubdate.month, pubdate.day
+            dc_date = dc.date(y, m, d, 'publication', self.doc)
+            self.metadata.appendChild(dc_date)
+
+
 
     def collectionMetadata(self, ameta):
         """

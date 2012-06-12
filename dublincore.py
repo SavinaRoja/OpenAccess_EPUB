@@ -63,10 +63,52 @@ def creator(input_string, file_as, dom):
     dc_ele.setAttribute('opf:role', 'aut')
     dc_ele.setAttribute('opf:file-as', file_as)
     return dc_ele
-    for auth in artmeta.art_auths:
-        newchild = mydoc.createElement('dc:creator')
-        newchild.appendChild(mydoc.createTextNode(auth.get_name()))
-        if not alreadyExists('dc:creator', auth.get_name(), parent):
-            newchild.setAttribute('opf:role', 'aut') #Extended by OPF
-            newchild.setAttribute('opf:file-as', auth.get_fileas_name()) #Extended by OPF
-            parent.appendChild(newchild)
+
+
+def contributor(input_string, dom, file_as=False, role='edt'):
+    """
+    This creates a dc:contributor element containing the passed string. It is
+    extended by the OPF specification to add opf:role and opf:file-as
+    (the latter being optional)
+    """
+    dc_ele = dom.createElement('dc:contributor')
+    dc_txt = dom.createTextNode(input_string)
+    dc_ele.appendChild(dc_txt)
+    dc_ele.setAttribute('opf:role', role)
+    if file_as:
+        dc_ele.setAttribute('opf:file-as', file_as)
+    return dc_ele
+
+
+def coverage(input_string, dom):
+    """
+    This creates a dc:coverage element containing the passed string. It is not
+    yet used.
+    """
+    dc_ele = dom.createElement('dc:coverage')
+    dc_txt = dom.createTextNode(input_string)
+    dc_ele.appendChild(dc_txt)
+    return dc_ele
+
+
+def date(year, month, day, event, dom):
+    """
+    This creates a dc:date element containing the passed string. It is extended
+    by the OPF specification to add opf:event to specify distinct dates such as
+    creation, publication, modification and others (the values are not strictly
+    defined). Note that the string should be formatted according to
+    http://www.w3.org/TR/NOTE-datetime
+    """
+    imonth, iday = int(month), int(day)
+    d_string = year
+    if imonth:
+        
+        d_string += '-{0}'.format(month)
+        if iday:
+            d_string += '-{0}'.format(day)
+    dc_ele = dom.createElement('dc:date')
+    dc_txt = dom.createTextNode(d_string)
+    dc_ele.appendChild(dc_txt)
+    dc_ele.setAttribute('opf:event', event)
+    return dc_ele
+
