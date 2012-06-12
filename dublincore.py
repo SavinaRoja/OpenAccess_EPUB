@@ -121,3 +121,15 @@ def source(input_string, dom):
     dc_txt = dom.createTextNode(input_string)
     dc_ele.appendChild(dc_txt)
     return dc_ele
+
+
+def epubformat(dom):
+    """
+    This creates a dc:format element whose value will be
+    \'application/epub+zip\'
+    """
+    dc_ele = dom.createElement('dc:format')
+    dc_txt = dom.createTextNode('application/epub+zip')
+    dc_ele.appendChild(dc_txt)
+    return dc_ele
+
