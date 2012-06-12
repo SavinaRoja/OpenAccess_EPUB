@@ -7,10 +7,10 @@ Dublin Core metadata will require publisher-specific definitions of metadata
 conversion.
 """
 
-#import dublincore
+import dublincore as dc
 import datetime
 import os.path
-#import utils
+import utils
 import xml.dom.minidom
 
 
@@ -156,7 +156,19 @@ class FrontiersOPF(OPF):
         """
         This method handles the metadata for single article Frontiers ePubs.
         """
-        pass
+        #Make the dc:identifier using the DOI of the article
+        dc_identifier = dc.identifier(self.doi, self.doc, primary=True)
+        dc_identifier.setAttribute('opf:scheme', 'DOI')
+        self.metadata.appendChild(dc_identifier)
+        #Make the dc:language, it defaults to english
+        self.metadata.appendChild(dc.language(self.doc))
+        #Make the dc:title using the article title
+        title = utils.serializeText(ameta.title.article_title, [])
+        self.metadata.appendChild(dc.title(title, self.doc))
+        #Make the dc:rights using the metadata in permissions
+        s = utils.serializeText(ameta.permissions.statement, [])
+        l = utils.serializeText(ameta.permissions.license, [])
+        self.metadata.appendChild(dc.rights(' '.join([s, l]), self.doc))
 
     def collectionMetadata(self, ameta):
         """
