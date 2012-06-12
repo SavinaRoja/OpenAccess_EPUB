@@ -102,7 +102,6 @@ def date(year, month, day, event, dom):
     imonth, iday = int(month), int(day)
     d_string = year
     if imonth:
-        
         d_string += '-{0}'.format(month)
         if iday:
             d_string += '-{0}'.format(day)
@@ -112,3 +111,13 @@ def date(year, month, day, event, dom):
     dc_ele.setAttribute('opf:event', event)
     return dc_ele
 
+
+def source(input_string, dom):
+    """
+    This creates a dc:source element containing the passed string. It is not
+    yet used.
+    """
+    dc_ele = dom.createElement('dc:source')
+    dc_txt = dom.createTextNode(input_string)
+    dc_ele.appendChild(dc_txt)
+    return dc_ele
