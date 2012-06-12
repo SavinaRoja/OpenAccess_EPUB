@@ -83,7 +83,8 @@ those conforming to the relaxed constraints of OPS 2.0'''))
         self.a_doi = self.doi.split('/')[1]
         body = article.body
         self.articles.append(article)
-        #If we are only packing one article...
+        self.navMapToTitlePage()
+        #If we are only packing one article
         if body:
             if not self.collection_mode:
                 self.structureParse(body)
@@ -91,10 +92,11 @@ those conforming to the relaxed constraints of OPS 2.0'''))
                 self.makeFiguresList()
             if self.lot.childNodes:
                 self.makeTablesList()
+        self.navMaptToReferences()
 
     def navMapToTitlePage(self):
         """
-        This decorates the structureParse method to create some elements which
+        This is used by the structureParse method to create some elements which
         do not require structure parsing in order to create.
         """
         #The title page element we will always expect, always in synop
@@ -109,7 +111,8 @@ those conforming to the relaxed constraints of OPS 2.0'''))
 
     def navMaptToReferences(self):
         """
-        The references page should be added if there are references
+        The references page should be added if there are references, this is
+        used by the structureParse method
         """
         try:
             back = self.article.root_tag.getElementsByTagName('back')[0]
@@ -125,7 +128,7 @@ those conforming to the relaxed constraints of OPS 2.0'''))
                 navlbl.appendChild(self.makeText('References'))
                 navcon = self.appendNewElement('content', nav)
                 artdoi = self.doi.split('/')[1]
-                navcon.setAttribute('src', 'biblio{0}.xml#references'.format(artdoi))
+                navcon.setAttribute('src', 'biblio.{0}.xml#references'.format(artdoi))
 
     def structureParse(self, srcnode, dstnode=None, depth=0, first=True):
         """
@@ -184,6 +187,7 @@ those conforming to the relaxed constraints of OPS 2.0'''))
                     navcon = nav.appendChild(self.doc.createElement('content'))
                     navcon.setAttribute('src', 'main.{0}.xml#{1}'.format(self.a_doi, mid))
                     self.structureParse(child, nav, depth, first=False)
+        #self.navMaptToReferences()
 
     def makeDocTitle(self):
         """

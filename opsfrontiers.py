@@ -146,6 +146,7 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
         #Post processing node conversion
         self.convertEmphasisElements(body)
         self.convertAddressLinkingElements(body)
+        self.convertXrefElements(body)
 
         #Finally, write to a document
         with open(os.path.join(self.ops_dir, self.synop_frag[:-4]), 'w') as op:
@@ -190,6 +191,7 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
 
         self.doc = self.makeDocument('biblio')
         body = self.doc.getElementsByTagName('body')[0]
+        body.setAttribute('id', 'references')
         try:
             back = self.article.getElementsByTagName('back')[0]
         except IndexError:
@@ -220,7 +222,11 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
         self.doc = self.makeDocument('tables')
         body = self.doc.getElementsByTagName('body')[0]
         for table in self.html_tables:
+            
+            #Move the table to the body
             body.appendChild(table)
+            #Move the link back to the body
+            body.appendChild(table.lastChild)
         #Handle node conversion
         self.convertEmphasisElements(body)
 
@@ -389,6 +395,7 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
         #if that fails, direct the link to the contained text
         for e in self.getDescendantsByTagName(node, 'ext-link'):
             eid = e.getAttribute('id')
+            e.tagName = 'a'
             xh = e.getAttribute('xlink:href')
             self.expungeAttributes(e)
             if xh:
@@ -400,6 +407,7 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
         #Uris often declare their address as xlink:href attribute
         #if that fails, direct the link to the contained text
         for u in self.getDescendantsByTagName(node, 'uri'):
+            u.tagName = 'a'
             xh = u.getAttribute('xlink:href')
             self.expungeAttributes(u)
             if xh:
@@ -585,9 +593,13 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
         """
         <sec> elements must be converted to meaningful <div> nodes
         """
+        c = 0
         for s in self.getDescendantsByTagName(node, 'sec'):
             s.tagName = 'div'
             self.renameAttributes(s, [['sec-type', 'class']])
+            if not s.getAttribute('id'):
+                s.setAttribute('id', 'OA-EPUB-{0}'.format(str(c)))
+                c += 1
 
     def recursiveConvertDivTitles(self, node, depth=0):
         """
