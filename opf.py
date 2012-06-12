@@ -169,6 +169,23 @@ class FrontiersOPF(OPF):
         s = utils.serializeText(ameta.permissions.statement, [])
         l = utils.serializeText(ameta.permissions.license, [])
         self.metadata.appendChild(dc.rights(' '.join([s, l]), self.doc))
+        #Make the dc:creator elements for each contributing author
+        #Note that the file-as name is: Surname, G(iven Initial)
+        for contrib in ameta.contrib:
+            if contrib.attrs['contrib-type'] == 'author':
+                name = contrib.getName()[0]  # Work with only first name listed
+                surname = name.surname
+                given = name.given
+                try:
+                    gi = given[0]
+                except IndexError:
+                    auth = surname
+                    file_as = surname
+                else:
+                    auth = ' '.join([given, surname])
+                    file_as = ', '.join([surname, gi])
+                dc_creator = dc.creator(auth, file_as, self.doc)
+                self.metadata.appendChild(dc_creator)
 
     def collectionMetadata(self, ameta):
         """
