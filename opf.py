@@ -220,6 +220,8 @@ class FrontiersOPF(OPF):
             y, m, d = pubdate.year, pubdate.month, pubdate.day
             dc_date = dc.date(y, m, d, 'publication', self.doc)
             self.metadata.appendChild(dc_date)
+        #Create the epub format declaration in dc:format
+        self.metadata.appendChild(dc.epubformat(self.doc))
 
 
 
