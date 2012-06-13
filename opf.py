@@ -188,6 +188,7 @@ class FrontiersOPF(OPF):
                 self.metadata.appendChild(dc_creator)
         #Make the dc:contributor elements for editors and reviewers
         for fn in ameta.author_notes.getElementsByTagName('fn'):
+            dc_contrib = []
             if fn.getAttribute('fn-type') == 'edited-by':
                 p = fn.getElementsByTagName('p')[0]
                 if p.firstChild.data[:11] == 'Edited by: ':
