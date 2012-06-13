@@ -582,7 +582,7 @@ class JPTSMeta(object):
         <related-article> is an optional element, 0 or more, within
         <article-meta>. This element is not likely to be critical to displaying
         the article content, but is valuable as a link to other content. This
-        element allows for the inclusiong of various metadata about the related
+        element allows for the inclusion of various metadata about the related
         content and should provide sufficient instruction (perhaps with some
         implicit assumptions based on the publisher) to construct a link to
         the resource. This element is of significant interest, but as the

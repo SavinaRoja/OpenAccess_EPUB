@@ -222,8 +222,21 @@ class FrontiersOPF(OPF):
             self.metadata.appendChild(dc_date)
         #Create the epub format declaration in dc:format
         self.metadata.appendChild(dc.epubformat(self.doc))
-
-
+        #Create the dc:relation for related articles
+        #This is not yet implemented
+        #self.metadata.appendChil(dc.relation(relation, self.doc))
+        #Create the dc:publisher element
+        self.metadata.appendChild(dc.publisher('Frontiers', self.doc))
+        #Create the dc:type element
+        self.metadata.appendChild(dc.texttype(self.doc))
+        #Create the dc:subject elements for each keyword
+        for kwd in ameta.all_kwds:
+            kwd_text = utils.serializeText(kwd.node, [])
+            self.metadata.appendChild(dc.subject(kwd_text, self.doc))
+        #Create the dc:description element from the abstract if available
+        if ameta.abstract:
+            abstract_text = utils.serializeText(ameta.abstract[0].node, [])
+            self.metadata.appendChild(dc.description(abstract_text, self.doc))
 
     def collectionMetadata(self, ameta):
         """

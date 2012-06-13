@@ -133,3 +133,52 @@ def epubformat(dom):
     dc_ele.appendChild(dc_txt)
     return dc_ele
 
+
+def relation(input_string, dom):
+    """
+    This creates a dc:relation element containing the passed string.
+    """
+    dc_ele = dom.createElement('dc:relation')
+    dc_txt = dom.createTextNode(input_string)
+    dc_ele.appendChild(dc_txt)
+    return dc_ele
+
+
+def publisher(input_string, dom):
+    """
+    This creates a dc:relation element containing the passed string.
+    """
+    dc_ele = dom.createElement('dc:publisher')
+    dc_txt = dom.createTextNode(input_string)
+    dc_ele.appendChild(dc_txt)
+    return dc_ele
+
+
+def description(input_string, dom):
+    """
+    This creates a dc:description element containing the passed string.
+    """
+    dc_ele = dom.createElement('dc:description')
+    dc_txt = dom.createTextNode(input_string)
+    dc_ele.appendChild(dc_txt)
+    return dc_ele
+
+
+def texttype(dom):
+    """
+    This creates a dc:type element whose value will be \'text\'
+    """
+    dc_ele = dom.createElement('dc:type')
+    dc_txt = dom.createTextNode('text')
+    dc_ele.appendChild(dc_txt)
+    return dc_ele
+
+
+def subject(input_string, dom):
+    """
+    This creates a dc:subject element containing the passed string.
+    """
+    dc_ele = dom.createElement('dc:subject')
+    dc_txt = dom.createTextNode(input_string)
+    dc_ele.appendChild(dc_txt)
+    return dc_ele
