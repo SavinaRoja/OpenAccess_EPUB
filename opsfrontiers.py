@@ -178,6 +178,8 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
         self.convertEmphasisElements(body)
         self.convertAddressLinkingElements(body)
         self.convertXrefElements(body)
+        self.convertDispFormulaElements(body)
+        self.convertInlineFormulaElements(body)
 
         #Finally, write to a document
         with open(os.path.join(self.ops_dir, self.main_frag[:-4]), 'w') as op:
@@ -229,6 +231,8 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
             body.appendChild(table.lastChild)
         #Handle node conversion
         self.convertEmphasisElements(body)
+        self.convertDispFormulaElements(body)
+        self.convertInlineFormulaElements(body)
 
         with open(os.path.join(self.ops_dir, self.tab_frag[:-4]), 'w') as op:
             op.write(self.doc.toprettyxml(encoding='utf-8'))
@@ -600,6 +604,67 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
             if not s.getAttribute('id'):
                 s.setAttribute('id', 'OA-EPUB-{0}'.format(str(c)))
                 c += 1
+
+    def convertDispFormulaElements(self, node):
+        """
+        <disp-formula> elements must be converted to conforming ops swtich
+        elements.
+        """
+        for df in self.getDescendantsByTagName(node, 'disp-formula'):
+            #remove label
+            label = df.getElementsByTagName('label')
+            for l in label:
+                df.removeChild(l)
+            dfid = df.getAttribute('id')
+            df.tagName = 'ops:switch'
+            oc = self.appendNewElement('ops:case', df)
+            oc.setAttribute('required-namespace', 'http://www.w3.org/1998/Math/MathML')
+            math = df.getElementsByTagName('mml:math')[0]
+            oc.appendChild(math)
+            math.setAttribute('xmlns:mml', 'http://www.w3.org/1998/Math/MathML')
+            od = self.appendNewElement('ops:default', df)
+            img = self.appendNewElement('img', od)
+            img.setAttribute('alt', 'A Display Formula')
+            #Compute the image source
+            if dfid[0] == 'E':
+                num = dfid[1:]
+            else:
+                raise InputError('Unexpected disp-formula frag id in this article')
+            img_dir = 'images-' + self.doi_frag + '/equations/'
+            img_name = 'e' + num.zfill(3) + '.gif'
+            img.setAttribute('src', img_dir + img_name)
+            img.setAttribute('class', 'disp-formula')
+
+    def convertInlineFormulaElements(self, node):
+        """
+        <inline-formula> elements must be converted to conforming ops swtich
+        elements.
+        """
+        for f in self.getDescendantsByTagName(node, 'inline-formula'):
+            #remove label
+            label = f.getElementsByTagName('label')
+            for l in label:
+                f.removeChild(l)
+            f.tagName = 'ops:switch'
+            oc = self.appendNewElement('ops:case', f)
+            oc.setAttribute('required-namespace', 'http://www.w3.org/1998/Math/MathML')
+            math = f.getElementsByTagName('mml:math')[0]
+            fid = math.getAttribute('id')
+            oc.appendChild(math)
+            math.setAttribute('xmlns:mml', 'http://www.w3.org/1998/Math/MathML')
+            od = self.appendNewElement('ops:default', f)
+            img = self.appendNewElement('img', od)
+            img.setAttribute('alt', 'An Inline Formula')
+            #Compute the image source
+            if fid[0] == 'M':
+                num = fid[1:]
+            else:
+                raise InputError('Unexpected disp-formula frag id in this article')
+            img_dir = 'images-' + self.doi_frag + '/equations/'
+            img_name = 'i' + num.zfill(3) + '.gif'
+            img.setAttribute('src', img_dir + img_name)
+            img.setAttribute('class', 'inline-formula')
+
 
     def recursiveConvertDivTitles(self, node, depth=0):
         """

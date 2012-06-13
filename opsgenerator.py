@@ -30,6 +30,7 @@ class OPSGenerator(object):
         doc = impl.createDocument(None, 'html', doctype)
         root = doc.lastChild
         root.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml')
+        root.setAttribute('xmlns:ops', 'http://www.idpf.org/2007/ops')
         root.setAttribute('xml:lang', 'en-US')
         head = doc.createElement('head')
         title = doc.createElement('title')
