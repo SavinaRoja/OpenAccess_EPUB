@@ -5,6 +5,7 @@ from collections import namedtuple
 import urllib2
 import shutil
 import time
+import re
 
 Identifier = namedtuple('Identifer', 'id, type')
 
@@ -290,12 +291,43 @@ def fetchFrontiersImages(doi, counts, cache_dir, output_dir, caching):
         else:
             with open(img_file, 'wb') as outimage:
                 outimage.write(image.read())
+        return True
 
-    fc = int(counts['fig-count'])
-    tc = int(counts['table-count'])
-    ec = int(counts['equation-count'])
+    def checkEquationCompletion(images):
+        """
+        In some cases, equations images are not exposed in the fulltext (hidden
+        behind a rasterized table). This attempts to look for gaps and fix them
+        """
+        equations = os.listdir(os.path.join(img_dir, 'equations'))
+        inline_equations = []
+        for e in equations:
+            if e[0] == 'i':
+                inline_equations.append(e)
+        missing = []
+        if inline_equations:
+            inline_equations.sort()
+            highest = int(inline_equations[-1][1:4])
+            i = 1
+            while i < highest:
+                name = 'i{0}.gif'.format(str(i).zfill(3))
+                if name not in inline_equations:
+                    missing.append(name)
+                i += 1
+        get = images[0][:-8]
+        for m in missing:
+            loc = os.path.join(img_dir, 'equations', m)
+            downloadImage(get + m, loc)
+            print('Downloaded image {0}'.format(loc))
+        #It is possible that we need to go further than the highest
+        highest += 1
+        name = 'i{0}.gif'.format(str(highest).zfill(3))
+        loc = os.path.join(img_dir, 'equations', name)
+        while downloadImage(get + name, loc):
+            print('Downloaded image {0}'.format(loc))
+            highest += 1
+            name = 'i{0}.gif'.format(str(highest).zfill(3))
+
     print('Processing images for {0}...'.format(doi))
-
     s = os.path.split(doi)[1]
     img_dir = os.path.join(output_dir, 'OPS', 'images-{0}'.format(s))
     #Check to see if this article's images have been cached
@@ -319,34 +351,20 @@ def fetchFrontiersImages(doi, counts, cache_dir, output_dir, caching):
         page = urllib2.urlopen(full)
         with open('temp', 'w') as temp:
             temp.write(page.read())
+        images = []
         with open('temp', 'r') as temp:
             for l in temp.readlines():
-                if '/image_m/' in l:
-                    img_src = l.split('href=\"')[1].split(' name=\"')[0]
-                    src_root, img_name = img_src.split('/image_m/')
-                if '/image_n/' in l:
-                    img_src = l.split('src=\"')[1].split(' alt=\"')[0]
-                    src_root, img_name = img_src.split('/image_n/')
+                images += re.findall('<a href="(?P<href>http://\w{7}.\w{3}.\w{3}.rackcdn.com/\d{5}/f\w{4}-\d{2}-\d{5}-HTML/image_m/f\w{4}-\d{2}-\d{5}-\D{1,2}\d{3}.\D{3})', l)
+                images += re.findall('<img src="(?P<src>http://\w{7}.\w{3}.\w{3}.rackcdn.com/\d{5}/f\w{4}-\d{2}-\d{5}-HTML/image_n/f\w{4}-\d{2}-\d{5}-\D{1,2}\d{3}.\D{3})', l)
         os.remove('temp')
-    for i in range(fc):
-        img = img_name[:-9] + 'g' + str(i + 1).zfill(3) + '.jpg'
-        fetch = src_root + '/image_m/' + img
-        img_file = os.path.join(img_dir, 'figures', img[-8:])
-        downloadImage(fetch, img_file)
-        print('Downloaded image {0}'.format(img))
-    for i in range(tc):
-        img = img_name[:-9] + 't' + str(i + 1).zfill(3) + '.jpg'
-        fetch = src_root + '/image_m/' + img
-        img_file = os.path.join(img_dir, 'tables', img[-8:])
-        downloadImage(fetch, img_file)
-        print('Downloaded image {0}'.format(img))
-    for i in range(ec):
-        img = img_name[:-9] + 'e' + str(i + 1).zfill(3) + '.gif'
-        fetch = src_root + '/image_n/' + img
-        img_file = os.path.join(img_dir, 'equations', img[-8:])
-        print(fetch)
-        downloadImage(fetch, img_file)
-        print('Downloaded image {0}'.format(img))
+    itypes = {'e': 'equations', 't': 'tables', 'g': 'figures',
+              'a': 'figures', 'i': 'equations'}
+    for i in images:
+        itype = i.split('-')[-1][0].lower()
+        loc = os.path.join(img_dir, itypes[itype], i.split('-')[-1])
+        downloadImage(i, loc)
+        print('Downloaded image {0}'.format(loc))
+    checkEquationCompletion(images)
     print("Done downloading images")
     #If the images were not already cached, and caching is enabled...
     #We want to transfer the downloaded files to the cache
