@@ -58,10 +58,10 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
         title.childNodes = self.metadata.title.article_title.childNodes
 
         #Get authors
-        auths = []
+        self.auths = []
         for contrib in self.metadata.contrib:
             if contrib.attrs['contrib-type'] == 'author':
-                auths.append(contrib)
+                self.auths.append(contrib)
             else:
                 if not contrib.attrs['contrib-type']:
                     print('No contrib-type provided for contibutor!')
@@ -72,7 +72,7 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
         auth_el = self.appendNewElement('h3', body)
         auth_el.setAttribute('class', 'authors')
         first = True
-        for auth in auths:
+        for auth in self.auths:
             if not first:
                 self.appendNewText(', ', auth_el)
             else:
@@ -270,7 +270,7 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
         pc = self.appendNewElement('p', ainfo)
         bc = self.appendNewElement('b', pc)
         self.appendNewText('Citation: ', bc)
-        self.appendNewText('This feature not yet implemented!', pc)
+        self.appendNewText(self.renderCitation(), pc)
         #Important dates might be publication dates or history dates
         pd = self.appendNewElement('p', ainfo)
         #For the publication dates
@@ -675,6 +675,54 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
             img.setAttribute('src', img_dir + img_name)
             img.setAttribute('class', 'inline-formula')
 
+    def renderCitation(self):
+        """
+        This method is responsible for producing properly formatted citations
+        for Frontiers. This is specific for the citation string of the article
+        itself. For bibliographic citations, please refer to
+        renderBiblioCitation()
+        """
+        #Based on information from Frontiers, it appears that the citation
+        #types to be concerned about are "Article in a periodical",
+        #"Article in a book", and "Book". I think we can expect to follow the
+        #guidelines for periodical article at this stage.
+        auth_num = len(self.auths)
+        if auth_num == 1:
+            auth = self.auths[0]
+            if not auth.anonymous:
+                given_initial = auth.name[0].given[0] + '.'
+                surname = auth.name[0].surname
+                name = ', '.join([surname, given_initial])
+            else:
+                name = 'Anonymous.'
+        elif auth_num == 2:
+            names = []
+            for auth in self.auths:
+                if not auth.anonymous:
+                    given_initial = auth.name[0].given[0] + '.'
+                    surname = auth.name[0].surname
+                    names.append(', '.join([surname, given_initial]))
+                else:
+                    names.append('Anonymous.')
+            name = ', '.join([names[0], names[1]])
+        elif auth_num > 2:
+            names = []
+            for auth in (self.auths[0], self.auths[1]):
+                if not auth.anonymous:
+                    given_initial = auth.name[0].given[0] + '.'
+                    surname = auth.name[0].surname
+                    names.append(', '.join([surname, given_initial]))
+                else:
+                    names.append('Anonymous.')
+            name = ', '.join([names[0], names[1]])
+            name += ' et al.'
+        else:
+            name = 'Anonymous.'
+        #The name is followed by the year in parentheses
+        
+        
+        
+#Sondheimer, N., and Lindquist, S. (2000). Rnq1: an epigenetic modifier of protein function in yeast. Mol. Cell 5, 163-172.
 
     def recursiveConvertDivTitles(self, node, depth=0):
         """
