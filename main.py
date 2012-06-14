@@ -279,11 +279,12 @@ def main():
         download = False
         files = os.listdir(args.batch)
         for f in files:
-            if not os.path.splitext(file)[1] == '.xml':
+            if not os.path.splitext(f)[1] == '.xml':
                 pass
             else:
                 filename = os.path.join(args.batch, f)
-                doc, xml_local = localInput(filename)
+                xml_local = f
+                doc = localInput(filename)
                 input_name = os.path.splitext(os.path.split(xml_local)[1])[0]
                 output_name = os.path.join(args.output, input_name)
                 if os.path.isdir(output_name):

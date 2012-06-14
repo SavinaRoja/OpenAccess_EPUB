@@ -274,6 +274,7 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
         self.convertEmphasisElements(body)
         self.convertDispFormulaElements(body)
         self.convertInlineFormulaElements(body)
+        self.convertXrefElements(body)
 
         with open(os.path.join(self.ops_dir, self.tab_frag[:-4]), 'w') as op:
             op.write(self.doc.toprettyxml(encoding='utf-8'))
@@ -406,6 +407,8 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
             self.renameAttributes(uri, [['xlink:href', 'href']])
         #Print the correspondence information
         for corr in corresp:
+            #KNOWN BUG: some current address data is listed as a corresp and
+            #is formatted differently.
             pc = self.appendNewElement('p', ainfo)
             pc.setAttribute('id', corr.getAttribute('id'))
             bc = self.appendNewElement('b', pc)
@@ -863,7 +866,7 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
             else:
                 if tag == u'div':
                     try:
-                        divlabel = i.getElementsByTagName('label')[0]
+                        divlabel = self.getChildrenByTagName('label', i)[0]
                     except IndexError:
                         label = ''
                     else:

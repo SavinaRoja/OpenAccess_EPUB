@@ -367,7 +367,8 @@ def fetchFrontiersImages(doi, counts, cache_dir, output_dir, caching):
         loc = os.path.join(img_dir, itypes[itype], i.split('-')[-1])
         downloadImage(i, loc)
         print('Downloaded image {0}'.format(loc))
-    checkEquationCompletion(images)
+    if images:
+        checkEquationCompletion(images)
     print("Done downloading images")
     #If the images were not already cached, and caching is enabled...
     #We want to transfer the downloaded files to the cache

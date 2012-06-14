@@ -219,7 +219,7 @@ class OPSGenerator(object):
 
     def getDescendantsByTagName(self, inpt, tagname):
         """
-        This function works for individual Nodes as well as NodeLists. It call
+        This function works for individual Nodes as well as NodeLists. It calls
         getElementsByTagName on a Node to get a NodeList of the specified
         tagname, or it will call getElementsByTagName on each Node in a
         NodeList to build a composite NodeList of the specified tagname.
@@ -231,6 +231,23 @@ class OPSGenerator(object):
             for n in inpt:
                 el_list += n.getElementsByTagName(tagname)
         return el_list
+
+    def getChildrenByTagName(self, searchterm, node):
+        """
+        This method differs from getElementsByTagName() by only searching the
+        childNodes of the specified node. The node must also be specified along
+        with the searchterm.
+        """
+        nodelist = []
+        for c in node.childNodes:
+            try:
+                tag = c.tagName
+            except AttributeError:  # Text nodes have no tagName
+                pass
+            else:
+                if tag == searchterm:
+                    nodelist.append(c)
+        return nodelist
 
     def announce(self):
         """
