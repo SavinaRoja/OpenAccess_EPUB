@@ -704,18 +704,16 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
                     names.append(', '.join([surname, given_initial]))
                 else:
                     names.append('Anonymous.')
-            name = ', '.join([names[0], names[1]])
+            name = ', and '.join([names[0], names[1]])
         elif auth_num > 2:
-            names = []
-            for auth in (self.auths[0], self.auths[1]):
-                if not auth.anonymous:
-                    given_initial = auth.name[0].given[0] + '.'
-                    surname = auth.name[0].surname
-                    names.append(', '.join([surname, given_initial]))
-                else:
-                    names.append('Anonymous.')
-            name = ', '.join([names[0], names[1]])
-            name += ' et al.'
+            auth = self.auths[0]
+            if not auth.anonymous:
+                given_initial = auth.name[0].given[0] + '.'
+                surname = auth.name[0].surname
+                name = ', '.join([surname, given_initial])
+            else:
+                name = 'Anonymous.'
+            name += ', et al.'
         else:
             name = 'Anonymous.'
         #The name is followed by the year in parentheses
@@ -738,7 +736,49 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
         self.appendNewText(self.doi, citation)
         return citation
 
-#Sondheimer, N., and Lindquist, S. (2000). Rnq1: an epigenetic modifier of protein function in yeast. Mol. Cell 5, 163-172.
+    def renderBiblioCitation(self, refnode):
+        """
+        This method is responsible for producing properly formatted
+        bibliographic citations for Frontiers. It is called individually on
+        each ref node in the back ref-list, and uses the contained xml content
+        to return a node for appending to the bibliography.
+        """
+        citation = self.doc.createElement('p')
+        citation.setAttribute('id', refnode.getAttribute('id'))
+        cnode = refnode.getElementsByTagName('citation')[0]
+        ctype = cnode.getAttribute('citation-type')
+        pg = cnode.getElementsByTagName('person-group')[0]
+        names = pg.getElementsByTagName('name')
+        names_num = len(names)
+        if names_num == 1:
+            n = names[0]
+            s = utils.nodeText(n.getElementsByTagName('surname'))
+            g = utils.nodeText(n.getElementsByTagName('given-names'))
+            name = ', '.join([s, g])
+        elif names_num == 2:
+            nlist = []
+            for name in (names[0], names[1]):
+                s = utils.nodeText(n.getElementsByTagName('surname'))
+                g = utils.nodeText(n.getElementsByTagName('given-names'))
+                nlist.append(', '.join([s, g]))
+            name = ', and '.join([nlist[0], nlist[1]])
+        elif names_num > 2:
+            n = names[0]
+            s = utils.nodeText(n.getElementsByTagName('surname'))
+            g = utils.nodeText(n.getElementsByTagName('given-names'))
+            name = ', '.join([s, g])
+            name += ', et al.'
+        else:
+            name = 'Anonymous.'
+        #Handle the year
+        year = utils.nodeText(cnode.getElementsByTagName('year')[0])
+        year = ' ({0}). '.format(year)
+        self.appendNewText(name + year, citation)
+        
+        #citation types I have seen
+        #journal, book, thesis, other, confproc, web
+        
+        return citation
 
     def recursiveConvertDivTitles(self, node, depth=0):
         """
@@ -751,7 +791,17 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
             except AttributeError:
                 pass  # Text nodes have no tagName attribute
             else:
-                if i.tagName == u'div':
+                if tag == u'div':
+                    try:
+                        divlabel = i.getElementsByTagName('label')[0]
+                    except IndexError:
+                        label = ''
+                    else:
+                        if not divlabel.childNodes:
+                            i.removeChild(divlabel)
+                        else:
+                            label = utils.nodeText(divlabel)
+                            i.removeChild(divlabel)
                     try:
                         divtitle = i.getElementsByTagName('title')[0]
                     except IndexError:
@@ -761,6 +811,9 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
                             i.removeChild(divtitle)
                         else:
                             divtitle.tagName = taglist[depth]
+                            if label:
+                                l = self.doc.createTextNode(label)
+                                divtitle.insertBefore(l, divtitle.firstChild)
                         depth += 1
                         self.recursiveConvertDivTitles(i, depth)
                         depth -= 1
