@@ -743,41 +743,73 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
         each ref node in the back ref-list, and uses the contained xml content
         to return a node for appending to the bibliography.
         """
+        #This method is not complete. I need to do some very thorough checking
+        #of the content XML in order to construct a full use-case model of what
+        #Frontiers will put inside the references. This can be somewhat lower
+        #in priority, as using utils.serializeText() produces the same output
+        #as the webpages, but without italic formatting of sources.
+
+        #citation types I have seen
+        #journal, book, thesis, other, confproc, web
         citation = self.doc.createElement('p')
         citation.setAttribute('id', refnode.getAttribute('id'))
         cnode = refnode.getElementsByTagName('citation')[0]
         ctype = cnode.getAttribute('citation-type')
-        pg = cnode.getElementsByTagName('person-group')[0]
-        names = pg.getElementsByTagName('name')
-        names_num = len(names)
-        if names_num == 1:
-            n = names[0]
-            s = utils.nodeText(n.getElementsByTagName('surname'))
-            g = utils.nodeText(n.getElementsByTagName('given-names'))
-            name = ', '.join([s, g])
-        elif names_num == 2:
-            nlist = []
-            for name in (names[0], names[1]):
+        if ctype in ['book', 'conf-proc', 'journal', 'thesis', 'web']:
+            pg = cnode.getElementsByTagName('person-group')[0]
+            names = pg.getElementsByTagName('name')
+            names_num = len(names)
+            if names_num == 1:
+                n = names[0]
                 s = utils.nodeText(n.getElementsByTagName('surname'))
                 g = utils.nodeText(n.getElementsByTagName('given-names'))
-                nlist.append(', '.join([s, g]))
-            name = ', and '.join([nlist[0], nlist[1]])
-        elif names_num > 2:
-            n = names[0]
-            s = utils.nodeText(n.getElementsByTagName('surname'))
-            g = utils.nodeText(n.getElementsByTagName('given-names'))
-            name = ', '.join([s, g])
-            name += ', et al.'
-        else:
-            name = 'Anonymous.'
-        #Handle the year
-        year = utils.nodeText(cnode.getElementsByTagName('year')[0])
-        year = ' ({0}). '.format(year)
-        self.appendNewText(name + year, citation)
-        
-        #citation types I have seen
-        #journal, book, thesis, other, confproc, web
-        
+                name = ', '.join([s, g])
+            elif names_num == 2:
+                nlist = []
+                for name in (names[0], names[1]):
+                    s = utils.nodeText(n.getElementsByTagName('surname'))
+                    g = utils.nodeText(n.getElementsByTagName('given-names'))
+                    nlist.append(', '.join([s, g]))
+                name = ', and '.join([nlist[0], nlist[1]])
+            elif names_num > 2:
+                n = names[0]
+                s = utils.nodeText(n.getElementsByTagName('surname'))
+                g = utils.nodeText(n.getElementsByTagName('given-names'))
+                name = ', '.join([s, g])
+                name += ', et al.'
+            else:
+                name = 'Anonymous.'
+            #Handle the year
+            year = utils.nodeText(cnode.getElementsByTagName('year')[0])
+            year = ' ({0}). '.format(year)
+            self.appendNewText(name + year, citation)
+        else:  #This handles unkown citation types
+            print('Unhandled Bibliographic citation type ' + ctype)
+            text = utils.serializeText(cnode, [])
+            self.appendNewText(text, citation)
+            return citation
+        if ctype == 'book':
+            source = cnode.getElementsByTagName('source')[0]
+            source.tagName = 'i'
+            citation.appendChild(source)
+            pl = utils.nodeText(cnode.getElementsByTagName('publisher-loc'))[0]
+            pn = utils.nodeText(cnode.getElementsByTagName('publisher-name'))[0]
+            self.appendNewText('. {0}:{1}.'.format(pl, pn), citation)
+            try:
+                pub_id = cnode.getElementsByTagName('pub-id')[0]
+            except IndexError:
+                pass
+            else:
+                self.appendNewText(utils.nodeText(pub_id), citation)
+        elif ctype == 'journal':
+            at = cnode.getElementsByTagName('article-title')[0]
+            for cn in at.childNodes:
+                citation.appendChild(cn.cloneNode(deep=True))
+            self.appendNewText('. ', citation)
+            source = cnode.getElementsByTagName('source')[0]
+            source.tagName = 'i'
+            citation.appendChild(source)
+            volume = cnode.getElementsByTagName('volume')[0]
         return citation
 
     def recursiveConvertDivTitles(self, node, depth=0):
