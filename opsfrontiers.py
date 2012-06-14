@@ -409,20 +409,23 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
         for corr in corresp:
             #KNOWN BUG: some current address data is listed as a corresp and
             #is formatted differently.
-            pc = self.appendNewElement('p', ainfo)
-            pc.setAttribute('id', corr.getAttribute('id'))
-            bc = self.appendNewElement('b', pc)
-            corr_p = corr.getElementsByTagName('p')[0]
-            link_char = corr_p.firstChild.data[0]
-            corr_p.firstChild.data = corr_p.firstChild.data[17:]
-            for cn in corr_p.childNodes:
-                pc.appendChild(cn.cloneNode(deep=True))
-            #The first character of the text in the <p> is the link char
-            self.appendNewText(link_char + 'Correspondence: ', bc)
-            for email in pc.getElementsByTagName('email'):
-                email.tagName = 'a'
-                mailto = 'mailto:{0}'.format(utils.nodeText(email))
-                email.setAttribute('href', mailto)
+            try:
+                pc = self.appendNewElement('p', ainfo)
+                pc.setAttribute('id', corr.getAttribute('id'))
+                bc = self.appendNewElement('b', pc)
+                corr_p = corr.getElementsByTagName('p')[0]
+                link_char = corr_p.firstChild.data[0]
+                corr_p.firstChild.data = corr_p.firstChild.data[17:]
+                for cn in corr_p.childNodes:
+                    pc.appendChild(cn.cloneNode(deep=True))
+                #The first character of the text in the <p> is the link char
+                self.appendNewText(link_char + 'Correspondence: ', bc)
+                for email in pc.getElementsByTagName('email'):
+                    email.tagName = 'a'
+                    mailto = 'mailto:{0}'.format(utils.nodeText(email))
+                    email.setAttribute('href', mailto)
+            except:
+                pass
 
     def convertAddressLinkingElements(self, node):
         """
@@ -632,7 +635,8 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
                    u'boxed-text': self.main_frag,
                    u'other': self.main_frag,
                    u'disp-formula': self.main_frag,
-                   u'fn': self.main_frag}
+                   u'fn': self.main_frag,
+                   u'app': self.main_frag}
         for x in self.getDescendantsByTagName(node, 'xref'):
             x.tagName = 'a'
             x_attrs = self.getAllAttributes(x, remove=True)
