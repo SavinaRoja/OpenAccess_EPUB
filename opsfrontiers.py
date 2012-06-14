@@ -267,10 +267,7 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
                     self.appendNewText(', ', pk)
                 for cn in kwd.node.childNodes:
                     pk.appendChild(cn.cloneNode(deep=True))
-        pc = self.appendNewElement('p', ainfo)
-        bc = self.appendNewElement('b', pc)
-        self.appendNewText('Citation: ', bc)
-        self.appendNewText(self.renderCitation(), pc)
+        ainfo.appendChild(self.renderCitation())
         #Important dates might be publication dates or history dates
         pd = self.appendNewElement('p', ainfo)
         #For the publication dates
@@ -295,8 +292,8 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
             accepted = None
         #Now that we collected the dates, let's use them:
         months = ['Offle', 'January', 'February', 'March', 'April',
-                          'May', 'June', 'July', 'August', 'September',
-                          'October', 'November', 'December']
+                  'May', 'June', 'July', 'August', 'September',
+                  'October', 'November', 'December']
         if received:
             bd = self.appendNewElement('b', pd)
             self.appendNewText('Received: ', bd)
@@ -686,6 +683,9 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
         #types to be concerned about are "Article in a periodical",
         #"Article in a book", and "Book". I think we can expect to follow the
         #guidelines for periodical article at this stage.
+        citation = self.doc.createElement('p')
+        b = self.appendNewElement('b', citation)
+        self.appendNewText('Citation: ', b)
         auth_num = len(self.auths)
         if auth_num == 1:
             auth = self.auths[0]
@@ -719,8 +719,14 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
         else:
             name = 'Anonymous.'
         #The name is followed by the year in parentheses
-        
-        
+        year = ' ({0}). '.format(self.metadata.pub_date['epub'].year)
+        self.appendNewText(name + year, citation)
+        #Next comes the article title, which can have complex
+        for cn in self.metadata.title.article_title.childNodes:
+            citation.appendChild(cn.cloneNode(deep=True))
+
+
+        return citation
         
 #Sondheimer, N., and Lindquist, S. (2000). Rnq1: an epigenetic modifier of protein function in yeast. Mol. Cell 5, 163-172.
 
