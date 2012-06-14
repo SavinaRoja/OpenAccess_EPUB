@@ -304,6 +304,7 @@ def fetchFrontiersImages(doi, counts, cache_dir, output_dir, caching):
             if e[0] == 'i':
                 inline_equations.append(e)
         missing = []
+        highest = 0
         if inline_equations:
             inline_equations.sort()
             highest = int(inline_equations[-1][1:4])

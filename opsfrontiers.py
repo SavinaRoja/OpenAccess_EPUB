@@ -224,11 +224,18 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
         self.doc = self.makeDocument('tables')
         body = self.doc.getElementsByTagName('body')[0]
         for table in self.html_tables:
-            
+            label = table.getAttribute('label')
+            if label:
+                table.removeAttribute('label')
+                l = self.appendNewElement('div', body)
+                b = self.appendNewElement('b', l)
+                self.appendNewText(label, b)
             #Move the table to the body
             body.appendChild(table)
-            #Move the link back to the body
-            body.appendChild(table.lastChild)
+            for d in table.getElementsByTagName('div'):
+                body.appendChild(d)
+                #Move the link back to the body
+                #body.appendChild(table.lastChild)
         #Handle node conversion
         self.convertEmphasisElements(body)
         self.convertDispFormulaElements(body)
@@ -546,6 +553,8 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
             #node before appending to the html_tables list
             table = t.getElementsByTagName('table')[0]
             table.setAttribute('id', t_attrs['id'])
+            if label:
+                table.setAttribute('label', label)
             for t_foot in t_foots:
                 t_foot.tagName = 'div'
                 t_foot.setAttribute('class', 'table-footnotes')
@@ -584,7 +593,8 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
                    u'table-fn': self.tab_frag,
                    u'boxed-text': self.main_frag,
                    u'other': self.main_frag,
-                   u'disp-formula': self.main_frag}
+                   u'disp-formula': self.main_frag,
+                   u'fn': self.main_frag}
         for x in self.getDescendantsByTagName(node, 'xref'):
             x.tagName = 'a'
             x_attrs = self.getAllAttributes(x, remove=True)
