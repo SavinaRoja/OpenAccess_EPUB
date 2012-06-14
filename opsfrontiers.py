@@ -184,6 +184,19 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
                 for cn in p.childNodes:
                     div.appendChild(cn.cloneNode(deep=True))
                 body.appendChild(div)
+            if back.getElementsByTagName('fn'):
+                div = self.doc.createElement('div')
+                div.setAttribute('id', 'OA-EPUB-fn')
+                h = self.appendNewElement('title', div)
+                self.appendNewText('Footnotes', h)
+                for fn in back.getElementsByTagName('fn'):
+                    fid = fn.getAttribute('id')
+                    new_p = self.appendNewElement('p', div)
+                    new_p.setAttribute('id', fid)
+                    p = fn.getElementsByTagName('p')[0]
+                    for cn in p.childNodes:
+                        new_p.appendChild(cn.cloneNode(deep=True))
+                body.appendChild(div)
             for app in back.getElementsByTagName('app'):
                 div = self.doc.createElement('div')
                 div.setAttribute('id', app.getAttribute('id'))
