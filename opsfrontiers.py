@@ -721,13 +721,23 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
         #The name is followed by the year in parentheses
         year = ' ({0}). '.format(self.metadata.pub_date['epub'].year)
         self.appendNewText(name + year, citation)
-        #Next comes the article title, which can have complex
+        #Next comes the article title, which can have complex children
         for cn in self.metadata.title.article_title.childNodes:
             citation.appendChild(cn.cloneNode(deep=True))
-
-
+        self.appendNewText('. ', citation)
+        ijrn = self.appendNewElement('i', citation)
+        self.appendNewText(self.metadata.journal_id['publisher-id'], ijrn)
+        #Add the volume of the journal in which the article was published
+        volume = self.metadata.volume.value
+        b = self.appendNewElement('b', citation)
+        self.appendNewText(volume, b)
+        #Add the elocation id of the article
+        elocation_id = self.metadata.elocation_id
+        self.appendNewText(':' + elocation_id + '. ', citation)
+        #Add the doi of the article
+        self.appendNewText(self.doi, citation)
         return citation
-        
+
 #Sondheimer, N., and Lindquist, S. (2000). Rnq1: an epigenetic modifier of protein function in yeast. Mol. Cell 5, 163-172.
 
     def recursiveConvertDivTitles(self, node, depth=0):
