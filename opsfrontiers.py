@@ -169,6 +169,27 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
         else:
             for item in article_body.childNodes:
                 body.appendChild(item.cloneNode(deep=True))
+        try:
+            back = self.article.getElementsByTagName('back')[0]
+        except IndexError:
+            pass
+        else:
+            if back.getElementsByTagName('ack'):
+                div = self.doc.createElement('div')
+                div.setAttribute('id', 'OA-EPUB-ack')
+                h = self.appendNewElement('title', div)
+                self.appendNewText('Acknowledgments', h)
+                ack = back.getElementsByTagName('ack')[0]
+                p = ack.getElementsByTagName('p')[0]
+                for cn in p.childNodes:
+                    div.appendChild(cn.cloneNode(deep=True))
+                body.appendChild(div)
+            for app in back.getElementsByTagName('app'):
+                div = self.doc.createElement('div')
+                div.setAttribute('id', app.getAttribute('id'))
+                for cn in app.childNodes:
+                    div.appendChild(cn.cloneNode(deep=True))
+                body.appendChild(div)
 
         #Handle node conversion
         self.convertFigElements(body)
@@ -525,6 +546,10 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
             tid = t_attrs['id']
             if tid[0] == 'T':
                 num = tid[1:]
+                img_name = 't' + num.zfill(3) + '.jpg'
+                if tid[:2] == 'TA':
+                    num = tid[2:]
+                    img_name = 'at' + num.zfill(3) + '.jpg'
             else:
                 raise InputError('Unexpected table frag id in this article')
             img_dir = 'images-' + self.doi_frag + '/tables/'

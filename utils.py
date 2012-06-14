@@ -359,9 +359,11 @@ def fetchFrontiersImages(doi, counts, cache_dir, output_dir, caching):
                 images += re.findall('<img src="(?P<src>http://\w{7}.\w{3}.\w{3}.rackcdn.com/\d{5}/f\w{4}-\d{2}-\d{5}-HTML/image_n/f\w{4}-\d{2}-\d{5}-\D{1,2}\d{3}.\D{3})', l)
         os.remove('temp')
     itypes = {'e': 'equations', 't': 'tables', 'g': 'figures',
-              'a': 'figures', 'i': 'equations'}
+              'a': 'figures', 'i': 'equations', 'at': 'tables'}
     for i in images:
         itype = i.split('-')[-1][0].lower()
+        if i.split('-')[-1][:1].lower() == 'at':
+            itype = 'at'
         loc = os.path.join(img_dir, itypes[itype], i.split('-')[-1])
         downloadImage(i, loc)
         print('Downloaded image {0}'.format(loc))
