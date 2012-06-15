@@ -788,11 +788,8 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
         each ref node in the back ref-list, and uses the contained xml content
         to return a node for appending to the bibliography.
         """
-        #This method is not complete. I need to do some very thorough checking
-        #of the content XML in order to construct a full use-case model of what
-        #Frontiers will put inside the references. This can be somewhat lower
-        #in priority, as using utils.serializeText() produces the same output
-        #as the webpages, but without italic formatting of sources.
+        #We will be employing the Chicago Manual of Style, contrary to the
+        #practices in the PDF and online fulltext
 
         #citation types I have seen
         #journal, book, thesis, other, confproc, web
