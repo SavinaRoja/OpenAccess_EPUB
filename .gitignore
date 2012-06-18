@@ -40,6 +40,10 @@ collections/*
 ############
 downloaded_xml_files/*
 
+# Build#
+############
+build/*
+
 # Eclipse Files #
 ############
 .project
