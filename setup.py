@@ -11,5 +11,8 @@ setup(name='OpenAccess_EPUB',
       author_email='pablo.barton@gmail.com',
       url='https://github.com/SavinaRoja/OpenAccess_EPUB',
       package_dir={'': 'src'},
-      packages=['OpenAccess_EPUB']
+      packages=['OpenAccess_EPUB', 'OpenAccess_EPUB.dublincore',
+                'OpenAccess_EPUB.jpts', 'OpenAccess_EPUB.ncx',
+                'OpenAccess_EPUB.opf', 'OpenAccess_EPUB.ops',
+                'OpenAccess_EPUB.settings', 'OpenAccess_EPUB.utils']
       )
