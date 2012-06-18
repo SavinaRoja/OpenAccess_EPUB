@@ -11,7 +11,7 @@ metadata, this class will handle everything except <body>.
 """
 
 from collections import namedtuple
-import utils
+import OpenAccess_EPUB.utils as utils
 import jptscontrib
 
 

@@ -3,11 +3,10 @@ This module defines an OPS content generator class for Frontiers. It inherits
 from the OPSGenerator base class in opsgenerator.py
 """
 
+import OpenAccess_EPUB.utils as utils
 import opsgenerator
-import os
 import os.path
 import logging
-import utils
 
 
 class InputError(Exception):

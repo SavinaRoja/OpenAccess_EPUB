@@ -4,7 +4,7 @@ article contributions as defined in the Journal Publishing Tag Set.
 """
 
 import collections
-import utils
+import OpenAccess_EPUB.utils as utils
 
 
 class ContribGroup(object):

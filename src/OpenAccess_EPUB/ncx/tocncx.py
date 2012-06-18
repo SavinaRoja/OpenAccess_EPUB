@@ -5,7 +5,7 @@ Talking Book specification and should work for both single and collection
 output modes.
 """
 
-import utils
+import OpenAccess_EPUB.utils as utils
 import os.path
 import xml.dom.minidom
 

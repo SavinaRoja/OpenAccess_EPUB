@@ -19,6 +19,7 @@ import logging
 #OpenAccess_EPUB Modules
 import utils
 import opf
+import dublincore
 import ncx
 import ops
 import settings
