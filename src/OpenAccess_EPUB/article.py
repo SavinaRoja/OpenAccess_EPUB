@@ -4,7 +4,7 @@ import os.path
 import sys
 import shutil
 import xml.dom.minidom
-import jptsmeta
+import jpts
 import urllib2
 from time import sleep
 
@@ -56,11 +56,11 @@ Publishing DTD: \n{0}'.format(doc.doctype.publicId))
         print(self.publisher)
         #Create instance of article metadata
         if self.dtd == u'2.0':
-            self.metadata = jptsmeta.JPTSMeta20(doc, self.publisher)
+            self.metadata = jpts.JPTSMeta20(doc, self.publisher)
         elif self.dtd == u'2.3':
-            self.metadata = jptsmeta.JPTSMeta23(doc, self.publisher)
+            self.metadata = jpts.JPTSMeta23(doc, self.publisher)
         elif self.dtd == u'3.0':
-            self.metadata = jptsmeta.JPTSMeta30(doc, self.publisher)
+            self.metadata = jpts.JPTSMeta30(doc, self.publisher)
         #The <article> tag has a handful of potential attributes, we can check
         #to make sure the mandated ones are valid
         self.attrs = {'article-type': None, 'dtd-version': None,
