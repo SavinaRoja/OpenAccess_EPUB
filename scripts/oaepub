@@ -1,0 +1,8 @@
+#!/usr/bin/python
+
+
+import OpenAccess_EPUB
+
+print('Launching OpenAccess_EPUB')
+
+OpenAccess_EPUB.main()
