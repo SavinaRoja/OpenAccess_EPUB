@@ -19,9 +19,8 @@ import logging
 #OpenAccess_EPUB Modules
 import utils
 import opf
-import tocncx
-import opsfrontiers
-import opsplos
+import ncx
+import ops
 import settings
 from article import Article
 
@@ -192,15 +191,15 @@ def makeEPUB(document, xml_local, cache_dir, outdirect, log_to):
     DOI = document.getDOI()
     if DOI.split('/')[0] == '10.1371':  # PLoS's publisher DOI
         document.fetchPLoSImages(cache_dir, outdirect, settings.caching)
-        opsplos.OPSPLoS(document, outdirect)
-        toc = tocncx.TocNCX(__version__)
+        ops.OPSPLoS(document, outdirect)
+        toc = ncx.TocNCX(__version__)
         toc.parseArticle(document)
         toc.write(outdirect)
         myopf = opf.PLoSOPF(__version__, outdirect, False)
     elif DOI.split('/')[0] == '10.3389':  # Frontiers' publisher DOI
         document.fetchFrontiersImages(cache_dir, outdirect, settings.caching)
-        opsfrontiers.OPSFrontiers(document, outdirect)
-        toc = tocncx.TocNCX(__version__)
+        ops.OPSFrontiers(document, outdirect)
+        toc = ncx.TocNCX(__version__)
         toc.parseArticle(document)
         toc.write(outdirect)
         myopf = opf.FrontiersOPF(__version__, outdirect, False)
@@ -222,7 +221,7 @@ def makeCollectionEPUB(documents, cache_dir, outdirect, log_to):
     """
     print(u'Processing output to {0}.epub'.format(outdirect))
     shutil.copytree(settings.base_epub, outdirect)
-    mytoc = tocncx.TocNCX(collection_mode=True)
+    mytoc = ncx.TocNCX(collection_mode=True)
     myopf = opf.ContentOPF(outdirect, collection_mode=True)
     for (doc, xml) in documents:
         DOI = doc.getDOI()

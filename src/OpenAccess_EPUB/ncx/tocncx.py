@@ -16,7 +16,7 @@ class TocNCX(object):
     """
 
     def __init__(self, version, collection_mode=False):
-        self.doi =''
+        self.doi = ''
         self.dois = []
         self.collection_mode = collection_mode
         self.version = version
