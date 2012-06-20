@@ -5,25 +5,22 @@ This is the main execution file for OpenAccess_EPUB. It provides the primary
 mode of execution and interaction.
 """
 
-__version__ = '0.1.1'
+#If you change the version here, make sure to also change it in setup.py
+__version__ = '0.2.0'
 
 #Standard Library Modules
 import argparse
 import sys
 import os.path
 import shutil
-import urllib2
-import urlparse
 import logging
 
 #OpenAccess_EPUB Modules
-import utils
+import utils.input
 import opf
-import dublincore
 import ncx
 import ops
 import settings
-from article import Article
 
 settings = settings.Settings()
 
@@ -76,88 +73,6 @@ def initCache(cache_loc):
     os.mkdir(os.path.join(cache_loc, 'model', 'images', 'tables'))
     os.mkdir(os.path.join(cache_loc, 'model', 'images', 'equations'))
     os.mkdir(os.path.join(cache_loc, 'model', 'images', 'supplementary'))
-
-
-def urlInput(inpt, xml_dir):
-    """
-    Handles input in URL form to instantiate the document. There is support for
-    PLoS as well as some support for Frontiers. In order for it to work for
-    Frontiers, the user must specify a link directly to the XML file.
-    """
-    try:
-        if '%2F10.1371%2F' in inpt:  # This is a PLoS page
-            address = urlparse.urlparse(inpt)
-            _fetch = '/article/fetchObjectAttachment.action?uri='
-            _id = address.path.split('/')[2]
-            _rep = '&representation=XML'
-            access = '{0}://{1}{2}{3}{4}'.format(address.scheme,
-                                                 address.netloc,
-                                                 _fetch, _id, _rep)
-            print('Opening {0}'.format(access.__str__()))
-            open_xml = urllib2.urlopen(access)
-        elif 'www.frontiersin.org' in inpt:  # This is a Frontiers page
-            try:
-                open_xml = urllib2.urlopen(inpt)
-                cd = open_xml.headers['Content-disposition']
-                filename = cd.split('filename= ')[1]
-            except:
-                print('Unable to get the XML file or filename, make sure that \
-you use a direct URL to the XML file.')
-                sys.exit(1)
-            else:
-                filename = os.path.join(xml_dir, filename)
-                with open(filename, 'wb') as xml_file:
-                    xml_file.write(open_xml.read())
-                document = Article(filename)
-                return document, filename
-        else:  # We don't know how to handle this input
-            print('Invalid Link: Bad URL or unsupported publisher')
-            sys.exit(1)
-    except:
-        sys.exit(1)
-    else:
-        filename = open_xml.headers['Content-disposition'].split('\"')[1]
-        filename = os.path.join(xml_dir, filename)
-        with open(filename, 'wb') as xml_file:
-            xml_file.write(open_xml.read())
-        document = Article(filename)
-        return(document, filename)
-
-
-def doiInput(inpt, xml_dir):
-    """
-    Handles input in DOI form to instantiate the document
-    """
-    try:
-        doi_url = 'http://dx.doi.org/' + inpt[4:]
-        page = urllib2.urlopen(doi_url)
-        address = urlparse.urlparse(page.geturl())
-        path = address.path.replace(':', '%3A').replace('/', '%2F')
-        _fetch = '/article/fetchObjectAttachment.action?uri='
-        _id = path.split('article%2F')[1]
-        _rep = '&representation=XML'
-        access = '{0}://{1}{2}{3}{4}'.format(address.scheme, address.netloc,
-                                    _fetch, _id, _rep)
-        open_xml = urllib2.urlopen(access)
-    except:
-        print('Invalid DOI Link: Check for correct address and format')
-        print('A valid entry looks like: \"doi:10.1371/journal.pcbi.1002222\"')
-        sys.exit(1)
-    else:
-        filename = open_xml.headers['Content-Disposition'].split('\"')[1]
-        filename = os.path.join(xml_dir, filename)
-        with open(filename, 'wb') as xml_file:
-            xml_file.write(open_xml.read())
-        document = Article(filename)
-        return(document, filename)
-
-
-def localInput(inpt):
-    """
-    Handles input in the form of a local XML file to instantiate the document.
-    """
-    document = Article(inpt)
-    return document
 
 
 def dirExists(outdirect, batch):
@@ -213,30 +128,30 @@ def makeEPUB(document, xml_local, cache_dir, outdirect, log_to):
     #    shutil.rmtree(outdirect)
 
 
-def makeCollectionEPUB(documents, cache_dir, outdirect, log_to):
-    """"
-    Encapsulates the processing workf-flow for the creation of
-    \"collection\", or \"omnibus\" ePubs from multiple PLoS journal articles.
-    Article objects have been instantiated and tupled to their local xml files
-    and now we may generate the file.
-    """
-    print(u'Processing output to {0}.epub'.format(outdirect))
-    shutil.copytree(settings.base_epub, outdirect)
-    mytoc = ncx.TocNCX(collection_mode=True)
-    myopf = opf.ContentOPF(outdirect, collection_mode=True)
-    for (doc, xml) in documents:
-        DOI = doc.getDOI()
-        doc.fetchPLoSImages(cache_dir, outdirect, settings.caching)
-        content.OPSContent(xml, DOI, outdirect, doc)
-        mytoc.takeArticle(doc)
-        myopf.takeArticle(doc)
-    mytoc.write(outdirect)
-    myopf.write()
-    utils.epubZip(outdirect)
-    #WARNING: shutil.rmtree() is a recursive deletion function, care should be
-    #taken whenever modifying this code
-    if settings.cleanup:
-        shutil.rmtree(outdirect)
+#def makeCollectionEPUB(documents, cache_dir, outdirect, log_to):
+#    """"
+#    Encapsulates the processing workf-flow for the creation of
+#    \"collection\", or \"omnibus\" ePubs from multiple PLoS journal articles.
+#    Article objects have been instantiated and tupled to their local xml files
+#    and now we may generate the file.
+#    """
+#    print(u'Processing output to {0}.epub'.format(outdirect))
+#    shutil.copytree(settings.base_epub, outdirect)
+#    mytoc = ncx.TocNCX(collection_mode=True)
+#    myopf = opf.ContentOPF(outdirect, collection_mode=True)
+#    for (doc, xml) in documents:
+#        DOI = doc.getDOI()
+#        doc.fetchPLoSImages(cache_dir, outdirect, settings.caching)
+#        content.OPSContent(xml, DOI, outdirect, doc)
+#        mytoc.takeArticle(doc)
+#        myopf.takeArticle(doc)
+#    mytoc.write(outdirect)
+#    myopf.write()
+#    utils.epubZip(outdirect)
+#    #WARNING: shutil.rmtree() is a recursive deletion function, care should be
+#    #taken whenever modifying this code
+#    if settings.cleanup:
+#        shutil.rmtree(outdirect)
 
 
 def epubcheck(epubname):
@@ -275,77 +190,76 @@ def main():
     logging.basicConfig(filename=logname, level=logging.DEBUG)
     logging.info('OpenAccess_EPUB Log v.{0}'.format(__version__))
     #Batch Mode
-    if args.batch:
-        download = False
-        files = os.listdir(args.batch)
-        for f in files:
-            if not os.path.splitext(f)[1] == '.xml':
-                pass
-            else:
-                filename = os.path.join(args.batch, f)
-                xml_local = f
-                doc = localInput(filename)
-                input_name = os.path.splitext(os.path.split(xml_local)[1])[0]
-                output_name = os.path.join(args.output, input_name)
-                if os.path.isdir(output_name):
-                    dirExists(output_name, args.batch)
-                makeEPUB(doc, xml_local, args.cache, output_name, args.log_to)
-        sys.exit(0)
+    #if args.batch:
+    #    download = False
+    #    files = os.listdir(args.batch)
+    #    for f in files:
+    #        if not os.path.splitext(f)[1] == '.xml':
+    #            pass
+    #        else:
+    #            filename = os.path.join(args.batch, f)
+    #            xml_local = f
+    #            doc = localInput(filename)
+    #            input_name = os.path.splitext(os.path.split(xml_local)[1])[0]
+    #            output_name = os.path.join(args.output, input_name)
+    #            if os.path.isdir(output_name):
+    #                dirExists(output_name, args.batch)
+    #            makeEPUB(doc, xml_local, args.cache, output_name, args.log_to)
+    #    sys.exit(0)
 
     #Collection Mode
-    if args.collection:
-        t = os.path.splitext(os.path.split(args.collection)[1])[0]
-        output_name = os.path.join(args.output, t)
-        if os.path.isdir(output_name):
-            dirExists(output_name, args.batch)
-        with open(args.collection, 'r') as collection:
-            inputs = collection.readlines()
-        documents = []
-        for i in inputs:
-            if 'http://www' in i:
-                download = True
-                document, xml_local = urlInput(i.rstrip('\n'), args.save_xml)
-            elif i[:4] == 'doi:':
-                download = True
-                document, xml_local = doiInput(i.rstrip('\n'), args.save_xml)
-            else:
-                if not i:
-                    pass
-                else:
-                    download = False
-                    document, xml_local = localInput(i.rstrip('\n'))
-            documents += [(document, xml_local)]
-        makeCollectionEPUB(documents, args.cache, output_name, args.log_to)
-        epubcheck('{0}.epub'.format(output_name))
-        sys.exit(0)
+    #if args.collection:
+    #    t = os.path.splitext(os.path.split(args.collection)[1])[0]
+    #    output_name = os.path.join(args.output, t)
+    #    if os.path.isdir(output_name):
+    #        dirExists(output_name, args.batch)
+    #    with open(args.collection, 'r') as collection:
+    #        inputs = collection.readlines()
+    #    documents = []
+    #    for i in inputs:
+    #        if 'http://www' in i:
+    #            download = True
+    #            document, xml_local = urlInput(i.rstrip('\n'), args.save_xml)
+    #        elif i[:4] == 'doi:':
+    #            download = True
+    #            document, xml_local = doiInput(i.rstrip('\n'), args.save_xml)
+    #        else:
+    #            if not i:
+    #                pass
+    #            else:
+    #                download = False
+    #                document, xml_local = localInput(i.rstrip('\n'))
+    #        documents += [(document, xml_local)]
+    #    makeCollectionEPUB(documents, args.cache, output_name, args.log_to)
+    #    epubcheck('{0}.epub'.format(output_name))
+    #    sys.exit(0)
 
     #Single Input Mode
+    #Determination of input type and processing
+    if 'http://www' in args.input:
+        download = True
+        document, xml_local = utils.input.urlInput(args.input)
+    elif args.input[:4] == 'doi:':
+        download = True
+        document, xml_local = utils.input.doiInput(args.input)
     else:
-        #Determination of input type and processing
-        if 'http://www' in args.input:
-            download = True
-            document, xml_local = urlInput(args.input, args.save_xml)
-        elif args.input[:4] == 'doi:':
-            download = True
-            document, xml_local = doiInput(args.input, args.save_xml)
-        else:
-            download = False
-            xml_local = args.input
-            document = localInput(xml_local)
-        #Later code versions may support the manual naming of the output file
-        #as a commandline argument. For now, the name of the ePub file will be
-        #the same as the input xml file.
-        input_name = os.path.splitext(os.path.split(xml_local)[1])[0]
-        output_name = os.path.join(args.output, input_name)
-        if os.path.isdir(output_name):
-            dirExists(output_name, args.batch)
-        makeEPUB(document, xml_local, args.cache, output_name, args.log_to)
-        if download and not settings.save_xml:
-            os.remove(xml_local)
-            newname = u'{0}.log'.format(input_name)
-            newname = os.path.join(args.log_to, newname)
-            os.rename(logname, newname)
-        epubcheck('{0}.epub'.format(output_name))
+        download = False
+        xml_local = args.input
+        xml_local, document = utils.input.localInput(args.input)
+    #Later code versions may support the manual naming of the output file
+    #as a commandline argument. For now, the name of the ePub file will be
+    #the same as the input xml file.
+    input_name = os.path.splitext(os.path.split(xml_local)[1])[0]
+    output_name = os.path.join(args.output, input_name)
+    if os.path.isdir(output_name):
+        dirExists(output_name, args.batch)
+    makeEPUB(document, xml_local, args.cache, output_name, args.log_to)
+    if download and not settings.save_xml:
+        os.remove(xml_local)
+        newname = u'{0}.log'.format(input_name)
+        newname = os.path.join(args.log_to, newname)
+        os.rename(logname, newname)
+    epubcheck('{0}.epub'.format(output_name))
 
 if __name__ == '__main__':
     main()
