@@ -41,17 +41,16 @@ def makeEPUBBase(location, css_location):
     """
 
     #Create root directory
-    rootname = location
-    os.mkdir(rootname)
+    os.mkdir(location)
     #Create mimetype file in root directory
-    mime_path = os.path.join(rootname, 'mimetype')
+    mime_path = os.path.join(location, 'mimetype')
     with open(mime_path, 'w') as mimetype:
         mimetype.write('application/epub+zip')
     #Create OPS and META-INF directorys
-    os.mkdir(os.path.join(rootname, 'META-INF'))
-    os.mkdir(os.path.join(rootname, 'OPS'))
+    os.mkdir(os.path.join(location, 'META-INF'))
+    os.mkdir(os.path.join(location, 'OPS'))
     #Create container.xml file in META-INF
-    meta_path = os.path.join(rootname, 'META-INF', 'container.xml')
+    meta_path = os.path.join(location, 'META-INF', 'container.xml')
     with open(meta_path, 'w') as container:
         container.write('''<?xml version="1.0" encoding="UTF-8" ?>
 <container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
@@ -64,8 +63,8 @@ def makeEPUBBase(location, css_location):
     #optional and may depend on content
     
     #Create the css directory in OPS, then copy the file from resources
-    os.mkdir(os.path.join(rootname, 'OPS', 'css'))
-    css_path = os.path.join(rootname, 'OPS', 'css', 'article.css')
+    os.mkdir(os.path.join(location, 'OPS', 'css'))
+    css_path = os.path.join(location, 'OPS', 'css', 'article.css')
     with open(css_path, 'w') as css_out:
         with open(css_location, 'r') as css_src:
             css_out.write(css_src.read())

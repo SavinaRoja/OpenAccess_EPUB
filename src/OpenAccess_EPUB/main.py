@@ -37,11 +37,11 @@ def OAEParser():
                         default=settings.default_output,
                         help='Use to specify a desired output directory')
     parser.add_argument('-s', '--save-xml', action='store',
-                        default=settings.xml_location,
+                        default=settings.xml_cache,
                         help='''Use to specify a directory for storing \
                                 downloaded xml files''')
     parser.add_argument('-l', '--log-to', action='store',
-                        default=settings.log_location,
+                        default=settings.cache_log,
                         help='Use to specify a non-default log directory')
     parser.add_argument('-c', '--cache', action='store',
                         default=settings.cache_location,
@@ -101,8 +101,6 @@ def makeEPUB(document, xml_local, cache_dir, outdirect, log_to):
     to generate the ePub content.
     """
     print(u'Processing output to {0}.epub'.format(outdirect))
-    if not os.path.isdir(settings.base_epub):
-        utils.makeEPUBBase(settings.base_epub, settings.css_location)
     shutil.copytree(settings.base_epub, outdirect)
     DOI = document.getDOI()
     if DOI.split('/')[0] == '10.1371':  # PLoS's publisher DOI
@@ -185,6 +183,8 @@ def main():
         os.mkdir(args.save_xml)
     if not os.path.isdir(args.output):  # The output directory
         os.mkdir(args.output)
+    if not os.path.isdir(settings.base_epub):  # The base ePub directory
+        utils.makeEPUBBase(settings.base_epub, settings.text_css)
     #Initiate logging settings
     logname = os.path.join(args.log_to, 'temp.log')
     logging.basicConfig(filename=logname, level=logging.DEBUG)
