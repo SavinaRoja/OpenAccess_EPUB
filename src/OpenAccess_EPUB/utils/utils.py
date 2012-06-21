@@ -21,7 +21,7 @@ def nodeText(node):
     return u'{0}'.format(node.firstChild.data.strip())
 
 
-def makeEPUBBase(location, css_location):
+def makeEPUBBase(location):
     """
     Contains the  functionality to create the ePub directory hierarchy from
     scratch. Typical practice will not require this method, but use this to
@@ -39,7 +39,6 @@ def makeEPUBBase(location, css_location):
     base_epub/OPS/images/figures/
     base_epub/OPS/images/tables/
     """
-
     #Create root directory
     os.mkdir(location)
     #Create mimetype file in root directory
@@ -58,16 +57,15 @@ def makeEPUBBase(location, css_location):
       <rootfile full-path="OPS/content.opf" media-type="application/oebps-package+xml"/>
    </rootfiles>
 </container>''')
-    #It is considered better practice to leave the instantiation of image 
-    #directories up to other methods. Such directories are technically 
+    #It is considered better practice to leave the instantiation of image
+    #directories up to other methods. Such directories are technically
     #optional and may depend on content
-    
     #Create the css directory in OPS, then copy the file from resources
     os.mkdir(os.path.join(location, 'OPS', 'css'))
     css_path = os.path.join(location, 'OPS', 'css', 'article.css')
-    with open(css_path, 'w') as css_out:
-        with open(css_location, 'r') as css_src:
-            css_out.write(css_src.read())
+    with open(css_path, 'w') as css:
+        dl_css = urllib2.urlopen('https://github.com/downloads/SavinaRoja/OpenAccess_EPUB/text.css')
+        css.write(dl_css.read())
 
 
 def buildCache(location):
@@ -77,6 +75,7 @@ def buildCache(location):
     os.mkdir(os.path.join(location, 'downloaded_xml_files'))
     os.mkdir(os.path.join(location, 'css'))
     os.mkdir(os.path.join(location, 'output'))
+    makeEPUBBase(location)
 
 
 def initImgCache(cache_loc):

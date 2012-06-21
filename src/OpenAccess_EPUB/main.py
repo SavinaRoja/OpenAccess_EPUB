@@ -136,7 +136,9 @@ def main():
     if not os.path.isdir(settings.cache_log):
         os.mkdir(settings.cache_log)
     if not os.path.isdir(settings.cache_img):
-        os.mkdir()
+        pass
+    if not os.path.isdir(settings.base_epub):
+        utils.makeEPUBBase(settings.base_epub)
     #Single Input Mode
     #Determination of input type and processing
     if 'http://www' in args.input:
@@ -161,7 +163,7 @@ def main():
     if os.path.isdir(output_name):
         dirExists(output_name, args.batch)
     #Make the ePub!
-    makeEPUB(document, xml_local, args.cache, output_name, args.log_to)
+    makeEPUB(document, xml_local, settings.cache_img, output_name, args.log_to)
     #Everything after this point is post-handling. Place things in the cache
     #as appropriate and clean up.
     if settings.save_xml:

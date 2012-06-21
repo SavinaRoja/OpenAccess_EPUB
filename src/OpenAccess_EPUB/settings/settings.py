@@ -13,7 +13,7 @@ class Settings(object):
         #This acquires the appropriate directory for storing static/global data
         #If the user encounters an error, or wants to customize the location
         #of their cache, they can do it here.
-        self.cache_loc = self.cache_location()
+        self.cache_loc = self.cacheLocation()
 
         #Caching implements storing image files locally in a cache so that
         #the same files need not be repetitively downloaded for the same input
