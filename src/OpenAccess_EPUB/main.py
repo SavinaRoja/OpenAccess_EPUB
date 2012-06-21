@@ -32,20 +32,12 @@ def OAEParser():
     parser = argparse.ArgumentParser(description='OpenAccess_EPUB Parser')
     parser.add_argument('--version', action='version',
                         version='OpenAccess_EPUB {0}'.format(__version__))
-    #parser.add_argument('-q', '--quiet', action='store_true', default=False)
     parser.add_argument('-o', '--output', action='store',
-                        default=settings.default_output,
+                        default=settings.local_output,
                         help='Use to specify a desired output directory')
-    parser.add_argument('-s', '--save-xml', action='store',
-                        default=settings.xml_cache,
-                        help='''Use to specify a directory for storing \
-                                downloaded xml files''')
     parser.add_argument('-l', '--log-to', action='store',
-                        default=settings.cache_log,
+                        default=settings.local_log,
                         help='Use to specify a non-default log directory')
-    parser.add_argument('-c', '--cache', action='store',
-                        default=settings.cache_location,
-                        help='Use to specify a non-default cache directory')
     modes = parser.add_mutually_exclusive_group()
     modes.add_argument('-i', '--input', action='store',
                         help='''Input may be a path to a local directory, a \
@@ -58,21 +50,6 @@ def OAEParser():
                         help='''Use to create an ePub file containing \
                                 multiple resources.''')
     return parser.parse_args()
-
-
-def initCache(cache_loc):
-    """
-    Initiates the cache if it does not exist
-    """
-    os.mkdir(cache_loc)
-    os.mkdir(os.path.join(cache_loc, 'model'))
-    os.mkdir(os.path.join(cache_loc, 'PLoS'))
-    os.mkdir(os.path.join(cache_loc, 'Frontiers'))
-    os.mkdir(os.path.join(cache_loc, 'model', 'images'))
-    os.mkdir(os.path.join(cache_loc, 'model', 'images', 'figures'))
-    os.mkdir(os.path.join(cache_loc, 'model', 'images', 'tables'))
-    os.mkdir(os.path.join(cache_loc, 'model', 'images', 'equations'))
-    os.mkdir(os.path.join(cache_loc, 'model', 'images', 'supplementary'))
 
 
 def dirExists(outdirect, batch):
@@ -120,36 +97,6 @@ def makeEPUB(document, xml_local, cache_dir, outdirect, log_to):
     myopf.parseArticle(document)
     myopf.write()
     utils.epubZip(outdirect)
-    #WARNING: shutil.rmtree() is a recursive deletion function, care should be
-    #taken whenever modifying this code
-    #if settings.cleanup:
-    #    shutil.rmtree(outdirect)
-
-
-#def makeCollectionEPUB(documents, cache_dir, outdirect, log_to):
-#    """"
-#    Encapsulates the processing workf-flow for the creation of
-#    \"collection\", or \"omnibus\" ePubs from multiple PLoS journal articles.
-#    Article objects have been instantiated and tupled to their local xml files
-#    and now we may generate the file.
-#    """
-#    print(u'Processing output to {0}.epub'.format(outdirect))
-#    shutil.copytree(settings.base_epub, outdirect)
-#    mytoc = ncx.TocNCX(collection_mode=True)
-#    myopf = opf.ContentOPF(outdirect, collection_mode=True)
-#    for (doc, xml) in documents:
-#        DOI = doc.getDOI()
-#        doc.fetchPLoSImages(cache_dir, outdirect, settings.caching)
-#        content.OPSContent(xml, DOI, outdirect, doc)
-#        mytoc.takeArticle(doc)
-#        myopf.takeArticle(doc)
-#    mytoc.write(outdirect)
-#    myopf.write()
-#    utils.epubZip(outdirect)
-#    #WARNING: shutil.rmtree() is a recursive deletion function, care should be
-#    #taken whenever modifying this code
-#    if settings.cleanup:
-#        shutil.rmtree(outdirect)
 
 
 def epubcheck(epubname):
@@ -174,66 +121,22 @@ def main():
     This is the main code execution block.
     """
     args = OAEParser()
-    #Certain directories must be in place in order to run. Here we check them.
-    if not os.path.isdir(args.log_to):  # The logging directory
+    #Certain locations are defined by the user or by default for production
+    #Here we make them if they don't already exist
+    if not os.path.isdir(args.log_to):
         os.mkdir(args.log_to)
-    if not os.path.isdir(args.cache):  # The cache directory
-        initCache(args.cache)
-    if not os.path.isdir(args.save_xml):  # The directory for local XMLs
-        os.mkdir(args.save_xml)
-    if not os.path.isdir(args.output):  # The output directory
+    if not os.path.isdir(args.output):
         os.mkdir(args.output)
-    if not os.path.isdir(settings.base_epub):  # The base ePub directory
-        utils.makeEPUBBase(settings.base_epub, settings.text_css)
-    #Initiate logging settings
-    logname = os.path.join(args.log_to, 'temp.log')
-    logging.basicConfig(filename=logname, level=logging.DEBUG)
-    logging.info('OpenAccess_EPUB Log v.{0}'.format(__version__))
-    #Batch Mode
-    #if args.batch:
-    #    download = False
-    #    files = os.listdir(args.batch)
-    #    for f in files:
-    #        if not os.path.splitext(f)[1] == '.xml':
-    #            pass
-    #        else:
-    #            filename = os.path.join(args.batch, f)
-    #            xml_local = f
-    #            doc = localInput(filename)
-    #            input_name = os.path.splitext(os.path.split(xml_local)[1])[0]
-    #            output_name = os.path.join(args.output, input_name)
-    #            if os.path.isdir(output_name):
-    #                dirExists(output_name, args.batch)
-    #            makeEPUB(doc, xml_local, args.cache, output_name, args.log_to)
-    #    sys.exit(0)
-
-    #Collection Mode
-    #if args.collection:
-    #    t = os.path.splitext(os.path.split(args.collection)[1])[0]
-    #    output_name = os.path.join(args.output, t)
-    #    if os.path.isdir(output_name):
-    #        dirExists(output_name, args.batch)
-    #    with open(args.collection, 'r') as collection:
-    #        inputs = collection.readlines()
-    #    documents = []
-    #    for i in inputs:
-    #        if 'http://www' in i:
-    #            download = True
-    #            document, xml_local = urlInput(i.rstrip('\n'), args.save_xml)
-    #        elif i[:4] == 'doi:':
-    #            download = True
-    #            document, xml_local = doiInput(i.rstrip('\n'), args.save_xml)
-    #        else:
-    #            if not i:
-    #                pass
-    #            else:
-    #                download = False
-    #                document, xml_local = localInput(i.rstrip('\n'))
-    #        documents += [(document, xml_local)]
-    #    makeCollectionEPUB(documents, args.cache, output_name, args.log_to)
-    #    epubcheck('{0}.epub'.format(output_name))
-    #    sys.exit(0)
-
+    #The cache is a static directory which can hold various items
+    #Image caching is of notable importance for some users.
+    if not os.path.isdir(settings.cache_loc):
+        utils.buildCache(settings.cache_loc)
+    if not os.path.isdir(settings.xml_cache):
+        os.mkdir(settings.xml_cache)
+    if not os.path.isdir(settings.cache_log):
+        os.mkdir(settings.cache_log)
+    if not os.path.isdir(settings.cache_img):
+        os.mkdir()
     #Single Input Mode
     #Determination of input type and processing
     if 'http://www' in args.input:
@@ -244,21 +147,33 @@ def main():
         document, xml_local = utils.input.doiInput(args.input)
     else:
         download = False
-        xml_local = args.input
         xml_local, document = utils.input.localInput(args.input)
     #Later code versions may support the manual naming of the output file
     #as a commandline argument. For now, the name of the ePub file will be
     #the same as the input xml file.
     input_name = os.path.splitext(os.path.split(xml_local)[1])[0]
+    #Initiate logging settings
+    logname = os.path.join(args.log_to, input_name + '.log')
+    logging.basicConfig(filename=logname, level=logging.DEBUG)
+    logging.info('OpenAccess_EPUB Log v.{0}'.format(__version__))
+    #Generate the output name, the output directory + input_name
     output_name = os.path.join(args.output, input_name)
     if os.path.isdir(output_name):
         dirExists(output_name, args.batch)
+    #Make the ePub!
     makeEPUB(document, xml_local, args.cache, output_name, args.log_to)
-    if download and not settings.save_xml:
-        os.remove(xml_local)
-        newname = u'{0}.log'.format(input_name)
-        newname = os.path.join(args.log_to, newname)
-        os.rename(logname, newname)
+    #Everything after this point is post-handling. Place things in the cache
+    #as appropriate and clean up.
+    if settings.save_xml:
+        shutil.copy2(xml_local, settings.xml_cache)
+    if settings.save_log:
+        shutil.copy2(logname, settings.cache_log)
+    if settings.save_output:
+        shutil.copy2(output_name, settings.cache_output)
+    #WARNING: shutil.rmtree() is a recursive deletion function, care should be
+    #taken whenever modifying this code
+    #if settings.cleanup:
+    #    shutil.rmtree(output_name)
     epubcheck('{0}.epub'.format(output_name))
 
 if __name__ == '__main__':

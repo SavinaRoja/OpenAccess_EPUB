@@ -69,6 +69,42 @@ def makeEPUBBase(location, css_location):
         with open(css_location, 'r') as css_src:
             css_out.write(css_src.read())
 
+
+def buildCache(location):
+    os.mkdir(location)
+    os.mkdir(os.path.join(location, 'img_cache'))
+    os.mkdir(os.path.join(location, 'logs'))
+    os.mkdir(os.path.join(location, 'downloaded_xml_files'))
+    os.mkdir(os.path.join(location, 'css'))
+    os.mkdir(os.path.join(location, 'output'))
+
+
+def initImgCache(cache_loc):
+    """
+    Initiates the image cache if it does not exist
+    """
+    os.mkdir(cache_loc)
+    os.mkdir(os.path.join(cache_loc, 'model'))
+    os.mkdir(os.path.join(cache_loc, 'PLoS'))
+    os.mkdir(os.path.join(cache_loc, 'Frontiers'))
+    os.mkdir(os.path.join(cache_loc, 'model', 'images'))
+    os.mkdir(os.path.join(cache_loc, 'model', 'images', 'figures'))
+    os.mkdir(os.path.join(cache_loc, 'model', 'images', 'tables'))
+    os.mkdir(os.path.join(cache_loc, 'model', 'images', 'equations'))
+    os.mkdir(os.path.join(cache_loc, 'model', 'images', 'supplementary'))
+
+
+def initImgCache2(cache_loc):
+    """
+    Initiates the image cache if it does not exist
+    """
+    os.mkdir(cache_loc)
+    os.mkdir(os.path.join(cache_loc, 'model'))
+    os.mkdir(os.path.join(cache_loc, 'PLoS'))
+    os.mkdir(os.path.join(cache_loc, 'Frontiers'))
+    os.mkdir(os.path.join(cache_loc, 'model', 'images'))
+
+
 def createDCElement(document, name, data, attributes = None):
     """
     A convenience method for creating DC tag elements.
