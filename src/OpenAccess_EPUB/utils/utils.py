@@ -78,30 +78,15 @@ def buildCache(location):
     makeEPUBBase(location)
 
 
-def initImgCache(cache_loc):
+def initImgCache(img_cache):
     """
     Initiates the image cache if it does not exist
     """
-    os.mkdir(cache_loc)
-    os.mkdir(os.path.join(cache_loc, 'model'))
-    os.mkdir(os.path.join(cache_loc, 'PLoS'))
-    os.mkdir(os.path.join(cache_loc, 'Frontiers'))
-    os.mkdir(os.path.join(cache_loc, 'model', 'images'))
-    os.mkdir(os.path.join(cache_loc, 'model', 'images', 'figures'))
-    os.mkdir(os.path.join(cache_loc, 'model', 'images', 'tables'))
-    os.mkdir(os.path.join(cache_loc, 'model', 'images', 'equations'))
-    os.mkdir(os.path.join(cache_loc, 'model', 'images', 'supplementary'))
-
-
-def initImgCache2(cache_loc):
-    """
-    Initiates the image cache if it does not exist
-    """
-    os.mkdir(cache_loc)
-    os.mkdir(os.path.join(cache_loc, 'model'))
-    os.mkdir(os.path.join(cache_loc, 'PLoS'))
-    os.mkdir(os.path.join(cache_loc, 'Frontiers'))
-    os.mkdir(os.path.join(cache_loc, 'model', 'images'))
+    os.mkdir(img_cache)
+    os.mkdir(os.path.join(img_cache, 'model'))
+    os.mkdir(os.path.join(img_cache, 'PLoS'))
+    os.mkdir(os.path.join(img_cache, 'Frontiers'))
+    os.mkdir(os.path.join(img_cache, 'model', 'images'))
 
 
 def createDCElement(document, name, data, attributes = None):
@@ -332,9 +317,9 @@ def fetchFrontiersImages(doi, counts, cache_dir, output_dir, caching):
         In some cases, equations images are not exposed in the fulltext (hidden
         behind a rasterized table). This attempts to look for gaps and fix them
         """
-        equations = os.listdir(os.path.join(img_dir, 'equations'))
+        files = os.listdir(img_dir)
         inline_equations = []
-        for e in equations:
+        for e in files:
             if e[0] == 'i':
                 inline_equations.append(e)
         missing = []
@@ -392,13 +377,8 @@ def fetchFrontiersImages(doi, counts, cache_dir, output_dir, caching):
                 images += re.findall('<a href="(?P<href>http://\w{7}.\w{3}.\w{3}.rackcdn.com/\d{5}/f\w{4}-\d{2}-\d{5}-HTML/image_m/f\w{4}-\d{2}-\d{5}-\D{1,2}\d{3}.\D{3})', l)
                 images += re.findall('<img src="(?P<src>http://\w{7}.\w{3}.\w{3}.rackcdn.com/\d{5}/f\w{4}-\d{2}-\d{5}-HTML/image_n/f\w{4}-\d{2}-\d{5}-\D{1,2}\d{3}.\D{3})', l)
         os.remove('temp')
-    itypes = {'e': 'equations', 't': 'tables', 'g': 'figures',
-              'a': 'figures', 'i': 'equations', 'at': 'tables'}
     for i in images:
-        itype = i.split('-')[-1][0].lower()
-        if i.split('-')[-1][:1].lower() == 'at':
-            itype = 'at'
-        loc = os.path.join(img_dir, itypes[itype], i.split('-')[-1])
+        loc = os.path.join(img_dir, i.split('-')[-1])
         downloadImage(i, loc)
         print('Downloaded image {0}'.format(loc))
     if images:

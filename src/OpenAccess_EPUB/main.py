@@ -136,7 +136,7 @@ def main():
     if not os.path.isdir(settings.cache_log):
         os.mkdir(settings.cache_log)
     if not os.path.isdir(settings.cache_img):
-        pass
+        utils.initImgCache(settings.cache_img)
     if not os.path.isdir(settings.base_epub):
         utils.makeEPUBBase(settings.base_epub)
     #Single Input Mode

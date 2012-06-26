@@ -8,7 +8,7 @@ conversion.
 """
 
 import OpenAccess_EPUB.dublincore as dc
-import OpenAccess_EPUB.utils
+import OpenAccess_EPUB.utils as utils
 import datetime
 import os.path
 import xml.dom.minidom
