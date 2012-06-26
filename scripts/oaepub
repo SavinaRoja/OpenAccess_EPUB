@@ -1,8 +1,21 @@
 #!/usr/bin/python
 
 
-import OpenAccess_EPUB
+import OpenAccess_EPUB as oae
+import os.path
+import logging
 
-print('Launching OpenAccess_EPUB')
+def main():
+    """The main method of the launch script"""
+    parsed_args = oae.OAEParser()
+    print('Launching OpenAccess_EPUB')
+    #Configure logging
+    logname = os.path.join(parsed_args.log_to, 'temp.log')
+    logging.basicConfig(filename=logname, level=logging.DEBUG)
+    logging.info('OpenAccess_EPUB Log v.{0}'.format(oae.__version__))
+    #Run the main script
+    oae.main(parsed_args, log=True)
 
-OpenAccess_EPUB.main()
+
+if __name__ == '__main__':
+    main()

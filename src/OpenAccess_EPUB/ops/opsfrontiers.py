@@ -503,7 +503,7 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
             img.setAttribute('alt', 'A figure')
             img.setAttribute('id', f_attrs['id'])
             #Compute the image source
-            img_dir = 'images-' + self.doi_frag + '/figures/'
+            img_dir = 'images-' + self.doi_frag + '/'
             img_name = os.path.splitext(graphic_xh)[0][-4:] + '.jpg'
             img.setAttribute('src', img_dir + img_name)
             #Now we can handle the caption and label
@@ -570,7 +570,7 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
                     img_name = 'at' + num.zfill(3) + '.jpg'
             else:
                 raise InputError('Unexpected table frag id in this article')
-            img_dir = 'images-' + self.doi_frag + '/tables/'
+            img_dir = 'images-' + self.doi_frag + '/'
             img_name = 't' + num.zfill(3) + '.jpg'
             img.setAttribute('src', img_dir + img_name)
             #Now we can handle the caption and label

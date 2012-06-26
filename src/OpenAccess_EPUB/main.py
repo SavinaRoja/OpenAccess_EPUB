@@ -5,7 +5,8 @@ This is the main execution file for OpenAccess_EPUB. It provides the primary
 mode of execution and interaction.
 """
 
-#If you change the version here, make sure to also change it in setup.py
+#If you change the version here, make sure to also change it in setup.py and
+#the module __init__.py
 __version__ = '0.2.0'
 
 #Standard Library Modules
@@ -116,11 +117,10 @@ def epubcheck(epubname):
     os.execlp('java', 'OpenAccess_EPUB', '-jar', settings.epubcheck, epubname)
 
 
-def main():
+def main(args=OAEParser(), log=False):
     """
     This is the main code execution block.
     """
-    args = OAEParser()
     #Certain locations are defined by the user or by default for production
     #Here we make them if they don't already exist
     if not os.path.isdir(args.log_to):
@@ -156,8 +156,9 @@ def main():
     input_name = os.path.splitext(os.path.split(xml_local)[1])[0]
     #Initiate logging settings
     logname = os.path.join(args.log_to, input_name + '.log')
-    logging.basicConfig(filename=logname, level=logging.DEBUG)
-    logging.info('OpenAccess_EPUB Log v.{0}'.format(__version__))
+    if not log:
+        logging.basicConfig(filename=logname, level=logging.DEBUG)
+        logging.info('OpenAccess_EPUB Log v.{0}'.format(__version__))
     #Generate the output name, the output directory + input_name
     output_name = os.path.join(args.output, input_name)
     if os.path.isdir(output_name):
@@ -166,6 +167,9 @@ def main():
     makeEPUB(document, xml_local, settings.cache_img, output_name, args.log_to)
     #Everything after this point is post-handling. Place things in the cache
     #as appropriate and clean up.
+    if log:  # Rename the temp.log to the appropriate name
+        temp = os.path.join(args.log_to, 'temp.log')
+        os.rename(temp, os.path.join(args.log_to, logname))
     if settings.save_xml:
         shutil.copy2(xml_local, settings.xml_cache)
     if settings.save_log:
