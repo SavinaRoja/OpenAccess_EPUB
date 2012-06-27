@@ -117,7 +117,7 @@ def epubcheck(epubname):
     os.execlp('java', 'OpenAccess_EPUB', '-jar', settings.epubcheck, epubname)
 
 
-def main(args=OAEParser(), log=False):
+def main():
     """
     This is the main code execution block.
     """
@@ -156,9 +156,6 @@ def main(args=OAEParser(), log=False):
     input_name = os.path.splitext(os.path.split(xml_local)[1])[0]
     #Initiate logging settings
     logname = os.path.join(args.log_to, input_name + '.log')
-    if not log:
-        logging.basicConfig(filename=logname, level=logging.DEBUG)
-        logging.info('OpenAccess_EPUB Log v.{0}'.format(__version__))
     #Generate the output name, the output directory + input_name
     output_name = os.path.join(args.output, input_name)
     if os.path.isdir(output_name):
@@ -167,9 +164,8 @@ def main(args=OAEParser(), log=False):
     makeEPUB(document, xml_local, settings.cache_img, output_name, args.log_to)
     #Everything after this point is post-handling. Place things in the cache
     #as appropriate and clean up.
-    if log:  # Rename the temp.log to the appropriate name
-        temp = os.path.join(args.log_to, 'temp.log')
-        os.rename(temp, os.path.join(args.log_to, logname))
+    temp = os.path.join(args.log_to, 'temp.log')
+    os.rename(temp, os.path.join(args.log_to, logname))
     if settings.save_xml:
         shutil.copy2(xml_local, settings.xml_cache)
     if settings.save_log:
@@ -182,5 +178,3 @@ def main(args=OAEParser(), log=False):
     #    shutil.rmtree(output_name)
     epubcheck('{0}.epub'.format(output_name))
 
-if __name__ == '__main__':
-    main()
