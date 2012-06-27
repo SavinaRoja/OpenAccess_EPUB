@@ -1,4 +1,6 @@
-'''utility/common stuff'''
+"""
+Common utility functions
+"""
 import os.path
 import zipfile
 from collections import namedtuple
@@ -6,6 +8,9 @@ import urllib2
 import shutil
 import time
 import re
+import logging
+
+log = logging.getLogger('utils')
 
 Identifier = namedtuple('Identifer', 'id, type')
 
@@ -39,6 +44,7 @@ def makeEPUBBase(location):
     base_epub/OPS/images/figures/
     base_epub/OPS/images/tables/
     """
+    log.info('Making the Base ePub at {0}'.format(location))
     #Create root directory
     os.mkdir(location)
     #Create mimetype file in root directory
@@ -64,11 +70,13 @@ def makeEPUBBase(location):
     os.mkdir(os.path.join(location, 'OPS', 'css'))
     css_path = os.path.join(location, 'OPS', 'css', 'article.css')
     with open(css_path, 'w') as css:
+        log.info('Fetching a filler CSS file from GitHub')
         dl_css = urllib2.urlopen('https://github.com/downloads/SavinaRoja/OpenAccess_EPUB/text.css')
         css.write(dl_css.read())
 
 
 def buildCache(location):
+    log.info('Building the cache at {0}'.format(location))
     os.mkdir(location)
     os.mkdir(os.path.join(location, 'img_cache'))
     os.mkdir(os.path.join(location, 'logs'))
@@ -82,6 +90,7 @@ def initImgCache(img_cache):
     """
     Initiates the image cache if it does not exist
     """
+    log.info('Initiating the image cache at {0}'.format(img_cache))
     os.mkdir(img_cache)
     os.mkdir(os.path.join(img_cache, 'model'))
     os.mkdir(os.path.join(img_cache, 'PLoS'))
@@ -99,40 +108,46 @@ def createDCElement(document, name, data, attributes = None):
     if attributes:
         for attr, attrval in attributes.iteritems():
             newnode.setAttribute(attr, attrval)
-    
     return newnode
 
-def stripDOMLayer(oldnodelist, depth = 1):
-    '''This method strips layers \"off the top\" from a specified NodeList or 
+
+def stripDOMLayer(oldnodelist, depth=1):
+    """
+    This method strips layers \"off the top\" from a specified NodeList or
     Node in the DOM. All child Nodes below the stripped layers are returned as
-    a NodeList, treating them as siblings irrespective of the original 
-    hierarchy. To be used with caution. '''
+    a NodeList, treating them as siblings irrespective of the original
+    hierarchy. To be used with caution.
+    """
     newnodelist = []
     while depth:
         try:
             for child in oldnodelist:
                 newnodelist += child.childNodes
-                
         except TypeError:
             newnodelist = oldnodelist.childNodes
-            
         depth -= 1
         newnodelist = stripDOMLayer(newnodelist, depth)
         return newnodelist
     return oldnodelist
 
-def serializeText(fromnode, stringlist = [], sep = u''):
-    '''Recursively extract the text data from a node and it's children'''
+
+def serializeText(fromnode, stringlist=[], sep=u''):
+    """
+    Recursively extract the text data from a node and it's children
+    """
     for item in fromnode.childNodes:
         if item.nodeType == item.TEXT_NODE and not item.data == u'\n':
             stringlist.append(item.data)
         else:
             serializeText(item, stringlist, sep)
     return sep.join(stringlist)
-    
+
+
 def getTagText(node):
-    '''Grab the text data from a Node. If it is provided a NodeList, it will 
-    return the text data from the first contained Node.'''
+    """
+    Grab the text data from a Node. If it is provided a NodeList, it will
+    return the text data from the first contained Node.
+    """
     data = u''
     try:
         children = node.childNodes
@@ -141,25 +156,27 @@ def getTagText(node):
     else:
         if children:
             for child in children:
-                if child.nodeType == child.TEXT_NODE and not child.data == u'\n':
+                if child.nodeType == child.TEXT_NODE and child.data != u'\n':
                     data = child.data
             return data
 
+
 def getFormattedNode(node):
-    '''This method is called on a Node whose children may include emphasis 
+    """
+    This method is called on a Node whose children may include emphasis
     elements. The contained emphasis elements will be converted to ePub-safe
-    emphasis elements. Non-emphasis elements will be untouched.'''
-    
+    emphasis elements. Non-emphasis elements will be untouched.
+    """
     #Some of these elements are to be supported through CSS
-    emphasis_elements = [u'bold', u'italic', u'monospace', u'overline', 
+    emphasis_elements = [u'bold', u'italic', u'monospace', u'overline',
                          u'sc', u'strike', u'underline']
-    spans = {u'monospace': u'font-family:monospace', 
-             u'overline': u'text-decoration:overline', 
-             u'sc': u'font-variant:small-caps', 
-             u'strike': u'text-decoration:line-through', 
+    spans = {u'monospace': u'font-family:monospace',
+             u'overline': u'text-decoration:overline',
+             u'sc': u'font-variant:small-caps',
+             u'strike': u'text-decoration:line-through',
              u'underline': u'text-decoration:underline'}
-    
-    clone = node.cloneNode(deep = True)
+
+    clone = node.cloneNode(deep=True)
     for element in emphasis_elements:
         for item in clone.getElementsByTagName(element):
             if item.tagName == u'bold':
@@ -170,6 +187,7 @@ def getFormattedNode(node):
                 item.tagName = u'span'
                 item.setAttribute('style', spans[item])
     return clone
+
 
 def getTagData(node_list):
     '''Grab the (string) data from text elements
@@ -183,21 +201,25 @@ def getTagData(node_list):
         return data
     except TypeError:
         getTagData([node_list])
-        
+
+
 def epubZip(outdirect):
-    '''Zips up the input file directory into an ePub file.'''
+    """Zips up the input file directory into an ePub file."""
+    log.info('Zipping up the directory {0}'.format(outdirect))
     epub_filename = outdirect + '.epub'
     epub = zipfile.ZipFile(epub_filename, 'w')
     current_dir = os.getcwd()
     os.chdir(outdirect)
     epub.write('mimetype')
+    log.info('Recursively zipping META-INF and OPS')
     recursive_zip(epub, 'META-INF')
     recursive_zip(epub, 'OPS')
     os.chdir(current_dir)
     epub.close()
 
-def recursive_zip(zipf, directory, folder = ""):
-    '''Recursively traverses the output directory to construct the zipfile'''
+
+def recursive_zip(zipf, directory, folder=''):
+    """Recursively traverses the output directory to construct the zipfile"""
     for item in os.listdir(directory):
         if os.path.isfile(os.path.join(directory, item)):
             zipf.write(os.path.join(directory, item), os.path.join(directory,
@@ -206,64 +228,70 @@ def recursive_zip(zipf, directory, folder = ""):
             recursive_zip(zipf, os.path.join(directory, item),
                           os.path.join(folder, item))
 
+
 def suggestedArticleTypes():
-    '''Returns a list of suggested values for article-type'''
+    """
+    Returns a list of suggested values for article-type
+    """
     #See http://dtd.nlm.nih.gov/publishing/tag-library/3.0/n-w2d0.html
-    s = ['abstract', 'addendum', 'announcement', 'article-commentary', 
-         'book-review', 'books-received', 'brief-report', 'calendar', 
-         'case-report', 'collection', 'correction', 'discussion', 
-         'dissertation', 'editorial', 'in-brief', 'introduction', 'letter', 
-         'meeting-report', 'news', 'obituary', 'oration', 
-         'partial-retraction', 'product-review', 'rapid-communication', 
-         'rapid-communication', 'reply', 'reprint', 'research-article', 
+    s = ['abstract', 'addendum', 'announcement', 'article-commentary',
+         'book-review', 'books-received', 'brief-report', 'calendar',
+         'case-report', 'collection', 'correction', 'discussion',
+         'dissertation', 'editorial', 'in-brief', 'introduction', 'letter',
+         'meeting-report', 'news', 'obituary', 'oration',
+         'partial-retraction', 'product-review', 'rapid-communication',
+         'rapid-communication', 'reply', 'reprint', 'research-article',
          'retraction', 'review-article', 'translation']
     return(s)
 
+
 def initiateDocument(titlestring,
-                     _publicId = '-//W3C//DTD XHTML 1.1//EN',
-                     _systemId = 'http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd'):
-    '''A method for conveniently initiating a new xml.DOM Document'''
+                     _publicId='-//W3C//DTD XHTML 1.1//EN',
+                     _systemId='http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd'):
+    """A method for conveniently initiating a new xml.DOM Document"""
     from xml.dom.minidom import getDOMImplementation
-    
+
     impl = getDOMImplementation()
-    
+
     mytype = impl.createDocumentType('article', _publicId, _systemId)
     doc = impl.createDocument(None, 'root', mytype)
-    
+
     root = doc.lastChild #IGNORE:E1101
     root.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml')
     root.setAttribute('xml:lang', 'en-US')
-    
+
     head = doc.createElement('head')
     root.appendChild(head)
-    
+
     title = doc.createElement('title')
     title.appendChild(doc.createTextNode(titlestring))
-    
+
     link = doc.createElement('link')
     link.setAttribute('rel', 'stylesheet')
     link.setAttribute('href','css/reference.css')
     link.setAttribute('type', 'text/css')
-    
+
     meta = doc.createElement('meta')
     meta.setAttribute('http-equiv', 'Content-Type')
     meta.setAttribute('content', 'application/xhtml+xml')
     meta.setAttribute('charset', 'utf-8')
-    
+
     headlist = [title, link, meta]
     for tag in headlist:
         head.appendChild(tag)
     root.appendChild(head)
-    
+
     body = doc.createElement('body')
     root.appendChild(body)
-    
+
     return doc, body
 
+
 def scrapePLoSIssueCollection(issue_url):
-    '''Uses Beautiful Soup to scrape the PLoS page of an issue. It is used
-    instead of xml.dom.minidom because of malformed html/xml'''
-    
+    """
+    Uses Beautiful Soup to scrape the PLoS page of an issue. It is used
+    instead of xml.dom.minidom because of malformed html/xml
+    """
     iu = urllib2.urlopen(issue_url)
     with open('temp','w') as temp:
         temp.write(iu.read())
@@ -271,7 +299,7 @@ def scrapePLoSIssueCollection(issue_url):
         soup = BeautifulStoneSoup(temp)
     os.remove('temp')
     #Map the journal urls to nice strings
-    jrns = {'plosgenetics': 'PLoS_Genetics', 'plosone' :'PLoS_ONE',
+    jrns = {'plosgenetics': 'PLoS_Genetics', 'plosone': 'PLoS_ONE',
             'plosntds': 'PLoS_Neglected_Tropical_Diseases', 'plosmedicine':
             'PLoS_Medicine', 'plosbiology': 'PLoS_Biology', 'ploscompbiol':
             'PLoS_Computational_Biology', 'plospathogens': 'PLoS_Pathogens'}
@@ -288,12 +316,15 @@ def scrapePLoSIssueCollection(issue_url):
                 id = href.split('10.1371%2F')[1].split(';')[0]
                 collection.write('doi:10.1371/{0}\n'.format(id))
 
+
 def fetchFrontiersImages(doi, counts, cache_dir, output_dir, caching):
     """
     Using the power of web-scraping and, we will get the images from the
     Frontiers pages. If run locally by Frontiers staffpersons, this method
     should be avoidable.
     """
+    log.info('Fetching Frontiers images from the internet')
+
     def downloadImage(fetch, img_file):
         try:
             image = urllib2.urlopen(fetch)
@@ -317,6 +348,7 @@ def fetchFrontiersImages(doi, counts, cache_dir, output_dir, caching):
         In some cases, equations images are not exposed in the fulltext (hidden
         behind a rasterized table). This attempts to look for gaps and fix them
         """
+        log.info('Checking for complete equations')
         files = os.listdir(img_dir)
         inline_equations = []
         for e in files:
