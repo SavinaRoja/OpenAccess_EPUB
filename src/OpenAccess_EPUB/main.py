@@ -117,7 +117,7 @@ def epubcheck(epubname):
     os.execlp('java', 'OpenAccess_EPUB', '-jar', settings.epubcheck, epubname)
 
 
-def main():
+def main(args):
     """
     This is the main code execution block.
     """

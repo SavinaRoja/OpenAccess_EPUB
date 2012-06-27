@@ -14,7 +14,7 @@ def main():
     logging.basicConfig(filename=logname, level=logging.DEBUG)
     logging.info('OpenAccess_EPUB Log v.{0}'.format(oae.__version__))
     #Run the main script
-    oae.main()
+    oae.main(parsed_args)
 
 
 if __name__ == '__main__':
