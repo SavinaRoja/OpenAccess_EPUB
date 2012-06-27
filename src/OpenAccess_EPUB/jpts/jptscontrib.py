@@ -5,6 +5,9 @@ article contributions as defined in the Journal Publishing Tag Set.
 
 import collections
 import OpenAccess_EPUB.utils as utils
+import logging
+
+log = logging.getLogger('jptscontrib')
 
 
 class ContribGroup(object):
@@ -35,6 +38,7 @@ class ContribGroup(object):
             X(cross) Reference <xref>
     """
     def __init__(self, contrib_group_node):
+        log.info('Parsing contrib-group node')
         self.Node = contrib_group_node
         self.content_type = self.Node.getAttribute('content-type')
         self.id = self.Node.getAttribute('id')
@@ -266,7 +270,7 @@ class Contrib(ContribGroup):
             ct = n.getAttribute('content-type')
             namelist.append(name(n, surname, given, prefix, suffix, ns, ct))
         return namelist
-    
+
     def getDegrees(self):
         """
         <degrees> is an optional element, 0 or more, under the <contrib> tag.
@@ -279,7 +283,7 @@ class Contrib(ContribGroup):
         degreeslist = []
         for degrees in self.getChildrenByTagName('degrees'):
             degreeslist.append(utils.nodeText(degrees))
-    
+
     def getContrib(self):
         """
         <contrib> nodes do not contain further <contrib> nodes
