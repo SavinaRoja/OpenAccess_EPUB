@@ -8,6 +8,9 @@ output modes.
 import OpenAccess_EPUB.utils as utils
 import os.path
 import xml.dom.minidom
+import logging
+
+log = logging.getLogger('TocNCX')
 
 
 class TocNCX(object):
@@ -16,6 +19,7 @@ class TocNCX(object):
     """
 
     def __init__(self, version, collection_mode=False):
+        log.info('Instantiating TocNCX class')
         self.doi = ''
         self.dois = []
         self.collection_mode = collection_mode
