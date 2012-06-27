@@ -33,7 +33,7 @@ class Article(object):
         such as found in jptsmeta.py to serve as the article's metadata
         attribute.
         """
-        log.info('Parsing file: {0}'.format(xml_file))
+        log.info('Parsing file- {0}'.format(xml_file))
         doc = xml.dom.minidom.parse(xml_file)
         #Here we check the doctype for the DTD under which the article was
         #published. This affects how we will parse metadata and content.
@@ -55,7 +55,7 @@ Publishing DTD: \n{0}'.format(doc.doctype.publicId))
         self.root_tag = doc.documentElement
         #Determine the publisher
         self.publisher = self.identifyPublisher()
-        log.info('Publisher: {0}'.format(self.publisher))
+        log.info('Publisher- {0}'.format(self.publisher))
         #Create instance of article metadata
         if self.dtd == u'2.0':
             self.metadata = jpts.JPTSMeta20(doc, self.publisher)
@@ -100,7 +100,7 @@ Publishing DTD: \n{0}'.format(doc.doctype.publicId))
                 try:
                     return pubs[pname]
                 except KeyError:
-                    log.debug('Strange publisher name: {0}'.format(pname))
+                    log.debug('Strange publisher name- {0}'.format(pname))
                     log.debug('Falling back to article-id DOI')
                     pname = False
             if not pname:  # If pname is undeclared, check article-id
@@ -131,7 +131,7 @@ Publishing DTD: \n{0}'.format(doc.doctype.publicId))
             if self.attrs[_key] and not self.attrs[_key] == _val:
                 log.error(attr_err.format(_key, self.attrs[_key]))
         if self.attrs['article-type'] not in utils.suggestedArticleTypes():
-            art_type_err = 'article-type value is not a suggested value: {0}'
+            art_type_err = 'article-type value is not a suggested value- {0}'
             log.warning(art_type_err.format(self.attrs['article-type']))
 
     def getDOI(self):
