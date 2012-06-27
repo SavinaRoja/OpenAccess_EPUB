@@ -7,7 +7,7 @@ mode of execution and interaction.
 
 #If you change the version here, make sure to also change it in setup.py and
 #the module __init__.py
-__version__ = '0.2.0'
+__version__ = '0.2.1'
 
 #Standard Library Modules
 import argparse
@@ -24,6 +24,7 @@ import ops
 import settings
 
 settings = settings.Settings()
+log = logging.getLogger('Main')
 
 
 def OAEParser():
@@ -177,4 +178,3 @@ def main(args):
     #if settings.cleanup:
     #    shutil.rmtree(output_name)
     epubcheck('{0}.epub'.format(output_name))
-
