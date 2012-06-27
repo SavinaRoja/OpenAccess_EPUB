@@ -2,6 +2,8 @@ import os.path
 import sys
 import logging
 
+log = logging.getLogger('Settings')
+
 
 class Settings(object):
     """
@@ -79,7 +81,6 @@ class Settings(object):
         """
         Make log statements for settings which might be useful for debugging.
         """
-        log = logging.getLogger('Settings')
         log.debug('Cache Location: {0}'.format(self.cache_loc))
         log.debug('Local: {0}'.format(self.local))
         log.debug('Local Output: {0}'.format(self.local_output))
