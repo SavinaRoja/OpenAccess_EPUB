@@ -11,7 +11,6 @@ allowed inside these elements.
 import logging
 
 log = logging.getLogger('dublincore')
-log.info('Loaded the Dublin Core element methods')
 
 
 def identifier(input_string, dom, primary=False):

@@ -28,7 +28,8 @@ class OPF(object):
         self.doi = ''
         self.dois = []
         self.collection_mode = collection_mode
-        log.debug('Collection Mode')
+        if self.collection_mode:
+            log.debug('Collection Mode')
         self.version = version
         self.location = location
         #Initiate the document
