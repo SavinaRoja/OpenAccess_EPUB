@@ -1,12 +1,14 @@
 import utils
-import logging
 import os.path
 import sys
 import shutil
 import xml.dom.minidom
 import jpts
 import urllib2
+import logging
 from time import sleep
+
+log = logging.getLogger('Article')
 
 
 class Article(object):
@@ -31,7 +33,7 @@ class Article(object):
         such as found in jptsmeta.py to serve as the article's metadata
         attribute.
         """
-        logging.info('Parsing file: {0}'.format(xml_file))
+        log.info('Parsing file: {0}'.format(xml_file))
         doc = xml.dom.minidom.parse(xml_file)
         #Here we check the doctype for the DTD under which the article was
         #published. This affects how we will parse metadata and content.
@@ -49,11 +51,11 @@ class Article(object):
             print('The article\'s DOCTYPE declares an unsupported Journal \
 Publishing DTD: \n{0}'.format(doc.doctype.publicId))
             sys.exit()
-        #Access the root tag of the document
+        #Access the root tag of the document name
         self.root_tag = doc.documentElement
         #Determine the publisher
         self.publisher = self.identifyPublisher()
-        print(self.publisher)
+        log.info('Publisher: {0}'.format(self.publisher))
         #Create instance of article metadata
         if self.dtd == u'2.0':
             self.metadata = jpts.JPTSMeta20(doc, self.publisher)
@@ -82,6 +84,7 @@ Publishing DTD: \n{0}'.format(doc.doctype.publicId))
         two important signifiers of publisher, <publisher> under <journal-meta>
         and <article-id pub-id-type="doi"> under <article-meta>.
         """
+        log.info('Determining Publisher')
         pubs = {u'Frontiers Research Foundation': u'Frontiers',
                 u'Public Library of Science': u'PLoS'}
         dois = {u'10.3389': u'Frontiers',
@@ -91,13 +94,14 @@ Publishing DTD: \n{0}'.format(doc.doctype.publicId))
             publisher = self.root_tag.getElementsByTagName('publisher')
             pname = False
             if publisher:
+                log.debug('Located publisher element')
                 pname = publisher[0].getElementsByTagName('publisher-name')[0]
                 pname = pname.firstChild.data
                 try:
                     return pubs[pname]
                 except KeyError:
-                    print('Strange publisher name: {0}'.format(pname))
-                    print('Falling back to article-id DOI')
+                    log.debug('Strange publisher name: {0}'.format(pname))
+                    log.debug('Falling back to article-id DOI')
                     pname = False
             if not pname:  # If pname is undeclared, check article-id
                 art_IDs = self.root_tag.getElementsByTagName('article-id')
@@ -125,20 +129,21 @@ Publishing DTD: \n{0}'.format(doc.doctype.publicId))
         attr_err = 'Article attribute {0} has improper value: {1}'
         for _key, _val in mandates:
             if self.attrs[_key] and not self.attrs[_key] == _val:
-                logging.error(attr_err.format(_key, self.attrs[_key]))
+                log.error(attr_err.format(_key, self.attrs[_key]))
         if self.attrs['article-type'] not in utils.suggestedArticleTypes():
             art_type_err = 'article-type value is not a suggested value: {0}'
-            logging.warning(art_type_err.format(self.attrs['article-type']))
+            log.warning(art_type_err.format(self.attrs['article-type']))
 
     def getDOI(self):
-        '''A method for returning the DOI identifier of an article'''
+        """
+        A method for returning the DOI identifier of an article
+        """
         return self.metadata.article_id['doi']
 
     def fetchPLoSImages(self, cache_dir, output_dir, caching):
         """
         Fetch the PLoS images associated with the article.
         """
-
         doi = self.getDOI()
         print('Processing images for {0}...'.format(doi))
         o = doi.split('journal.')[1]
@@ -151,11 +156,11 @@ Publishing DTD: \n{0}'.format(doc.doctype.publicId))
             art_cache_images = os.path.join(art_cache, 'images')
             if os.path.isdir(art_cache):
                 cached = True
-                logging.info('Cached images found')
+                log.info('Cached images found')
                 print('Cached images found. Transferring from cache...')
                 shutil.copytree(art_cache_images, img_dir)
             else:
-                logging.info('Cached images not found')
+                log.info('Cached images not found')
         else:
             print('The publisher DOI does not correspond to PLoS')
         if not cached:
@@ -204,7 +209,7 @@ Publishing DTD: \n{0}'.format(doc.doctype.publicId))
                         except:
                             break
                     elif e.code == 500:
-                        logging.error('urllib2.HTTPError {0}'.format(e.code))
+                        log.error('urllib2.HTTPError {0}'.format(e.code))
                     break
                 else:
                     filename = '{0}.png'.format(tag)
