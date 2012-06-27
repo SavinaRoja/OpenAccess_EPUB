@@ -8,8 +8,10 @@ passing that file to the class.
 from OpenAccess_EPUB.article import Article
 import urllib2
 import urlparse
-import os.path
 import sys
+import logging
+
+log = logging.getLogger('utils.input')
 
 
 def localInput(xml_path):
@@ -17,6 +19,7 @@ def localInput(xml_path):
     This method accepts xml path data as an argument, instantiates the Article,
     and returns the two.
     """
+    log.info('Local Input: {0}'.format(xml_path))
     art = Article(xml_path)
     return xml_path, art
 
@@ -29,12 +32,14 @@ def doiInput(doi_string):
     from http://dx.doi.org/ and then using publisher conventions to identify
     the article xml on that page.
     """
+    log.info('DOI Input: {0}'.format(doi_string))
     pub_doi = {'10.1371': 'PLoS', '10.3389': 'Frontiers'}
     #A user might accidentally copy/paste the "doi:" part of a DOI
     if doi_string[:4]:
         doi_string = doi_string[4:]
     #Compose the URL to access at http://dx.doi.org
     doi_url = 'http://dx.doi.org/{0}'.format(doi_string)
+    log.debug('DOI URL: {0}'.format(doi_url))
     #Report a problem specifying that the page could not be reached
     try:
         page = urllib2.urlopen(doi_url)
@@ -50,6 +55,7 @@ def doiInput(doi_string):
         sys.exit(1)
     if publisher == 'PLoS':
         address = urlparse.urlparse(page.geturl())
+        log.debug('Rendered address: {0}'.format(address))
         path = address.path.replace(':', '%3A').replace('/', '%2F')
         fetch = '/article/fetchObjectAttachment.action?uri='
         aid = path.split('article%2F')[1]
@@ -74,6 +80,7 @@ def urlInput(url_string):
     appropriate xml file from that page. This method is highly dependent on
     publisher conventions and may not be appropriate for all pusblishers.
     """
+    log.info('URL Input: {0}'.format(url_string))
     support = ['PLoS']
     if '%2F10.1371%2F' in url_string:  # This is a PLoS page
         try:
@@ -95,6 +102,7 @@ def urlInput(url_string):
                 xml_file.write(open_xml.read())
             art = Article(filename)
             xml_path = filename
+            log.debug('Received XML path: {0}'.format(xml_path))
             return art, xml_path
     else:  # We don't support this input or publisher
         print('Invalid Link: Bad URL or unsupported publisher')

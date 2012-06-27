@@ -323,7 +323,7 @@ def fetchFrontiersImages(doi, counts, cache_dir, output_dir, caching):
     Frontiers pages. If run locally by Frontiers staffpersons, this method
     should be avoidable.
     """
-    log.info('Fetching Frontiers images from the internet')
+    log.info('Fetching Frontiers images')
 
     def downloadImage(fetch, img_file):
         try:
