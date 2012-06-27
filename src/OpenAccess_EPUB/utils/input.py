@@ -19,7 +19,7 @@ def localInput(xml_path):
     This method accepts xml path data as an argument, instantiates the Article,
     and returns the two.
     """
-    log.info('Local Input: {0}'.format(xml_path))
+    log.info('Local Input - {0}'.format(xml_path))
     art = Article(xml_path)
     return xml_path, art
 
@@ -32,7 +32,7 @@ def doiInput(doi_string):
     from http://dx.doi.org/ and then using publisher conventions to identify
     the article xml on that page.
     """
-    log.info('DOI Input: {0}'.format(doi_string))
+    log.info('DOI Input - {0}'.format(doi_string))
     pub_doi = {'10.1371': 'PLoS', '10.3389': 'Frontiers'}
     #A user might accidentally copy/paste the "doi:" part of a DOI
     if doi_string[:4]:
@@ -80,7 +80,7 @@ def urlInput(url_string):
     appropriate xml file from that page. This method is highly dependent on
     publisher conventions and may not be appropriate for all pusblishers.
     """
-    log.info('URL Input: {0}'.format(url_string))
+    log.info('URL Input - {0}'.format(url_string))
     support = ['PLoS']
     if '%2F10.1371%2F' in url_string:  # This is a PLoS page
         try:
@@ -102,7 +102,7 @@ def urlInput(url_string):
                 xml_file.write(open_xml.read())
             art = Article(filename)
             xml_path = filename
-            log.debug('Received XML path: {0}'.format(xml_path))
+            log.debug('Received XML path - {0}'.format(xml_path))
             return art, xml_path
     else:  # We don't support this input or publisher
         print('Invalid Link: Bad URL or unsupported publisher')
