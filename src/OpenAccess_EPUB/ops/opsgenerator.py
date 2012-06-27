@@ -7,6 +7,9 @@ tag set and/or publisher must provide these functions.
 """
 
 import xml.dom.minidom
+import logging
+
+log = logging.getLogger('OPSGenerator')
 
 
 class OPSGenerator(object):
@@ -15,6 +18,7 @@ class OPSGenerator(object):
     order to produce OPS content.
     """
     def __init__(self):
+        log.info('Initiating OPSGenerator')
         self.announce()
         self.doc = self.makeDocument('base')
 

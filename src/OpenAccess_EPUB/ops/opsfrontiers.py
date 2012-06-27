@@ -8,6 +8,8 @@ import opsgenerator
 import os.path
 import logging
 
+log = logging.getLogger('OPSFrontiers')
+
 
 class InputError(Exception):
     """
@@ -27,6 +29,7 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
     """
     def __init__(self, article, output_dir):
         opsgenerator.OPSGenerator.__init__(self)
+        log.info('Initiating OPSFrontiers')
         print('Generating OPS content...')
         self.article = article.root_tag
         self.metadata = article.metadata
