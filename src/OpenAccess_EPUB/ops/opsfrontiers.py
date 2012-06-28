@@ -111,12 +111,15 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
                 try:
                     sup_text = aff_id.split('aff')[1]
                 except IndexError:
-                    raise InputError('Could not identify affiliation number!')
+                    log.warning('Could not identify affiliation number!')
+                    sup_text = ''
             else:
                 sup_text = utils.nodeText(sup)
-            affp.setAttribute('id', aff.getAttribute('id'))
-            aff_sup = self.appendNewElement('sup', affp)
-            self.appendNewText(sup_text, aff_sup)
+            if aff.getAttribute('id'):
+                affp.setAttribute('id', aff.getAttribute('id'))
+            if sup_text:
+                aff_sup = self.appendNewElement('sup', affp)
+                self.appendNewText(sup_text, aff_sup)
             #These will be considered optional
             try:
                 inst = aff.getElementsByTagName('institution')[0]
