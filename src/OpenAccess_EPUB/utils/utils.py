@@ -5,9 +5,6 @@ import os.path
 import zipfile
 from collections import namedtuple
 import urllib2
-import shutil
-import time
-import re
 import logging
 
 log = logging.getLogger('utils')
@@ -84,18 +81,6 @@ def buildCache(location):
     os.mkdir(os.path.join(location, 'css'))
     os.mkdir(os.path.join(location, 'output'))
     makeEPUBBase(location)
-
-
-def initImgCache(img_cache):
-    """
-    Initiates the image cache if it does not exist
-    """
-    log.info('Initiating the image cache at {0}'.format(img_cache))
-    os.mkdir(img_cache)
-    os.mkdir(os.path.join(img_cache, 'model'))
-    os.mkdir(os.path.join(img_cache, 'PLoS'))
-    os.mkdir(os.path.join(img_cache, 'Frontiers'))
-    os.mkdir(os.path.join(img_cache, 'model', 'images'))
 
 
 def createDCElement(document, name, data, attributes = None):
@@ -317,107 +302,3 @@ def scrapePLoSIssueCollection(issue_url):
                 collection.write('doi:10.1371/{0}\n'.format(id))
 
 
-def fetchFrontiersImages(doi, counts, cache_dir, output_dir, caching):
-    """
-    Using the power of web-scraping and, we will get the images from the
-    Frontiers pages. If run locally by Frontiers staffpersons, this method
-    should be avoidable.
-    """
-    log.info('Fetching Frontiers images')
-
-    def downloadImage(fetch, img_file):
-        try:
-            image = urllib2.urlopen(fetch)
-        except urllib2.HTTPError, e:
-            if e.code == 503:  # Server overloaded
-                time.sleep(1)  # Wait one second
-                try:
-                    image = urllib2.urlopen(fetch)
-                except:
-                    return None
-            elif e.code == 500:
-                print('urllib2.HTTPError {0}'.format(e.code))
-            return None
-        else:
-            with open(img_file, 'wb') as outimage:
-                outimage.write(image.read())
-        return True
-
-    def checkEquationCompletion(images):
-        """
-        In some cases, equations images are not exposed in the fulltext (hidden
-        behind a rasterized table). This attempts to look for gaps and fix them
-        """
-        log.info('Checking for complete equations')
-        files = os.listdir(img_dir)
-        inline_equations = []
-        for e in files:
-            if e[0] == 'i':
-                inline_equations.append(e)
-        missing = []
-        highest = 0
-        if inline_equations:
-            inline_equations.sort()
-            highest = int(inline_equations[-1][1:4])
-            i = 1
-            while i < highest:
-                name = 'i{0}.gif'.format(str(i).zfill(3))
-                if name not in inline_equations:
-                    missing.append(name)
-                i += 1
-        get = images[0][:-8]
-        for m in missing:
-            loc = os.path.join(img_dir, 'equations', m)
-            downloadImage(get + m, loc)
-            print('Downloaded image {0}'.format(loc))
-        #It is possible that we need to go further than the highest
-        highest += 1
-        name = 'i{0}.gif'.format(str(highest).zfill(3))
-        loc = os.path.join(img_dir, 'equations', name)
-        while downloadImage(get + name, loc):
-            print('Downloaded image {0}'.format(loc))
-            highest += 1
-            name = 'i{0}.gif'.format(str(highest).zfill(3))
-
-    print('Processing images for {0}...'.format(doi))
-    s = os.path.split(doi)[1]
-    img_dir = os.path.join(output_dir, 'OPS', 'images-{0}'.format(s))
-    #Check to see if this article's images have been cached
-    art_cache = os.path.join(cache_dir, 'Frontiers', s)
-    art_cache_images = os.path.join(art_cache, 'images')
-    if os.path.isdir(art_cache):
-        print('Cached images found. Transferring from cache...')
-        shutil.copytree(art_cache_images, img_dir)
-        return None
-    else:
-        model_images = os.path.join(cache_dir, 'model', 'images')
-        shutil.copytree(model_images, img_dir)
-        #We use the DOI of the article to locate the page.
-        doistr = 'http://dx.doi.org/{0}'.format(doi)
-        page = urllib2.urlopen(doistr)
-        if page.geturl()[-8:] == 'abstract':
-            full = page.geturl()[:-8] + 'full'
-        elif page.geturl()[-4:] == 'full':
-            full = page.geturl()
-        print(full)
-        page = urllib2.urlopen(full)
-        with open('temp', 'w') as temp:
-            temp.write(page.read())
-        images = []
-        with open('temp', 'r') as temp:
-            for l in temp.readlines():
-                images += re.findall('<a href="(?P<href>http://\w{7}.\w{3}.\w{3}.rackcdn.com/\d{5}/f\w{4}-\d{2}-\d{5}-HTML/image_m/f\w{4}-\d{2}-\d{5}-\D{1,2}\d{3}.\D{3})', l)
-                images += re.findall('<img src="(?P<src>http://\w{7}.\w{3}.\w{3}.rackcdn.com/\d{5}/f\w{4}-\d{2}-\d{5}-HTML/image_n/f\w{4}-\d{2}-\d{5}-\D{1,2}\d{3}.\D{3})', l)
-        os.remove('temp')
-    for i in images:
-        loc = os.path.join(img_dir, i.split('-')[-1])
-        downloadImage(i, loc)
-        print('Downloaded image {0}'.format(loc))
-    if images:
-        checkEquationCompletion(images)
-    print("Done downloading images")
-    #If the images were not already cached, and caching is enabled...
-    #We want to transfer the downloaded files to the cache
-    if caching:
-        os.mkdir(art_cache)
-        shutil.copytree(img_dir, art_cache_images)
