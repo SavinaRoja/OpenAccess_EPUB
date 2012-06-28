@@ -9,6 +9,8 @@ def main():
     parsed_args = oae.OAEParser()
     print('Launching OpenAccess_EPUB')
     #Configure logging
+    if not os.path.isdir(parsed_args.log_to):
+        os.mkdir(parsed_args.log_to)
     logname = os.path.join(parsed_args.log_to, 'temp.log')
     logging.basicConfig(filename=logname, level=logging.DEBUG)
     logging.info('OpenAccess_EPUB Log v.{0}'.format(oae.__version__))
