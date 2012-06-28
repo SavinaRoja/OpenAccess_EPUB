@@ -155,7 +155,7 @@ def main(args):
     #as a commandline argument. For now, the name of the ePub file will be
     #the same as the input xml file.
     input_name = os.path.splitext(os.path.split(xml_local)[1])[0]
-    #Initiate logging settings
+    #Set the log name
     logname = os.path.join(args.log_to, input_name + '.log')
     #Generate the output name, the output directory + input_name
     output_name = os.path.join(args.output, input_name)
