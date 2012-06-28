@@ -22,25 +22,28 @@ def getImages(doi, argimages, outdirect, default, caching, cache_img):
     #image cache, fetch from internet.
     #When complete: If caching is true, copy images to cache.
     jdoi, adoi = doi.split('/')  # Split DOI into journal, article components
-    log.debug('jdoi-{0}| adoi-{1}'.format(jdoi, adoi))
+    log.debug('jdoi-{0}|adoi-{1}'.format(jdoi, adoi))
     img_dir = os.path.join(outdirect, 'OPS', 'images-{0}'.format(adoi))
     log.info('Constructed image directory as {0}'.format(img_dir))
+    #Construct the path to the cache for this article
+    c = {'10.3389': 'Frontiers', '10.1371': 'PloS'}[jdoi]
+    ac = os.path.join(cache_img, c, adoi)
     if argimages:  # If manual input provided, use it
         shutil.copytree(argimages, img_dir)
-        log.info('Copied images from {0}'.format())
+        log.info('Copied images from {0}'.format(argimages))
     else:  # Fall back to the default, cache, or download
         #Check the default image directory
         if os.path.isdir(default):
             shutil.copytree(default, img_dir)
+            log.info('Copied images from default {0}'.format(default))
         else:
             #Check the image cache
-            c = {'10.3389': 'Frontiers', '10.1371': 'PloS'}[jdoi]
-            ac = os.path.join(cache_img, c, adoi)
             if os.path.isdir(ac):
                 shutil.copytree(ac, img_dir)
-                log.info('Copied images from cache-{0}'.format(ac))
+                log.info('Copied images from cache at {0}'.format(ac))
             else:
                 #Download from the internet
+                os.mkdir(img_dir)
                 if jdoi == '10.3389':
                     fetchFrontiersImages(doi, img_dir)
                 elif jdoi == '10.1371':
@@ -59,10 +62,8 @@ def initImgCache(img_cache):
     """
     log.info('Initiating the image cache at {0}'.format(img_cache))
     os.mkdir(img_cache)
-    os.mkdir(os.path.join(img_cache, 'model'))
     os.mkdir(os.path.join(img_cache, 'PLoS'))
     os.mkdir(os.path.join(img_cache, 'Frontiers'))
-    os.mkdir(os.path.join(img_cache, 'model', 'images'))
 
 
 def fetchFrontiersImages(doi, output_dir):
@@ -100,7 +101,7 @@ def fetchFrontiersImages(doi, output_dir):
         behind a rasterized table). This attempts to look for gaps and fix them
         """
         log.info('Checking for complete equations')
-        files = os.listdir(img_dir)
+        files = os.listdir(output_dir)
         inline_equations = []
         for e in files:
             if e[0] == 'i':
@@ -118,23 +119,22 @@ def fetchFrontiersImages(doi, output_dir):
                 i += 1
         get = images[0][:-8]
         for m in missing:
-            loc = os.path.join(img_dir, 'equations', m)
+            loc = os.path.join(output_dir, m)
             downloadImage(get + m, loc)
             print('Downloaded image {0}'.format(loc))
         #It is possible that we need to go further than the highest
         highest += 1
         name = 'i{0}.gif'.format(str(highest).zfill(3))
-        loc = os.path.join(img_dir, 'equations', name)
+        loc = os.path.join(output_dir, name)
         while downloadImage(get + name, loc):
             print('Downloaded image {0}'.format(loc))
             highest += 1
             name = 'i{0}.gif'.format(str(highest).zfill(3))
 
     print('Processing images for {0}...'.format(doi))
-    adoi = doi.split('/')[1]
-    img_dir = os.path.join(output_dir, 'OPS', 'images-{0}'.format(adoi))
     #We use the DOI of the article to locate the page.
     doistr = 'http://dx.doi.org/{0}'.format(doi)
+    logging.debug('Accessing DOI address-{0}'.format(doistr))
     page = urllib2.urlopen(doistr)
     if page.geturl()[-8:] == 'abstract':
         full = page.geturl()[:-8] + 'full'
@@ -151,14 +151,14 @@ def fetchFrontiersImages(doi, output_dir):
             images += re.findall('<img src="(?P<src>http://\w{7}.\w{3}.\w{3}.rackcdn.com/\d{5}/f\w{4}-\d{2}-\d{5}-HTML/image_n/f\w{4}-\d{2}-\d{5}-\D{1,2}\d{3}.\D{3})', l)
     os.remove('temp')
     for i in images:
-        loc = os.path.join(img_dir, i.split('-')[-1])
+        loc = os.path.join(output_dir, i.split('-')[-1])
         downloadImage(i, loc)
         print('Downloaded image {0}'.format(loc))
     if images:
         checkEquationCompletion(images)
     print("Done downloading images")
 
-
+#This method is defunct until I begin development for PLoS again
 def fetchPLoSImages(doi, cache_dir, output_dir, caching):
     """
     Fetch the images from PLoS's website.
