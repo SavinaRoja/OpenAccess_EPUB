@@ -38,6 +38,7 @@ def getImages(doi, argimages, outdirect, default, caching, cache_img):
             ac = os.path.join(cache_img, c, adoi)
             if os.path.isdir(ac):
                 shutil.copytree(ac, img_dir)
+                log.info('Copied images from cache-{0}'.format(ac))
             else:
                 #Download from the internet
                 if jdoi == '10.3389':
@@ -45,6 +46,10 @@ def getImages(doi, argimages, outdirect, default, caching, cache_img):
                 elif jdoi == '10.1371':
                     fetchPLoSImages(doi, img_dir)
     if caching:
+        if os.path.isdir(ac):  # Remove previous cache and replace with new
+            #WARNING: shutil.rmtree() is a recursive deletion function, take
+            #care when modifying this code
+            shutil.rmtree(ac)
         shutil.copytree(img_dir, ac)
 
 
@@ -60,7 +65,7 @@ def initImgCache(img_cache):
     os.mkdir(os.path.join(img_cache, 'model', 'images'))
 
 
-def fetchFrontiersImages(doi, counts, output_dir):
+def fetchFrontiersImages(doi, output_dir):
     """
     Fetch the images from Frontiers' website. This method may fail to properly
     locate all the images and should be avoided if the files can be accessed
@@ -126,35 +131,25 @@ def fetchFrontiersImages(doi, counts, output_dir):
             name = 'i{0}.gif'.format(str(highest).zfill(3))
 
     print('Processing images for {0}...'.format(doi))
-    s = os.path.split(doi)[1]
-    img_dir = os.path.join(output_dir, 'OPS', 'images-{0}'.format(s))
-    #Check to see if this article's images have been cached
-    art_cache = os.path.join(cache_dir, 'Frontiers', s)
-    art_cache_images = os.path.join(art_cache, 'images')
-    if os.path.isdir(art_cache):
-        print('Cached images found. Transferring from cache...')
-        shutil.copytree(art_cache_images, img_dir)
-        return None
-    else:
-        model_images = os.path.join(cache_dir, 'model', 'images')
-        shutil.copytree(model_images, img_dir)
-        #We use the DOI of the article to locate the page.
-        doistr = 'http://dx.doi.org/{0}'.format(doi)
-        page = urllib2.urlopen(doistr)
-        if page.geturl()[-8:] == 'abstract':
-            full = page.geturl()[:-8] + 'full'
-        elif page.geturl()[-4:] == 'full':
-            full = page.geturl()
-        print(full)
-        page = urllib2.urlopen(full)
-        with open('temp', 'w') as temp:
-            temp.write(page.read())
-        images = []
-        with open('temp', 'r') as temp:
-            for l in temp.readlines():
-                images += re.findall('<a href="(?P<href>http://\w{7}.\w{3}.\w{3}.rackcdn.com/\d{5}/f\w{4}-\d{2}-\d{5}-HTML/image_m/f\w{4}-\d{2}-\d{5}-\D{1,2}\d{3}.\D{3})', l)
-                images += re.findall('<img src="(?P<src>http://\w{7}.\w{3}.\w{3}.rackcdn.com/\d{5}/f\w{4}-\d{2}-\d{5}-HTML/image_n/f\w{4}-\d{2}-\d{5}-\D{1,2}\d{3}.\D{3})', l)
-        os.remove('temp')
+    adoi = doi.split('/')[1]
+    img_dir = os.path.join(output_dir, 'OPS', 'images-{0}'.format(adoi))
+    #We use the DOI of the article to locate the page.
+    doistr = 'http://dx.doi.org/{0}'.format(doi)
+    page = urllib2.urlopen(doistr)
+    if page.geturl()[-8:] == 'abstract':
+        full = page.geturl()[:-8] + 'full'
+    elif page.geturl()[-4:] == 'full':
+        full = page.geturl()
+    print(full)
+    page = urllib2.urlopen(full)
+    with open('temp', 'w') as temp:
+        temp.write(page.read())
+    images = []
+    with open('temp', 'r') as temp:
+        for l in temp.readlines():
+            images += re.findall('<a href="(?P<href>http://\w{7}.\w{3}.\w{3}.rackcdn.com/\d{5}/f\w{4}-\d{2}-\d{5}-HTML/image_m/f\w{4}-\d{2}-\d{5}-\D{1,2}\d{3}.\D{3})', l)
+            images += re.findall('<img src="(?P<src>http://\w{7}.\w{3}.\w{3}.rackcdn.com/\d{5}/f\w{4}-\d{2}-\d{5}-HTML/image_n/f\w{4}-\d{2}-\d{5}-\D{1,2}\d{3}.\D{3})', l)
+    os.remove('temp')
     for i in images:
         loc = os.path.join(img_dir, i.split('-')[-1])
         downloadImage(i, loc)
@@ -162,11 +157,6 @@ def fetchFrontiersImages(doi, counts, output_dir):
     if images:
         checkEquationCompletion(images)
     print("Done downloading images")
-    #If the images were not already cached, and caching is enabled...
-    #We want to transfer the downloaded files to the cache
-    if caching:
-        os.mkdir(art_cache)
-        shutil.copytree(img_dir, art_cache_images)
 
 
 def fetchPLoSImages(doi, cache_dir, output_dir, caching):
