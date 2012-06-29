@@ -7,7 +7,7 @@ mode of execution and interaction.
 
 #If you change the version here, make sure to also change it in setup.py and
 #the module __init__.py
-__version__ = '0.2.1'
+__version__ = '0.2.2'
 
 #Standard Library Modules
 import argparse
@@ -45,8 +45,7 @@ def OAEParser():
                         help='''Specify a path to the directory containing the
                         images. This overrides the program's attempts to get
                         the images from the default directory, the image cache,
-                        or the internet.'''
-                        )
+                        or the internet.''')
     modes = parser.add_mutually_exclusive_group()
     modes.add_argument('-i', '--input', action='store',
                         help='''Input may be a path to a local directory, a \
