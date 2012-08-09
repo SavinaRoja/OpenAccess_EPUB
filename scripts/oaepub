@@ -3,6 +3,7 @@
 import OpenAccess_EPUB as oae
 import os.path
 import logging
+import tempfile
 
 def main():
     """The main method of the launch script"""
@@ -11,11 +12,12 @@ def main():
     #Configure logging
     if not os.path.isdir(parsed_args.log_to):
         os.mkdir(parsed_args.log_to)
-    logname = os.path.join(parsed_args.log_to, 'temp.log')
-    logging.basicConfig(filename=logname, level=logging.DEBUG)
+    temp_log_id, temp_log_path = tempfile.mkstemp(dir='logs')
+    #logname = os.path.join(parsed_args.log_to, 'temp.log')
+    logging.basicConfig(filename=temp_log_path, level=logging.DEBUG)
     logging.info('OpenAccess_EPUB Log v.{0}'.format(oae.__version__))
     #Run the main script
-    oae.main(parsed_args)
+    oae.main(parsed_args, temp_log_id, temp_log_path)
 
 
 if __name__ == '__main__':

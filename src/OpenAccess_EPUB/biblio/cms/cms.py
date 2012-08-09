@@ -3,11 +3,18 @@ The Chicago Manual of Style specifies the textual formatting style of
 bibliographic citations. This module works with xml.dom to parse the xml
 metadata of a bibliographic reference into a correctly formatted string.
 
-This implementation may require more refinement. It should endeavor to 
+This implementation may require more refinement. It should endeavor to work
+with diverse input formats. An interchange specification may be needed at some
+point, but that is uncertain. Alternatively, each format serving citation info
+might require a pre-processing method to guide the styling of the citation.
 """
 
 import OpenAccess_EPUB.utils as utils
 import OpenAccess_EPUB.jpts as jpts
+import xml.dom.minidom
+import logging
+
+log = logging.getLogger('biblio.cms')
 
 
 class Citation(object):
@@ -21,6 +28,8 @@ class Citation(object):
         """
         The initiation process.
         """
+        impl = xml.dom.minidom.getDOMImplementation()
+        self.doc = impl.createDocument(None, 'package', None)
         self.node = citation_node
         self.type = self.node.getAttribute('citation_type')
         self.text_only = text_only

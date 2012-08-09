@@ -115,7 +115,7 @@ class OPF(object):
                     _name, ext = os.path.splitext(filename)
                     ext = ext[1:]
                     new = self.manifest.appendChild(self.doc.createElement('item'))
-                    new.setAttribute('href', os.path.join(path, filename))
+                    new.setAttribute('href', '/'.join([path, filename]))
                     new.setAttribute('media-type', mimetypes[ext])
                     if filename == 'toc.ncx':
                         new.setAttribute('id', 'ncx')

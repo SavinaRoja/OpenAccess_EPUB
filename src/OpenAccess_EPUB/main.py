@@ -7,13 +7,14 @@ mode of execution and interaction.
 
 #If you change the version here, make sure to also change it in setup.py and
 #the module __init__.py
-__version__ = '0.2.2'
+__version__ = '0.2.3'
 
 #Standard Library Modules
 import argparse
 import sys
 import os.path
 import shutil
+import tempfile
 import logging
 
 #OpenAccess_EPUB Modules
@@ -132,7 +133,7 @@ def epubcheck(epubname):
     os.execlp('java', 'OpenAccess_EPUB', '-jar', setngs.epubcheck, epubname)
 
 
-def main(args):
+def main(args, temp_log_id, temp_log_path):
     """
     This is the main code execution block.
     """
@@ -185,8 +186,8 @@ def main(args):
 
     #Everything after this point is post-handling. Place things in the cache
     #as appropriate and clean up.
-    temp = os.path.join(args.log_to, 'temp.log')
-    os.rename(temp, os.path.join(args.log_to, logname))
+    os.close(temp_log_id)
+    os.rename(temp_log_path, os.path.join(args.log_to, logname))
     if setngs.save_xml:
         shutil.copy2(xml_local, setngs.xml_cache)
     if setngs.save_log:
