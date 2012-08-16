@@ -13,7 +13,6 @@ def main():
     if not os.path.isdir(parsed_args.log_to):
         os.mkdir(parsed_args.log_to)
     temp_log_id, temp_log_path = tempfile.mkstemp(dir='logs')
-    #logname = os.path.join(parsed_args.log_to, 'temp.log')
     logging.basicConfig(filename=temp_log_path, level=logging.DEBUG)
     logging.info('OpenAccess_EPUB Log v.{0}'.format(oae.__version__))
     #Run the main script

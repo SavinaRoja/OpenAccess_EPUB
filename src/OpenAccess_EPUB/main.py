@@ -14,7 +14,6 @@ import argparse
 import sys
 import os.path
 import shutil
-import tempfile
 import logging
 
 #OpenAccess_EPUB Modules
@@ -42,7 +41,8 @@ def OAEParser():
     parser.add_argument('-l', '--log-to', action='store',
                         default=setngs.local_log,
                         help='Use to specify a non-default log directory')
-    parser.add_argument('-I', '--images', action='store', default=False,
+    parser.add_argument('-I', '--images', action='store',
+                        default=setngs.default_images,
                         help='''Specify a path to the directory containing the
                         images. This overrides the program's attempts to get
                         the images from the default directory, the image cache,
@@ -85,7 +85,7 @@ def dirExists(outdirect, batch):
         shutil.rmtree(outdirect)
 
 
-def makeEPUB(document, xml_local, outdirect, log_to, images):
+def makeEPUB(document, xml_local, outdirect, images):
     """
     Encapsulates the primary processing work-flow. Before this method is
     called, pre-processing has occurred to define important directory and file
@@ -95,8 +95,9 @@ def makeEPUB(document, xml_local, outdirect, log_to, images):
     print(u'Processing output to {0}.epub'.format(outdirect))
     shutil.copytree(setngs.base_epub, outdirect)
     DOI = document.getDOI()
-    utils.images.getImages(DOI, images, outdirect, setngs.default_images,
-                           setngs.caching, setngs.cache_img)
+    utils.images.localImages(images, outdirect, DOI)
+    #utils.images.getImages(DOI, images, outdirect, setngs.default_images,
+    #                       setngs.caching, setngs.cache_img)
     if DOI.split('/')[0] == '10.1371':  # PLoS's publisher DOI
         #document.fetchPLoSImages(cache_dir, outdirect, setngs.caching)
         ops.OPSPLoS(document, outdirect)
@@ -144,7 +145,7 @@ def main(args, temp_log_id, temp_log_path):
     if not os.path.isdir(args.output):
         os.mkdir(args.output)
     #The cache is a static directory which can hold various items
-    #Image caching is of notable importance for some users.
+    #Image caching is important for some users.
     if not os.path.isdir(setngs.cache_loc):
         utils.buildCache(setngs.cache_loc)
     if not os.path.isdir(setngs.xml_cache):
@@ -158,13 +159,10 @@ def main(args, temp_log_id, temp_log_path):
     #Single Input Mode
     #Determination of input type and processing
     if 'http://www' in args.input:
-        download = True
         document, xml_local = utils.input.urlInput(args.input)
     elif args.input[:4] == 'doi:':
-        download = True
         document, xml_local = utils.input.doiInput(args.input)
     else:
-        download = False
         xml_local, document = utils.input.localInput(args.input)
     #Later code versions may support the manual naming of the output file
     #as a commandline argument. For now, the name of the ePub file will be
@@ -172,6 +170,8 @@ def main(args, temp_log_id, temp_log_path):
     input_name = os.path.splitext(os.path.split(xml_local)[1])[0]
     #Set the log name
     logname = os.path.join(args.log_to, input_name + '.log')
+    os.close(temp_log_id)
+    os.rename(temp_log_path, logname)
     #Generate the output name, the output directory + input_name
     output_name = os.path.join(args.output, input_name)
     if os.path.isdir(output_name):
@@ -181,13 +181,10 @@ def main(args, temp_log_id, temp_log_path):
     makeEPUB(document,  # The parsed Article class
              xml_local,  # The path to the local xml file
              output_name,  # The name of the output file
-             args.log_to,  # Path specifying where the logs should be put
              args.images)  # Path specifying where to find the images
 
     #Everything after this point is post-handling. Place things in the cache
     #as appropriate and clean up.
-    os.close(temp_log_id)
-    os.rename(temp_log_path, os.path.join(args.log_to, logname))
     if setngs.save_xml:
         shutil.copy2(xml_local, setngs.xml_cache)
     if setngs.save_log:

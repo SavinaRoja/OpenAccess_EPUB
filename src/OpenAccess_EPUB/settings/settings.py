@@ -25,7 +25,8 @@ class Settings(object):
         self.cache_img = os.path.join(self.cache_loc, 'img_cache')
 
         #This sets the default relative location for finding image files
-        self.default_images = os.path.join(self.local, 'images')
+        #self.default_images = os.path.join(self.local, 'images')
+        self.default_images = self.local
 
         #This sets the location for storing log files
         self.local_log = os.path.join(self.local, 'logs')

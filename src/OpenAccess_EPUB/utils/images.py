@@ -12,6 +12,20 @@ import logging
 
 log = logging.getLogger('utils.images')
 
+def localImages(images_path, outdirect, doi):
+    """
+    This function is employed to copy image files into the ePub's image
+    directory, it expects an existing directory.
+    """
+    jdoi, adoi = doi.split('/')
+    log.debug('Journal DOI-{0}|Article DOI{1}'.format(jdoi, adoi))
+    epub_img_dir = os.path.join(outdirect, 'OPS', 'images-{0}'.format(adoi))
+    log.info('ePub image directory path: {0}'.format(epub_img_dir))
+    os.mkdir(epub_img_dir)
+    for item in os.listdir(images_path):
+        item_path = os.path.join(images_path, item)
+        if os.path.splitext(item_path)[1] == '.tif':
+            shutil.copy2(item_path, epub_img_dir)
 
 def getImages(doi, argimages, outdirect, default, caching, cache_img):
     """

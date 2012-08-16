@@ -509,9 +509,8 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
             img.setAttribute('alt', 'A figure')
             img.setAttribute('id', f_attrs['id'])
             #Compute the image source
-            img_dir = 'images-' + self.doi_frag + '/'
-            img_name = os.path.splitext(graphic_xh)[0][-4:] + '.jpg'
-            img.setAttribute('src', img_dir + img_name)
+            img_dir = 'images-{0}/'.format(self.doi_frag)
+            img.setAttribute('src', img_dir + graphic_xh)
             #Now we can handle the caption and label
             if caption or label:
                 div = self.doc.createElement('div')
@@ -566,19 +565,10 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
             parent.insertBefore(img, t)
             img.setAttribute('alt', 'A table')
             img.setAttribute('id', t_attrs['id'])
-            #Compute the image source
-            tid = t_attrs['id']
-            if tid[0] == 'T':
-                num = tid[1:]
-                img_name = 't' + num.zfill(3) + '.jpg'
-                if tid[:2] == 'TA':
-                    num = tid[2:]
-                    img_name = 'at' + num.zfill(3) + '.jpg'
-            else:
-                raise InputError('Unexpected table frag id in this article')
-            img_dir = 'images-' + self.doi_frag + '/'
-            img_name = 't' + num.zfill(3) + '.jpg'
-            img.setAttribute('src', img_dir + img_name)
+            #Add the image source, this is a little complex, see the method
+            src = self.tableSource(t_attrs['id'])
+            print(src)
+            img.setAttribute('src', src)
             #Now we can handle the caption and label
             if caption or label:
                 div = self.doc.createElement('div')
@@ -896,6 +886,35 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
                         depth += 1
                         self.recursiveConvertDivTitles(i, depth)
                         depth -= 1
+
+    def tableSource(self, table_id):
+        """
+        As the name of the table image is not directly referenced in the input,
+        this method is tasked with the job of finding the correct table image
+        based on the table's id.
+        """
+        if table_id[0] == 'T':
+            num = int(table_id[1:])
+            pref = 't'
+        elif table_id[:2] == 'TA':
+            num = int(table_id[2:])
+            pref = 'at'
+        else:
+            err_msg = 'Unknown table ID type: {0}'.format(table_id)
+            log.error(err_msg)
+            raise InputError(err_msg)
+        img_dir = 'images-{0}/'.format(self.doi_frag)
+        print(os.listdir(os.getcwd()))
+        for item in os.listdir(os.getcwd()):  # Needs a more thorough fix
+            if os.path.splitext(item)[1] == '.tif':
+                img_name = item.split('-')[-1]
+                if img_name[0] == 't':
+                    if 't' == pref and int(img_name[1:]) == num:
+                        return (img_dir + item)
+                elif img_name[:2] == 'at':
+                    if 'at' == pref and int(img_name[2:]) == num:
+                        return (img_dir + item)
+        raise InputError('Could not find table image, ID {0}'.format(table_id))
 
     def announce(self):
         """
