@@ -49,15 +49,20 @@ def OAEParser():
                         or the internet.''')
     modes = parser.add_mutually_exclusive_group()
     modes.add_argument('-i', '--input', action='store',
-                        help='''Input may be a path to a local directory, a \
+                       help='''Input may be a path to a local directory, a \
                               URL to a PLoS journal article, or a PLoS DOI \
                               string''')
+    modes.add_argument('-z', '--zip', action='store', default=False,
+                       help='''Input mode supporting Frontiers production from
+                               zipfiles. Use the name of either of the zipfiles
+                               with this mode, both zipfiles are required to be
+                               in the same directory.''')
     modes.add_argument('-b', '--batch', action='store', default=False,
-                        help='''Use to specify a batch directory; each \
-                                article inside will be processed.''')
+                       help='''Use to specify a batch directory; each \
+                               article inside will be processed.''')
     modes.add_argument('-C', '--collection', action='store', default=False,
-                        help='''Use to create an ePub file containing \
-                                multiple resources.''')
+                       help='''Use to create an ePub file containing \
+                               multiple resources.''')
     modes.add_argument('-cI', '--clear-image-cache', action='store_true',
                        default=False, help='''Clears the image cache''')
     modes.add_argument('-cX', '--clear-xml-cache', action='store_true',
@@ -158,12 +163,15 @@ def main(args, temp_log_id, temp_log_path):
         utils.makeEPUBBase(setngs.base_epub)
     #Single Input Mode
     #Determination of input type and processing
-    if 'http://www' in args.input:
-        document, xml_local = utils.input.urlInput(args.input)
-    elif args.input[:4] == 'doi:':
-        document, xml_local = utils.input.doiInput(args.input)
-    else:
-        xml_local, document = utils.input.localInput(args.input)
+    if args.input:
+        if 'http://www' in args.input:
+            document, xml_local = utils.input.urlInput(args.input)
+        elif args.input[:4] == 'doi:':
+            document, xml_local = utils.input.doiInput(args.input)
+        else:
+            xml_local, document = utils.input.localInput(args.input)
+    elif args.zip:
+        utils.input.frontiersZipInput(args.zip, args.output)
     #Later code versions may support the manual naming of the output file
     #as a commandline argument. For now, the name of the ePub file will be
     #the same as the input xml file.

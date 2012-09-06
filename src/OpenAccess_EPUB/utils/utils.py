@@ -36,10 +36,6 @@ def makeEPUBBase(location):
     base_epub/OPS/
     base_epub/OPS/css
     base_epub/OPS/css/article.css
-    base_epub/OPS/images/
-    base_epub/OPS/images/equations/
-    base_epub/OPS/images/figures/
-    base_epub/OPS/images/tables/
     """
     log.info('Making the Base ePub at {0}'.format(location))
     #Create root directory
