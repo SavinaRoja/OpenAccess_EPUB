@@ -98,9 +98,17 @@ def makeEPUB(document, outdirect, images):
     to generate the ePub content.
     """
     print(u'Processing output to {0}.epub'.format(outdirect))
-    shutil.copytree(setngs.base_epub, outdirect)
+    #Copy files from base_epub to the new output
+    mimetype = os.path.join(setngs.base_epub, 'mimetype')
+    container = os.path.join(setngs.base_epub, 'META-INF', 'container.xml')
+    css = os.path.join(setngs.base_epub, 'OPS', 'css', 'article.css')
+    shutil.copy(mimetype, outdirect)
+    shutil.copy(container, os.path.join(outdirect, 'META-INF'))
+    os.makedirs(os.path.join(outdirect, 'OPS', 'css'))
+    shutil.copy(css, os.path.join(outdirect, 'OPS', 'css'))
+    #Get the Digital Object Identifier
     DOI = document.getDOI()
-    utils.images.localImages(images, outdirect, DOI)
+    #utils.images.localImages(images, outdirect, DOI)
     #utils.images.getImages(DOI, images, outdirect, setngs.default_images,
     #                       setngs.caching, setngs.cache_img)
     if DOI.split('/')[0] == '10.1371':  # PLoS's publisher DOI
@@ -165,24 +173,24 @@ def main(args, temp_log_id, temp_log_path):
     #Determination of input type and processing
     if args.input:
         if 'http://www' in args.input:
-            document, filename = utils.input.urlInput(args.input)
+            doc, fn = utils.input.urlInput(args.input)
         elif args.input[:4] == 'doi:':
-            document, filename = utils.input.doiInput(args.input)
+            doc, fn = utils.input.doiInput(args.input)
         else:
-            document, filename = utils.input.localInput(args.input)
+            doc, fn = utils.input.localInput(args.input)
     elif args.zip:
-        utils.input.frontiersZipInput(args.zip, args.output)
+        doc, fn = utils.input.frontiersZipInput(args.zip, args.output)
     #Set the log name
-    logname = os.path.join(args.log_to, filename + '.log')
+    logname = os.path.join(args.log_to, fn + '.log')
     os.close(temp_log_id)
     os.rename(temp_log_path, logname)
     #Generate the output name, the output directory + input_name
-    output_name = os.path.join(args.output, filename)
-    if os.path.isdir(output_name):
-        dirExists(output_name, args.batch)
+    output_name = os.path.join(args.output, fn)
+    #if os.path.isdir(output_name):
+    #    dirExists(output_name, args.batch)
 
     #Make the ePub!
-    makeEPUB(document,  # The parsed Article class
+    makeEPUB(doc,  # The parsed Article class
              output_name,  # The name of the output file
              args.images)  # Path specifying where to find the images
 

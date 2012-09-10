@@ -61,7 +61,7 @@ class Settings(object):
         self.cache_css = os.path.join(self.cache_loc, 'css')
 
         #Configure the location of epubcheck-*.jar.
-        self.epubcheck = '../epubcheck/epubcheck-3.0b3.jar'
+        self.epubcheck = '/home/pablo/epubcheck/epubcheck-3.0b3.jar'
 
         #Record settings in log
         self.logSettings()

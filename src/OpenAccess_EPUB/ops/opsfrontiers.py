@@ -501,6 +501,8 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
                 caption = None
             graphic = f.getElementsByTagName('graphic')[0]
             graphic_xh = graphic.getAttribute('xlink:href')
+            #Coerce the file extension to .jpg
+            graphic_xh = os.path.splitext(graphic_xh)[0] + '.jpg'
             #Now we can begin constructing our OPS representation
             parent = f.parentNode
             parent.insertBefore(self.doc.createElement('hr'), f)
@@ -509,7 +511,7 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
             img.setAttribute('alt', 'A figure')
             img.setAttribute('id', f_attrs['id'])
             #Compute the image source
-            img_dir = 'images-{0}/'.format(self.doi_frag)
+            img_dir = 'images/'
             img.setAttribute('src', img_dir + graphic_xh)
             #Now we can handle the caption and label
             if caption or label:
@@ -599,12 +601,12 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
             l = self.appendNewElement('div', table)
             p = self.appendNewElement('p', l)
             a = self.appendNewElement('a', p)
-            a.setAttribute('href', self.main_frag.format(tid))
+            a.setAttribute('href', self.main_frag.format(t_attrs['id']))
             self.appendNewText('Back to the text', a)
             self.html_tables.append(table)
             #Create a link to the html version of the table
             a = self.doc.createElement('a')
-            a.setAttribute('href', self.tab_frag.format(tid))
+            a.setAttribute('href', self.tab_frag.format(t_attrs['id']))
             self.appendNewText('HTML version of this table', a)
             parent.insertBefore(a, t)
             #Remove the original <table-wrap>
@@ -893,26 +895,27 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
         this method is tasked with the job of finding the correct table image
         based on the table's id.
         """
-        if table_id[0] == 'T':
-            num = int(table_id[1:])
-            pref = 't'
-        elif table_id[:2] == 'TA':
+        if table_id[:2] == 'TA':
             num = int(table_id[2:])
             pref = 'at'
+        elif table_id[0] == 'T':
+            num = int(table_id[1:])
+            pref = 't'
         else:
             err_msg = 'Unknown table ID type: {0}'.format(table_id)
             log.error(err_msg)
             raise InputError(err_msg)
-        img_dir = 'images-{0}/'.format(self.doi_frag)
-        print(os.listdir(os.getcwd()))
-        for item in os.listdir(os.getcwd()):  # Needs a more thorough fix
-            if os.path.splitext(item)[1] == '.tif':
-                img_name = item.split('-')[-1]
-                if img_name[0] == 't':
-                    if 't' == pref and int(img_name[1:]) == num:
-                        return (img_dir + item)
-                elif img_name[:2] == 'at':
-                    if 'at' == pref and int(img_name[2:]) == num:
+        img_dir = 'images/'.format(self.doi_frag)
+        for item in os.listdir(os.path.join(self.ops_dir, 'images')):
+            print(item)
+            root, ext = os.path.splitext(item)
+            if ext == '.jpg':
+                suffix = root.split('-')[-1]
+                if suffix[0] == 't':
+                    if 't' == pref and int(suffix[1:]) == num:
+                        return(img_dir + item)
+                elif suffix[:2] == 'at':
+                    if 'at' == pref and int(suffix[2:]) == num:
                         return (img_dir + item)
         raise InputError('Could not find table image, ID {0}'.format(table_id))
 

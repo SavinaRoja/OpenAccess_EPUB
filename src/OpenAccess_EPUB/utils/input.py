@@ -140,7 +140,9 @@ def frontiersZipInput(zip_path, output_prefix):
     zipname1 = "{0}-r{1}.zip".format(file_root, '1')
     zipname2 = "{0}-r{1}.zip".format(file_root, '2')
     #Construct the pathnames for output
-    output = os.path.join(output_prefix, file_root, 'META-INF')
+    output = os.path.join(output_prefix, file_root)
+    shutil.rmtree(output)  # Delete previous output
+    output_meta = os.path.join(output, 'META-INF')
     images_output = os.path.join(output, 'OPS', 'images')
     with zipfile.ZipFile(os.path.join(path, zipname1), 'r') as xml_zip:
         zip_dir = '{0}-r1'.format(file_root)
@@ -152,9 +154,10 @@ def frontiersZipInput(zip_path, output_prefix):
             print('There is no item {0} in the zipfile'.format(xml))
             sys.exit(1)
         else:
-            if not os.path.isdir(output):
-                os.makedirs(output)
-            shutil.copy(xml, os.path.join(output))
+            if not os.path.isdir(output_meta):
+                os.makedirs(output_meta)
+            article = Article(xml)
+            shutil.copy(xml, os.path.join(output_meta))
             os.remove(xml)
             os.rmdir(zip_dir)
     with zipfile.ZipFile(os.path.join(path, zipname2), 'r') as image_zip:
@@ -163,10 +166,9 @@ def frontiersZipInput(zip_path, output_prefix):
             if 'image_m' in i:
                 image_zip.extract(i)
         if not os.path.isdir(images_output):
-            os.mkdir(images_output)
+            os.makedirs(images_output)
         unzipped_images = os.path.join(zip_dir, 'images', 'image_m')
         for i in os.listdir(unzipped_images):
             shutil.copy(os.path.join(unzipped_images, i), images_output)
-        #shutil.rmtree() is a recursive deletion function, have caution when
-        #modifying it or you may lose system files.
         shutil.rmtree(zip_dir)
+    return article, file_root
