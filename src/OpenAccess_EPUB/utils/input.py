@@ -141,7 +141,8 @@ def frontiersZipInput(zip_path, output_prefix):
     zipname2 = "{0}-r{1}.zip".format(file_root, '2')
     #Construct the pathnames for output
     output = os.path.join(output_prefix, file_root)
-    shutil.rmtree(output)  # Delete previous output
+    if os.path.isdir(output):
+        shutil.rmtree(output)  # Delete previous output
     output_meta = os.path.join(output, 'META-INF')
     images_output = os.path.join(output, 'OPS', 'images')
     with zipfile.ZipFile(os.path.join(path, zipname1), 'r') as xml_zip:

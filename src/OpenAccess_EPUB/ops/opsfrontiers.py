@@ -212,6 +212,7 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
         #Handle node conversion
         self.convertFigElements(body)
         self.convertTableWrapElements(body)
+        self.convertListElements(body)
         self.convertSecElements(body)
         self.recursiveConvertDivTitles(body, depth=0)
         self.convertEmphasisElements(body)
@@ -477,6 +478,27 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
         self.bib_frag = 'biblio.{0}.xml'.format(self.doi_frag) + '#{0}'
         self.tab_frag = 'tables.{0}.xml'.format(self.doi_frag) + '#{0}'
 
+    def convertListElements(self, node):
+        """
+        <list> tags are not allowed in OPS documents, the tagname may be
+        converted to <ol> or <ul> for ordered and unordered lists respectively.
+        The <list> tag should contain a "list-type" attribute to declare the
+        appropriate type. Attributes are not to be kept.
+        """
+        for l in self.getDescendantsByTagName(node, 'list'):
+            l_attrs = self.getAllAttributes(l, remove=True)
+            print(l_attrs)
+            try:
+                if l_attrs['list-type'] == 'order':
+                    l.tagName = 'ol'
+                elif l_attrs['list-type'] == 'bullet':
+                    l.tagName = 'ul'
+            except KeyError:
+                l.tagName = 'ul'
+            else:
+                for li in self.getChildrenByTagName('list-item', l):
+                    li.tagName = 'li'
+
     def convertFigElements(self, node):
         """
         <fig> tags are not allowed in OPS documents, the tagname must be
@@ -556,10 +578,9 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
             except IndexError:
                 caption = None
             #Get the optional table-wrap-foot as xml or none
-            try:
-                t_foots = t.getElementsByTagName('table-wrap-foot')
-            except IndexError:
-                t_foots = []
+            t_foots = t.getElementsByTagName('table-wrap-foot')
+            #Get <fn> tags for conversion to <span>
+            fns = t.getElementsByTagName('fn')
             #Now we can begin constructing our OPS representation
             parent = t.parentNode
             parent.insertBefore(self.doc.createElement('hr'), t)
@@ -597,6 +618,16 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
                 t_foot.tagName = 'div'
                 t_foot.setAttribute('class', 'table-footnotes')
                 table.appendChild(t_foot)
+            for fn in fns:
+                fn_parent = fn.parentNode
+                fn_id = fn.getAttribute('id')
+                first = True
+                for fc in fn.childNodes:
+                    fn_parent.insertBefore(fc, fn)
+                    if first:
+                        fc.setAttribute('id', fn_id)
+                        first = False
+                fn_parent.removeChild(fn)
             #Create a link back to main text
             l = self.appendNewElement('div', table)
             p = self.appendNewElement('p', l)
@@ -907,7 +938,6 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
             raise InputError(err_msg)
         img_dir = 'images/'.format(self.doi_frag)
         for item in os.listdir(os.path.join(self.ops_dir, 'images')):
-            print(item)
             root, ext = os.path.splitext(item)
             if ext == '.jpg':
                 suffix = root.split('-')[-1]

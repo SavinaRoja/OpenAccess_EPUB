@@ -7,8 +7,9 @@ have reached a stage of relative completion.
 import xml.dom.minidom as minidom
 import xml.dom
 import logging
-import os, os.path
+import os.path
 import utils
+
 
 class OPSContent(object):
     '''A class for instantiating content xml documents in the OPS Preferred
@@ -20,7 +21,7 @@ class OPSContent(object):
         #Get string from outdirect sans "journal."
         self.doi = doi
         print(self.doi)
-        self.jid = self.doi.split('journal.')[1] #journal id string
+        self.jid = self.doi.split('journal.')[1]  #journal id string
         self.syn_frag = 'synop.{0}.xml'.format(self.jid) + '#{0}'
         self.main_frag = 'main.{0}.xml'.format(self.jid) + '#{0}'
         self.bib_frag = 'biblio.{0}.xml'.format(self.jid) + '#{0}'
