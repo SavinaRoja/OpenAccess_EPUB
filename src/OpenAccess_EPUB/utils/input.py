@@ -17,6 +17,16 @@ import logging
 log = logging.getLogger('utils.input')
 
 
+def getFileName(full_path):
+    """
+    This method provides the standard mode of deriving the file root name from
+    a given path to the file; excludes the file extension and all parent
+    directories.
+    """
+    filename = os.path.split(full_path)[1]
+    return os.path.splitext(filename)[0]
+
+
 def localInput(xml_path):
     """
     This method accepts xml path data as an argument, instantiates the Article,
@@ -24,7 +34,7 @@ def localInput(xml_path):
     """
     log.info('Local Input - {0}'.format(xml_path))
     art = Article(xml_path)
-    return xml_path, art
+    return art, getFileName(xml_path)
 
 
 def doiInput(doi_string):
@@ -70,8 +80,7 @@ def doiInput(doi_string):
         with open(filename, 'wb') as xml_file:
             xml_file.write(open_xml.read())
         art = Article(filename)
-        xml_path = filename
-        return art, xml_path
+        return art, getFileName(filename)
     else:
         print('{0} is not supported for DOI Input'.format(publisher))
         sys.exit(1)
@@ -104,9 +113,8 @@ def urlInput(url_string):
             with open(filename, 'wb') as xml_file:
                 xml_file.write(open_xml.read())
             art = Article(filename)
-            xml_path = filename
             log.debug('Received XML path - {0}'.format(xml_path))
-            return art, xml_path
+            return art, getFileName(filename)
     else:  # We don't support this input or publisher
         print('Invalid Link: Bad URL or unsupported publisher')
         print('Supported publishers are: {0}'.format(', '.join(support)))
@@ -132,8 +140,8 @@ def frontiersZipInput(zip_path, output_prefix):
     zipname1 = "{0}-r{1}.zip".format(file_root, '1')
     zipname2 = "{0}-r{1}.zip".format(file_root, '2')
     #Construct the pathnames for output
-    output = os.path.join(output_prefix, file_root)
-    images_output = os.path.join(output, 'images')
+    output = os.path.join(output_prefix, file_root, 'META-INF')
+    images_output = os.path.join(output, 'OPS', 'images')
     with zipfile.ZipFile(os.path.join(path, zipname1), 'r') as xml_zip:
         zip_dir = '{0}-r1'.format(file_root)
         xml = os.path.join(zip_dir, '{0}.xml'.format(file_root))
@@ -145,7 +153,7 @@ def frontiersZipInput(zip_path, output_prefix):
             sys.exit(1)
         else:
             if not os.path.isdir(output):
-                os.mkdir(output)
+                os.makedirs(output)
             shutil.copy(xml, os.path.join(output))
             os.remove(xml)
             os.rmdir(zip_dir)

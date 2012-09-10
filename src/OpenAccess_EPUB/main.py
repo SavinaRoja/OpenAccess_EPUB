@@ -90,7 +90,7 @@ def dirExists(outdirect, batch):
         shutil.rmtree(outdirect)
 
 
-def makeEPUB(document, xml_local, outdirect, images):
+def makeEPUB(document, outdirect, images):
     """
     Encapsulates the primary processing work-flow. Before this method is
     called, pre-processing has occurred to define important directory and file
@@ -165,36 +165,31 @@ def main(args, temp_log_id, temp_log_path):
     #Determination of input type and processing
     if args.input:
         if 'http://www' in args.input:
-            document, xml_local = utils.input.urlInput(args.input)
+            document, filename = utils.input.urlInput(args.input)
         elif args.input[:4] == 'doi:':
-            document, xml_local = utils.input.doiInput(args.input)
+            document, filename = utils.input.doiInput(args.input)
         else:
-            xml_local, document = utils.input.localInput(args.input)
+            document, filename = utils.input.localInput(args.input)
     elif args.zip:
         utils.input.frontiersZipInput(args.zip, args.output)
-    #Later code versions may support the manual naming of the output file
-    #as a commandline argument. For now, the name of the ePub file will be
-    #the same as the input xml file.
-    input_name = os.path.splitext(os.path.split(xml_local)[1])[0]
     #Set the log name
-    logname = os.path.join(args.log_to, input_name + '.log')
+    logname = os.path.join(args.log_to, filename + '.log')
     os.close(temp_log_id)
     os.rename(temp_log_path, logname)
     #Generate the output name, the output directory + input_name
-    output_name = os.path.join(args.output, input_name)
+    output_name = os.path.join(args.output, filename)
     if os.path.isdir(output_name):
         dirExists(output_name, args.batch)
 
     #Make the ePub!
     makeEPUB(document,  # The parsed Article class
-             xml_local,  # The path to the local xml file
              output_name,  # The name of the output file
              args.images)  # Path specifying where to find the images
 
     #Everything after this point is post-handling. Place things in the cache
     #as appropriate and clean up.
-    if setngs.save_xml:
-        shutil.copy2(xml_local, setngs.xml_cache)
+    #if setngs.save_xml:
+    #    shutil.copy2(xml_local, setngs.xml_cache)
     if setngs.save_log:
         shutil.copy2(logname, setngs.cache_log)
     if setngs.save_output:
