@@ -147,7 +147,7 @@ def frontiersZipInput(zip_path, output_prefix):
     images_output = os.path.join(output, 'OPS', 'images')
     with zipfile.ZipFile(os.path.join(path, zipname1), 'r') as xml_zip:
         zip_dir = '{0}-r1'.format(file_root)
-        xml = os.path.join(zip_dir, '{0}.xml'.format(file_root))
+        xml = '/'.join([zip_dir, '{0}.xml'.format(file_root)])
         try:
             xml_zip.extract(xml)
         except KeyError:
