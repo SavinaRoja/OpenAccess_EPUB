@@ -79,7 +79,7 @@ class Settings(object):
             return os.path.join(s, '.OpenAccess_EPUB')
         if os.name == 'nt':
             s = os.environ['APPDATA']
-            return os.path.join(s, '.OpenAccess_EPUB')
+            return os.path.join(s, 'OpenAccess_EPUB')
 
     def logSettings(self):
         """

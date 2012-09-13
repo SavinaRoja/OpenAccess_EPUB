@@ -12,6 +12,21 @@ log = logging.getLogger('utils')
 Identifier = namedtuple('Identifer', 'id, type')
 
 
+def getFileRoot(path):
+    """
+    This method provides a standard method for acquiring the root name of a
+    file from a path string. It will not raise an error if it returns an empty
+    string, but it will issue a warning.
+    """
+    bn = os.path.basename(path)
+    root = os.path.splitext(bn)[0]
+    if not root:
+        w = 'getFileRoot could not derive a root file name from\"{0}\"'
+        log.warning(w.format(path))
+        print(w.format(path))
+    return root
+
+
 def nodeText(node):
     """
     This is to be used when a node may only contain text, numbers or special

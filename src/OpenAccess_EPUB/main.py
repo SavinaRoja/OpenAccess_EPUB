@@ -48,7 +48,7 @@ def OAEParser():
                         the images from the default directory, the image cache,
                         or the internet.''')
     modes = parser.add_mutually_exclusive_group()
-    modes.add_argument('-i', '--input', action='store',
+    modes.add_argument('-i', '--input', action='store', default=False,
                        help='''Input may be a path to a local directory, a \
                               URL to a PLoS journal article, or a PLoS DOI \
                               string''')
@@ -147,7 +147,7 @@ def epubcheck(epubname):
     os.execlp('java', 'OpenAccess_EPUB', '-jar', setngs.epubcheck, epubname)
 
 
-def main(args, temp_log_id, temp_log_path):
+def main(args):
     """
     This is the main code execution block.
     """
@@ -180,10 +180,6 @@ def main(args, temp_log_id, temp_log_path):
             doc, fn = utils.input.localInput(args.input)
     elif args.zip:
         doc, fn = utils.input.frontiersZipInput(args.zip, args.output)
-    #Set the log name
-    logname = os.path.join(args.log_to, fn + '.log')
-    os.close(temp_log_id)
-    os.rename(temp_log_path, logname)
     #Generate the output name, the output directory + input_name
     output_name = os.path.join(args.output, fn)
     #if os.path.isdir(output_name):
@@ -198,8 +194,6 @@ def main(args, temp_log_id, temp_log_path):
     #as appropriate and clean up.
     #if setngs.save_xml:
     #    shutil.copy2(xml_local, setngs.xml_cache)
-    if setngs.save_log:
-        shutil.copy2(logname, setngs.cache_log)
     if setngs.save_output:
         shutil.copy2(output_name, setngs.cache_output)
     #WARNING: shutil.rmtree() is a recursive deletion function, care should be
