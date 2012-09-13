@@ -39,7 +39,7 @@ def OAEParser():
                         default=setngs.local_output,
                         help='Use to specify a desired output directory')
     parser.add_argument('-l', '--log-to', action='store',
-                        default=setngs.local_log,
+                        default=setngs.local_output,
                         help='Use to specify a non-default log directory')
     parser.add_argument('-I', '--images', action='store',
                         default=setngs.default_images,

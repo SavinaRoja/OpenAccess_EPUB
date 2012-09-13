@@ -487,7 +487,6 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
         """
         for l in self.getDescendantsByTagName(node, 'list'):
             l_attrs = self.getAllAttributes(l, remove=True)
-            print(l_attrs)
             try:
                 if l_attrs['list-type'] == 'order':
                     l.tagName = 'ol'
@@ -590,7 +589,6 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
             img.setAttribute('id', t_attrs['id'])
             #Add the image source, this is a little complex, see the method
             src = self.tableSource(t_attrs['id'])
-            print(src)
             img.setAttribute('src', src)
             #Now we can handle the caption and label
             if caption or label:
@@ -936,7 +934,7 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
             err_msg = 'Unknown table ID type: {0}'.format(table_id)
             log.error(err_msg)
             raise InputError(err_msg)
-        img_dir = 'images/'.format(self.doi_frag)
+        img_dir = 'images/'
         for item in os.listdir(os.path.join(self.ops_dir, 'images')):
             root, ext = os.path.splitext(item)
             if ext == '.jpg':

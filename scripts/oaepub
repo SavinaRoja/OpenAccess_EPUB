@@ -19,8 +19,6 @@ def main():
     elif args.zip:
         logname = utils.getFileRoot(args.zip) + '.log'
     logpath = os.path.join(args.output, logname)
-    #if not os.path.isdir(args.log_to):
-    #    os.mkdir(args.log_to)
     logging.basicConfig(filename=logpath, level=logging.DEBUG)
     logging.info('OpenAccess_EPUB Log v.{0}'.format(oae.__version__))
     #Run the main script
