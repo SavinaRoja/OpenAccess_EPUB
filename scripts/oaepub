@@ -27,7 +27,6 @@ def main():
     oae.main(args)
     #Cache the log
     if setngs.save_log:
-        logging.close()
         shutil.copy2(logpath, setngs.cache_log)
 
 

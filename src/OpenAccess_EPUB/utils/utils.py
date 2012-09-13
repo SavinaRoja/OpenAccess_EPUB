@@ -54,7 +54,8 @@ def makeEPUBBase(location):
     """
     log.info('Making the Base ePub at {0}'.format(location))
     #Create root directory
-    os.mkdir(location)
+    if not os.path.isdir(location):
+        os.makedirs(location)
     #Create mimetype file in root directory
     mime_path = os.path.join(location, 'mimetype')
     with open(mime_path, 'w') as mimetype:
