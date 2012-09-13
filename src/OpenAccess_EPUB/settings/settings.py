@@ -35,9 +35,7 @@ class Settings(object):
         #This sets a default output location relative to the directory in which
         #the code is run.
         self.save_output = False
-        self.local_output = os.path.join(self.local, 'output')
-        #self.local_output = self.local
-        self.cache_output = os.path.join(self.cache_loc, 'output')
+        self.local_output = os.path.join(self.local)
 
         #This determines whether the program will erase the pre-zipped output
         #directory once it finishes zipping it to ePub.
