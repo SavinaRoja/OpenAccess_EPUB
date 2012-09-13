@@ -89,9 +89,7 @@ def buildCache(location):
     os.mkdir(location)
     os.mkdir(os.path.join(location, 'img_cache'))
     os.mkdir(os.path.join(location, 'logs'))
-    os.mkdir(os.path.join(location, 'downloaded_xml_files'))
     os.mkdir(os.path.join(location, 'css'))
-    os.mkdir(os.path.join(location, 'output'))
     makeEPUBBase(location)
 
 

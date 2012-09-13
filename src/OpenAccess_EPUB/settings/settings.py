@@ -32,12 +32,6 @@ class Settings(object):
         self.save_log = True
         self.cache_log = os.path.join(self.cache_loc, 'logs')
 
-        #This controls whether an XML file downloaded from the internet will be
-        #cached
-        self.save_xml = True
-        #This sets the downloaded xml file location
-        self.xml_cache = os.path.join(self.cache_loc, 'downloaded_xml_files')
-
         #This sets a default output location relative to the directory in which
         #the code is run.
         self.save_output = False
