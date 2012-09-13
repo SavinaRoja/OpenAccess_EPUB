@@ -161,8 +161,6 @@ def main(args):
     #Image caching is important for some users.
     if not os.path.isdir(setngs.cache_loc):
         utils.buildCache(setngs.cache_loc)
-    if not os.path.isdir(setngs.xml_cache):
-        os.mkdir(setngs.xml_cache)
     if not os.path.isdir(setngs.cache_log):
         os.mkdir(setngs.cache_log)
     if not os.path.isdir(setngs.cache_img):
@@ -180,24 +178,18 @@ def main(args):
             doc, fn = utils.input.localInput(args.input)
     elif args.zip:
         doc, fn = utils.input.frontiersZipInput(args.zip, args.output)
-    #Generate the output name, the output directory + input_name
+
+    #Generate the output name
     output_name = os.path.join(args.output, fn)
-    #if os.path.isdir(output_name):
-    #    dirExists(output_name, args.batch)
 
     #Make the ePub!
     makeEPUB(doc,  # The parsed Article class
              output_name,  # The name of the output file
              args.images)  # Path specifying where to find the images
 
-    #Everything after this point is post-handling. Place things in the cache
-    #as appropriate and clean up.
-    #if setngs.save_xml:
-    #    shutil.copy2(xml_local, setngs.xml_cache)
+    #Everything after this point is post-handling.
     if setngs.save_output:
         shutil.copy2(output_name, setngs.cache_output)
-    #WARNING: shutil.rmtree() is a recursive deletion function, care should be
-    #taken whenever modifying this code
-    #if setngs.cleanup:
-    #    shutil.rmtree(output_name)
+    if setngs.cleanup:
+        shutil.rmtree(output_name)
     epubcheck('{0}.epub'.format(output_name))
