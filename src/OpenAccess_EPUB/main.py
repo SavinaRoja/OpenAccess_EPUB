@@ -7,7 +7,7 @@ mode of execution and interaction.
 
 #If you change the version here, make sure to also change it in setup.py and
 #the module __init__.py
-__version__ = '0.2.4'
+__version__ = '0.2.5'
 
 #Standard Library Modules
 import argparse
@@ -169,14 +169,14 @@ def main(args):
         utils.makeEPUBBase(setngs.base_epub)
     #Single Input Mode
     #Determination of input type and processing
-    if args.input:
+    if args.input:  # Input target is an xml file, either local or online
         if 'http://www' in args.input:
             doc, fn = utils.input.urlInput(args.input)
         elif args.input[:4] == 'doi:':
             doc, fn = utils.input.doiInput(args.input)
         else:
             doc, fn = utils.input.localInput(args.input)
-    elif args.zip:
+    elif args.zip:  # Zipped input, containing necessary xml and images
         doc, fn = utils.input.frontiersZipInput(args.zip, args.output)
 
     #Generate the output name
@@ -187,9 +187,10 @@ def main(args):
              output_name,  # The name of the output file
              args.images)  # Path specifying where to find the images
 
-    #Everything after this point is post-handling.
-    if setngs.save_output:
-        shutil.copy2(output_name, setngs.cache_output)
-    if setngs.cleanup:
+    #Cleanup removes the produced output directory, keeps the ePub file.
+    if setngs.cleanup:  # Can be toggled in settings.
         shutil.rmtree(output_name)
+
+    #Running epubcheck on the output verifies the validity of the ePub,
+    #requires a local installation of java and epubcheck.
     epubcheck('{0}.epub'.format(output_name))
