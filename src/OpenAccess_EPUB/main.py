@@ -60,9 +60,9 @@ def OAEParser():
     modes.add_argument('-b', '--batch', action='store', default=False,
                        help='''Use to specify a batch directory; each \
                                article inside will be processed.''')
-    modes.add_argument('-C', '--collection', action='store', default=False,
-                       help='''Use to create an ePub file containing \
-                               multiple resources.''')
+    #modes.add_argument('-C', '--collection', action='store', default=False,
+    #                   help='''Use to create an ePub file containing \
+    #                           multiple resources.''')
     modes.add_argument('-cI', '--clear-image-cache', action='store_true',
                        default=False, help='''Clears the image cache''')
     modes.add_argument('-cX', '--clear-xml-cache', action='store_true',
