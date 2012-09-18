@@ -6,7 +6,7 @@ from distutils.core import setup
 import os.path
 
 setup(name='OpenAccess_EPUB',
-      version='0.2.5',
+      version='0.2.6',
       description='Converts OpenAccess Journal articles to ePub',
       author='Paul Barton',
       author_email='pablo.barton@gmail.com',
