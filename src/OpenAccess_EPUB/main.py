@@ -47,6 +47,9 @@ def OAEParser():
                         images. This overrides the program's attempts to get
                         the images from the default directory, the image cache,
                         or the internet.''')
+    parser.add_argument('-c', '--clean', action='store_false', default=True,
+                        help='''Use to toggle off cleanup. Without this flag, \
+                                the pre-zipped output will be removed.''')
     modes = parser.add_mutually_exclusive_group()
     modes.add_argument('-i', '--input', action='store', default=False,
                        help='''Input may be a path to a local directory, a \
@@ -188,7 +191,7 @@ def main(args):
              args.images)  # Path specifying where to find the images
 
     #Cleanup removes the produced output directory, keeps the ePub file.
-    if setngs.cleanup:  # Can be toggled in settings.
+    if args.clean:  # Can be toggled in settings.
         shutil.rmtree(output_name)
 
     #Running epubcheck on the output verifies the validity of the ePub,

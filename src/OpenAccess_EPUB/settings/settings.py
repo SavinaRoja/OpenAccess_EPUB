@@ -37,11 +37,6 @@ class Settings(object):
         self.save_output = False
         self.local_output = os.path.join(self.local)
 
-        #This determines whether the program will erase the pre-zipped output
-        #directory once it finishes zipping it to ePub.
-        #It is generally good to leave as True. You can always unzip the ePub.
-        self.cleanup = True
-
         #This determines the location of the base_epub directory, which is the
         #reference directory copied to instantiate the epub hierarchy
         self.base_epub = os.path.join(self.cache_loc, 'base_epub')
