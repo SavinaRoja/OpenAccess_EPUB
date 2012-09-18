@@ -75,4 +75,3 @@ class Settings(object):
         log.debug('Local: {0}'.format(self.local))
         log.debug('Local Output: {0}'.format(self.local_output))
         log.debug('Local CSS: {0}'.format(self.local_css))
-        log.debug('Cleanup: {0}'.format(self.cleanup))
