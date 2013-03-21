@@ -12,7 +12,7 @@ import logging
 log = logging.getLogger('OPSGenerator')
 
 
-class OPSGenerator(object):
+class OPSMeta(object):
     """
     This class provides several baseline features and functions required in
     order to produce OPS content.

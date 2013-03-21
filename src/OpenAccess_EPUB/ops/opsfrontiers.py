@@ -4,7 +4,7 @@ from the OPSGenerator base class in opsgenerator.py
 """
 
 import OpenAccess_EPUB.utils as utils
-import opsgenerator
+from .opsmeta import OPSMeta
 import os.path
 import logging
 
@@ -22,13 +22,13 @@ class InputError(Exception):
         return self.detail
 
 
-class OPSFrontiers(opsgenerator.OPSGenerator):
+class OPSFrontiers(OPSMeta):
     """
     This provides the full feature set to create OPS content for an ePub file
     from a Frontiers journal article.
     """
     def __init__(self, article, output_dir):
-        opsgenerator.OPSGenerator.__init__(self)
+        OPSMeta.__init__(self)
         log.info('Initiating OPSFrontiers')
         print('Generating OPS content...')
         self.article = article.root_tag

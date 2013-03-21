@@ -4,7 +4,7 @@ from the OPSGenerator base class in opsgenerator.py
 """
 
 import OpenAccess_EPUB.utils as utils
-import opsgenerator
+from opsmeta import OPSMeta
 import os.path
 import logging
 
@@ -22,13 +22,13 @@ class InputError(Exception):
         return self.detail
 
 
-class OPSPLoS(opsgenerator.OPSGenerator):
+class OPSPLoS(OPSMeta):
     """
     This provides the full feature set to create OPS content for an ePub file
     from a PLoS journal article.
     """
     def __init__(self, article, output_dir):
-        opsgenerator.OPSGenerator.__init__(self)
+        OPSMeta.__init__(self)
         log.info('Initiating OPSPLoS')
         print('Generating OPS content...')
         self.metadata = article.metadata
