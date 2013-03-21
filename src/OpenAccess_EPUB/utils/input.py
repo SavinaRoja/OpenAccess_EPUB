@@ -18,7 +18,7 @@ def localInput(xml_path):
     and returns the two.
     """
     art = Article(xml_path)
-    return xml_path, art
+    return art, xml_path
 
 
 def doiInput(doi_string):

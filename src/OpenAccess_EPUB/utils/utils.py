@@ -239,46 +239,47 @@ def initiateDocument(titlestring,
                      _systemId = 'http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd'):
     '''A method for conveniently initiating a new xml.DOM Document'''
     from xml.dom.minidom import getDOMImplementation
-    
+
     impl = getDOMImplementation()
-    
+
     mytype = impl.createDocumentType('article', _publicId, _systemId)
     doc = impl.createDocument(None, 'root', mytype)
-    
+
     root = doc.lastChild #IGNORE:E1101
     root.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml')
     root.setAttribute('xml:lang', 'en-US')
-    
+
     head = doc.createElement('head')
     root.appendChild(head)
-    
+
     title = doc.createElement('title')
     title.appendChild(doc.createTextNode(titlestring))
-    
+
     link = doc.createElement('link')
     link.setAttribute('rel', 'stylesheet')
     link.setAttribute('href','css/reference.css')
     link.setAttribute('type', 'text/css')
-    
+
     meta = doc.createElement('meta')
     meta.setAttribute('http-equiv', 'Content-Type')
     meta.setAttribute('content', 'application/xhtml+xml')
     meta.setAttribute('charset', 'utf-8')
-    
+
     headlist = [title, link, meta]
     for tag in headlist:
         head.appendChild(tag)
     root.appendChild(head)
-    
+
     body = doc.createElement('body')
     root.appendChild(body)
-    
+
     return doc, body
+
 
 def scrapePLoSIssueCollection(issue_url):
     '''Uses Beautiful Soup to scrape the PLoS page of an issue. It is used
     instead of xml.dom.minidom because of malformed html/xml'''
-    
+
     iu = urllib2.urlopen(issue_url)
     with open('temp','w') as temp:
         temp.write(iu.read())
@@ -302,6 +303,7 @@ def scrapePLoSIssueCollection(issue_url):
             if href[:9] == '/article/':
                 id = href.split('10.1371%2F')[1].split(';')[0]
                 collection.write('doi:10.1371/{0}\n'.format(id))
+
 
 def fetchFrontiersImages(doi, counts, cache_dir, output_dir, caching):
     """

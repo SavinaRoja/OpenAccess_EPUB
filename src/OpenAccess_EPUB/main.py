@@ -60,7 +60,7 @@ def dirExists(outdirect, batch):
     """
     if not batch:
         print(u'The directory {0} already exists.'.format(outdirect))
-        r = raw_input('Replace? [y/n]')
+        r = raw_input('Replace? [Y/n]')
         if r in ['y', 'Y', '']:
             shutil.rmtree(outdirect)
         else:
@@ -149,7 +149,7 @@ def main():
         document, xml_local = utils.input.doiInput(args.input)
     else:
         download = False
-        xml_local, document = utils.input.localInput(args.input)
+        document, xml_local = utils.input.localInput(args.input)
     #Later code versions may support the manual naming of the output file
     #as a commandline argument. For now, the name of the ePub file will be
     #the same as the input xml file.
