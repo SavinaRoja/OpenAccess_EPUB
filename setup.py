@@ -17,5 +17,5 @@ setup(name='OpenAccess_EPUB',
                 'OpenAccess_EPUB.opf', 'OpenAccess_EPUB.ops',
                 'OpenAccess_EPUB.settings', 'OpenAccess_EPUB.utils'],
       scripts=['scripts/oaepub', 'scripts/epubzip'],
-      data_files=[('epubcheck', ['resources/epubcheck-3.0b5.jar'])]
+      data_files=[]
       )

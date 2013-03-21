@@ -22,9 +22,9 @@ import utils.images
 import opf
 import ncx
 import ops
-from settings import Settings
+from .settings import *
 
-settings = Settings()
+
 log = logging.getLogger('Main')
 
 
@@ -36,13 +36,13 @@ def OAEParser():
     parser.add_argument('--version', action='version',
                         version='OpenAccess_EPUB {0}'.format(__version__))
     parser.add_argument('-o', '--output', action='store',
-                        default=settings.local_output,
+                        default=DEFAULT_OUTPUT,
                         help='Use to specify a desired output directory')
     parser.add_argument('-l', '--log-to', action='store',
-                        default=settings.local_output,
+                        default=DEFAULT_LOG,
                         help='Use to specify a non-default log directory')
     parser.add_argument('-I', '--images', action='store',
-                        default=settings.default_images,
+                        default=DEFAULT_IMAGES,
                         help='''Specify a path to the directory containing the
                         images. This overrides the program's attempts to get
                         the images from the default directory, the image cache,
@@ -75,22 +75,18 @@ def OAEParser():
     return parser.parse_args()
 
 
-def dirExists(outdirect, batch):
+def dir_exists(outdirect):
     """
     Provides interaction with the user if the output directory already exists.
     If running in batch mode, this interaction is ignored and the directory
     is automatically deleted.
     """
-    if not batch:
-        print(u'The directory {0} already exists.'.format(outdirect))
-        r = raw_input('Replace? [Y/n]')
-        if r in ['y', 'Y', '']:
-            shutil.rmtree(outdirect)
-        else:
-            print('Aborting process.')
-            sys.exit()
-    else:
+    print(u'The directory {0} already exists.'.format(outdirect))
+    r = raw_input('Replace? [Y/n]')
+    if r in ['y', 'Y', '']:
         shutil.rmtree(outdirect)
+    else:
+        sys.exit('Aborting process!')
 
 
 def makeEPUB(document, outdirect, images):
@@ -102,13 +98,9 @@ def makeEPUB(document, outdirect, images):
     """
     print(u'Processing output to {0}.epub'.format(outdirect))
     #Copy files from base_epub to the new output
-    mimetype = os.path.join(settings.base_epub, 'mimetype')
-    container = os.path.join(settings.base_epub, 'META-INF', 'container.xml')
-    css = os.path.join(settings.base_epub, 'OPS', 'css', 'article.css')
-    shutil.copy(mimetype, outdirect)
-    shutil.copy(container, os.path.join(outdirect, 'META-INF'))
-    os.makedirs(os.path.join(outdirect, 'OPS', 'css'))
-    shutil.copy(css, os.path.join(outdirect, 'OPS', 'css'))
+    if os.path.isdir(outdirect):
+        dir_exists(outdirect)
+    shutil.copytree(BASE_EPUB, outdirect)
     #Get the Digital Object Identifier
     DOI = document.getDOI()
     #utils.images.localImages(images, outdirect, DOI)
@@ -147,7 +139,7 @@ def epubcheck(epubname):
     elif not e == '.epub':
         print('Warning: Filename extension is not \'.epub\', appending it...')
         epubname += '.epub'
-    os.execlp('java', 'OpenAccess_EPUB', '-jar', settings.epubcheck, epubname)
+    os.execlp('java', 'OpenAccess_EPUB', '-jar', EPUBCHECK, epubname)
 
 
 def main(args):
@@ -164,14 +156,14 @@ def main(args):
 
     #The cache is a static directory which can hold various items
     #Image caching is important for some users.
-    if not os.path.isdir(settings.cache_loc):
-        utils.buildCache(settings.cache_loc)
-    if not os.path.isdir(settings.cache_log):
-        os.mkdir(settings.cache_log)
-    if not os.path.isdir(settings.cache_img):
-        utils.images.initImgCache(settings.cache_img)
-    if not os.path.isdir(settings.base_epub):
-        utils.makeEPUBBase(settings.base_epub)
+    if not os.path.isdir(CACHE_LOCATION):
+        utils.buildCache(CACHE_LOCATION)
+    if not os.path.isdir(CACHE_LOG):
+        os.mkdir(CACHE_LOG)
+    if not os.path.isdir(CACHE_IMAGES):
+        utils.images.initImgCache(CACHE_IMAGES)
+    if not os.path.isdir(BASE_EPUB):
+        utils.makeEPUBBase(BASE_EPUB)
 
     #Single Input Mode
     #Determination of input type and processing
@@ -194,8 +186,8 @@ def main(args):
              args.images)  # Path specifying where to find the images
 
     #Cleanup removes the produced output directory, keeps the ePub file.
-    if args.clean:  # Can be toggled in settings.
-        shutil.rmtree(output_name)
+    #if args.clean:  # Can be toggled in settings.
+        #shutil.rmtree(output_name)
 
     #Running epubcheck on the output verifies the validity of the ePub,
     #requires a local installation of java and epubcheck.

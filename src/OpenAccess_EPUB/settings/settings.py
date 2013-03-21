@@ -27,7 +27,7 @@ CACHING = True
 CACHE_LOCATION = cache_location()
 
 #Where cached images should be
-CACHE_IMAGE = os.path.join(CACHE_LOCATION, 'img_cache')
+CACHE_IMAGES = os.path.join(CACHE_LOCATION, 'img_cache')
 
 #Where to look for images relative to the working directory
 DEFAULT_IMAGES = LOCAL_DIR
@@ -37,6 +37,9 @@ SAVE_LOG = True
 
 #Where cached log files should be
 CACHE_LOG = os.path.join(CACHE_LOCATION, 'logs')
+
+#Where to put the default log file
+DEFAULT_LOG = LOCAL_DIR
 
 #Toggle caching of output
 SAVE_OUTPUT = False

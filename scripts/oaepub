@@ -2,11 +2,10 @@
 
 import OpenAccess_EPUB as oae
 import OpenAccess_EPUB.utils as utils
-import OpenAccess_EPUB.settings
+from OpenAccess_EPUB.settings import *
 import os.path
 import logging
-
-setngs = OpenAccess_EPUB.settings.Settings()
+import shutil
 
 
 def main():
@@ -24,8 +23,8 @@ def main():
     #Run the main script
     oae.main(args)
     #Cache the log
-    if setngs.save_log:
-        shutil.copy2(logpath, setngs.cache_log)
+    if SAVE_LOG:
+        shutil.copy2(logpath, CACHE_LOG)
 
 
 if __name__ == '__main__':
