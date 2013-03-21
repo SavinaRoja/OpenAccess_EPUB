@@ -8,6 +8,10 @@ It is important to note that only text, numbers, and special characters are
 allowed inside these elements.
 """
 
+import logging
+
+log = logging.getLogger('dublincore')
+
 
 def identifier(input_string, dom, primary=False):
     """

@@ -1,12 +1,14 @@
 import utils
-import logging
 import os.path
 import sys
 import shutil
 import xml.dom.minidom
 import jpts
 import urllib2
+import logging
 from time import sleep
+
+log = logging.getLogger('Article')
 
 
 class Article(object):
@@ -31,7 +33,7 @@ class Article(object):
         such as found in jptsmeta.py to serve as the article's metadata
         attribute.
         """
-        logging.info('Parsing file: {0}'.format(xml_file))
+        log.info('Parsing file - {0}'.format(xml_file))
         doc = xml.dom.minidom.parse(xml_file)
         #Here we check the doctype for the DTD under which the article was
         #published. This affects how we will parse metadata and content.
@@ -49,11 +51,11 @@ class Article(object):
             print('The article\'s DOCTYPE declares an unsupported Journal \
 Publishing DTD: \n{0}'.format(doc.doctype.publicId))
             sys.exit()
-        #Access the root tag of the document
+        #Access the root tag of the document name
         self.root_tag = doc.documentElement
         #Determine the publisher
         self.publisher = self.identifyPublisher()
-        print(self.publisher)
+        log.info('Publisher - {0}'.format(self.publisher))
         #Create instance of article metadata
         if self.dtd == u'2.0':
             self.metadata = jpts.JPTSMeta20(doc, self.publisher)
@@ -82,6 +84,7 @@ Publishing DTD: \n{0}'.format(doc.doctype.publicId))
         two important signifiers of publisher, <publisher> under <journal-meta>
         and <article-id pub-id-type="doi"> under <article-meta>.
         """
+        log.info('Determining Publisher')
         pubs = {u'Frontiers Research Foundation': u'Frontiers',
                 u'Public Library of Science': u'PLoS'}
         dois = {u'10.3389': u'Frontiers',
@@ -91,13 +94,14 @@ Publishing DTD: \n{0}'.format(doc.doctype.publicId))
             publisher = self.root_tag.getElementsByTagName('publisher')
             pname = False
             if publisher:
+                log.debug('Located publisher element')
                 pname = publisher[0].getElementsByTagName('publisher-name')[0]
                 pname = pname.firstChild.data
                 try:
                     return pubs[pname]
                 except KeyError:
-                    print('Strange publisher name: {0}'.format(pname))
-                    print('Falling back to article-id DOI')
+                    log.debug('Strange publisher name - {0}'.format(pname))
+                    log.debug('Falling back to article-id DOI')
                     pname = False
             if not pname:  # If pname is undeclared, check article-id
                 art_IDs = self.root_tag.getElementsByTagName('article-id')
@@ -125,104 +129,13 @@ Publishing DTD: \n{0}'.format(doc.doctype.publicId))
         attr_err = 'Article attribute {0} has improper value: {1}'
         for _key, _val in mandates:
             if self.attrs[_key] and not self.attrs[_key] == _val:
-                logging.error(attr_err.format(_key, self.attrs[_key]))
+                log.error(attr_err.format(_key, self.attrs[_key]))
         if self.attrs['article-type'] not in utils.suggestedArticleTypes():
-            art_type_err = 'article-type value is not a suggested value: {0}'
-            logging.warning(art_type_err.format(self.attrs['article-type']))
+            art_type_err = 'article-type value is not a suggested value - {0}'
+            log.warning(art_type_err.format(self.attrs['article-type']))
 
     def getDOI(self):
-        '''A method for returning the DOI identifier of an article'''
+        """
+        A method for returning the DOI identifier of an article
+        """
         return self.metadata.article_id['doi']
-
-    def fetchPLoSImages(self, cache_dir, output_dir, caching):
-        """
-        Fetch the PLoS images associated with the article.
-        """
-
-        doi = self.getDOI()
-        print('Processing images for {0}...'.format(doi))
-        o = doi.split('journal.')[1]
-        img_dir = os.path.join(output_dir, 'OPS', 'images-{0}'.format(o))
-        #Check cache to see if images already have been downloaded
-        cached = False
-        p, s = os.path.split(doi)
-        if p == '10.1371':
-            art_cache = os.path.join(cache_dir, 'PLoS', s)
-            art_cache_images = os.path.join(art_cache, 'images')
-            if os.path.isdir(art_cache):
-                cached = True
-                logging.info('Cached images found')
-                print('Cached images found. Transferring from cache...')
-                shutil.copytree(art_cache_images, img_dir)
-            else:
-                logging.info('Cached images not found')
-        else:
-            print('The publisher DOI does not correspond to PLoS')
-        if not cached:
-            model_images = os.path.join(cache_dir, 'model', 'images')
-            shutil.copytree(model_images, img_dir)
-            print('Downloading images, this may take some time...')
-            #This string is invariable in the fetching of PLoS images
-            PLOSSTRING = 'article/fetchObject.action?uri=info%3Adoi%2F'
-            #An example DOI for PLoS is 10.1371/journal.pmed.0010027
-            #Here we parse it into useful strings for URL construction
-            pdoi, jdoi = doi.split('/')  # 10.1371, journal.pmed.0010027
-            _j, jrn_id, art_id = jdoi.split('.')  # journal, pmed, 0010027
-            #A mapping of journal ids to URLs:
-            jids = {'pgen': 'http://www.plosgenetics.org/',
-                    'pcbi': 'http://www.ploscompbiol.org/',
-                    'ppat': 'http://www.plospathogens.org/',
-                    'pntd': 'http://www.plosntds.org/',
-                    'pmed': 'http://www.plosmedicine.org/',
-                    'pbio': 'http://www.plosbiology.org/',
-                    'pone': 'http://www.plosone.org/'}
-            #A mapping of image types to directory names
-            dirs = {'e': 'equations', 'g': 'figures', 't': 'tables'}
-            #We detect all the graphic references in the document
-            graphics = self.root_tag.getElementsByTagName('graphic')
-            graphics += self.root_tag.getElementsByTagName('inline-graphic')
-            for g in graphics:
-                xlink_href = g.getAttribute('xlink:href')
-                tag = xlink_href.split('.')[-1]
-                typechar = tag[0]  # first character, either e, g, or t
-                if typechar == 'e':  # the case of an equation
-                    rep = '&representation=PNG'
-                else:  # other cases: table and figure
-                    rep = '&representation=PNG_L'
-                #Let's compose the address
-                addr_str = '{0}{1}{2}%2Fjournal.{3}.{4}.{5}{6}'
-                addr = addr_str.format(jids[jrn_id], PLOSSTRING, pdoi, jrn_id,
-                                       art_id, tag, rep)
-                #Open the address
-                try:
-                    image = urllib2.urlopen(addr)
-                except urllib2.HTTPError, e:
-                    if e.code == 503:  # Server overloaded
-                        sleep(1)  # Wait one second
-                        try:
-                            image = urllib2.urlopen(addr)
-                        except:
-                            break
-                    elif e.code == 500:
-                        logging.error('urllib2.HTTPError {0}'.format(e.code))
-                    break
-                else:
-                    filename = '{0}.png'.format(tag)
-                    img_dir_sub = dirs[type]
-                    img_file = os.path.join(img_dir, img_dir_sub, filename)
-                    with open(img_file, 'wb') as outimage:
-                        outimage.write(image.read())
-                    dl_str = 'Downloaded image {0}'
-                    print(dl_str.format(tag))
-            print("Done downloading images")
-        #If the images were not already cached, and caching is enabled...
-        #We want to transfer the downloaded files to the cache
-        if not cached and caching:
-            os.mkdir(art_cache)
-            shutil.copytree(img_dir, art_cache_images)
-
-    def fetchFrontiersImages(self, cache_dir, output_dir, caching):
-        '''Fetch the Frontiers images associated with the article.'''
-        doi = self.getDOI()
-        counts = self.metadata.counts
-        utils.fetchFrontiersImages(doi, counts, cache_dir, output_dir, caching)

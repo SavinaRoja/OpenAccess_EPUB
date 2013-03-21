@@ -8,6 +8,8 @@ import opsgenerator
 import os.path
 import logging
 
+log = logging.getLogger('OPSPLoS')
+
 
 class InputError(Exception):
     """
@@ -27,6 +29,7 @@ class OPSPLoS(opsgenerator.OPSGenerator):
     """
     def __init__(self, article, output_dir):
         opsgenerator.OPSGenerator.__init__(self)
+        log.info('Initiating OPSPLoS')
         print('Generating OPS content...')
         self.metadata = article.metadata
         self.doi = article.getDOI()

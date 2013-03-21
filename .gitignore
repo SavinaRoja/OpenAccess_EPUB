@@ -9,6 +9,10 @@
 *.hg
 .directory
 
+# Sphinx #
+##########
+.buildinfo
+
 # Epubcheck #
 ############
 epubcheck.sh

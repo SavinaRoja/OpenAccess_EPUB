@@ -13,6 +13,9 @@ metadata, this class will handle everything except <body>.
 from collections import namedtuple
 import OpenAccess_EPUB.utils as utils
 import jptscontrib
+import logging
+
+log = logging.getLogger('JPTSMeta')
 
 
 class JPTSMeta(object):
@@ -20,6 +23,7 @@ class JPTSMeta(object):
     This is the base class for the Journal Publishing Tag Set metadata.
     """
     def __init__(self, document, publisher):
+        log.info('Instantiating JPTSMeta{0} class'.format(self.dtdVersion()))
         self.doc = document
         self.publisher_name = publisher
         self.getTopElements()
@@ -787,7 +791,7 @@ class JPTSMeta(object):
         return nodelist
 
     def dtdVersion(self):
-        return None
+        return ''
 
 
 class JPTSMeta20(JPTSMeta):

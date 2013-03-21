@@ -5,8 +5,9 @@ This is the main execution file for OpenAccess_EPUB. It provides the primary
 mode of execution and interaction.
 """
 
-#If you change the version here, make sure to also change it in setup.py
-__version__ = '0.2.0'
+#If you change the version here, make sure to also change it in setup.py and
+#the module __init__.py
+__version__ = '0.2.6'
 
 #Standard Library Modules
 import argparse
@@ -17,12 +18,14 @@ import logging
 
 #OpenAccess_EPUB Modules
 import utils.input
+import utils.images
 import opf
 import ncx
 import ops
-import settings
+from settings import Settings
 
-settings = settings.Settings()
+settings = Settings()
+log = logging.getLogger('Main')
 
 
 def OAEParser():
@@ -36,19 +39,39 @@ def OAEParser():
                         default=settings.local_output,
                         help='Use to specify a desired output directory')
     parser.add_argument('-l', '--log-to', action='store',
-                        default=settings.local_log,
+                        default=settings.local_output,
                         help='Use to specify a non-default log directory')
+    parser.add_argument('-I', '--images', action='store',
+                        default=settings.default_images,
+                        help='''Specify a path to the directory containing the
+                        images. This overrides the program's attempts to get
+                        the images from the default directory, the image cache,
+                        or the internet.''')
+    parser.add_argument('-c', '--clean', action='store_false', default=True,
+                        help='''Use to toggle off cleanup. Without this flag, \
+                                the pre-zipped output will be removed.''')
     modes = parser.add_mutually_exclusive_group()
-    modes.add_argument('-i', '--input', action='store',
-                        help='''Input may be a path to a local directory, a \
+    modes.add_argument('-i', '--input', action='store', default=False,
+                       help='''Input may be a path to a local directory, a \
                               URL to a PLoS journal article, or a PLoS DOI \
                               string''')
+    modes.add_argument('-z', '--zip', action='store', default=False,
+                       help='''Input mode supporting Frontiers production from
+                               zipfiles. Use the name of either of the zipfiles
+                               with this mode, both zipfiles are required to be
+                               in the same directory.''')
     modes.add_argument('-b', '--batch', action='store', default=False,
-                        help='''Use to specify a batch directory; each \
-                                article inside will be processed.''')
-    modes.add_argument('-C', '--collection', action='store', default=False,
-                        help='''Use to create an ePub file containing \
-                                multiple resources.''')
+                       help='''Use to specify a batch directory; each \
+                               article inside will be processed.''')
+    #modes.add_argument('-C', '--collection', action='store', default=False,
+    #                   help='''Use to create an ePub file containing \
+    #                           multiple resources.''')
+    modes.add_argument('-cI', '--clear-image-cache', action='store_true',
+                       default=False, help='''Clears the image cache''')
+    modes.add_argument('-cX', '--clear-xml-cache', action='store_true',
+                       default=False, help='''Clears the xml cache''')
+    modes.add_argument('-cC', '--clear-cache', action='store_true',
+                       default=False, help='''Clears the entire cache''')
     return parser.parse_args()
 
 
@@ -70,7 +93,7 @@ def dirExists(outdirect, batch):
         shutil.rmtree(outdirect)
 
 
-def makeEPUB(document, xml_local, cache_dir, outdirect, log_to):
+def makeEPUB(document, outdirect, images):
     """
     Encapsulates the primary processing work-flow. Before this method is
     called, pre-processing has occurred to define important directory and file
@@ -78,17 +101,28 @@ def makeEPUB(document, xml_local, cache_dir, outdirect, log_to):
     to generate the ePub content.
     """
     print(u'Processing output to {0}.epub'.format(outdirect))
-    shutil.copytree(settings.base_epub, outdirect)
+    #Copy files from base_epub to the new output
+    mimetype = os.path.join(settings.base_epub, 'mimetype')
+    container = os.path.join(settings.base_epub, 'META-INF', 'container.xml')
+    css = os.path.join(settings.base_epub, 'OPS', 'css', 'article.css')
+    shutil.copy(mimetype, outdirect)
+    shutil.copy(container, os.path.join(outdirect, 'META-INF'))
+    os.makedirs(os.path.join(outdirect, 'OPS', 'css'))
+    shutil.copy(css, os.path.join(outdirect, 'OPS', 'css'))
+    #Get the Digital Object Identifier
     DOI = document.getDOI()
+    #utils.images.localImages(images, outdirect, DOI)
+    #utils.images.getImages(DOI, images, outdirect, setngs.default_images,
+    #                       setngs.caching, setngs.cache_img)
     if DOI.split('/')[0] == '10.1371':  # PLoS's publisher DOI
-        document.fetchPLoSImages(cache_dir, outdirect, settings.caching)
+        #document.fetchPLoSImages(cache_dir, outdirect, setngs.caching)
         ops.OPSPLoS(document, outdirect)
         toc = ncx.TocNCX(__version__)
         toc.parseArticle(document)
         toc.write(outdirect)
         myopf = opf.PLoSOPF(__version__, outdirect, False)
     elif DOI.split('/')[0] == '10.3389':  # Frontiers' publisher DOI
-        document.fetchFrontiersImages(cache_dir, outdirect, settings.caching)
+        #document.fetchFrontiersImages(cache_dir, outdirect, setngs.caching)
         ops.OPSFrontiers(document, outdirect)
         toc = ncx.TocNCX(__version__)
         toc.parseArticle(document)
@@ -116,11 +150,11 @@ def epubcheck(epubname):
     os.execlp('java', 'OpenAccess_EPUB', '-jar', settings.epubcheck, epubname)
 
 
-def main():
+def main(args):
     """
     This is the main code execution block.
     """
-    args = OAEParser()
+
     #Certain locations are defined by the user or by default for production
     #Here we make them if they don't already exist
     if not os.path.isdir(args.log_to):
@@ -129,61 +163,40 @@ def main():
         os.mkdir(args.output)
 
     #The cache is a static directory which can hold various items
-    #Image caching is of notable importance for some users.
+    #Image caching is important for some users.
     if not os.path.isdir(settings.cache_loc):
         utils.buildCache(settings.cache_loc)
-    if not os.path.isdir(settings.xml_cache):
-        os.mkdir(settings.xml_cache)
     if not os.path.isdir(settings.cache_log):
         os.mkdir(settings.cache_log)
     if not os.path.isdir(settings.cache_img):
-        pass
+        utils.images.initImgCache(settings.cache_img)
     if not os.path.isdir(settings.base_epub):
         utils.makeEPUBBase(settings.base_epub)
 
     #Single Input Mode
     #Determination of input type and processing
-    #All input modes pass the xml data to instantiate an Article class
-    if 'http://www' in args.input:
-        document, xml_local = utils.input.urlInput(args.input)
-    elif args.input[:4] == 'doi:':
-        document, xml_local = utils.input.doiInput(args.input)
-    else:
-        document, xml_local = utils.input.localInput(args.input)
+    if args.input:  # Input target is an xml file, either local or online
+        if 'http://www' in args.input:
+            doc, fn = utils.input.urlInput(args.input)
+        elif args.input[:4] == 'doi:':
+            doc, fn = utils.input.doiInput(args.input)
+        else:
+            doc, fn = utils.input.localInput(args.input)
+    elif args.zip:  # Zipped input, containing necessary xml and images
+        doc, fn = utils.input.frontiersZipInput(args.zip, args.output)
 
-    #Later code versions may support the manual naming of the output file
-    #as a commandline argument. For now, the name of the ePub file will be
-    #the same as the input xml file.
-    input_name = os.path.splitext(os.path.split(xml_local)[1])[0]
-
-    #Initiate logging settings
-    logname = os.path.join(args.log_to, input_name + '.log')
-    logging.basicConfig(filename=logname, level=logging.DEBUG)
-    logging.info('OpenAccess_EPUB Log v.{0}'.format(__version__))
-
-    #Generate the output name, the output directory + input_name
-    output_name = os.path.join(args.output, input_name)
-    if os.path.isdir(output_name):
-        dirExists(output_name, args.batch)
+    #Generate the output name
+    output_name = os.path.join(args.output, fn)
 
     #Make the ePub!
-    makeEPUB(document, xml_local, settings.cache_img, output_name, args.log_to)
+    makeEPUB(doc,  # The parsed Article class
+             output_name,  # The name of the output file
+             args.images)  # Path specifying where to find the images
 
-    #Everything after this point is post-handling. Place things in the cache
-    #as appropriate and clean up.
-    if settings.save_xml:
-        shutil.copy2(xml_local, settings.xml_cache)
-    if settings.save_log:
-        shutil.copy2(logname, settings.cache_log)
-    if settings.save_output:
-        shutil.copy2(output_name, settings.cache_output)
+    #Cleanup removes the produced output directory, keeps the ePub file.
+    if args.clean:  # Can be toggled in settings.
+        shutil.rmtree(output_name)
 
-    #WARNING: shutil.rmtree() is a recursive deletion function, care should be
-    #taken whenever modifying this code
-    #if settings.cleanup:
-    #    shutil.rmtree(output_name)
-
+    #Running epubcheck on the output verifies the validity of the ePub,
+    #requires a local installation of java and epubcheck.
     epubcheck('{0}.epub'.format(output_name))
-
-if __name__ == '__main__':
-    main()

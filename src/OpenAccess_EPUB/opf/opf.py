@@ -8,10 +8,13 @@ conversion.
 """
 
 import OpenAccess_EPUB.dublincore as dc
-import OpenAccess_EPUB.utils
+import OpenAccess_EPUB.utils as utils
 import datetime
 import os.path
 import xml.dom.minidom
+import logging
+
+log = logging.getLogger('OPF')
 
 
 class OPF(object):
@@ -21,13 +24,17 @@ class OPF(object):
     """
 
     def __init__(self, version, location, collection_mode=False):
+        log.info('Instantiating OPF class')
         self.doi = ''
         self.dois = []
         self.collection_mode = collection_mode
+        if self.collection_mode:
+            log.debug('Collection Mode')
         self.version = version
         self.location = location
         #Initiate the document
         self.initOpfDocument()
+        log.info('Created the OPF document')
         #List of articles included
         self.articles = []
 
@@ -98,7 +105,7 @@ class OPF(object):
         mimetypes = {'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 'xml':
                      'application/xhtml+xml', 'png': 'image/png', 'css':
                      'text/css', 'ncx': 'application/x-dtbncx+xml', 'gif':
-                     'image/gif'}
+                     'image/gif', 'tif': 'image/tif'}
         current_dir = os.getcwd()
         os.chdir(self.location)
         for path, _subname, filenames in os.walk('OPS'):
@@ -108,7 +115,10 @@ class OPF(object):
                     _name, ext = os.path.splitext(filename)
                     ext = ext[1:]
                     new = self.manifest.appendChild(self.doc.createElement('item'))
-                    new.setAttribute('href', os.path.join(path, filename))
+                    if path:
+                        new.setAttribute('href', '/'.join([path, filename]))
+                    else:
+                        new.setAttribute('href', filename)
                     new.setAttribute('media-type', mimetypes[ext])
                     if filename == 'toc.ncx':
                         new.setAttribute('id', 'ncx')
@@ -156,6 +166,7 @@ class FrontiersOPF(OPF):
         """
         This method handles the metadata for single article Frontiers ePubs.
         """
+        log.info('Using Frontiers singleMetadata')
         #Make the dc:identifier using the DOI of the article
         dc_identifier = dc.identifier(self.doi, self.doc, primary=True)
         dc_identifier.setAttribute('opf:scheme', 'DOI')
@@ -244,7 +255,7 @@ class FrontiersOPF(OPF):
         This method handles the metadata for a Frontiers article in a
         collection.
         """
-        pass
+        log.info('Using Frontiers collectionMetadata')
 
 
 class PLoSOPF(OPF):
@@ -256,10 +267,10 @@ class PLoSOPF(OPF):
         """
         This method handles the metadata for single article PLoS ePubs.
         """
-        pass
+        log.info('Using PLoS singleMetadata')
 
     def collectionMetadata(self, ameta):
         """
         This method handles the metadata for a PLoS article in a collection.
         """
-        pass
+        log.info('Using PLoS collectionMetadata')

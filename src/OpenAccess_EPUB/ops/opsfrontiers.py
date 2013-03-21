@@ -8,6 +8,8 @@ import opsgenerator
 import os.path
 import logging
 
+log = logging.getLogger('OPSFrontiers')
+
 
 class InputError(Exception):
     """
@@ -27,6 +29,7 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
     """
     def __init__(self, article, output_dir):
         opsgenerator.OPSGenerator.__init__(self)
+        log.info('Initiating OPSFrontiers')
         print('Generating OPS content...')
         self.article = article.root_tag
         self.metadata = article.metadata
@@ -108,12 +111,15 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
                 try:
                     sup_text = aff_id.split('aff')[1]
                 except IndexError:
-                    raise InputError('Could not identify affiliation number!')
+                    log.warning('Could not identify affiliation number!')
+                    sup_text = ''
             else:
                 sup_text = utils.nodeText(sup)
-            affp.setAttribute('id', aff.getAttribute('id'))
-            aff_sup = self.appendNewElement('sup', affp)
-            self.appendNewText(sup_text, aff_sup)
+            if aff.getAttribute('id'):
+                affp.setAttribute('id', aff.getAttribute('id'))
+            if sup_text:
+                aff_sup = self.appendNewElement('sup', affp)
+                self.appendNewText(sup_text, aff_sup)
             #These will be considered optional
             try:
                 inst = aff.getElementsByTagName('institution')[0]
@@ -206,6 +212,7 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
         #Handle node conversion
         self.convertFigElements(body)
         self.convertTableWrapElements(body)
+        self.convertListElements(body)
         self.convertSecElements(body)
         self.recursiveConvertDivTitles(body, depth=0)
         self.convertEmphasisElements(body)
@@ -471,6 +478,26 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
         self.bib_frag = 'biblio.{0}.xml'.format(self.doi_frag) + '#{0}'
         self.tab_frag = 'tables.{0}.xml'.format(self.doi_frag) + '#{0}'
 
+    def convertListElements(self, node):
+        """
+        <list> tags are not allowed in OPS documents, the tagname may be
+        converted to <ol> or <ul> for ordered and unordered lists respectively.
+        The <list> tag should contain a "list-type" attribute to declare the
+        appropriate type. Attributes are not to be kept.
+        """
+        for l in self.getDescendantsByTagName(node, 'list'):
+            l_attrs = self.getAllAttributes(l, remove=True)
+            try:
+                if l_attrs['list-type'] == 'order':
+                    l.tagName = 'ol'
+                elif l_attrs['list-type'] == 'bullet':
+                    l.tagName = 'ul'
+            except KeyError:
+                l.tagName = 'ul'
+            else:
+                for li in self.getChildrenByTagName('list-item', l):
+                    li.tagName = 'li'
+
     def convertFigElements(self, node):
         """
         <fig> tags are not allowed in OPS documents, the tagname must be
@@ -495,6 +522,8 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
                 caption = None
             graphic = f.getElementsByTagName('graphic')[0]
             graphic_xh = graphic.getAttribute('xlink:href')
+            #Coerce the file extension to .jpg
+            graphic_xh = os.path.splitext(graphic_xh)[0] + '.jpg'
             #Now we can begin constructing our OPS representation
             parent = f.parentNode
             parent.insertBefore(self.doc.createElement('hr'), f)
@@ -503,9 +532,8 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
             img.setAttribute('alt', 'A figure')
             img.setAttribute('id', f_attrs['id'])
             #Compute the image source
-            img_dir = 'images-' + self.doi_frag + '/figures/'
-            img_name = os.path.splitext(graphic_xh)[0][-4:] + '.jpg'
-            img.setAttribute('src', img_dir + img_name)
+            img_dir = 'images/'
+            img.setAttribute('src', img_dir + graphic_xh)
             #Now we can handle the caption and label
             if caption or label:
                 div = self.doc.createElement('div')
@@ -549,10 +577,9 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
             except IndexError:
                 caption = None
             #Get the optional table-wrap-foot as xml or none
-            try:
-                t_foots = t.getElementsByTagName('table-wrap-foot')
-            except IndexError:
-                t_foots = []
+            t_foots = t.getElementsByTagName('table-wrap-foot')
+            #Get <fn> tags for conversion to <span>
+            fns = t.getElementsByTagName('fn')
             #Now we can begin constructing our OPS representation
             parent = t.parentNode
             parent.insertBefore(self.doc.createElement('hr'), t)
@@ -560,19 +587,9 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
             parent.insertBefore(img, t)
             img.setAttribute('alt', 'A table')
             img.setAttribute('id', t_attrs['id'])
-            #Compute the image source
-            tid = t_attrs['id']
-            if tid[0] == 'T':
-                num = tid[1:]
-                img_name = 't' + num.zfill(3) + '.jpg'
-                if tid[:2] == 'TA':
-                    num = tid[2:]
-                    img_name = 'at' + num.zfill(3) + '.jpg'
-            else:
-                raise InputError('Unexpected table frag id in this article')
-            img_dir = 'images-' + self.doi_frag + '/tables/'
-            img_name = 't' + num.zfill(3) + '.jpg'
-            img.setAttribute('src', img_dir + img_name)
+            #Add the image source, this is a little complex, see the method
+            src = self.tableSource(t_attrs['id'])
+            img.setAttribute('src', src)
             #Now we can handle the caption and label
             if caption or label:
                 div = self.doc.createElement('div')
@@ -599,16 +616,26 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
                 t_foot.tagName = 'div'
                 t_foot.setAttribute('class', 'table-footnotes')
                 table.appendChild(t_foot)
+            for fn in fns:
+                fn_parent = fn.parentNode
+                fn_id = fn.getAttribute('id')
+                first = True
+                for fc in fn.childNodes:
+                    fn_parent.insertBefore(fc, fn)
+                    if first:
+                        fc.setAttribute('id', fn_id)
+                        first = False
+                fn_parent.removeChild(fn)
             #Create a link back to main text
             l = self.appendNewElement('div', table)
             p = self.appendNewElement('p', l)
             a = self.appendNewElement('a', p)
-            a.setAttribute('href', self.main_frag.format(tid))
+            a.setAttribute('href', self.main_frag.format(t_attrs['id']))
             self.appendNewText('Back to the text', a)
             self.html_tables.append(table)
             #Create a link to the html version of the table
             a = self.doc.createElement('a')
-            a.setAttribute('href', self.tab_frag.format(tid))
+            a.setAttribute('href', self.tab_frag.format(t_attrs['id']))
             self.appendNewText('HTML version of this table', a)
             parent.insertBefore(a, t)
             #Remove the original <table-wrap>
@@ -890,6 +917,35 @@ class OPSFrontiers(opsgenerator.OPSGenerator):
                         depth += 1
                         self.recursiveConvertDivTitles(i, depth)
                         depth -= 1
+
+    def tableSource(self, table_id):
+        """
+        As the name of the table image is not directly referenced in the input,
+        this method is tasked with the job of finding the correct table image
+        based on the table's id.
+        """
+        if table_id[:2] == 'TA':
+            num = int(table_id[2:])
+            pref = 'at'
+        elif table_id[0] == 'T':
+            num = int(table_id[1:])
+            pref = 't'
+        else:
+            err_msg = 'Unknown table ID type: {0}'.format(table_id)
+            log.error(err_msg)
+            raise InputError(err_msg)
+        img_dir = 'images/'
+        for item in os.listdir(os.path.join(self.ops_dir, 'images')):
+            root, ext = os.path.splitext(item)
+            if ext == '.jpg':
+                suffix = root.split('-')[-1]
+                if suffix[0] == 't':
+                    if 't' == pref and int(suffix[1:]) == num:
+                        return(img_dir + item)
+                elif suffix[:2] == 'at':
+                    if 'at' == pref and int(suffix[2:]) == num:
+                        return (img_dir + item)
+        raise InputError('Could not find table image, ID {0}'.format(table_id))
 
     def announce(self):
         """
