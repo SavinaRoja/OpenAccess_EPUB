@@ -127,6 +127,7 @@ def main():
         os.mkdir(args.log_to)
     if not os.path.isdir(args.output):
         os.mkdir(args.output)
+
     #The cache is a static directory which can hold various items
     #Image caching is of notable importance for some users.
     if not os.path.isdir(settings.cache_loc):
@@ -139,31 +140,35 @@ def main():
         pass
     if not os.path.isdir(settings.base_epub):
         utils.makeEPUBBase(settings.base_epub)
+
     #Single Input Mode
     #Determination of input type and processing
+    #All input modes pass the xml data to instantiate an Article class
     if 'http://www' in args.input:
-        download = True
         document, xml_local = utils.input.urlInput(args.input)
     elif args.input[:4] == 'doi:':
-        download = True
         document, xml_local = utils.input.doiInput(args.input)
     else:
-        download = False
         document, xml_local = utils.input.localInput(args.input)
+
     #Later code versions may support the manual naming of the output file
     #as a commandline argument. For now, the name of the ePub file will be
     #the same as the input xml file.
     input_name = os.path.splitext(os.path.split(xml_local)[1])[0]
+
     #Initiate logging settings
     logname = os.path.join(args.log_to, input_name + '.log')
     logging.basicConfig(filename=logname, level=logging.DEBUG)
     logging.info('OpenAccess_EPUB Log v.{0}'.format(__version__))
+
     #Generate the output name, the output directory + input_name
     output_name = os.path.join(args.output, input_name)
     if os.path.isdir(output_name):
         dirExists(output_name, args.batch)
+
     #Make the ePub!
     makeEPUB(document, xml_local, settings.cache_img, output_name, args.log_to)
+
     #Everything after this point is post-handling. Place things in the cache
     #as appropriate and clean up.
     if settings.save_xml:
@@ -172,10 +177,12 @@ def main():
         shutil.copy2(logname, settings.cache_log)
     if settings.save_output:
         shutil.copy2(output_name, settings.cache_output)
+
     #WARNING: shutil.rmtree() is a recursive deletion function, care should be
     #taken whenever modifying this code
     #if settings.cleanup:
     #    shutil.rmtree(output_name)
+
     epubcheck('{0}.epub'.format(output_name))
 
 if __name__ == '__main__':
