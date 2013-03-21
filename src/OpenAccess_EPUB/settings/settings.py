@@ -2,76 +2,64 @@ import os.path
 import sys
 import logging
 
-log = logging.getLogger('Settings')
 
+def cache_location():
+    '''Cross-platform placement of cached files'''
+    if sys.platform == 'win32':  # Windows
+        return os.path.join(os.environ['APPDATA'], 'OpenAccess_EPUB')
+    else:  # Mac or Linux
+        path = os.path.expanduser('~')
+        if path == '~':
+            path = os.path.expanduser('~user')
+            if path == '~user':
+                sys.exit('Could not find the correct cache location')
+        return os.path.join(path, 'OpenAccess_EPUB')
 
-class Settings(object):
-    """
-    "A class for holding settings
-    """
-    def __init__(self):
-        #This acquires the local directory
-        self.local = os.getcwd()
+LOG = logging.getLogger('Settings')
 
-        #This acquires the appropriate directory for storing static/global data
-        #If the user encounters an error, or wants to customize the location
-        #of their cache, they can do it here.
-        self.cache_loc = self.cacheLocation()
+#Local directory
+LOCAL_DIR = os.getcwd()
 
-        #Caching implements storing image files locally in a cache so that
-        #the same files need not be repetitively downloaded for the same input
-        self.caching = True
-        #This sets the cache_location
-        self.cache_img = os.path.join(self.cache_loc, 'img_cache')
+#Toggle caching
+CACHING = True
 
-        #This sets the default relative location for finding image files
-        #self.default_images = os.path.join(self.local, 'images')
-        self.default_images = self.local
+#Where cache should be
+CACHE_LOCATION = cache_location()
 
-        #This sets the location for storing log files
-        self.save_log = True
-        self.cache_log = os.path.join(self.cache_loc, 'logs')
+#Where cached images should be
+CACHE_IMAGE = os.path.join(CACHE_LOCATION, 'img_cache')
 
-        #This sets a default output location relative to the directory in which
-        #the code is run.
-        self.save_output = False
-        self.local_output = os.path.join(self.local)
+#Where to look for images relative to the working directory
+DEFAULT_IMAGES = LOCAL_DIR
 
-        #This determines the location of the base_epub directory, which is the
-        #reference directory copied to instantiate the epub hierarchy
-        self.base_epub = os.path.join(self.cache_loc, 'base_epub')
+#Toggle the caching of log files
+SAVE_LOG = True
 
-        #This determines the location of the base css file, which is copied to
-        #the ePub's css directory
-        self.local_css = os.path.join(self.local, 'css')
-        self.cache_css = os.path.join(self.cache_loc, 'css')
+#Where cached log files should be
+CACHE_LOG = os.path.join(CACHE_LOCATION, 'logs')
 
-        #Configure the location of epubcheck-*.jar.
-        self.epubcheck = '/home/pablo/epubcheck/epubcheck-3.0b3.jar'
+#Toggle caching of output
+SAVE_OUTPUT = False
 
-        #Record settings in log
-        self.logSettings()
+#Where cached output files should be
+CACHE_OUTPUT = os.path.join(CACHE_LOCATION, 'output')
 
-    def cacheLocation(self):
-        """
-        This handles where the cache should be located on various OSs.
-        """
-        if os.name == 'posix':
-            s = os.path.expanduser('~')
-            if s == '~':
-                s = os.path.expanduser('~user')
-                if s == '~user':
-                    sys.exit('Could not find the correct cache location')
-            return os.path.join(s, '.OpenAccess_EPUB')
-        if os.name == 'nt':
-            s = os.environ['APPDATA']
-            return os.path.join(s, 'OpenAccess_EPUB')
+#Where to put the output relative to the working directory
+DEFAULT_OUTPUT = LOCAL_DIR
 
-    def logSettings(self):
-        """
-        Make log statements for settings which might be useful for debugging.
-        """
-        log.debug('Cache Location: {0}'.format(self.cache_loc))
-        log.debug('Local: {0}'.format(self.local))
-        log.debug('Local Output: {0}'.format(self.local_output))
-        log.debug('Local CSS: {0}'.format(self.local_css))
+#Where to find the base epub structure
+BASE_EPUB = os.path.join(CACHE_LOCATION, 'base_epub')
+
+#A location for a default CSS, overrides base CSS if found
+DEFAULT_CSS = LOCAL_DIR
+
+#Where to find the cached/base CSS
+CACHE_CSS = os.path.join(CACHE_LOCATION, 'css')
+
+#Where to find the system's epubcheck.jar file
+EPUBCHECK = '/home/pablo/epubcheck/epubcheck-3.0b3.jar'
+
+LOG.debug('Cache Location: {0}'.format(CACHE_LOCATION))
+LOG.debug('Local Directory: {0}'.format(LOCAL_DIR))
+LOG.debug('Local Output: {0}'.format(DEFAULT_OUTPUT))
+LOG.debug('Local CSS: {0}'.format(DEFAULT_CSS))
