@@ -1302,16 +1302,16 @@ class JPTSMeta30(JPTSMeta):
         all_cmpd_kwds = []
         kwd = namedtuple('Keyword', 'node, type, id')
         cmpd_kwd = namedtuple('Compound_Keyword', 'node, type, content_type, id')
-        for kg in self.article_meta.getElementsbyTagName('kwd-group'):
+        for kg in self.article_meta.getElementsByTagName('kwd-group'):
             kwd_groups.append(kg)
             ktype = kg.getAttribute('keyword-group-type')
             for key in kg.getElementsByTagName('kwd'):
-                kid = key.getAttribute('id')
-                all_kwds.append(kwd(key, ktype, kid))
+                key_id = key.getAttribute('id')
+                all_kwds.append(kwd(key, ktype, key_id))
             for cmpd in kg.getElementsByTagName('compound-kwd'):
-                kid = cmpd.getAttribute('id')
+                key_id = cmpd.getAttribute('id')
                 ct = cmpd.getAttribute('content-type')
-                all_cmpd_keywords.append(cmpd_kwd(cpmd, ktype, ct, kid))
+                all_cmpd_kwds.append(cmpd_kwd(cmpd, ktype, ct, key_id))
         return kwd_groups, all_kwds, all_cmpd_kwds
 
     def getIssue(self):
