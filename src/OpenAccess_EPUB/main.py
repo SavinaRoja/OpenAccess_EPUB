@@ -7,7 +7,7 @@ mode of execution and interaction.
 
 #If you change the version here, make sure to also change it in setup.py and
 #the module __init__.py
-__version__ = '0.2.6'
+__version__ = '0.2.7'
 
 #Standard Library Modules
 import argparse
@@ -146,7 +146,6 @@ def main(args):
     """
     This is the main code execution block.
     """
-
     #Certain locations are defined by the user or by default for production
     #Here we make them if they don't already exist
     if not os.path.isdir(args.log_to):
