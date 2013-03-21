@@ -9,7 +9,7 @@ tag set and/or publisher must provide these functions.
 import xml.dom.minidom
 import logging
 
-log = logging.getLogger('OPSGenerator')
+log = logging.getLogger('OPSMeta')
 
 
 class OPSMeta(object):
@@ -18,7 +18,7 @@ class OPSMeta(object):
     order to produce OPS content.
     """
     def __init__(self):
-        log.info('Initiating OPSGenerator')
+        log.info('Initiating OPSMeta')
         self.announce()
         self.doc = self.makeDocument('base')
 
