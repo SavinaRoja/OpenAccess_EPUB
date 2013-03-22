@@ -277,3 +277,4 @@ def fetch_plos_images(article_doi, output_dir, document):
                 output.write(image.read())
             print('Downloaded image {0}\n'.format(img_name))
     print('Done downloading images')
+    return True
