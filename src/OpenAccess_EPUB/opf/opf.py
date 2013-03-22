@@ -17,7 +17,7 @@ import logging
 log = logging.getLogger('OPF')
 
 
-class OPF(object):
+class MetaOPF(object):
     """
     Represents the OPF document and the methods needed to produce it. Dublin
     Core metadata is referenced by this class per publisher.
@@ -33,12 +33,12 @@ class OPF(object):
         self.version = version
         self.location = location
         #Initiate the document
-        self.initOpfDocument()
+        self.init_opf_document()
         log.info('Created the OPF document')
         #List of articles included
         self.articles = []
 
-    def initOpfDocument(self):
+    def init_opf_document(self):
         """
         This method creates the initial DOM document for the content.opf file
         """
@@ -54,8 +54,8 @@ class OPF(object):
         self.package.setAttribute('xmlns', 'http://www.idpf.org/2007/opf')
         self.package.setAttribute('xmlns:oebpackage', 'http://openebook.org/namespaces/oeb-package/1.0/')
         #Create the sub elements for <package>
-        opf_subelements = ['metadata', 'manifest', 'spine', 'guide']
-        for el in opf_subelements:
+        opf_sub_elements = ['metadata', 'manifest', 'spine', 'guide']
+        for el in opf_sub_elements:
             self.package.appendChild(self.doc.createElement(el))
         self.metadata, self.manifest, self.spine, self.guide = self.package.childNodes
         self.spine.setAttribute('toc', 'ncx')
@@ -65,7 +65,7 @@ class OPF(object):
         self.ccuid = 'OpenAccess_EPUBv{0}-{1}'.format('__version__',
                                                       t.utcnow().__str__())
 
-    def parseArticle(self, article):
+    def parse_article(self, article):
         """
         Process the contents of an article to build the content.opf
         """
@@ -76,26 +76,26 @@ class OPF(object):
         self.a_doi_dashed = self.a_doi.replace('.', '-')
         self.articles.append(article)
         if not self.collection_mode:
-            self.singleMetadata(article.metadata)
+            self.single_metadata(article.metadata)
         else:
-            self.collectionMetadata(article.metadata)
-        self.addToSpine()
+            self.collection_metadata(article.metadata)
+        self.add_to_spine()
 
-    def singleMetadata(self, ameta):
+    def single_metadata(self, ameta):
         """
         This method handles the metadata for single article ePubs. Should be
         overridden by publisher-specific classes.
         """
         pass
 
-    def collectionMetadata(self, ameta):
+    def collection_metadata(self, ameta):
         """
         This method handles the metadata for a collection. Should be overridden
         by publisher-specific classes.
         """
         pass
 
-    def makeManifest(self):
+    def make_manifest(self):
         """
         The Manifest declares all of the documents within the ePub (except
         mimetype and META-INF/container.xml). It should be generated as a
@@ -123,14 +123,12 @@ class OPF(object):
                     if filename == 'toc.ncx':
                         new.setAttribute('id', 'ncx')
                     elif ext == 'png':
-                        eid = os.path.dirname(path)
-                        eid = id[7:]
-                        new.setAttribute('id', '{0}-{1}'.format(eid, filename.replace('.', '-')))
+                        new.setAttribute('id', '{0}'.format(filename.replace('.', '-')))
                     else:
                         new.setAttribute('id', filename.replace('.', '-'))
         os.chdir(current_dir)
 
-    def addToSpine(self):
+    def add_to_spine(self):
         idref = '{0}-' + '{0}-xml'.format(self.a_doi_dashed)
         syn_ref = self.spine.appendChild(self.doc.createElement('itemref'))
         main_ref = self.spine.appendChild(self.doc.createElement('itemref'))
@@ -151,21 +149,24 @@ class OPF(object):
             self.spine.appendChild(tab_ref)
 
     def write(self):
-        self.makeManifest()
+        self.make_manifest()
         filename = os.path.join(self.location, 'OPS', 'content.opf')
         with open(filename, 'w') as output:
             output.write(self.doc.toprettyxml(encoding='utf-8'))
 
 
-class FrontiersOPF(OPF):
+class FrontiersOPF(MetaOPF):
     """
     This is the OPF class intended for use with Frontiers articles.
     """
 
-    def singleMetadata(self, ameta):
+    def single_metadata(self, article_metadata):
         """
         This method handles the metadata for single article Frontiers ePubs.
         """
+        #For brevity
+        ameta = article_metadata
+
         log.info('Using Frontiers singleMetadata')
         #Make the dc:identifier using the DOI of the article
         dc_identifier = dc.identifier(self.doi, self.doc, primary=True)
@@ -236,7 +237,7 @@ class FrontiersOPF(OPF):
         self.metadata.appendChild(dc.epubformat(self.doc))
         #Create the dc:relation for related articles
         #This is not yet implemented
-        #self.metadata.appendChil(dc.relation(relation, self.doc))
+        #self.metadata.appendChild(dc.relation(relation, self.doc))
         #Create the dc:publisher element
         self.metadata.appendChild(dc.publisher('Frontiers', self.doc))
         #Create the dc:type element
@@ -250,7 +251,7 @@ class FrontiersOPF(OPF):
             abstract_text = utils.serializeText(ameta.abstract[0].node, [])
             self.metadata.appendChild(dc.description(abstract_text, self.doc))
 
-    def collectionMetadata(self, ameta):
+    def collection_metadata(self, article_metadata):
         """
         This method handles the metadata for a Frontiers article in a
         collection.
@@ -258,18 +259,119 @@ class FrontiersOPF(OPF):
         log.info('Using Frontiers collectionMetadata')
 
 
-class PLoSOPF(OPF):
+class PLoSOPF(MetaOPF):
     """
     This is the OPF class intended for use with PLoS articles.
     """
 
-    def singleMetadata(self, ameta):
+    def single_metadata(self, article_metadata):
         """
         This method handles the metadata for single article PLoS ePubs.
         """
         log.info('Using PLoS singleMetadata')
 
-    def collectionMetadata(self, ameta):
+        #For brevity
+        ameta = article_metadata
+
+        #Make the dc:identifier using the DOI of the article
+        dc_identifier = dc.identifier(self.doi, self.doc, primary=True)
+        dc_identifier.setAttribute('opf:scheme', 'DOI')
+        self.metadata.appendChild(dc_identifier)
+
+        #Make the dc:language, it defaults to english
+        self.metadata.appendChild(dc.language(self.doc))
+
+        #Make the dc:title using the article title
+        title = utils.serializeText(ameta.title.article_title, [])
+        self.metadata.appendChild(dc.title(title, self.doc))
+
+        #Make the dc:rights using the metadata in permissions
+        license = utils.serializeText(ameta.permissions.license)
+        self.metadata.appendChild(dc.rights(license, self.doc))
+
+        #Make the dc:creator elements for each contributing author
+        #Note that the file-as name is: Surname, G(iven Initial)
+        for contrib in ameta.contrib:
+            if contrib.attrs['contrib-type'] == 'author':
+                name = contrib.getName()[0]  # Work with only first name listed
+                surname = name.surname
+                given = name.given
+                try:
+                    gi = given[0]
+                except IndexError:
+                    auth = surname
+                    file_as = surname
+                else:
+                    auth = ' '.join([given, surname])
+                    file_as = ', '.join([surname, gi])
+                dc_creator = dc.creator(auth, file_as, self.doc)
+                self.metadata.appendChild(dc_creator)
+
+        #Make the dc:contributor elements for editors
+        for contrib in ameta.contrib:
+            if contrib.attrs['contrib-type'] == 'editor':
+                name = contrib.getName()[0]
+                try:
+                    given_initial = name.given[0]
+                except IndexError:
+                    editor_name = name.surname
+                    file_name = name.surname
+                else:
+                    editor_name = name.given + ' ' + name.surname
+                    file_name = name.surname + ', ' + given_initial
+                dc_contrib = dc.contributor(editor_name, self.doc, file_as=file_name, role='edt')
+                self.metadata.appendChild(dc_contrib)
+
+        #Make the dc:date elements for important dates regarding the article
+        #Creation
+        try:
+            creation_date = ameta.history['accepted']
+        except KeyError:
+            pass
+        else:
+            dc_date = dc.date(creation_date.year,
+                              creation_date.month,
+                              creation_date.day,
+                              event='creation',
+                              dom=self.doc)
+            self.metadata.appendChild(dc_date)
+        #Publication
+        try:
+            pub_date = ameta.pub_date['epub']
+        except KeyError:
+            pass
+        else:
+            pub_date = dc.date(pub_date.year,
+                               pub_date.month,
+                               pub_date.day,
+                               event='publication',
+                               dom=self.doc)
+            self.metadata.appendChild(pub_date)
+
+        #Create the epub format declaration in dc:format
+        self.metadata.appendChild(dc.epubformat(self.doc))
+
+        #Create the dc:relation for related articles
+        #This is not yet implemented
+        #self.metadata.appendChild(dc.relation(relation, self.doc))
+
+        #Create the dc:publisher element
+        self.metadata.appendChild(dc.publisher('Public Library of Science', self.doc))
+
+        #Create the dc:type element
+        self.metadata.appendChild(dc.texttype(self.doc))
+
+        #Create the dc:subject elements for each keyword
+        for kwd in ameta.all_kwds:
+            kwd_text = utils.serializeText(kwd.node, [])
+            self.metadata.appendChild(dc.subject(kwd_text, self.doc))
+
+        #Create the dc:description element from the abstract if available
+        if ameta.abstract:
+            abstract_text = utils.serializeText(ameta.abstract[0].node, [])
+            self.metadata.appendChild(dc.description(abstract_text, self.doc))
+
+    def collection_metadata(self, article_metadata):
         """
         This method handles the metadata for a PLoS article in a collection.
         """

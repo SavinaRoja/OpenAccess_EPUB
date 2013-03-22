@@ -698,9 +698,9 @@ class JPTSMeta(object):
             try:
                 a = c.getElementsByTagName('conf-acronym')[0]
             except IndexError:
-                acr = None
+                acronym = None
             else:
-                acr = utils.nodeText(a)
+                acronym = utils.nodeText(a)
             if not name and not acronym:
                 print('Warning: Conference element provides no name or acronym')
             try:

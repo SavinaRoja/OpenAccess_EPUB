@@ -123,7 +123,7 @@ def makeEPUB(document, outdirect, images):
         toc.parseArticle(document)
         toc.write(outdirect)
         myopf = opf.FrontiersOPF(__version__, outdirect, False)
-    myopf.parseArticle(document)
+    myopf.parse_article(document)
     myopf.write()
     utils.epubZip(outdirect)
 
