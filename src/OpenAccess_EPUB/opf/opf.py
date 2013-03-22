@@ -123,7 +123,8 @@ class MetaOPF(object):
                     if filename == 'toc.ncx':
                         new.setAttribute('id', 'ncx')
                     elif ext == 'png':
-                        new.setAttribute('id', '{0}'.format(filename.replace('.', '-')))
+                        trim = path[7:]
+                        new.setAttribute('id', '{0}-{1}'.format(trim, filename.replace('.', '-')))
                     else:
                         new.setAttribute('id', filename.replace('.', '-'))
         os.chdir(current_dir)

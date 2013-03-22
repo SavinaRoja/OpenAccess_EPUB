@@ -36,16 +36,16 @@ class OPSFrontiers(OPSMeta):
         self.doi = article.getDOI()
         #From "10.3389/fimmu.2012.00104" get "fimmu.2012.00104"
         self.doi_frag = self.doi.split('10.3389/')[1]
-        self.makeFragmentIdentifiers()
+        self.make_fragment_identifiers()
         self.ops_dir = os.path.join(output_dir, 'OPS')
         self.html_tables = []
-        self.createSynopsis()
-        self.createMain()
-        self.createBiblio()
+        self.create_synopsis()
+        self.create_main()
+        self.create_biblio()
         if self.html_tables:
-            self.createTables()
+            self.create_tables()
 
-    def createSynopsis(self):
+    def create_synopsis(self):
         """
         This method encapsulates the functions necessary to create the synopsis
         segment of the article.
@@ -146,7 +146,7 @@ class OPSFrontiers(OPSMeta):
             self.expungeAttributes(abstract.node)
 
         #Refer to self.createArticleInfo()
-        self.createArticleInfo(body)
+        self.create_article_info(body)
 
         #Post processing node conversion
         self.convertEmphasisElements(body)
@@ -157,7 +157,7 @@ class OPSFrontiers(OPSMeta):
         with open(os.path.join(self.ops_dir, self.synop_frag[:-4]), 'w') as op:
             op.write(self.doc.toprettyxml(encoding='utf-8'))
 
-    def createMain(self):
+    def create_main(self):
         """
         This method encapsulates the functions necessary to create the main
         segment of the article.
@@ -225,7 +225,7 @@ class OPSFrontiers(OPSMeta):
         with open(os.path.join(self.ops_dir, self.main_frag[:-4]), 'w') as op:
             op.write(self.doc.toprettyxml(encoding='utf-8'))
 
-    def createBiblio(self):
+    def create_biblio(self):
         """
         This method encapsulates the functions necessary to create the biblio
         segment of the article.
@@ -254,7 +254,7 @@ class OPSFrontiers(OPSMeta):
         with open(os.path.join(self.ops_dir, self.bib_frag[:-4]), 'w') as op:
             op.write(self.doc.toprettyxml(encoding='utf-8'))
 
-    def createTables(self):
+    def create_tables(self):
         """
         This method encapsulates the functions necessary to create a file
         containing html versions of all the tables in the article. If there
@@ -285,7 +285,7 @@ class OPSFrontiers(OPSMeta):
         with open(os.path.join(self.ops_dir, self.tab_frag[:-4]), 'w') as op:
             op.write(self.doc.toprettyxml(encoding='utf-8'))
 
-    def createArticleInfo(self, body):
+    def create_article_info(self, body):
         """
         The 'article info' section is a segment of metadata information about
         the article that is of primary interest to human readers. This section
@@ -469,7 +469,7 @@ class OPSFrontiers(OPSMeta):
             else:
                 u.setAttribute('href', utils.nodeText(u))
 
-    def makeFragmentIdentifiers(self):
+    def make_fragment_identifiers(self):
         """
         This will create useful fragment identifier strings.
         """
