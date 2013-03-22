@@ -18,7 +18,7 @@ import logging
 
 #OpenAccess_EPUB Modules
 import utils.input
-import utils.images
+from .utils.images import get_images
 import opf
 import ncx
 import ops
@@ -42,7 +42,7 @@ def OAEParser():
                         default=DEFAULT_LOG,
                         help='Use to specify a non-default log directory')
     parser.add_argument('-I', '--images', action='store',
-                        default=DEFAULT_IMAGES,
+                        default=None,
                         help='''Specify a path to the directory containing the
                         images. This overrides the program's attempts to get
                         the images from the default directory, the image cache,
@@ -97,24 +97,27 @@ def makeEPUB(document, outdirect, images):
     to generate the ePub content.
     """
     print(u'Processing output to {0}.epub'.format(outdirect))
+
     #Copy files from base_epub to the new output
     if os.path.isdir(outdirect):
         dir_exists(outdirect)
     shutil.copytree(BASE_EPUB, outdirect)
+
     #Get the Digital Object Identifier
     DOI = document.getDOI()
-    #utils.images.localImages(images, outdirect, DOI)
-    #utils.images.getImages(DOI, images, outdirect, setngs.default_images,
-    #                       setngs.caching, setngs.cache_img)
+
+    #Get the images
+    get_images(DOI, outdirect, images, DEFAULT_IMAGES, CACHE_IMAGES, CACHING,
+               document)
+
+    #Run content processing per publisher
     if DOI.split('/')[0] == '10.1371':  # PLoS's publisher DOI
-        #document.fetchPLoSImages(cache_dir, outdirect, setngs.caching)
         ops.OPSPLoS(document, outdirect)
         toc = ncx.TocNCX(__version__)
         toc.parseArticle(document)
         toc.write(outdirect)
         myopf = opf.PLoSOPF(__version__, outdirect, False)
     elif DOI.split('/')[0] == '10.3389':  # Frontiers' publisher DOI
-        #document.fetchFrontiersImages(cache_dir, outdirect, setngs.caching)
         ops.OPSFrontiers(document, outdirect)
         toc = ncx.TocNCX(__version__)
         toc.parseArticle(document)
@@ -160,7 +163,7 @@ def main(args):
     if not os.path.isdir(CACHE_LOG):
         os.mkdir(CACHE_LOG)
     if not os.path.isdir(CACHE_IMAGES):
-        utils.images.initImgCache(CACHE_IMAGES)
+        utils.images.init_image_cache(CACHE_IMAGES)
     if not os.path.isdir(BASE_EPUB):
         utils.makeEPUBBase(BASE_EPUB)
 

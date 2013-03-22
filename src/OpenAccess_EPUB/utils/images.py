@@ -12,7 +12,8 @@ import logging
 
 log = logging.getLogger('utils.images')
 
-def localImages(images_path, outdirect, doi):
+
+def local_images(images_path, outdirect, doi):
     """
     This function is employed to copy image files into the ePub's image
     directory, it expects an existing directory.
@@ -27,60 +28,104 @@ def localImages(images_path, outdirect, doi):
         if os.path.splitext(item_path)[1] == '.tif':
             shutil.copy2(item_path, epub_img_dir)
 
-def getImages(doi, argimages, outdirect, default, caching, cache_img):
+
+def move_images_to_cache(source, destination):
+    """
+    Handles the movement of images to the cache. Must be helpful if it finds
+    that the folder for this article already exists.
+    """
+    try:
+        shutil.copytree(source, destination)
+    except OSError:  # Should occur if the folder already exists
+        print('An image cache for this article already appears to exist!')
+        print('Would you like to replace it?')
+        choice = raw_input('[y/N]')
+        if choice in ['y', 'Y']:
+            shutil.rmtree(destination)
+            log.debug('Previous cache removed: {0}'.format(destination))
+            shutil.copytree(source, destination)
+
+
+def get_images(doi, outdirect, manual_images, default_images, cache_images,
+                caching, document):
     """
     This controls the logic for placing the appropriate image files into the
     ePub directory.
+
+    The function will attempt to incorporate the images according to priority
+    as follows: Manually specified image directory (argument flag), default
+    image location (a known place to look, such as ./images/), fetched from
+    the cache (if the images have been downloaded and cached previously).
+
+    If unable to find images through manual specification, default location, or
+    the cache, get_images will call the appropriate function to download the
+    images from the internet (publisher's website).
+
+    Caching=True will ensure that the images are added to the cache.
     """
-    #Order of operations: passed image directory, default image directory,
-    #image cache, fetch from internet.
-    #When complete: If caching is true, copy images to cache.
-    jdoi, adoi = doi.split('/')  # Split DOI into journal, article components
-    log.debug('jdoi-{0}|adoi-{1}'.format(jdoi, adoi))
-    img_dir = os.path.join(outdirect, 'OPS', 'images-{0}'.format(adoi))
+
+    #Split the DOI
+    journal_doi, article_doi = doi.split('/')
+    log.debug('journal-doi-{0}'.format(journal_doi))
+    log.debug('article-doi-{1}'.format(article_doi))
+
+    #Specify where to place the images in the output
+    img_dir = os.path.join(outdirect, 'OPS', 'images-{0}'.format(article_doi))
     log.info('Constructed image directory as {0}'.format(img_dir))
-    #Construct the path to the cache for this article
-    c = {'10.3389': 'Frontiers', '10.1371': 'PloS'}[jdoi]
-    ac = os.path.join(cache_img, c, adoi)
-    if argimages:  # If manual input provided, use it
-        shutil.copytree(argimages, img_dir)
-        log.info('Copied images from {0}'.format(argimages))
-    else:  # Fall back to the default, cache, or download
-        #Check the default image directory
-        if os.path.isdir(default):
-            shutil.copytree(default, img_dir)
-            log.info('Copied images from default {0}'.format(default))
-        else:
-            #Check the image cache
-            if os.path.isdir(ac):
-                shutil.copytree(ac, img_dir)
-                log.info('Copied images from cache at {0}'.format(ac))
-            else:
-                #Download from the internet
-                os.mkdir(img_dir)
-                if jdoi == '10.3389':
-                    fetchFrontiersImages(doi, img_dir)
-                elif jdoi == '10.1371':
-                    fetchPLoSImages(doi, img_dir)
-    if caching:
-        if os.path.isdir(ac):  # Remove previous cache and replace with new
-            #WARNING: shutil.rmtree() is a recursive deletion function, take
-            #care when modifying this code
-            shutil.rmtree(ac)
-        shutil.copytree(img_dir, ac)
+
+    #Construct path to cache for article
+    article_cache = os.path.join(cache_images, journal_doi, article_doi)
+
+    #Use manual image directory if used
+    if manual_images:
+        log.info('Manual image directory specified: {0}'.format(manual_images))
+        shutil.copytree(manual_images, img_dir)
+        if caching:
+            move_images_to_cache(manual_images, article_cache)
+        return True
+
+    #Use default image directory if it is there
+    if os.path.isdir(default_images):
+        log.info('Default image directory found: {0}'.format(default_images))
+        shutil.copytree(default_images, img_dir)
+        if caching:
+            move_images_to_cache(default_images, article_cache)
+        return True
+
+    #Use cache for article if it exists
+    if os.path.isdir(article_cache):
+        log.info('Cached image directory found: {0}'.format(article_cache))
+        shutil.copytree(article_cache, img_dir)
+        return True
+
+    #Download images from internet
+    os.mkdir(img_dir)
+    if journal_doi == '10.3389':
+        fetch_frontiers_images(article_doi, img_dir)
+        if caching:
+            move_images_to_cache(img_dir, article_cache)
+        return True
+    elif journal_doi == '10.1371':
+        fetch_plos_images(article_doi, img_dir)
+        if caching:
+            move_images_to_cache(img_dir, article_cache, document)
+        return True
+    else:
+        print('Fetching images for this publisher is not supported!')
+        return False
 
 
-def initImgCache(img_cache):
+def init_image_cache(img_cache):
     """
     Initiates the image cache if it does not exist
     """
     log.info('Initiating the image cache at {0}'.format(img_cache))
     os.mkdir(img_cache)
-    os.mkdir(os.path.join(img_cache, 'PLoS'))
-    os.mkdir(os.path.join(img_cache, 'Frontiers'))
+    os.mkdir(os.path.join(img_cache, '10.1371'))
+    os.mkdir(os.path.join(img_cache, '10.3389'))
 
 
-def fetchFrontiersImages(doi, output_dir):
+def fetch_frontiers_images(doi, output_dir):
     """
     Fetch the images from Frontiers' website. This method may fail to properly
     locate all the images and should be avoided if the files can be accessed
@@ -91,7 +136,7 @@ def fetchFrontiersImages(doi, output_dir):
     log.info('Fetching Frontiers images')
     log.warning('This method may fail to locate all images.')
 
-    def downloadImage(fetch, img_file):
+    def download_image(fetch, img_file):
         try:
             image = urllib2.urlopen(fetch)
         except urllib2.HTTPError, e:
@@ -109,7 +154,7 @@ def fetchFrontiersImages(doi, output_dir):
                 outimage.write(image.read())
         return True
 
-    def checkEquationCompletion(images):
+    def check_equation_completion(images):
         """
         In some cases, equations images are not exposed in the fulltext (hidden
         behind a rasterized table). This attempts to look for gaps and fix them
@@ -134,13 +179,13 @@ def fetchFrontiersImages(doi, output_dir):
         get = images[0][:-8]
         for m in missing:
             loc = os.path.join(output_dir, m)
-            downloadImage(get + m, loc)
+            download_image(get + m, loc)
             print('Downloaded image {0}'.format(loc))
         #It is possible that we need to go further than the highest
         highest += 1
         name = 'i{0}.gif'.format(str(highest).zfill(3))
         loc = os.path.join(output_dir, name)
-        while downloadImage(get + name, loc):
+        while download_image(get + name, loc):
             print('Downloaded image {0}'.format(loc))
             highest += 1
             name = 'i{0}.gif'.format(str(highest).zfill(3))
@@ -167,94 +212,65 @@ def fetchFrontiersImages(doi, output_dir):
     os.remove('temp')
     for i in images:
         loc = os.path.join(output_dir, i.split('-')[-1])
-        downloadImage(i, loc)
+        download_image(i, loc)
         print('Downloaded image {0}'.format(loc))
     if images:
-        checkEquationCompletion(images)
+        check_equation_completion(images)
     print("Done downloading images")
 
-#This method is defunct until I begin development for PLoS again
-def fetchPLoSImages(doi, cache_dir, output_dir, caching):
+
+def fetch_plos_images(article_doi, output_dir, document):
     """
-    Fetch the images from PLoS's website.
+    Fetch the images for a PLoS article from the internet.
+
+    PLoS images are known through the inspection of <graphic> and
+    <inline-graphic> elements. The information in these tags are then parsed
+    into appropriate URLs for downloading.
     """
-    print('Processing images for {0}...'.format(doi))
-    o = doi.split('journal.')[1]
-    img_dir = os.path.join(output_dir, 'OPS', 'images-{0}'.format(o))
-    #Check cache to see if images already have been downloaded
-    cached = False
-    p, s = os.path.split(doi)
-    if p == '10.1371':
-        art_cache = os.path.join(cache_dir, 'PLoS', s)
-        art_cache_images = os.path.join(art_cache, 'images')
-        if os.path.isdir(art_cache):
-            cached = True
-            log.info('Cached images found')
-            print('Cached images found. Transferring from cache...')
-            shutil.copytree(art_cache_images, img_dir)
+    print('Processing images for {0}...'.format(article_doi))
+
+    #A dict of URLs for PLoS subjournals
+    journal_urls = {'pgen': 'http://www.plosgenetics.org/article/{0}',
+                    'pcbi': 'http://www.ploscompbiol.org/article/{0}',
+                    'ppat': 'http://www.plospathogens.org/article/{0}',
+                    'pntd': 'http://www.plosntds.org/article/{0}',
+                    'pmed': 'http://www.plosmedicine.org/article/{0}',
+                    'pbio': 'http://www.plosbiology.org/article/{0}',
+                    'pone': 'http://www.plosone.org/article/{0}'}
+
+    #Identify subjournal name for base URl
+    subjournal_name = article_doi.split('.')[1]
+    base_url = journal_urls[subjournal_name]
+
+    #Acquire <graphic> and <inline-graphic> xml elements
+    graphics = document.root_tag.getElementsByTagNAme('graphic')
+    graphics += document.root_tag.getElementsByTagNAme('inline-graphic')
+
+    #Begin to download
+    print('Downloading images, this may take some time...')
+    for graphic in graphics:
+        xlink_href = graphic.getAttribute('xlink:href')
+        if xlink_href[-4] == 'e':  # Equations are handled differently
+            resource = '/largerimage' + xlink_href + '&representation=PNG'
         else:
-            log.info('Cached images not found')
-    else:
-        print('The publisher DOI does not correspond to PLoS')
-    if not cached:
-        model_images = os.path.join(cache_dir, 'model', 'images')
-        shutil.copytree(model_images, img_dir)
-        print('Downloading images, this may take some time...')
-        #This string is invariable in the fetching of PLoS images
-        PLOSSTRING = 'article/fetchObject.action?uri=info%3Adoi%2F'
-        #An example DOI for PLoS is 10.1371/journal.pmed.0010027
-        #Here we parse it into useful strings for URL construction
-        pdoi, jdoi = doi.split('/')  # 10.1371, journal.pmed.0010027
-        _j, jrn_id, art_id = jdoi.split('.')  # journal, pmed, 0010027
-        #A mapping of journal ids to URLs:
-        jids = {'pgen': 'http://www.plosgenetics.org/',
-                'pcbi': 'http://www.ploscompbiol.org/',
-                'ppat': 'http://www.plospathogens.org/',
-                'pntd': 'http://www.plosntds.org/',
-                'pmed': 'http://www.plosmedicine.org/',
-                'pbio': 'http://www.plosbiology.org/',
-                'pone': 'http://www.plosone.org/'}
-        #A mapping of image types to directory names
-        dirs = {'e': 'equations', 'g': 'figures', 't': 'tables'}
-        #We detect all the graphic references in the document
-        graphics = self.root_tag.getElementsByTagName('graphic')
-        graphics += self.root_tag.getElementsByTagName('inline-graphic')
-        for g in graphics:
-            xlink_href = g.getAttribute('xlink:href')
-            tag = xlink_href.split('.')[-1]
-            typechar = tag[0]  # first character, either e, g, or t
-            if typechar == 'e':  # the case of an equation
-                rep = '&representation=PNG'
-            else:  # other cases: table and figure
-                rep = '&representation=PNG_L'
-            #Let's compose the address
-            addr_str = '{0}{1}{2}%2Fjournal.{3}.{4}.{5}{6}'
-            addr = addr_str.format(jids[jrn_id], PLOSSTRING, pdoi, jrn_id,
-                                   art_id, tag, rep)
-            #Open the address
-            try:
-                image = urllib2.urlopen(addr)
-            except urllib2.HTTPError, e:
-                if e.code == 503:  # Server overloaded
-                    sleep(1)  # Wait one second
-                    try:
-                        image = urllib2.urlopen(addr)
-                    except:
-                        break
-                elif e.code == 500:
-                    log.error('urllib2.HTTPError {0}'.format(e.code))
-                break
+            resource = xlink_href + '/largerimage'
+        full_url = base_url.format(resource)
+        try:
+            image = urllib2.urlopen(full_url)
+        except urllib2.HTTPError, e:
+            if e.code == 503:  # Server overload error
+                time.sleep(1)  # Wait a second
+                try:
+                    image = urllib2.urlopen(full_url)
+                except:
+                    break  # Happened twice, give up
             else:
-                filename = '{0}.png'.format(tag)
-                img_dir_sub = dirs[type]
-                img_file = os.path.join(img_dir, img_dir_sub, filename)
-                with open(img_file, 'wb') as outimage:
-                    outimage.write(image.read())
-                dl_str = 'Downloaded image {0}'
-                print(dl_str.format(tag))
-        print("Done downloading images")
-    #If the images were not already cached, and caching is enabled...
-    #We want to transfer the downloaded files to the cache
-    if not cached and caching:
-        os.mkdir(art_cache)
-        shutil.copytree(img_dir, art_cache_images)
+                log.error('urllib2.HTTPError {0}'.format(e.code))
+            break
+        else:
+            img_name = xlink_href.split('.')[-1] + '.png'
+            img_path = os.path.join(output_dir, img_name)
+            with open(img_path, 'wb') as output:
+                output.write(image.read())
+            print('Downloaded image {0}'.format(img_name))
+    print('Done downloading images')
