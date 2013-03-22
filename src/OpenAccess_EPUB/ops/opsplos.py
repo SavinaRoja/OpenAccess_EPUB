@@ -50,47 +50,87 @@ class OPSPLoS(OPSMeta):
         This method encapsulates the functions necessary to create the synopsis
         segment of the article.
         """
-        self.doc = self.makeDocument('synop')
+        #Make the synopsis file and get its body element
+        self.doc = self.make_document('synop')
         body = self.doc.getElementsByTagName('body')[0]
+
+        #Create a large title element for the article
         title = self.appendNewElement('h1', body)
         self.setSomeAttributes(title, {'id': 'title',
                                        'class': 'article-title'})
         title.childNodes = self.metadata.title.article_title.childNodes
-        auths, edits = [], []
+
+        #Compile the list of authors and editors
+        authors, editors = [], []
         for contrib in self.metadata.contrib:
             if contrib.attrs['contrib-type'] == 'author':
-                auths.append(contrib)
+                authors.append(contrib)
             elif contrib.attrs['contrib-type'] == 'editor':
-                edits.append(contrib)
+                editors.append(contrib)
             else:
                 if not contrib.attrs['contrib-type']:
                     print('No contrib-type provided for contibutor!')
                 else:
                     print('Unexpected value for contrib-type')
-        auth_el = self.appendNewElement('h3', body)
+
+        #Construct an element for the authors
+        author_element = self.appendNewElement('h3', body)
+        author_element.setAttribute('class', 'authors')
+
+        #Construct content for the author element
         first = True
-        for auth in auths:
-            if not first:
-                self.appendNewText(', ', auth_el)
-            else:
+        for author in authors:
+            if first:
                 first = False
-            if not auth.anonymous:
-                given = auth.name[0].given
-                surname = auth.name[0].surname
-                name = given + ' ' + surname
+            else:
+                self.appendNewText(', ', author_element)
+            if not author.anonymous:
+                name = author.name[0].given + ' ' + author.name[0].surname
             else:
                 name = 'Anonymous'
-            self.appendNewText(name, auth_el)
-            for x in auth.xref:
-                s = x.node.getElementsByTagName('sup')
-                if s:
-                    s = utils.nodeText(s[0])
-                else:
-                    s = u'!'
-                _sup = self.appendNewElement('sup', auth_el)
-                _a = self.appendNewElement('a', _sup)
-                _a.setAttribute('href', self.synop_frag.format(x.rid))
-                self.appendNewText(s, _a)
+            self.appendNewText(name, author_element)
+            for xref in author.xref:
+                if xref.ref_type in ['corresp', 'aff']:
+                    try:
+                        sup_element = self.getChildrenByTagName('sup', xref.node)[0]
+                    except IndexError:
+                        log.info('Author xref did not contain <sup> element')
+                        sup_text = utils.nodeText(xref.node)
+                    else:
+                        sup_text = utils.nodeText(sup_element)
+                    new_sup = self.appendNewElement('sup', author_element)
+                    sup_link = self.appendNewElement('a', new_sup)
+                    sup_link.setAttribute('href', self.synop_frag.format(xref.rid))
+                    self.appendNewText(sup_text, sup_link)
+
+        #Construct the content for abstracts
+        for abstract in self.metadata.abstract:
+            if abstract.type == '':  # If no type is listed -> main abstract
+                self.expungeAttributes(abstract.node)
+                self.appendNewElementWithText('h2', 'Abstract', body)
+                body.appendChild(abstract.node)
+                abstract.node.tagName = 'div'
+                abstract.node.setAttribute('id', 'abstract')
+            if abstract.type == 'summary':
+                self.expungeAttributes(abstract.node)
+                self.appendNewElementWithText('h2', 'Author Summary', body)
+                body.appendChild(abstract.node)
+                abstract.node.tagName = 'div'
+                abstract.node.setAttribute('id', 'author-summary')
+
+        #Add a visual cue that the article info is distinct
+        self.appendNewElement('hr', body)
+
+        #Create the citation content
+        citation_div = self.appendNewElement('div', body)
+        citation_div.setAttribute('id', 'article-citation')
+        self.appendNewElementWithText('b', 'Citation: ', citation_div)
+        self.appendNewText(self.doi, citation_div)
+
+        #Post processing node conversion
+        self.convert_emphasis_elements(body)
+        self.convert_address_linking_elements(body)
+        self.convert_xref_elements(body)
 
         #Finally, write to a document
         with open(os.path.join(self.ops_dir, self.synop_frag[:-4]), 'w') as op:
@@ -102,7 +142,7 @@ class OPSPLoS(OPSMeta):
         segment of the article.
         """
 
-        self.doc = self.makeDocument('main')
+        self.doc = self.make_document('main')
         body = self.doc.getElementsByTagName('body')[0]
         #Here I make a complete copy of the article's body tag to the the main
         #document's DOM
@@ -115,7 +155,16 @@ class OPSPLoS(OPSMeta):
                 body.appendChild(item.cloneNode(deep=True))
 
         #Handle node conversion
-        self.convertEmphasisElements(body)
+        #self.convertFigElements(body)
+        #self.convertTableWrapElements(body)
+        #self.convertListElements(body)
+        #self.convertSecElements(body)
+        #self.recursiveConvertDivTitles(body, depth=0)
+        self.convert_emphasis_elements(body)
+        self.convert_address_linking_elements(body)
+        self.convert_xref_elements(body)
+        #self.convertDispFormulaElements(body)
+        #self.convertInlineFormulaElements(body)
 
         #Finally, write to a document
         with open(os.path.join(self.ops_dir, self.main_frag[:-4]), 'w') as op:
@@ -127,7 +176,7 @@ class OPSPLoS(OPSMeta):
         segment of the article.
         """
 
-        self.doc = self.makeDocument('biblio')
+        self.doc = self.make_document('biblio')
         body = self.doc.getElementsByTagName('body')[0]
 
         #Finally, write to a document
@@ -141,7 +190,7 @@ class OPSPLoS(OPSMeta):
         are no tables, the file is not created.
         """
 
-        self.doc = self.makeDocument('tables')
+        self.doc = self.make_document('tables')
         body = self.doc.getElementsByTagName('body')[0]
 
         with open(os.path.join(self.ops_dir, self.tab_frag[:-4]), 'w') as op:
@@ -295,6 +344,42 @@ class OPSPLoS(OPSMeta):
             except:
                 pass
 
+    def convert_address_linking_elements(self, node):
+        """
+        The Journal Publishing Tag Set defines the following elements as
+        address linking elements: <email>, <ext-link>, <uri>. The only
+        appropriate hypertext element for linking in OPS is the <a> element.
+        """
+        #Convert email to a mailto link addressed to the text it contains
+        for e in self.getDescendantsByTagName(node, 'email'):
+            self.expungeAttributes(e)
+            e.tagName = 'a'
+            mailto = 'mailto:{0}'.format(utils.nodeText(e))
+            e.setAttribute('href', mailto)
+        #Ext-links often declare their address as xlink:href attribute
+        #if that fails, direct the link to the contained text
+        for e in self.getDescendantsByTagName(node, 'ext-link'):
+            eid = e.getAttribute('id')
+            e.tagName = 'a'
+            xh = e.getAttribute('xlink:href')
+            self.expungeAttributes(e)
+            if xh:
+                e.setAttribute('href', xh)
+            else:
+                e.setAttribute('href', utils.nodeText(e))
+            if eid:
+                e.setAttribute('id', eid)
+        #Uris often declare their address as xlink:href attribute
+        #if that fails, direct the link to the contained text
+        for u in self.getDescendantsByTagName(node, 'uri'):
+            u.tagName = 'a'
+            xh = u.getAttribute('xlink:href')
+            self.expungeAttributes(u)
+            if xh:
+                u.setAttribute('href', xh)
+            else:
+                u.setAttribute('href', utils.nodeText(u))
+
     def make_fragment_identifiers(self):
         """
         This will create useful fragment identifier strings.
@@ -303,6 +388,35 @@ class OPSPLoS(OPSMeta):
         self.main_frag = 'main.{0}.xml'.format(self.doi_frag) + '#{0}'
         self.bib_frag = 'biblio.{0}.xml'.format(self.doi_frag) + '#{0}'
         self.tab_frag = 'tables.{0}.xml'.format(self.doi_frag) + '#{0}'
+
+    def convert_xref_elements(self, node):
+        """
+        xref elements are used for internal referencing to document components
+        such as figures, tables, equations, bibliography, or supplementary
+        materials. As <a> is the only appropiate hypertext linker, this method
+        converts xrefs to anchors with the appropriate address.
+        """
+        #This is a mapping of values of the ref-type attribute to the desired
+        #local file to be addressed
+        ref_map = {u'bibr': self.bib_frag,
+                   u'fig': self.main_frag,
+                   u'supplementary-material': self.main_frag,
+                   u'table': self.main_frag,
+                   u'aff': self.synop_frag,
+                   u'sec': self.main_frag,
+                   u'table-fn': self.tab_frag,
+                   u'boxed-text': self.main_frag,
+                   u'other': self.main_frag,
+                   u'disp-formula': self.main_frag,
+                   u'fn': self.main_frag,
+                   u'app': self.main_frag}
+        for x in self.getDescendantsByTagName(node, 'xref'):
+            x.tagName = 'a'
+            x_attrs = self.getAllAttributes(x, remove=True)
+            ref_type = x_attrs['ref-type']
+            rid = x_attrs['rid']
+            address = ref_map[ref_type].format(rid)
+            x.setAttribute('href', address)
 
     def announce(self):
         """

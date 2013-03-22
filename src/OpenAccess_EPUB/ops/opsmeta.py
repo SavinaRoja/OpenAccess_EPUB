@@ -20,9 +20,9 @@ class OPSMeta(object):
     def __init__(self):
         log.info('Initiating OPSMeta')
         self.announce()
-        self.doc = self.makeDocument('base')
+        self.doc = self.make_document('base')
 
-    def makeDocument(self, titlestring):
+    def make_document(self, titlestring):
         """
         This method may be used to create a new document for writing as xml
         to the OPS subdirectory of the ePub structure.
@@ -54,7 +54,7 @@ class OPSMeta(object):
         root.appendChild(body)
         return doc
 
-    def writeDocument(self, name, document):
+    def write_document(self, name, document):
         """
         This function will write a DOM document to an XML file.
         """
@@ -187,7 +187,17 @@ class OPSMeta(object):
         new = self.doc.createTextNode(newtext)
         parent.appendChild(new)
 
-    def convertEmphasisElements(self, node):
+    def appendNewElementWithText(self, newelement, newtext, parent):
+        """
+        A common xml editing idiom is to create a new element with some text in
+        it and append it to pre-existing element. This method makes that more
+        conscise. It will return the newly created element with the text added.
+        """
+        new = self.appendNewElement(newelement, parent)
+        self.appendNewText(newtext, new)
+        return new
+
+    def convert_emphasis_elements(self, node):
         """
         The Journal Publishing Tag Set defines the following elements as
         emphasis elements: <bold>, <italic>, <monospace>, <overline>,

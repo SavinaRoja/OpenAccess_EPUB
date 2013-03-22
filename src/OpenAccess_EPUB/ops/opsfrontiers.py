@@ -50,7 +50,7 @@ class OPSFrontiers(OPSMeta):
         This method encapsulates the functions necessary to create the synopsis
         segment of the article.
         """
-        self.doc = self.makeDocument('synop')
+        self.doc = self.make_document('synop')
         body = self.doc.getElementsByTagName('body')[0]
 
         #Create the title for the article
@@ -141,17 +141,17 @@ class OPSFrontiers(OPSMeta):
             if abstract.type:
                 print('abstract-type specified!: {0}'.format(abstract.type))
             body.appendChild(abstract.node)
+            self.expungeAttributes(abstract.node)
             abstract.node.tagName = 'div'
             abstract.node.setAttribute('id', 'abstract')
-            self.expungeAttributes(abstract.node)
 
-        #Refer to self.createArticleInfo()
+        #Refer to self.create_article_info()
         self.create_article_info(body)
 
         #Post processing node conversion
         self.convertEmphasisElements(body)
-        self.convertAddressLinkingElements(body)
-        self.convertXrefElements(body)
+        self.convert_address_linking_elements(body)
+        self.convert_xref_elements(body)
 
         #Finally, write to a document
         with open(os.path.join(self.ops_dir, self.synop_frag[:-4]), 'w') as op:
@@ -163,7 +163,7 @@ class OPSFrontiers(OPSMeta):
         segment of the article.
         """
 
-        self.doc = self.makeDocument('main')
+        self.doc = self.make_document('main')
         body = self.doc.getElementsByTagName('body')[0]
         #Here I make a complete copy of the article's body tag to the the main
         #document's DOM
@@ -216,8 +216,8 @@ class OPSFrontiers(OPSMeta):
         self.convertSecElements(body)
         self.recursiveConvertDivTitles(body, depth=0)
         self.convertEmphasisElements(body)
-        self.convertAddressLinkingElements(body)
-        self.convertXrefElements(body)
+        self.convert_address_linking_elements(body)
+        self.convert_xref_elements(body)
         self.convertDispFormulaElements(body)
         self.convertInlineFormulaElements(body)
 
@@ -231,7 +231,7 @@ class OPSFrontiers(OPSMeta):
         segment of the article.
         """
 
-        self.doc = self.makeDocument('biblio')
+        self.doc = self.make_document('biblio')
         body = self.doc.getElementsByTagName('body')[0]
         body.setAttribute('id', 'references')
         try:
@@ -261,7 +261,7 @@ class OPSFrontiers(OPSMeta):
         are no tables, the file is not written.
         """
 
-        self.doc = self.makeDocument('tables')
+        self.doc = self.make_document('tables')
         body = self.doc.getElementsByTagName('body')[0]
         for table in self.html_tables:
             label = table.getAttribute('label')
@@ -280,7 +280,7 @@ class OPSFrontiers(OPSMeta):
         self.convertEmphasisElements(body)
         self.convertDispFormulaElements(body)
         self.convertInlineFormulaElements(body)
-        self.convertXrefElements(body)
+        self.convert_xref_elements(body)
 
         with open(os.path.join(self.ops_dir, self.tab_frag[:-4]), 'w') as op:
             op.write(self.doc.toprettyxml(encoding='utf-8'))
@@ -433,7 +433,7 @@ class OPSFrontiers(OPSMeta):
             except:
                 pass
 
-    def convertAddressLinkingElements(self, node):
+    def convert_address_linking_elements(self, node):
         """
         The Journal Publishing Tag Set defines the following elements as
         address linking elements: <email>, <ext-link>, <uri>. The only
@@ -642,7 +642,7 @@ class OPSFrontiers(OPSMeta):
             parent.insertBefore(self.doc.createElement('hr'), t)
             parent.removeChild(t)
 
-    def convertXrefElements(self, node):
+    def convert_xref_elements(self, node):
         """
         xref elements are used for internal referencing to document components
         such as figures, tables, equations, bibliography, or supplementary
