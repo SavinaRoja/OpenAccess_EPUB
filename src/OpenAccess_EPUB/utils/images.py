@@ -107,10 +107,12 @@ def get_images(doi, outdirect, manual_images, default_images, cache_images,
             move_images_to_cache(img_dir, article_cache)
         return True
     elif journal_doi == '10.1371':
-        fetch_plos_images(article_doi, img_dir, document)
-        if caching:
-            move_images_to_cache(img_dir, article_cache)
-        return True
+        success = fetch_plos_images(article_doi, img_dir, document)
+        if success:
+            if caching:
+                move_images_to_cache(img_dir, article_cache)
+            return True
+        return False
     else:
         print('Fetching images for this publisher is not supported!')
         return False
@@ -252,7 +254,7 @@ def fetch_plos_images(article_doi, output_dir, document):
     for graphic in graphics:
         xlink_href = graphic.getAttribute('xlink:href')
         if xlink_href[-4] == 'e':  # Equations are handled differently
-            resource = '/largerimage' + xlink_href + '&representation=PNG'
+            resource = 'fetchObject.action?uri=' + xlink_href + '&representation=PNG'
         else:
             resource = xlink_href + '/largerimage'
         full_url = base_url.format(resource)
@@ -264,10 +266,10 @@ def fetch_plos_images(article_doi, output_dir, document):
                 try:
                     image = urllib2.urlopen(full_url)
                 except:
-                    break  # Happened twice, give up
+                    return False  # Happened twice, give up
             else:
                 log.error('urllib2.HTTPError {0}'.format(e.code))
-            break
+            return False
         else:
             img_name = xlink_href.split('.')[-1] + '.png'
             img_path = os.path.join(output_dir, img_name)
