@@ -13,7 +13,7 @@ def cache_location():
             path = os.path.expanduser('~user')
             if path == '~user':
                 sys.exit('Could not find the correct cache location')
-        return os.path.join(path, 'OpenAccess_EPUB')
+        return os.path.join(path, '.OpenAccess_EPUB')
 
 LOG = logging.getLogger('Settings')
 
@@ -30,7 +30,7 @@ CACHE_LOCATION = cache_location()
 CACHE_IMAGES = os.path.join(CACHE_LOCATION, 'img_cache')
 
 #Where to look for images relative to the working directory
-DEFAULT_IMAGES = LOCAL_DIR
+DEFAULT_IMAGES = os.path.join(LOCAL_DIR, 'images')
 
 #Toggle the caching of log files
 SAVE_LOG = True

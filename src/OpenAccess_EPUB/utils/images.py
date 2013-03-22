@@ -34,6 +34,7 @@ def move_images_to_cache(source, destination):
     Handles the movement of images to the cache. Must be helpful if it finds
     that the folder for this article already exists.
     """
+    print('Moving images to cache, {0}'.format(destination))
     try:
         shutil.copytree(source, destination)
     except OSError:  # Should occur if the folder already exists
@@ -67,7 +68,7 @@ def get_images(doi, outdirect, manual_images, default_images, cache_images,
     #Split the DOI
     journal_doi, article_doi = doi.split('/')
     log.debug('journal-doi-{0}'.format(journal_doi))
-    log.debug('article-doi-{1}'.format(article_doi))
+    log.debug('article-doi-{0}'.format(article_doi))
 
     #Specify where to place the images in the output
     img_dir = os.path.join(outdirect, 'OPS', 'images-{0}'.format(article_doi))
@@ -106,9 +107,9 @@ def get_images(doi, outdirect, manual_images, default_images, cache_images,
             move_images_to_cache(img_dir, article_cache)
         return True
     elif journal_doi == '10.1371':
-        fetch_plos_images(article_doi, img_dir)
+        fetch_plos_images(article_doi, img_dir, document)
         if caching:
-            move_images_to_cache(img_dir, article_cache, document)
+            move_images_to_cache(img_dir, article_cache)
         return True
     else:
         print('Fetching images for this publisher is not supported!')
@@ -243,8 +244,8 @@ def fetch_plos_images(article_doi, output_dir, document):
     base_url = journal_urls[subjournal_name]
 
     #Acquire <graphic> and <inline-graphic> xml elements
-    graphics = document.root_tag.getElementsByTagNAme('graphic')
-    graphics += document.root_tag.getElementsByTagNAme('inline-graphic')
+    graphics = document.root_tag.getElementsByTagName('graphic')
+    graphics += document.root_tag.getElementsByTagName('inline-graphic')
 
     #Begin to download
     print('Downloading images, this may take some time...')
@@ -272,5 +273,5 @@ def fetch_plos_images(article_doi, output_dir, document):
             img_path = os.path.join(output_dir, img_name)
             with open(img_path, 'wb') as output:
                 output.write(image.read())
-            print('Downloaded image {0}'.format(img_name))
+            print('Downloaded image {0}\n'.format(img_name))
     print('Done downloading images')
