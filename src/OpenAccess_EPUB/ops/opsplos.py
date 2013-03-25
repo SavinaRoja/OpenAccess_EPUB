@@ -10,7 +10,6 @@ import logging
 
 log = logging.getLogger('OPSPLoS')
 
-
 class InputError(Exception):
     """
     This is a custom exception for unexpected input from a publisher.
@@ -55,77 +54,26 @@ class OPSPLoS(OPSMeta):
         body = self.doc.getElementsByTagName('body')[0]
 
         #Create a large title element for the article
-        title = self.appendNewElement('h1', body)
-        self.setSomeAttributes(title, {'id': 'title',
-                                       'class': 'article-title'})
-        title.childNodes = self.metadata.title.article_title.childNodes
+        self.make_synopsis_title(body)
 
         #Compile the list of authors and editors
-        authors, editors = [], []
-        for contrib in self.metadata.contrib:
-            if contrib.attrs['contrib-type'] == 'author':
-                authors.append(contrib)
-            elif contrib.attrs['contrib-type'] == 'editor':
-                editors.append(contrib)
-            else:
-                if not contrib.attrs['contrib-type']:
-                    print('No contrib-type provided for contibutor!')
-                else:
-                    print('Unexpected value for contrib-type')
+        authors = self.get_authors_list()
+        editors = self.get_editors_list()
 
-        #Construct an element for the authors
-        author_element = self.appendNewElement('h3', body)
-        author_element.setAttribute('class', 'authors')
-
-        #Construct content for the author element
-        first = True
-        for author in authors:
-            if first:
-                first = False
-            else:
-                self.appendNewText(', ', author_element)
-            if not author.anonymous:
-                name = author.name[0].given + ' ' + author.name[0].surname
-            else:
-                name = 'Anonymous'
-            self.appendNewText(name, author_element)
-            for xref in author.xref:
-                if xref.ref_type in ['corresp', 'aff']:
-                    try:
-                        sup_element = self.getChildrenByTagName('sup', xref.node)[0]
-                    except IndexError:
-                        log.info('Author xref did not contain <sup> element')
-                        sup_text = utils.nodeText(xref.node)
-                    else:
-                        sup_text = utils.nodeText(sup_element)
-                    new_sup = self.appendNewElement('sup', author_element)
-                    sup_link = self.appendNewElement('a', new_sup)
-                    sup_link.setAttribute('href', self.synop_frag.format(xref.rid))
-                    self.appendNewText(sup_text, sup_link)
+        #Construct the authors section of the synopsis
+        self.make_synopsis_authors(authors, body)
 
         #Construct the content for abstracts
-        for abstract in self.metadata.abstract:
-            if abstract.type == '':  # If no type is listed -> main abstract
-                self.expungeAttributes(abstract.node)
-                self.appendNewElementWithText('h2', 'Abstract', body)
-                body.appendChild(abstract.node)
-                abstract.node.tagName = 'div'
-                abstract.node.setAttribute('id', 'abstract')
-            if abstract.type == 'summary':
-                self.expungeAttributes(abstract.node)
-                self.appendNewElementWithText('h2', 'Author Summary', body)
-                body.appendChild(abstract.node)
-                abstract.node.tagName = 'div'
-                abstract.node.setAttribute('id', 'author-summary')
+        self.make_synopsis_abstracts(body)
 
         #Add a visual cue that the article info is distinct
         self.appendNewElement('hr', body)
 
         #Create the citation content
-        citation_div = self.appendNewElement('div', body)
-        citation_div.setAttribute('id', 'article-citation')
-        self.appendNewElementWithText('b', 'Citation: ', citation_div)
-        self.appendNewText(self.doi, citation_div)
+        self.make_synopsis_citation(body)
+
+        #Create the editors section of the synopsis
+        self.make_synopsis_editors(editors, body)
 
         #Post processing node conversion
         self.convert_emphasis_elements(body)
@@ -417,6 +365,155 @@ class OPSPLoS(OPSMeta):
             rid = x_attrs['rid']
             address = ref_map[ref_type].format(rid)
             x.setAttribute('href', address)
+
+    ### Content Conversion Methods ###
+    ##################################
+
+    def make_synopsis_title(self, body):
+        """
+        Makes the title for the synopsis.
+        """
+        title = self.appendNewElement('h1', body)
+        self.setSomeAttributes(title, {'id': 'title',
+                                       'class': 'article-title'})
+        title.childNodes = self.metadata.title.article_title.childNodes
+
+    def get_authors_list(self):
+        """
+        Gets a list of all authors described in the metadata.
+        """
+        authors = []
+        for contrib in self.metadata.contrib:
+            if contrib.attrs['contrib-type'] == 'author':
+                authors.append(contrib)
+            else:
+                if not contrib.attrs['contrib-type']:
+                    print('No contrib-type provided for contibutor!')
+                else:
+                    print('Unexpected value for contrib-type')
+        return authors
+
+    def get_editors_list(self):
+        """
+        Gets a list of all editors described in the metadata.
+        """
+        editors = [i for i in self.metadata.contrib if i.attrs['contrib-type']=='editor']
+        #editors = []
+        #for contrib in self.metadata.contrib:
+        #    if contrib.attrs['contrib-type'] == 'editor':
+        #        editors.append(contrib)
+        #    else:
+        #        if not contrib.attrs['contrib-type']:
+        #            print('No contrib-type provided for contibutor!')
+        #        else:
+        #            print('Unexpected value for contrib-type')
+        return editors
+
+    def make_synopsis_authors(self, authors, body):
+        """
+        Constructs the authors content after the title in of the synopsis;
+        creates nodes and text.
+        """
+        #Make and append a new element to the passed body node
+        author_element = self.appendNewElement('h3', body)
+        author_element.setAttribute('class', 'authors')
+        #Construct content for the author element
+        first = True
+        for author in authors:
+            if first:
+                first = False
+            else:
+                self.appendNewText(', ', author_element)
+            if not author.anonymous:
+                name = author.name[0].given + ' ' + author.name[0].surname
+            else:
+                name = 'Anonymous'
+            self.appendNewText(name, author_element)
+            for xref in author.xref:
+                if xref.ref_type in ['corresp', 'aff']:
+                    try:
+                        sup_element = self.getChildrenByTagName('sup', xref.node)[0]
+                    except IndexError:
+                        log.info('Author xref did not contain <sup> element')
+                        #sup_text = utils.nodeText(xref.node)
+                        sup_text = ''
+                    else:
+                        sup_text = utils.nodeText(sup_element)
+                    new_sup = self.appendNewElement('sup', author_element)
+                    sup_link = self.appendNewElement('a', new_sup)
+                    sup_link.setAttribute('href', self.synop_frag.format(xref.rid))
+                    self.appendNewText(sup_text, sup_link)
+
+    def make_synopsis_abstracts(self, body):
+        """
+        An article may contain data for various kinds of abstracts. This method
+        works on those that are included in the synopsis, handling the content
+        conversion and the ordering.
+        """
+        for abstract in self.metadata.abstract:
+            if abstract.type == '':  # If no type is listed -> main abstract
+                self.expungeAttributes(abstract.node)
+                self.appendNewElementWithText('h2', 'Abstract', body)
+                body.appendChild(abstract.node)
+                abstract.node.tagName = 'div'
+                abstract.node.setAttribute('id', 'abstract')
+            if abstract.type == 'summary':
+                self.expungeAttributes(abstract.node)
+                self.appendNewElementWithText('h2', 'Author Summary', body)
+                body.appendChild(abstract.node)
+                abstract.node.tagName = 'div'
+                abstract.node.setAttribute('id', 'author-summary')
+
+    def make_synopsis_citation(self, body):
+        """
+        Creates a citation node for the synopsis of the article.
+        """
+        citation_text = self.format_self_citation()
+        citation_div = self.appendNewElement('div', body)
+        citation_div.setAttribute('id', 'article-citation')
+        self.appendNewElementWithText('b', 'Citation: ', citation_div)
+        self.appendNewText(citation_text, citation_div)
+
+    def make_synopsis_editors(self, editors, body):
+        if not editors:
+            pass
+        else:
+            editors_div = self.appendNewElement('div', body)
+            if len(editors) > 1:
+                self.appendNewElementWithText('b', 'Editors: ', editors_div)
+            else:
+                self.appendNewElementWithText('b', 'Editor: ', editors_div)
+            first = True
+            for editor in editors:
+                if first:
+                    first = False
+                else:
+                    self.appendNewText('; ', editors_div)
+                if not editor.anonymous:
+                    name = editor.name[0].given + ' ' + editor.name[0].surname
+                else:
+                    name = 'Anonymous'
+                self.appendNewText(name, editors_div)
+                #Add some text for the editor affiliations
+                for xref in editor.xref:
+                    if xref.ref_type == 'aff':
+                        #Relate this xref to the appropriate aff tag
+                        ref_id = xref.rid
+                        refer_aff = self.metadata.affs_by_id[ref_id]
+                        #Put in appropriate text
+                        self.appendNewText(', ', editors_div)
+                        addr = refer_aff.getElementsByTagName('addr-line')[0]
+                        editors_div.childNodes += addr.childNodes
+
+    def format_self_citation(self):
+        """
+        PLoS articles present a citation for the article itself. This method
+        will return the citation for the article as a string.
+        """
+        #This is not yet fully implemented.
+        #I need clarification/documentation from PLoS
+        #So for now I just put in the DOI
+        return self.doi
 
     def announce(self):
         """
