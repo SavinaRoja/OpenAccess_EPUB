@@ -450,7 +450,7 @@ class JPTSMeta(object):
         model for this element and the <date> elements it contains, the history
         will be represented as a dictionary of dates keyed by date-type values.
         """
-        dates = {}
+        dates = {'received': None, 'accepted': None}
         datetuple = namedtuple('Date', 'year, month, day, season')
         try:
             h = self.getChildrenByTagName('history', self.article_meta)[0]

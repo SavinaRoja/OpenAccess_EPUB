@@ -75,6 +75,9 @@ class OPSPLoS(OPSMeta):
         #Create the editors section of the synopsis
         self.make_synopsis_editors(editors, body)
 
+        #Create the important dates section
+        self.make_synopsis_dates(body)
+
         #Post processing node conversion
         self.convert_emphasis_elements(body)
         self.convert_address_linking_elements(body)
@@ -475,35 +478,78 @@ class OPSPLoS(OPSMeta):
         self.appendNewText(citation_text, citation_div)
 
     def make_synopsis_editors(self, editors, body):
-        if not editors:
-            pass
+        if not editors:  # No editors
+            return
+        editors_div = self.appendNewElement('div', body)
+        if len(editors) > 1:  # Pluralize if more than one editor
+            self.appendNewElementWithText('b', 'Editors: ', editors_div)
         else:
-            editors_div = self.appendNewElement('div', body)
-            if len(editors) > 1:
-                self.appendNewElementWithText('b', 'Editors: ', editors_div)
+            self.appendNewElementWithText('b', 'Editor: ', editors_div)
+        first = True
+        for editor in editors:
+            if first:
+                first = False
             else:
-                self.appendNewElementWithText('b', 'Editor: ', editors_div)
-            first = True
-            for editor in editors:
-                if first:
-                    first = False
-                else:
-                    self.appendNewText('; ', editors_div)
-                if not editor.anonymous:
-                    name = editor.name[0].given + ' ' + editor.name[0].surname
-                else:
-                    name = 'Anonymous'
-                self.appendNewText(name, editors_div)
-                #Add some text for the editor affiliations
-                for xref in editor.xref:
-                    if xref.ref_type == 'aff':
-                        #Relate this xref to the appropriate aff tag
-                        ref_id = xref.rid
-                        refer_aff = self.metadata.affs_by_id[ref_id]
-                        #Put in appropriate text
-                        self.appendNewText(', ', editors_div)
-                        addr = refer_aff.getElementsByTagName('addr-line')[0]
-                        editors_div.childNodes += addr.childNodes
+                self.appendNewText('; ', editors_div)
+            if not editor.anonymous:
+                name = editor.name[0].given + ' ' + editor.name[0].surname
+            else:
+                name = 'Anonymous'
+            self.appendNewText(name, editors_div)
+            #Add some text for the editor affiliations
+            for xref in editor.xref:
+                if xref.ref_type == 'aff':
+                    #Relate this xref to the appropriate aff tag
+                    ref_id = xref.rid
+                    refer_aff = self.metadata.affs_by_id[ref_id]
+                    #Put in appropriate text
+                    self.appendNewText(', ', editors_div)
+                    addr = refer_aff.getElementsByTagName('addr-line')[0]
+                    editors_div.childNodes += addr.childNodes
+
+    def make_synopsis_dates(self, body):
+        """
+        Makes the section containing important dates for the article: typically
+        Received, Accepted, and Published.
+        """
+        dates_div = self.appendNewElement('div', body)
+        dates_div.setAttribute('id', 'article-dates')
+
+        #Received - Optional
+        received = self.metadata.history['received']
+        if received:
+            self.appendNewElementWithText('b', 'Received: ', dates_div)
+            self.appendNewText(self.format_date_string(received), dates_div)
+
+        #Accepted - Optional
+        accepted = self.metadata.history['accepted']
+        if accepted:
+            self.appendNewElementWithText('b', 'Accepted: ', dates_div)
+            self.appendNewText(self.format_date_string(accepted), dates_div)
+
+        #Published - Required
+        published = self.metadata.pub_date['epub']
+        self.appendNewElementWithText('b', 'Published: ', dates_div)
+        self.appendNewText(self.format_date_string(published), dates_div)
+
+    def format_date_string(self, date_tuple):
+        """
+        Receives a date_tuple object, defined in jptsmeta, and outputs a string
+        for placement in the article content.
+        """
+        months = ['', 'January', 'February', 'March', 'April', 'May', 'June',
+                  'July', 'August', 'September', 'October', 'November', 'December']
+        date_string = ''
+        if date_tuple.season:
+            return '{0}, {1}'.format(date_tuple.season, date_tuple.year)
+        else:
+            if not date_tuple.month and not date_tuple.day:
+                return '{0}'.format(date_tuple.year)
+            if date_tuple.month:
+                date_string += months[int(date_tuple.month)]
+            if date_tuple.day:
+                date_string += ' ' + date_tuple.day
+            return ', '.join([date_string, date_tuple.year])
 
     def format_self_citation(self):
         """

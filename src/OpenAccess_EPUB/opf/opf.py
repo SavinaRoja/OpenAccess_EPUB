@@ -325,11 +325,8 @@ class PLoSOPF(MetaOPF):
 
         #Make the dc:date elements for important dates regarding the article
         #Creation
-        try:
-            creation_date = ameta.history['accepted']
-        except KeyError:
-            pass
-        else:
+        creation_date = ameta.history['accepted']
+        if creation_date:
             dc_date = dc.date(creation_date.year,
                               creation_date.month,
                               creation_date.day,
