@@ -30,7 +30,7 @@ class JPTSMeta(object):
         self.getFrontElements()
         self.parseJournalMetadata()
         self.parseArticleMetadata()
-        self.parseBackData()
+        self.parse_back_data()
 
     def getTopElements(self):
         self.front = self.doc.getElementsByTagName('front')[0]  # Required
@@ -750,7 +750,7 @@ class JPTSMeta(object):
         """
         return self.getChildrenByTagName('custom-meta-wrap', self.article_meta)
 
-    def parseBackData(self):
+    def parse_back_data(self):
         """
         For each version of the JPTS, <back> contains "Ancillary or supporting
         material that, although it is not included as part of the main
@@ -1348,6 +1348,38 @@ class JPTSMeta30(JPTSMeta):
             new = funding_tuple(award_groups, funding_statements, open_access)
             funding_groups.append(new)
         return funding_groups
+
+    def parse_back_data(self):
+        """
+        The JPTS 3.0 defines the following as back elements, which <back>
+        may have any combination of:
+
+        <ack> Acknowledgments
+        <app-group> Appendix Matter
+        <bio> Biography
+        <fn-group> Footnote Group
+        <glossary> Glossary Elements List
+        <ref-list> Reference List (Bibliographic Reference List)
+        <notes> Notes
+        <sec> Section
+
+        All of these will be NodeLists in the self.backmatter namedtuple.
+        """
+        #No point in looking for back matter if no back element
+        if not self.back:
+            self.backmatter = None
+            return
+
+        #Define the namedtuple for backmatter
+        back_tuple = namedtuple('Back_Matter',
+                                'ack, app_group, bio, fn_group, glossary, ref_list, notes, sec')
+
+        #Populate backmatter
+        nodes = []
+        for node_name in ['ack', 'app-group', 'bio', 'fn-group', 'glossary',
+                          'ref-list', 'notes', 'sec']:
+            nodes.append(self.getChildrenByTagName(node_name, self.back))
+        self.backmatter = back_tuple(*nodes)
 
     def dtdVersion(self):
         return '3.0'

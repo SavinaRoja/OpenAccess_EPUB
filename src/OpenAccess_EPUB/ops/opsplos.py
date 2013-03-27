@@ -32,6 +32,7 @@ class OPSPLoS(OPSMeta):
         print('Generating OPS content...')
         self.article = article.root_tag
         self.metadata = article.metadata
+        self.backmatter = article.metadata.backmatter
         self.doi = article.getDOI()
         #From "10.1371/journal.pone.0035956" get "pone.0335956"
         self.doi_frag = self.doi.split('10.1371/')[1]
@@ -93,6 +94,12 @@ class OPSPLoS(OPSMeta):
         #Create the content for the article's correspondence
         self.make_synopsis_correspondences(body)
 
+        #Make synopsis footnotes other
+        self.make_synopsis_footnotes_other(body)
+
+        #Add a visual cue that the article info is distinct
+        self.appendNewElement('hr', body)
+
         #Post processing node conversion
         self.convert_emphasis_elements(body)
         self.convert_address_linking_elements(body)
@@ -117,14 +124,13 @@ class OPSPLoS(OPSMeta):
         except IndexError:  # Article has no body...
             return None
         else:
-            for item in article_body.childNodes:
-                body.appendChild(item.cloneNode(deep=True))
+            body.childNodes = article_body.childNodes
 
         #Handle node conversion
         #self.convertFigElements(body)
         #self.convertTableWrapElements(body)
         #self.convertListElements(body)
-        #self.convertSecElements(body)
+        self.convert_sec_elements(body)
         #self.recursiveConvertDivTitles(body, depth=0)
         self.convert_emphasis_elements(body)
         self.convert_address_linking_elements(body)
@@ -144,6 +150,7 @@ class OPSPLoS(OPSMeta):
 
         self.doc = self.make_document('biblio')
         body = self.doc.getElementsByTagName('body')[0]
+        self.appendNewElement('div', body)
 
         #Finally, write to a document
         with open(os.path.join(self.ops_dir, self.bib_frag[:-4]), 'w') as op:
@@ -310,42 +317,6 @@ class OPSPLoS(OPSMeta):
             except:
                 pass
 
-    def convert_address_linking_elements(self, node):
-        """
-        The Journal Publishing Tag Set defines the following elements as
-        address linking elements: <email>, <ext-link>, <uri>. The only
-        appropriate hypertext element for linking in OPS is the <a> element.
-        """
-        #Convert email to a mailto link addressed to the text it contains
-        for e in self.getDescendantsByTagName(node, 'email'):
-            self.expungeAttributes(e)
-            e.tagName = 'a'
-            mailto = 'mailto:{0}'.format(utils.nodeText(e))
-            e.setAttribute('href', mailto)
-        #Ext-links often declare their address as xlink:href attribute
-        #if that fails, direct the link to the contained text
-        for e in self.getDescendantsByTagName(node, 'ext-link'):
-            eid = e.getAttribute('id')
-            e.tagName = 'a'
-            xh = e.getAttribute('xlink:href')
-            self.expungeAttributes(e)
-            if xh:
-                e.setAttribute('href', xh)
-            else:
-                e.setAttribute('href', utils.nodeText(e))
-            if eid:
-                e.setAttribute('id', eid)
-        #Uris often declare their address as xlink:href attribute
-        #if that fails, direct the link to the contained text
-        for u in self.getDescendantsByTagName(node, 'uri'):
-            u.tagName = 'a'
-            xh = u.getAttribute('xlink:href')
-            self.expungeAttributes(u)
-            if xh:
-                u.setAttribute('href', xh)
-            else:
-                u.setAttribute('href', utils.nodeText(u))
-
     def make_fragment_identifiers(self):
         """
         This will create useful fragment identifier strings.
@@ -354,6 +325,21 @@ class OPSPLoS(OPSMeta):
         self.main_frag = 'main.{0}.xml'.format(self.doi_frag) + '#{0}'
         self.bib_frag = 'biblio.{0}.xml'.format(self.doi_frag) + '#{0}'
         self.tab_frag = 'tables.{0}.xml'.format(self.doi_frag) + '#{0}'
+
+    def convert_sec_elements(self, body):
+        """
+        Convert <sec> elements to <div> elements and handle ids and attributes
+        """
+        #Find all <sec> in body
+        sec_elements = body.getElementsByTagName('sec')
+        count = 0
+        #Convert the sec elements
+        for sec in sec_elements:
+            sec.tagName = 'div'
+            self.renameAttributes(sec, [('sec-type', 'class')])
+            if not sec.getAttribute('id'):  # Give it am id if it is missing
+                sec.setAttribute('id', 'OA-EPUB-{0}'.format(str(count)))
+                count += 1
 
     def convert_xref_elements(self, node):
         """
@@ -589,7 +575,7 @@ class OPSPLoS(OPSMeta):
             return
         copyright_div = self.appendNewElement('div', body)
         copyright_div.setAttribute('id', 'copyright')
-        self.appendNewElementWithText('b', 'Copyright: ', body)
+        self.appendNewElementWithText('b', 'Copyright: ', copyright_div)
 
         #Construct the string for the copyright statement
         copyright_string = u' \u00A9 '
@@ -602,7 +588,7 @@ class OPSPLoS(OPSMeta):
         if permissions.license:  # I hope this is a general solution
             license_p = self.getChildrenByTagName('license-p', permissions.license)[0]
             copyright_string += ' ' + utils.nodeText(license_p)
-        self.appendNewText(copyright_string, body)
+        self.appendNewText(copyright_string, copyright_div)
 
     def make_synopsis_funding(self, body):
         """
@@ -661,6 +647,30 @@ class OPSPLoS(OPSMeta):
             corresp_subdiv = self.appendNewElement('div', corresp_div)
             corresp_subdiv.setAttribute('id', corresp_fn.getAttribute('id'))
             corresp_subdiv.childNodes = corresp_fn.childNodes
+
+    def make_synopsis_footnotes_other(self, body):
+        """
+        This will catch all of the footnotes of type 'other' in the <fn-group>
+        of the <back> element.
+        """
+        #Check for backmatter, skip if it doesn't exist
+        if not self.backmatter:
+            return
+        #Check for backmatter fn-groups, skip if empty
+        fn_groups = self.backmatter.fn_group
+        if not fn_groups:
+            return
+        #Look for fn nodes of fn-type 'other'
+        other_fns = []
+        for fn_group in fn_groups:
+            for fn in self.getChildrenByTagName('fn', fn_group):
+                if fn.getAttribute('fn-type') == 'other':
+                    other_fns.append(fn)
+        if other_fns:
+            other_fn_div = self.appendNewElement('div', body)
+            other_fn_div.setAttribute('id', 'back-fn-other')
+        for other_fn in other_fns:
+            other_fn_div.childNodes += other_fn.childNodes
 
     def format_date_string(self, date_tuple):
         """

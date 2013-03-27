@@ -213,7 +213,7 @@ class OPSFrontiers(OPSMeta):
         self.convertFigElements(body)
         self.convertTableWrapElements(body)
         self.convertListElements(body)
-        self.convertSecElements(body)
+        self.convert_sec_elements(body)
         self.recursiveConvertDivTitles(body, depth=0)
         self.convertEmphasisElements(body)
         self.convert_address_linking_elements(body)
@@ -433,42 +433,6 @@ class OPSFrontiers(OPSMeta):
             except:
                 pass
 
-    def convert_address_linking_elements(self, node):
-        """
-        The Journal Publishing Tag Set defines the following elements as
-        address linking elements: <email>, <ext-link>, <uri>. The only
-        appropriate hypertext element for linking in OPS is the <a> element.
-        """
-        #Convert email to a mailto link addressed to the text it contains
-        for e in self.getDescendantsByTagName(node, 'email'):
-            self.expungeAttributes(e)
-            e.tagName = 'a'
-            mailto = 'mailto:{0}'.format(utils.nodeText(e))
-            e.setAttribute('href', mailto)
-        #Ext-links often declare their address as xlink:href attribute
-        #if that fails, direct the link to the contained text
-        for e in self.getDescendantsByTagName(node, 'ext-link'):
-            eid = e.getAttribute('id')
-            e.tagName = 'a'
-            xh = e.getAttribute('xlink:href')
-            self.expungeAttributes(e)
-            if xh:
-                e.setAttribute('href', xh)
-            else:
-                e.setAttribute('href', utils.nodeText(e))
-            if eid:
-                e.setAttribute('id', eid)
-        #Uris often declare their address as xlink:href attribute
-        #if that fails, direct the link to the contained text
-        for u in self.getDescendantsByTagName(node, 'uri'):
-            u.tagName = 'a'
-            xh = u.getAttribute('xlink:href')
-            self.expungeAttributes(u)
-            if xh:
-                u.setAttribute('href', xh)
-            else:
-                u.setAttribute('href', utils.nodeText(u))
-
     def make_fragment_identifiers(self):
         """
         This will create useful fragment identifier strings.
@@ -671,7 +635,7 @@ class OPSFrontiers(OPSMeta):
             address = ref_map[ref_type].format(rid)
             x.setAttribute('href', address)
 
-    def convertSecElements(self, node):
+    def convert_sec_elements(self, node):
         """
         <sec> elements must be converted to meaningful <div> nodes
         """
