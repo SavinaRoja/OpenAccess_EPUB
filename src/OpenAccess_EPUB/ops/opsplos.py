@@ -90,6 +90,9 @@ class OPSPLoS(OPSMeta):
         #Create the competing interests statement
         self.make_synopsis_competing_interests(body)
 
+        #Create the content for the article's correspondence
+        self.make_synopsis_correspondences(body)
+
         #Post processing node conversion
         self.convert_emphasis_elements(body)
         self.convert_address_linking_elements(body)
@@ -634,6 +637,26 @@ class OPSPLoS(OPSMeta):
         conflict_p = self.getChildrenByTagName('p', conflict)[0]
         conflict_div.childNodes += conflict_p.childNodes
 
+    def make_synopsis_correspondences(self, body):
+        """
+        Articles generally provide a first contact, typically an email address
+        for one of the authors. This will supply that content.
+        """
+        #Check for author-notes
+        author_notes = self.metadata.author_notes
+        if not author_notes:  # skip if not found
+            return
+        #Check for correspondences
+        correspondence = self.getChildrenByTagName('corresp', author_notes)
+        if not correspondence:  # skip if none found
+            return
+        #Go about creating the content
+        corresp_div = self.appendNewElement('div', body)
+        corresp_div.setAttribute('id', 'correspondence')
+        for corresp_fn in correspondence:
+            corresp_subdiv = self.appendNewElement('div', corresp_div)
+            corresp_subdiv.setAttribute('id', corresp_fn.getAttribute('id'))
+            corresp_subdiv.childNodes = corresp_fn.childNodes
 
     def format_date_string(self, date_tuple):
         """
