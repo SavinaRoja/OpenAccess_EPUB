@@ -548,28 +548,16 @@ class JPTSMeta(object):
         except IndexError:
             return None
         else:
-            try:
-                csnode = self.getChildrenByTagName('copyright-statement', p)[0]
-            except IndexError:
-                csnode = None
-            try:
-                cy = self.getChildrenByTagName('copyright-year', p)[0]
-            except IndexError:
-                cy = ''
-            else:
-                cy = utils.nodeText(cy)
-            try:
-                chnode = self.getChildrenByTagName('copyright-holder', p)[0]
-            except IndexError:
-                chnode = None
-            try:
-                lic = self.getChildrenByTagName('license', p)[0]
-            except IndexError:
-                lic = None
-                license_type = ''
-            else:
-                license_type = lic.getAttribute('license-type')
-        return perm(csnode, cy, chnode, lic, license_type)
+            nodes = []
+            for node_name in ['copyright-statement', 'copyright-year',
+                              'copyright-holder', 'license']:
+                try:
+                    nodes.append(self.getChildrenByTagName(node_name, p)[0])
+                except IndexError:
+                    nodes.append(None)
+            if nodes[3]:
+                nodes.append(nodes[3].getAttribute('license-type'))
+            return perm(*nodes)
 
     def getSelfURI(self):
         """

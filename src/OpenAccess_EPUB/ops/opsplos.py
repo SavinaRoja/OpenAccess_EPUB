@@ -63,6 +63,9 @@ class OPSPLoS(OPSMeta):
         #Construct the authors section of the synopsis
         self.make_synopsis_authors(authors, body)
 
+        #Construct the authors affiliation section
+        self.make_synopsis_affiliations(body)
+
         #Construct the content for abstracts
         self.make_synopsis_abstracts(body)
 
@@ -77,6 +80,9 @@ class OPSPLoS(OPSMeta):
 
         #Create the important dates section
         self.make_synopsis_dates(body)
+
+        #Create the copyright statement
+        self.make_synopsis_copyright(body)
 
         #Post processing node conversion
         self.convert_emphasis_elements(body)
@@ -447,6 +453,33 @@ class OPSPLoS(OPSMeta):
                     sup_link.setAttribute('href', self.synop_frag.format(xref.rid))
                     self.appendNewText(sup_text, sup_link)
 
+    def make_synopsis_affiliations(self, body):
+        """
+        Makes the content that displays affiliations.
+        """
+        if self.metadata.affs:
+            affs_div = self.appendNewElement('div', body)
+            affs_div.setAttribute('id', 'affiliations')
+
+        #A simple way that seems to work by PLoS convention, but does not treat
+        #the full scope of the <aff> element
+        for aff in self.metadata.affs:
+            aff_id = aff.getAttribute('id')
+            if not 'aff' in aff_id:  # Skip affs for editors...
+                continue
+            #Get the label node and the addr-line node
+            #<label> might be missing, especially for one author works
+            label_node = self.getChildrenByTagName('label', aff)
+            #I expect there to always be the <addr-line>
+            addr_line_node = self.getChildrenByTagName('addr-line', aff)[0]
+            cur_aff_span = self.appendNewElement('span', affs_div)
+            cur_aff_span.setAttribute('id', aff_id)
+            if label_node:
+                label_text = utils.nodeText(label_node[0])
+                label_b = self.appendNewElementWithText('b', label_text, cur_aff_span)
+            addr_line_text = utils.nodeText(addr_line_node)
+            self.appendNewText(addr_line_text + ', ', cur_aff_span)
+
     def make_synopsis_abstracts(self, body):
         """
         An article may contain data for various kinds of abstracts. This method
@@ -531,6 +564,31 @@ class OPSPLoS(OPSMeta):
         published = self.metadata.pub_date['epub']
         self.appendNewElementWithText('b', 'Published: ', dates_div)
         self.appendNewText(self.format_date_string(published), dates_div)
+
+    def make_synopsis_copyright(self, body):
+        """
+        Makes the copyright section for the ArticleInfo. For PLoS, this means
+        handling the information contained in the metadata <permissions>
+        element.
+        """
+        permissions = self.metadata.permissions
+        if permissions:
+            copyright_div = self.appendNewElement('div', body)
+            copyright_div.setAttribute('id', 'copyright')
+            self.appendNewElementWithText('b', 'Copyright: ', body)
+
+            #Construct the string for the copyright statement
+            copyright_string = u' \u00A9 '
+            #I expect year to always be there
+            copyright_string += utils.nodeText(permissions.year) + ' '
+            #Holder won't always be there
+            if permissions.holder:
+                copyright_string += utils.nodeText(permissions.holder) + '.'
+            #I don't know if the license will always be included
+            if permissions.license:  # I hope this is a general solution
+                license_p = self.getChildrenByTagName('license-p', permissions.license)[0]
+                copyright_string += ' ' + utils.nodeText(license_p)
+            self.appendNewText(copyright_string, body)
 
     def format_date_string(self, date_tuple):
         """
