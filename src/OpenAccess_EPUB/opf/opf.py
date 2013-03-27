@@ -294,17 +294,24 @@ class PLoSOPF(MetaOPF):
         #Note that the file-as name is: Surname, G(iven Initial)
         for contrib in ameta.contrib:
             if contrib.attrs['contrib-type'] == 'author':
-                name = contrib.getName()[0]  # Work with only first name listed
-                surname = name.surname
-                given = name.given
-                try:
-                    gi = given[0]
-                except IndexError:
-                    auth = surname
-                    file_as = surname
+                if contrib.collab:
+                    auth = utils.serializeText(contrib.collab[0])
+                    file_as = auth
+                elif contrib.anonymous:
+                    auth = 'Anonymous'
+                    file_as = auth
                 else:
-                    auth = ' '.join([given, surname])
-                    file_as = ', '.join([surname, gi])
+                    name = contrib.getName()[0]  # Work with only first name listed
+                    surname = name.surname
+                    given = name.given
+                    try:
+                        gi = given[0]
+                    except IndexError:
+                        auth = surname
+                        file_as = surname
+                    else:
+                        auth = ' '.join([given, surname])
+                        file_as = ', '.join([surname, gi])
                 dc_creator = dc.creator(auth, file_as, self.doc)
                 self.metadata.appendChild(dc_creator)
 

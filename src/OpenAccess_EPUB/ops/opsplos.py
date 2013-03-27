@@ -442,11 +442,15 @@ class OPSPLoS(OPSMeta):
                 first = False
             else:
                 self.appendNewText(', ', author_element)
-            if not author.anonymous:
+            if author.collab:  # If collab, just add rich content
+                #Assume only one collab
+                author_element.childNodes += author.collab[0].childNodes
+            elif not author.anonymous:
                 name = author.name[0].given + ' ' + author.name[0].surname
+                self.appendNewText(name, author_element)
             else:
                 name = 'Anonymous'
-            self.appendNewText(name, author_element)
+                self.appendNewText(name, author_element)
             for xref in author.xref:
                 if xref.ref_type in ['corresp', 'aff']:
                     try:
