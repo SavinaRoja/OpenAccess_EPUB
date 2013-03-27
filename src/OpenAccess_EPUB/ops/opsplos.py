@@ -107,7 +107,8 @@ class OPSPLoS(OPSMeta):
 
         #Finally, write to a document
         with open(os.path.join(self.ops_dir, self.synop_frag[:-4]), 'w') as op:
-            op.write(self.doc.toprettyxml(encoding='utf-8'))
+            op.write(self.doc.toxml(encoding='utf-8'))
+            #op.write(self.doc.toprettyxml(encoding='utf-8'))
 
     def create_main(self):
         """
@@ -124,14 +125,15 @@ class OPSPLoS(OPSMeta):
         except IndexError:  # Article has no body...
             return None
         else:
-            body.childNodes = article_body.childNodes
+            for item in article_body.childNodes:
+                body.appendChild(item.cloneNode(deep=True))
 
         #Handle node conversion
         self.convert_fig_elements(body)
         self.convert_table_wrap_elements(body)
         #self.convertListElements(body)
         self.convert_sec_elements(body)
-        #self.recursiveConvertDivTitles(body, depth=0)
+        self.convert_div_titles(body)
         self.convert_emphasis_elements(body)
         self.convert_address_linking_elements(body)
         self.convert_xref_elements(body)
@@ -140,7 +142,8 @@ class OPSPLoS(OPSMeta):
 
         #Finally, write to a document
         with open(os.path.join(self.ops_dir, self.main_frag[:-4]), 'w') as op:
-            op.write(self.doc.toprettyxml(encoding='utf-8'))
+            op.write(self.doc.toxml(encoding='utf-8'))
+            #op.write(self.doc.toprettyxml(encoding='utf-8'))
 
     def create_biblio(self):
         """
@@ -452,6 +455,7 @@ class OPSPLoS(OPSMeta):
             graphic_node = self.getChildrenByTagName('graphic', alternatives)[0]
             #Get the table node in the <alternatives>, mandatory
             table_node = self.getChildrenByTagName('table', alternatives)[0]
+            table_node.setAttribute('id', tab_attributes['id'])
             #Add the table node to self.html_tables
             self.html_tables.append(table_node)
 
@@ -523,6 +527,40 @@ class OPSPLoS(OPSMeta):
                 sec.setAttribute('id', 'OA-EPUB-{0}'.format(str(count)))
                 count += 1
 
+    def convert_div_titles(self, node, depth=0):
+        """
+        A recursive function to convert <title> nodes directly beneath <div>
+        nodes into appropriate OPS compatible header tags.
+        """
+        depth_tags = ['h2', 'h3', 'h4', 'h5', 'h6']
+        #Look for divs
+        for div in self.getChildrenByTagName('div', node):
+            #Look for a label
+            try:
+                div_label = self.getChildrenByTagName('label', div)[0]
+            except IndexError:
+                div_label_text = ''
+            else:
+                if not div_label.childNodes:
+                    div.removeChild(div_label)
+                else:
+                    div_label_text = utils.nodeText(div_label)
+                    div.removeChild(div_label)
+            #Look for a title
+            try:
+                div_title = self.getChildrenByTagName('title', div)[0]
+            except IndexError:
+                div_title = None
+            else:
+                if not div_title.childNodes:
+                    div.removeChild(div_title)
+                else:
+                    div_title.tagName = depth_tags[depth]
+                    if div_label_text:
+                        label_node = self.doc.createTextNode(div_label_text)
+                        div_title.insetBefore(label_node, div_title.firstChild)
+                    self.convert_div_titles(div, depth=depth+1)
+
     def convert_xref_elements(self, node):
         """
         xref elements are used for internal referencing to document components
@@ -572,25 +610,13 @@ class OPSPLoS(OPSMeta):
             else:
                 if not contrib.attrs['contrib-type']:
                     print('No contrib-type provided for contibutor!')
-                else:
-                    print('Unexpected value for contrib-type')
         return authors
 
     def get_editors_list(self):
         """
         Gets a list of all editors described in the metadata.
         """
-        editors = [i for i in self.metadata.contrib if i.attrs['contrib-type']=='editor']
-        #editors = []
-        #for contrib in self.metadata.contrib:
-        #    if contrib.attrs['contrib-type'] == 'editor':
-        #        editors.append(contrib)
-        #    else:
-        #        if not contrib.attrs['contrib-type']:
-        #            print('No contrib-type provided for contibutor!')
-        #        else:
-        #            print('Unexpected value for contrib-type')
-        return editors
+        return [i for i in self.metadata.contrib if i.attrs['contrib-type']=='editor']
 
     def make_synopsis_authors(self, authors, body):
         """
@@ -665,6 +691,9 @@ class OPSPLoS(OPSMeta):
         conversion and the ordering.
         """
         for abstract in self.metadata.abstract:
+            #Remove <title> elements in the abstracts
+            for title in self.getChildrenByTagName('title', abstract.node):
+                abstract.node.removeChild(title)
             if abstract.type == '':  # If no type is listed -> main abstract
                 self.expungeAttributes(abstract.node)
                 self.appendNewElementWithText('h2', 'Abstract', body)
