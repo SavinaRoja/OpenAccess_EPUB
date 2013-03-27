@@ -128,7 +128,7 @@ class OPSPLoS(OPSMeta):
 
         #Handle node conversion
         self.convert_fig_elements(body)
-        #self.convertTableWrapElements(body)
+        self.convert_table_wrap_elements(body)
         #self.convertListElements(body)
         self.convert_sec_elements(body)
         #self.recursiveConvertDivTitles(body, depth=0)
@@ -176,6 +176,26 @@ class OPSPLoS(OPSMeta):
 
         self.doc = self.make_document('tables')
         body = self.doc.getElementsByTagName('body')[0]
+
+        for table in self.html_tables:
+            label = table.getAttribute('label')
+            if label:
+                table.removeAttribute('label')
+                l = self.appendNewElement('div', body)
+                b = self.appendNewElement('b', l)
+                self.appendNewText(label, b)
+            #Move the table to the body
+            body.appendChild(table)
+            for d in table.getElementsByTagName('div'):
+                body.appendChild(d)
+                #Move the link back to the body
+                #body.appendChild(table.lastChild)
+
+        #Handle node conversion
+        self.convert_emphasis_elements(body)
+        #self.convert_disp_formula_elements(body)
+        #self.convert_inline_formula_elements(body)
+        self.convert_xref_elements(body)
 
         with open(os.path.join(self.ops_dir, self.tab_frag[:-4]), 'w') as op:
             op.write(self.doc.toprettyxml(encoding='utf-8'))
@@ -339,7 +359,7 @@ class OPSPLoS(OPSMeta):
 
     def convert_fig_elements(self, body):
         """
-        Responsible for the correct conversion of JPTS 3.0 fig elements to
+        Responsible for the correct conversion of JPTS 3.0 <fig> elements to
         OPS xhtml. Aside from translating <fig> to <img>, the content model
         must be edited.
         """
@@ -347,13 +367,11 @@ class OPSPLoS(OPSMeta):
         for fig in figs:
             #Parse all fig attributes to a dict
             fig_attributes = self.getAllAttributes(fig, remove=False)
-            #Determine if there is a <label>, 0 or 1, grab its text
+            #Determine if there is a <label>, 0 or 1, grab the node
             try:
-                label = self.getChildrenByTagName('label', fig)[0]
+                label_node = self.getChildrenByTagName('label', fig)[0]
             except IndexError:  # No label tag
-                label_text = ''
-            else:  # label tag present
-                label_text = utils.nodeText(label)
+                label_node = None
             #Determine if there is a <caption>, grab the node
             try:
                 caption_node = self.getChildrenByTagName('caption', fig)[0]
@@ -381,18 +399,20 @@ class OPSPLoS(OPSMeta):
             fig_parent.insertBefore(img_element, fig)
 
             #Create content for the label and caption
-            if caption_node or label:  # These will go into a <div> after <img>
+            if caption_node or label_node:  # These will go into a <div> after <img>
                 img_caption_div = self.doc.createElement('div')
-                img_caption_div.setAttribute('class', 'caption')
-                if label_text:
-                    self.appendNewElementWithText('b', label_text + '.', img_caption_div)
+                img_caption_div.setAttribute('class', 'figure-caption')
+                img_caption_div_b = self.appendNewElement('b', img_caption_div)
+                if label_node:
+                    img_caption_div_b.childNodes += label_node.childNodes
+                    self.appendNewText('. ', img_caption_div_b)
                 #The caption element may have <title> 0 or 1, and <p> 0 or more
                 if caption_node:
                     #Detect caption title
                     caption_title = self.getChildrenByTagName('title', caption_node)
                     if caption_title:
-                        caption_title_b = self.appendNewElement('b', img_caption_div)
-                        caption_title_b.childNodes += caption_title[0].childNodes
+                        img_caption_div_b.childNodes += caption_title[0].childNodes
+                        self.appendNewText(' ', img_caption_div_b)
                     #Detect <p>s
                     caption_ps = self.getChildrenByTagName('p', caption_node)
                     for each_p in caption_ps:
@@ -405,6 +425,88 @@ class OPSPLoS(OPSMeta):
 
             #Remove the original <fig>
             fig_parent.removeChild(fig)
+
+    def convert_table_wrap_elements(self, body):
+        """
+        Responsible for the correct conversion of JPTS 3.0 <table-wrap>
+        elements to OPS content.
+        """
+        table_wraps = body.getElementsByTagName('table-wrap')
+        for tab in table_wraps:
+            #Parse all attributes to a dict
+            tab_attributes = self.getAllAttributes(tab, remove=False)
+            #Determine if there is a <label>, 0 or 1, grab the node
+            try:
+                label_node = self.getChildrenByTagName('label', tab)[0]
+            except IndexError:  # No label tag
+                label_node = None
+            #Determine if there is a <caption>, grab the node
+            try:
+                caption_node = self.getChildrenByTagName('caption', tab)[0]
+            except IndexError:
+                caption_node = None
+
+            #Get the alternatives node, mandatory
+            alternatives = self.getChildrenByTagName('alternatives', tab)[0]
+            #Get the graphic node in the <alternatives>, mandatory
+            graphic_node = self.getChildrenByTagName('graphic', alternatives)[0]
+            #Get the table node in the <alternatives>, mandatory
+            table_node = self.getChildrenByTagName('table', alternatives)[0]
+            #Add the table node to self.html_tables
+            self.html_tables.append(table_node)
+
+            #Create a file reference for the image
+            graphic_xlink_href = graphic_node.getAttribute('xlink:href')
+            file_name = graphic_xlink_href.split('.')[-1] + '.png'
+            img_dir = 'images-' + self.doi_frag
+            img_path = '/'.join([img_dir, file_name])
+
+            #Create OPS content, using image path, label, and caption
+            tab_parent = tab.parentNode
+            #Create a horizontal rule
+            tab_parent.insertBefore(self.doc.createElement('hr'), tab)
+            #Create the img element
+            img_element = self.doc.createElement('img')
+            img_element.setAttribute('alt', 'A Table')
+            img_element.setAttribute('id', tab_attributes['id'])
+            img_element.setAttribute('src', img_path)
+
+            #Create content for the label and caption
+            if caption_node or label_node:  # These will go into a <div> before <img>
+                img_caption_div = self.doc.createElement('div')
+                img_caption_div.setAttribute('class', 'table-caption')
+                img_caption_div_b = self.appendNewElement('b', img_caption_div)
+                if label_node:
+                    img_caption_div_b.childNodes += label_node.childNodes
+                    self.appendNewText('. ', img_caption_div_b)
+                #The caption element may have <title> 0 or 1, and <p> 0 or more
+                if caption_node:
+                    #Detect caption title
+                    caption_title = self.getChildrenByTagName('title', caption_node)
+                    if caption_title:
+                        img_caption_div.childNodes += caption_title[0].childNodes
+                        self.appendNewText(' ', img_caption_div)
+                    #Detect <p>s
+                    caption_ps = self.getChildrenByTagName('p', caption_node)
+                    for each_p in caption_ps:
+                        img_caption_div.childNodes += each_p.childNodes
+                #Now that we have created the img caption div content, insert
+                tab_parent.insertBefore(img_caption_div, tab)
+
+            #Insert the img element
+            tab_parent.insertBefore(img_element, tab)
+
+            #Create a link to the html version of the table
+            html_table_link = self.doc.createElement('a')
+            html_table_link.setAttribute('href', self.tab_frag.format(tab_attributes['id']))
+            self.appendNewText('HTML version of this table', html_table_link)
+            tab_parent.insertBefore(html_table_link, tab)
+
+            #Create a horizontal rule
+            tab_parent.insertBefore(self.doc.createElement('hr'), tab)
+
+            #Remove the original <table-wrap>
+            tab_parent.removeChild(tab)
 
     def convert_sec_elements(self, body):
         """
@@ -449,9 +551,6 @@ class OPSPLoS(OPSMeta):
             rid = x_attrs['rid']
             address = ref_map[ref_type].format(rid)
             x.setAttribute('href', address)
-
-    ### Content Conversion Methods ###
-    ##################################
 
     def make_synopsis_title(self, body):
         """
