@@ -34,7 +34,7 @@ class OPSPLoS(OPSMeta):
         self.metadata = article.metadata
         self.backmatter = article.metadata.backmatter
         self.doi = article.getDOI()
-        #From "10.1371/journal.pone.0035956" get "pone.0335956"
+        #From "10.1371/journal.pone.0035956" get "journal.pone.0335956"
         self.doi_frag = self.doi.split('10.1371/')[1]
         self.make_fragment_identifiers()
         self.ops_dir = os.path.join(output_dir, 'OPS')
@@ -127,7 +127,7 @@ class OPSPLoS(OPSMeta):
             body.childNodes = article_body.childNodes
 
         #Handle node conversion
-        #self.convertFigElements(body)
+        self.convert_fig_elements(body)
         #self.convertTableWrapElements(body)
         #self.convertListElements(body)
         self.convert_sec_elements(body)
@@ -147,10 +147,21 @@ class OPSPLoS(OPSMeta):
         This method encapsulates the functions necessary to create the biblio
         segment of the article.
         """
-
         self.doc = self.make_document('biblio')
         body = self.doc.getElementsByTagName('body')[0]
-        self.appendNewElement('div', body)
+        body.setAttribute('id', 'references')
+        try:
+            back = self.article.getElementsByTagName('back')[0]
+        except IndexError:
+            return None
+        else:
+            refs = back.getElementsByTagName('ref')
+        if not refs:
+            return None
+        for ref in refs:
+            p = self.appendNewElement('p', body)
+            p.setAttribute('id', ref.getAttribute('id'))
+            self.appendNewText(utils.serializeText(ref, []), p)
 
         #Finally, write to a document
         with open(os.path.join(self.ops_dir, self.bib_frag[:-4]), 'w') as op:
@@ -325,6 +336,75 @@ class OPSPLoS(OPSMeta):
         self.main_frag = 'main.{0}.xml'.format(self.doi_frag) + '#{0}'
         self.bib_frag = 'biblio.{0}.xml'.format(self.doi_frag) + '#{0}'
         self.tab_frag = 'tables.{0}.xml'.format(self.doi_frag) + '#{0}'
+
+    def convert_fig_elements(self, body):
+        """
+        Responsible for the correct conversion of JPTS 3.0 fig elements to
+        OPS xhtml. Aside from translating <fig> to <img>, the content model
+        must be edited.
+        """
+        figs = body.getElementsByTagName('fig')
+        for fig in figs:
+            #Parse all fig attributes to a dict
+            fig_attributes = self.getAllAttributes(fig, remove=False)
+            #Determine if there is a <label>, 0 or 1, grab its text
+            try:
+                label = self.getChildrenByTagName('label', fig)[0]
+            except IndexError:  # No label tag
+                label_text = ''
+            else:  # label tag present
+                label_text = utils.nodeText(label)
+            #Determine if there is a <caption>, grab the node
+            try:
+                caption_node = self.getChildrenByTagName('caption', fig)[0]
+            except IndexError:
+                caption_node = None
+
+            #Get the graphic node in the fig, treat as mandatory
+            graphic_node = self.getChildrenByTagName('graphic', fig)[0]
+            #Create a file reference for the image
+            graphic_xlink_href = graphic_node.getAttribute('xlink:href')
+            file_name = graphic_xlink_href.split('.')[-1] + '.png'
+            img_dir = 'images-' + self.doi_frag
+            img_path = '/'.join([img_dir, file_name])
+
+            #Create OPS content, using image path, label, and caption
+            fig_parent = fig.parentNode
+            #Create a horizontal rule
+            fig_parent.insertBefore(self.doc.createElement('hr'), fig)
+            #Create the img element
+            img_element = self.doc.createElement('img')
+            img_element.setAttribute('alt', 'A Figure')
+            img_element.setAttribute('id', fig_attributes['id'])
+            img_element.setAttribute('src', img_path)
+            #Insert the img element
+            fig_parent.insertBefore(img_element, fig)
+
+            #Create content for the label and caption
+            if caption_node or label:  # These will go into a <div> after <img>
+                img_caption_div = self.doc.createElement('div')
+                img_caption_div.setAttribute('class', 'caption')
+                if label_text:
+                    self.appendNewElementWithText('b', label_text + '.', img_caption_div)
+                #The caption element may have <title> 0 or 1, and <p> 0 or more
+                if caption_node:
+                    #Detect caption title
+                    caption_title = self.getChildrenByTagName('title', caption_node)
+                    if caption_title:
+                        caption_title_b = self.appendNewElement('b', img_caption_div)
+                        caption_title_b.childNodes += caption_title[0].childNodes
+                    #Detect <p>s
+                    caption_ps = self.getChildrenByTagName('p', caption_node)
+                    for each_p in caption_ps:
+                        img_caption_div.childNodes += each_p.childNodes
+                #Now that we have created the img caption div content, insert
+                fig_parent.insertBefore(img_caption_div, fig)
+
+            #Create a horizontal rule
+            fig_parent.insertBefore(self.doc.createElement('hr'), fig)
+
+            #Remove the original <fig>
+            fig_parent.removeChild(fig)
 
     def convert_sec_elements(self, body):
         """
