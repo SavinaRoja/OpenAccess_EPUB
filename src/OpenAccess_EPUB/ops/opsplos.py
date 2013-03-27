@@ -87,6 +87,9 @@ class OPSPLoS(OPSMeta):
         #Create the funding section
         self.make_synopsis_funding(body)
 
+        #Create the competing interests statement
+        self.make_synopsis_competing_interests(body)
+
         #Post processing node conversion
         self.convert_emphasis_elements(body)
         self.convert_address_linking_elements(body)
@@ -606,6 +609,30 @@ class OPSPLoS(OPSMeta):
         self.appendNewElementWithText('b', 'Funding: ', funding_div)
         #As far as I can tell, PLoS only uses one funding-statement
         funding_div.childNodes += funding[0].funding_statement[0].childNodes
+
+    def make_synopsis_competing_interests(self, body):
+        """
+        Creates the element for declaring competing interests in the article
+        info.
+        """
+        #Check for author-notes
+        author_notes = self.metadata.author_notes
+        if not author_notes:  # skip if not found
+            return
+        #Check for conflict of interest statement
+        fn_nodes = self.getChildrenByTagName('fn', author_notes)
+        conflict = None
+        for fn in fn_nodes:
+            if fn.getAttribute('fn-type') == 'conflict':
+                conflict = fn
+        if not conflict:  # skip if not found
+            return
+        #Go about creating the content
+        conflict_div = self.appendNewElement('div', body)
+        conflict_div.setAttribute('id', 'conflict')
+        self.appendNewElementWithText('b', 'Competing Interests: ', conflict_div)
+        conflict_p = self.getChildrenByTagName('p', conflict)[0]
+        conflict_div.childNodes += conflict_p.childNodes
 
 
     def format_date_string(self, date_tuple):
