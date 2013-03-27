@@ -84,6 +84,9 @@ class OPSPLoS(OPSMeta):
         #Create the copyright statement
         self.make_synopsis_copyright(body)
 
+        #Create the funding section
+        self.make_synopsis_funding(body)
+
         #Post processing node conversion
         self.convert_emphasis_elements(body)
         self.convert_address_linking_elements(body)
@@ -572,23 +575,38 @@ class OPSPLoS(OPSMeta):
         element.
         """
         permissions = self.metadata.permissions
-        if permissions:
-            copyright_div = self.appendNewElement('div', body)
-            copyright_div.setAttribute('id', 'copyright')
-            self.appendNewElementWithText('b', 'Copyright: ', body)
+        if not permissions:
+            return
+        copyright_div = self.appendNewElement('div', body)
+        copyright_div.setAttribute('id', 'copyright')
+        self.appendNewElementWithText('b', 'Copyright: ', body)
 
-            #Construct the string for the copyright statement
-            copyright_string = u' \u00A9 '
-            #I expect year to always be there
-            copyright_string += utils.nodeText(permissions.year) + ' '
-            #Holder won't always be there
-            if permissions.holder:
-                copyright_string += utils.nodeText(permissions.holder) + '.'
-            #I don't know if the license will always be included
-            if permissions.license:  # I hope this is a general solution
-                license_p = self.getChildrenByTagName('license-p', permissions.license)[0]
-                copyright_string += ' ' + utils.nodeText(license_p)
-            self.appendNewText(copyright_string, body)
+        #Construct the string for the copyright statement
+        copyright_string = u' \u00A9 '
+        #I expect year to always be there
+        copyright_string += utils.nodeText(permissions.year) + ' '
+        #Holder won't always be there
+        if permissions.holder:
+            copyright_string += utils.nodeText(permissions.holder) + '.'
+        #I don't know if the license will always be included
+        if permissions.license:  # I hope this is a general solution
+            license_p = self.getChildrenByTagName('license-p', permissions.license)[0]
+            copyright_string += ' ' + utils.nodeText(license_p)
+        self.appendNewText(copyright_string, body)
+
+    def make_synopsis_funding(self, body):
+        """
+        Creates the element for declaring Funding in the article info.
+        """
+        funding = self.metadata.funding_group
+        if not funding:
+            return
+        funding_div = self.appendNewElement('div', body)
+        funding_div.setAttribute('id', 'funding')
+        self.appendNewElementWithText('b', 'Funding: ', funding_div)
+        #As far as I can tell, PLoS only uses one funding-statement
+        funding_div.childNodes += funding[0].funding_statement[0].childNodes
+
 
     def format_date_string(self, date_tuple):
         """

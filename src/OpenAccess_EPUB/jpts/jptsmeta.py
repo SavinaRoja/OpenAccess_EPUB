@@ -1326,12 +1326,28 @@ class JPTSMeta30(JPTSMeta):
         """
         <funding-group> is an optional element, 0 or more, in <article-meta>.
         This element takes the functional place of several elements in the
-        previous versions of the DTD. This element's content model actually
-        has some considerable depth, and allows for sensible presentation
-        of data about individual funding providers. At this time, I'm not going
-        to implement it until the need arises.
+        previous versions of the DTD. This element may show significant
+        variation in content, for this reason this method will take the
+        simplistic approach of exposing the following sub-elements:
+
+        <award-group>       : 0 or more | award_group - NodeList
+        <funding-statement> : 0 or more | funding_statement - NodeList
+        <open-access>       : 0 or one  | open_access - Node
+
+        As <funding-group> may appear more than once, this will be a list
+        itself.
         """
-        return None
+        funding_tuple = namedtuple('Funding_Group', 'award_group, funding_statement, open_access')
+        funding_groups = []
+        for funding_group in self.getChildrenByTagName('funding-group', self.article_meta):
+            award_groups = self.getChildrenByTagName('award-group', funding_group)
+            funding_statements = self.getChildrenByTagName('funding-statement', funding_group)
+            open_access = self.getChildrenByTagName('open-access', funding_group)
+            if open_access:
+                open_access = open_access[0]
+            new = funding_tuple(award_groups, funding_statements, open_access)
+            funding_groups.append(new)
+        return funding_groups
 
     def dtdVersion(self):
         return '3.0'
