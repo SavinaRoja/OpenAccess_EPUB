@@ -137,7 +137,7 @@ class OPSPLoS(OPSMeta):
         self.convert_emphasis_elements(body)
         self.convert_address_linking_elements(body)
         self.convert_xref_elements(body)
-        #self.convertDispFormulaElements(body)
+        self.convert_disp_formula_elements(body)
         #self.convertInlineFormulaElements(body)
 
         #Finally, write to a document
@@ -168,7 +168,8 @@ class OPSPLoS(OPSMeta):
 
         #Finally, write to a document
         with open(os.path.join(self.ops_dir, self.bib_frag[:-4]), 'w') as op:
-            op.write(self.doc.toprettyxml(encoding='utf-8'))
+            op.write(self.doc.toxml(encoding='utf-8'))
+            #op.write(self.doc.toprettyxml(encoding='utf-8'))
 
     def create_tables(self):
         """
@@ -201,7 +202,8 @@ class OPSPLoS(OPSMeta):
         self.convert_xref_elements(body)
 
         with open(os.path.join(self.ops_dir, self.tab_frag[:-4]), 'w') as op:
-            op.write(self.doc.toprettyxml(encoding='utf-8'))
+            op.write(self.doc.toxml(encoding='utf-8'))
+            #op.write(self.doc.toprettyxml(encoding='utf-8'))
 
     def create_article_info(self, body):
         """
@@ -558,8 +560,8 @@ class OPSPLoS(OPSMeta):
                     div_title.tagName = depth_tags[depth]
                     if div_label_text:
                         label_node = self.doc.createTextNode(div_label_text)
-                        div_title.insetBefore(label_node, div_title.firstChild)
-                    self.convert_div_titles(div, depth=depth+1)
+                        div_title.insertBefore(label_node, div_title.firstChild)
+                    self.convert_div_titles(div, depth=depth + 1)
 
     def convert_xref_elements(self, node):
         """
@@ -589,6 +591,48 @@ class OPSPLoS(OPSMeta):
             rid = x_attrs['rid']
             address = ref_map[ref_type].format(rid)
             x.setAttribute('href', address)
+
+    def convert_disp_formula_elements(self, body):
+        """
+        <disp-formula> elements must be converted to conforming ops swtich
+        elements.
+        """
+        disp_formulas = body.getElementsByTagName('disp-formula')
+        for disp in disp_formulas:
+            #Parse all fig attributes to a dict
+            disp_attributes = self.getAllAttributes(disp, remove=False)
+            #Determine if there is a <label>, 0 or 1, grab_node
+            try:
+                label_node = self.getChildrenByTagName('label', disp)[0]
+            except IndexError:  # No label tag
+                label_node = None
+
+            #Get the graphic node in the fig, treat as mandatory
+            graphic_node = self.getChildrenByTagName('graphic', disp)[0]
+            #Create a file reference for the image
+            graphic_xlink_href = graphic_node.getAttribute('xlink:href')
+            file_name = graphic_xlink_href.split('.')[-1] + '.png'
+            img_dir = 'images-' + self.doi_frag
+            img_path = '/'.join([img_dir, file_name])
+
+            #Create OPS content, using image path, and label
+            disp_parent = disp.parentNode
+
+            #Create the img element
+            img_element = self.doc.createElement('img')
+            img_element.setAttribute('alt', 'A Display Formula')
+            img_element.setAttribute('id', disp_attributes['id'])
+            img_element.setAttribute('class', 'disp-formula')
+            img_element.setAttribute('src', img_path)
+
+            #Insert the img element
+            disp_parent.insertBefore(img_element, disp)
+            if label_node:
+                disp_parent.insertBefore(label_node, img_element)
+                label_node.tagName = 'b'
+
+            #Create content for the label
+            disp_parent.removeChild(disp)
 
     def make_synopsis_title(self, body):
         """
