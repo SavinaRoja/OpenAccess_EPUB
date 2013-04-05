@@ -104,6 +104,7 @@ class OPSPLoS(OPSMeta):
         self.convert_emphasis_elements(body)
         self.convert_address_linking_elements(body)
         self.convert_xref_elements(body)
+        self.convert_named_content_elements(body)
 
         #Finally, write to a document
         with open(os.path.join(self.ops_dir, self.synop_frag[:-4]), 'w') as op:
@@ -138,7 +139,13 @@ class OPSPLoS(OPSMeta):
         self.convert_address_linking_elements(body)
         self.convert_xref_elements(body)
         self.convert_disp_formula_elements(body)
-        #self.convertInlineFormulaElements(body)
+        self.convert_named_content_elements(body)
+
+        #TODO: Boxed-text
+        #TODO: Supplementary-material
+        #TODO: inline-formulas
+        #TODO: List elements
+        #TODO: Disp-quotes
 
         #Finally, write to a document
         with open(os.path.join(self.ops_dir, self.main_frag[:-4]), 'w') as op:
@@ -646,6 +653,19 @@ class OPSPLoS(OPSMeta):
         inline_formulas = body.getElementsByTagName('inline-formula')
         for inline in inline_formulas:
             pass
+
+    def convert_named_content_elements(self, body):
+        """
+        <named-content> elements are used by PLoS for certain spcecial kinds
+        of content, such as genus-species denotations. This method will convert
+        the tagname to <span> and the content-type attribute to class. I expect
+        that this will provide an easily extensible basis for CSS handling.
+        """
+        for named_content in body.getElementsByTagName('named-content'):
+            named_content.tagName = 'span'
+            attrs = self.getAllAttributes(named_content, remove=True)
+            if 'content-type' in attrs:
+                named_content.setAttribute('class', attrs['content-type'])
 
     def make_synopsis_title(self, body):
         """
