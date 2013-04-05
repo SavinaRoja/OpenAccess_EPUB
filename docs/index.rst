@@ -11,7 +11,7 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-.. automodule:: OpenAccess_EPUB
+.. automodule:: OpenAccess_EPUB.ops
    :members:
 
 Indices and tables
