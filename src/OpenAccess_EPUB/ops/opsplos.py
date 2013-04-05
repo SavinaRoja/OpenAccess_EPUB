@@ -594,8 +594,7 @@ class OPSPLoS(OPSMeta):
 
     def convert_disp_formula_elements(self, body):
         """
-        <disp-formula> elements must be converted to conforming ops swtich
-        elements.
+        <disp-formula> elements must be converted to OPS conforming elements
         """
         disp_formulas = body.getElementsByTagName('disp-formula')
         for disp in disp_formulas:
@@ -633,6 +632,14 @@ class OPSPLoS(OPSMeta):
 
             #Create content for the label
             disp_parent.removeChild(disp)
+
+    def convert_inline_formula_elements(self, bosy):
+        """
+        <inline-formula> elements must be converted to OPS conforming elements
+        """
+        inline_formulas = body.getElementsByTagName('inline-formula')
+        for inline in inline_formulas:
+            pass
 
     def make_synopsis_title(self, body):
         """
