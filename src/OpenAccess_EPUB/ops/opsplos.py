@@ -451,15 +451,20 @@ class OPSPLoS(OPSMeta):
             except IndexError:
                 caption_node = None
 
-            #Get the alternatives node, mandatory
-            alternatives = self.getChildrenByTagName('alternatives', tab)[0]
-            #Get the graphic node in the <alternatives>, mandatory
-            graphic_node = self.getChildrenByTagName('graphic', alternatives)[0]
-            #Get the table node in the <alternatives>, mandatory
-            table_node = self.getChildrenByTagName('table', alternatives)[0]
-            table_node.setAttribute('id', tab_attributes['id'])
-            #Add the table node to self.html_tables
-            self.html_tables.append(table_node)
+            #Get the alternatives node, for some articles it will hold the graphic
+            #The graphic is mandatory
+            alternatives = self.getChildrenByTagName('alternatives', tab)
+            if alternatives:  # New articles are this way
+                graphic_node = self.getChildrenByTagName('graphic', alternatives[0])[0]
+                table_node = self.getChildrenByTagName('table', alternatives[0])[0]
+            else:  # Old articles seem to be this way
+                graphic_node = self.getChildrenByTagName('graphic', tab)[0]
+                #TODO: Find some way to properly render out the HTML comments
+                table_node = False
+            #Label and move the html table node to the list of html tables
+            if table_node:
+                table_node.setAttribute('id', tab_attributes['id'])
+                self.html_tables.append(table_node)
 
             #Create a file reference for the image
             graphic_xlink_href = graphic_node.getAttribute('xlink:href')
@@ -503,10 +508,11 @@ class OPSPLoS(OPSMeta):
             tab_parent.insertBefore(img_element, tab)
 
             #Create a link to the html version of the table
-            html_table_link = self.doc.createElement('a')
-            html_table_link.setAttribute('href', self.tab_frag.format(tab_attributes['id']))
-            self.appendNewText('HTML version of this table', html_table_link)
-            tab_parent.insertBefore(html_table_link, tab)
+            if table_node:
+                html_table_link = self.doc.createElement('a')
+                html_table_link.setAttribute('href', self.tab_frag.format(tab_attributes['id']))
+                self.appendNewText('HTML version of this table', html_table_link)
+                tab_parent.insertBefore(html_table_link, tab)
 
             #Create a horizontal rule
             tab_parent.insertBefore(self.doc.createElement('hr'), tab)
@@ -561,7 +567,7 @@ class OPSPLoS(OPSMeta):
                     if div_label_text:
                         label_node = self.doc.createTextNode(div_label_text)
                         div_title.insertBefore(label_node, div_title.firstChild)
-                    self.convert_div_titles(div, depth=depth + 1)
+            self.convert_div_titles(div, depth=depth + 1)
 
     def convert_xref_elements(self, node):
         """
@@ -783,7 +789,9 @@ class OPSPLoS(OPSMeta):
             else:
                 self.appendNewText('; ', editors_div)
             if not editor.anonymous:
-                name = editor.name[0].given + ' ' + editor.name[0].surname
+                name = editor.name[0].surname
+                if editor.name[0].given:
+                    name = editor.name[0].given + ' ' + name
             else:
                 name = 'Anonymous'
             self.appendNewText(name, editors_div)
@@ -795,8 +803,11 @@ class OPSPLoS(OPSMeta):
                     refer_aff = self.metadata.affs_by_id[ref_id]
                     #Put in appropriate text
                     self.appendNewText(', ', editors_div)
-                    addr = refer_aff.getElementsByTagName('addr-line')[0]
-                    editors_div.childNodes += addr.childNodes
+                    addr = refer_aff.getElementsByTagName('addr-line')
+                    if addr:
+                        editors_div.childNodes += addr.childNodes
+                    else:
+                        editors_div.childNodes += refer_aff.childNodes
 
     def make_synopsis_dates(self, body):
         """

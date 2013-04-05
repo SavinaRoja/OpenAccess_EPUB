@@ -321,9 +321,12 @@ class PLoSOPF(MetaOPF):
                 name = contrib.getName()[0]
                 try:
                     given_initial = name.given[0]
-                except IndexError:
+                except TypeError:
                     editor_name = name.surname
                     file_name = name.surname
+                #except IndexError:
+                #    editor_name = name.surname
+                #    file_name = name.surname
                 else:
                     editor_name = name.given + ' ' + name.surname
                     file_name = name.surname + ', ' + given_initial

@@ -50,6 +50,10 @@ def OAEParser():
     parser.add_argument('-c', '--clean', action='store_false', default=True,
                         help='''Use to toggle off cleanup. Without this flag, \
                                 the pre-zipped output will be removed.''')
+    parser.add_argument('-N', '--no-epubcheck', action='store_false',
+                        default=EPUBCHECK,
+                        help='''Use this tag to turn off epub validation with
+                        epubcheck.''')
     modes = parser.add_mutually_exclusive_group()
     modes.add_argument('-i', '--input', action='store', default=False,
                        help='''Input may be a path to a local directory, a \
@@ -193,4 +197,5 @@ def main(args):
 
     #Running epubcheck on the output verifies the validity of the ePub,
     #requires a local installation of java and epubcheck.
-    epubcheck('{0}.epub'.format(output_name))
+    if args.no_epubcheck:
+        epubcheck('{0}.epub'.format(output_name))
