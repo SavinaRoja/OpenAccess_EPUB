@@ -12,6 +12,7 @@ Contents:
    :maxdepth: 2
 
 .. automodule:: OpenAccess_EPUB
+   :members:
 
 Indices and tables
 ==================
