@@ -133,6 +133,7 @@ class OPSPLoS(OPSMeta):
         self.convert_fig_elements(body)
         self.convert_table_wrap_elements(body)
         self.convert_disp_formula_elements(body)
+        self.convert_inline_formula_elements(body)
         self.convert_named_content_elements(body)
         self.convert_disp_quote_elements(body)
         self.convert_emphasis_elements(body)
@@ -140,9 +141,8 @@ class OPSPLoS(OPSMeta):
         self.convert_xref_elements(body)
         self.convert_boxed_text_elements(body)
         self.convert_verse_group_elements(body)
-        #TODO: verse-group
+        
         #TODO: Supplementary-material
-        #TODO: inline-formulas
         #TODO: List elements
         #TODO: Definition lists
 
@@ -652,14 +652,16 @@ class OPSPLoS(OPSMeta):
             #Create content for the label
             disp_parent.removeChild(disp)
 
-    def convert_inline_formula_elements(self, bosy):
+    def convert_inline_formula_elements(self, body):
         """
         <inline-formula> elements must be converted to OPS conforming elements
         """
-        inline_formulas = body.getElementsByTagName('inline-formula')
-        for inline in inline_formulas:
-            #Parse all fig attributes to a dict
-            inline_attributes = self.getAllAttributes(inline, remove=False)
+        for inline in body.getElementsByTagName('inline-formula'):
+            inline_attributes = self.getAllAttributes(inline, remove=True)
+            inline.tagName = 'span'
+            if 'id' in inline_attributes:
+                inline.setAttribute('id', inline_attributes['id'])
+            inline.setAttribute('class', 'inline-formula')
 
     def convert_named_content_elements(self, body):
         """
