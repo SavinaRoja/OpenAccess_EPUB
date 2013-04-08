@@ -688,6 +688,13 @@ class OPSPLoS(OPSMeta):
         """
         for disp_quote in body.getElementsByTagName('disp-quote'):
             disp_quote_parent = disp_quote.parentNode
+            if disp_quote_parent.tagName == 'p':
+                grandparent = disp_quote_parent.parentNode
+                self.elevateNode(disp_quote)
+                if not disp_quote_parent.childNodes:
+                    grandparent.removeChild(disp_quote_parent)
+                #The grandparent is now the new parent
+                disp_quote_parent = grandparent
             paragraph = self.getChildrenByTagName('p', disp_quote)[0]
             top_hr = self.doc.createElement('hr')
             bottom_hr = self.doc.createElement('hr')
@@ -695,6 +702,7 @@ class OPSPLoS(OPSMeta):
                 element.setAttribute('class', 'disp-quote')
                 disp_quote_parent.insertBefore(element, disp_quote)
             disp_quote_parent.removeChild(disp_quote)
+            
 
     def convert_boxed_text_elements(self, body):
         """

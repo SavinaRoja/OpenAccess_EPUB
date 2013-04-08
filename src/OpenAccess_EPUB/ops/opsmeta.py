@@ -157,9 +157,9 @@ class OPSMeta(object):
         """
         #These must be collected before modifying the xml
         parent = node.parentNode
-        parent_sibling = parent.NextSibling
+        parent_sibling = parent.nextSibling
         grandparent = parent.parentNode
-        node_index = parent.index(node)
+        node_index = parent.childNodes.index(node)
         #Now we make modifications
         grandparent.insertBefore(node, parent_sibling)
         if not adopt:
