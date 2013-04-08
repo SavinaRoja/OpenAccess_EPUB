@@ -83,7 +83,7 @@ def makeEPUBBase(location):
     css_path = os.path.join(location, 'OPS', 'css', 'article.css')
     with open(css_path, 'w') as css:
         log.info('Fetching a filler CSS file from GitHub')
-        dl_css = urllib2.urlopen('https://github.com/downloads/SavinaRoja/OpenAccess_EPUB/text.css')
+        dl_css = urllib2.urlopen('https://raw.github.com/SavinaRoja/OpenAccess_EPUB/master/resources/text.css')
         css.write(dl_css.read())
 
 
