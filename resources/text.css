@@ -35,3 +35,8 @@ text-align:right;
 margin:5%;
 background-color:#EEEEEE;
 }
+p.verse-line
+{
+font-style:italic;
+line-height:50%;
+}

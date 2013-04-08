@@ -139,7 +139,8 @@ class OPSPLoS(OPSMeta):
         self.convert_address_linking_elements(body)
         self.convert_xref_elements(body)
         self.convert_boxed_text_elements(body)
-        #TODO: Boxed-text
+        self.convert_verse_group_elements(body)
+        #TODO: verse-group
         #TODO: Supplementary-material
         #TODO: inline-formulas
         #TODO: List elements
@@ -718,6 +719,39 @@ class OPSPLoS(OPSMeta):
             sec.setAttribute('id', boxed_text_attrs['id'])
             boxed_text_parent.insertBefore(sec, boxed_text)
             boxed_text_parent.removeChild(boxed_text)
+
+    def convert_verse_group_elements(self, body):
+        """
+        A song, poem, or verse
+
+        Implementor’s Note: No attempt has been made to retain the look or
+        visual form of the original poetry.
+
+        This unusual element, <verse-group> is used to convey poetry and is
+        recursive in nature (it may contain further <verse-group> elements).
+        Examples of these tags are sparse, so it remains difficult to ensure
+        full implementation. This method will attempt to handle the label,
+        title, and subtitle elements correctly, while converting <verse-lines>
+        to italicized lines.
+        """
+        for verse_group in body.getElementsByTagName('verse-group'):
+            label = self.getChildrenByTagName('label', verse_group)
+            title = self.getChildrenByTagName('title', verse_group)
+            subtitle = self.getChildrenByTagName('subtitle', verse_group)
+            verse_group.tagName = 'div'
+            verse_group.setAttribute('id', 'verse-group')
+            if any([label, title, subtitle]):
+                new_verse_title = self.doc.createElement('b')
+                verse_group.insertBefore(verse_group.firstChild)
+                if label:
+                    new_verse_title.childNodes += label[0].childNodes
+                if title:
+                    new_verse_title.childNodes += title[0].childNodes
+                if subtitle:
+                    new_verse_title.childNodes += subtitle[0].childNodes
+            for verse_line in self.getChildrenByTagName('verse-line', verse_group):
+                verse_line.tagName = 'p'
+                verse_line.setAttribute('class', 'verse-line')
 
     def make_synopsis_title(self, body):
         """
