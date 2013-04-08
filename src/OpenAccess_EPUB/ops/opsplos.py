@@ -132,21 +132,25 @@ class OPSPLoS(OPSMeta):
         #Handle node conversion
         self.convert_fig_elements(body)
         self.convert_table_wrap_elements(body)
-        #self.convertListElements(body)
-        self.convert_sec_elements(body)
-        self.convert_div_titles(body)
-        self.convert_emphasis_elements(body)
-        self.convert_address_linking_elements(body)
-        self.convert_xref_elements(body)
         self.convert_disp_formula_elements(body)
         self.convert_named_content_elements(body)
         self.convert_disp_quote_elements(body)
-
+        self.convert_emphasis_elements(body)
+        self.convert_address_linking_elements(body)
+        self.convert_xref_elements(body)
+        self.convert_boxed_text_elements(body)
         #TODO: Boxed-text
         #TODO: Supplementary-material
         #TODO: inline-formulas
         #TODO: List elements
-        #TODO: Disp-quotes
+        #TODO: Definition lists
+
+
+        #These come last for a reason
+        self.convert_sec_elements(body)
+        self.convert_div_titles(body)
+
+
 
         #Finally, write to a document
         with open(os.path.join(self.ops_dir, self.main_frag[:-4]), 'w') as op:
@@ -688,6 +692,32 @@ class OPSPLoS(OPSMeta):
                 element.setAttribute('class', 'disp-quote')
                 disp_quote_parent.insertBefore(element, disp_quote)
             disp_quote_parent.removeChild(disp_quote)
+
+    def convert_boxed_text_elements(self, body):
+        """
+        Textual material that is part of the body of text but outside the
+        flow of the narrative text, for example, a sidebar, marginalia, text
+        insert (whether enclosed in a box or not), caution, tip, note box, etc.
+
+        <boxed-text> elements for PLoS appear to all contain a single <sec>
+        element which frequently contains a <title> and various other content.
+        This method will elevate the <sec> element, adding class information as
+        well as processing the title.
+        """
+        for boxed_text in body.getElementsByTagName('boxed-text'):
+            boxed_text_attrs = self.getAllAttributes(boxed_text, remove=False)
+            boxed_text_parent = boxed_text.parentNode
+            sec = self.getChildrenByTagName('sec', boxed_text)[0]
+            title = self.getChildrenByTagName('title', sec)
+            top_hr = self.doc.createElement('hr')
+            bottom_hr = self.doc.createElement('hr')
+            if title:
+                title[0].tagName = 'b'
+            sec.tagName = 'div'
+            sec.setAttribute('class', 'boxed-text')
+            sec.setAttribute('id', boxed_text_attrs['id'])
+            boxed_text_parent.insertBefore(sec, boxed_text)
+            boxed_text_parent.removeChild(boxed_text)
 
     def make_synopsis_title(self, body):
         """

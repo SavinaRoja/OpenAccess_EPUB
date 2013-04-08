@@ -1,8 +1,3 @@
-/*I know a little CSS now */
-blockquote
-{
-background-color:#80C0FF;
-}
 div.abstract,
 div.editorsAbstract,
 div.summary,
@@ -24,7 +19,7 @@ display:block;
 .disp-quote
 {
 display:block;
-text-indent:10%;
+margin-left:5%;
 }
 img.disp-formula
 {
@@ -34,4 +29,9 @@ b.disp-formula-label
 {
 display:block;
 text-align:right;
+}
+.boxed-text
+{
+margin:5%;
+background-color:#EEEEEE;
 }
