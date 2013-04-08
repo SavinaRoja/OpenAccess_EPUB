@@ -21,9 +21,10 @@ span.footnote
 {
 display:block;
 }
-span.disp-quote
+.disp-quote
 {
 display:block;
+text-indent:10%;
 }
 img.disp-formula
 {

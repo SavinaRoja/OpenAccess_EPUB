@@ -140,6 +140,7 @@ class OPSPLoS(OPSMeta):
         self.convert_xref_elements(body)
         self.convert_disp_formula_elements(body)
         self.convert_named_content_elements(body)
+        self.convert_disp_quote_elements(body)
 
         #TODO: Boxed-text
         #TODO: Supplementary-material
@@ -652,7 +653,8 @@ class OPSPLoS(OPSMeta):
         """
         inline_formulas = body.getElementsByTagName('inline-formula')
         for inline in inline_formulas:
-            pass
+            #Parse all fig attributes to a dict
+            inline_attributes = self.getAllAttributes(inline, remove=False)
 
     def convert_named_content_elements(self, body):
         """
@@ -666,6 +668,26 @@ class OPSPLoS(OPSMeta):
             attrs = self.getAllAttributes(named_content, remove=True)
             if 'content-type' in attrs:
                 named_content.setAttribute('class', attrs['content-type'])
+
+    def convert_disp_quote_elements(self, body):
+        """
+        Extract or extended quoted passage from another work, usually made
+        typographically distinct from surrounding text
+
+        <disp-quote> elements have a relatively complex content model, but it
+        appears that PLoS typically employs a simple <p> child element to hold
+        all of the text, until otherwise found, this method handles the
+        conversion under this assumption.
+        """
+        for disp_quote in body.getElementsByTagName('disp-quote'):
+            disp_quote_parent = disp_quote.parentNode
+            paragraph = self.getChildrenByTagName('p', disp_quote)[0]
+            top_hr = self.doc.createElement('hr')
+            bottom_hr = self.doc.createElement('hr')
+            for element in [top_hr, paragraph, bottom_hr]:
+                element.setAttribute('class', 'disp-quote')
+                disp_quote_parent.insertBefore(element, disp_quote)
+            disp_quote_parent.removeChild(disp_quote)
 
     def make_synopsis_title(self, body):
         """
