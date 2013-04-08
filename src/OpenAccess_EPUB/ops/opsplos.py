@@ -142,8 +142,10 @@ class OPSPLoS(OPSMeta):
         self.convert_boxed_text_elements(body)
         self.convert_verse_group_elements(body)
         self.convert_supplementary_material_elements(body)
+        self.convert_fn_elements(body)
         #TODO: List elements
         #TODO: Definition lists
+        #TODO: Back matter stuffs
 
         #These come last for a reason
         self.convert_sec_elements(body)
@@ -804,6 +806,44 @@ class OPSPLoS(OPSMeta):
             for verse_line in self.getChildrenByTagName('verse-line', verse_group):
                 verse_line.tagName = 'p'
                 verse_line.setAttribute('class', 'verse-line')
+
+    def convert_fn_elements(self, body):
+        """
+        <fn> elements may be used in the main text body outside of tables and
+        figures for purposes such as erratum notes. It appears that PLoS
+        practice is to not show erratum notes in the web or pdf formats after
+        the appropriate corrections have been made to the text. The erratum
+        notes are thus the only record that an error was made.
+
+        This method will attempt to display footnotes unless the note can be
+        identified as an Erratum, in which case it will be removed in
+        accordance with PLoS' apparent guidelines.
+        """
+        for fn in body.getElementsByTagName('fn'):
+            #Get the attributes
+            fn_attributes = self.getAllAttributes(fn, remove=True)
+            fn_parent = fn.parentNode
+            #Find the fn paragraph
+            fn_paragraphs = self.getChildrenByTagName('p', fn)
+            if fn_paragraphs:
+                #Work with only one fn paragraph
+                fn_paragraph = fn_paragraphs[0]
+                fn_paragraph_text = utils.serializeText(fn_paragraph)
+                #Remove the fn element if it is a corrected erratum
+                if fn_paragraph_text.startswith('Erratum') and 'Corrected' in fn_paragraph_text:
+                    fn_parent.removeChild(fn)
+                    continue
+                #If otherwise, place the paragraph at fn level with attributes
+                #and remove the <fn>
+                else:
+                    if 'id' in fn_attributes:
+                        fn_paragraph.setAttribute('id', fn_attributes['id'])
+                    if 'fn-type' in fn_attributes:
+                        fn_paragraph.setAttribute('class', 'fn-type-{0}'.format(fn_attributes['fn-type']))
+                    else:
+                        fn_paragraph.setAttribute('class', 'fn')
+                    fn_parent.insertBefore(fn_paragraph, fn)
+                    fn_parent.removeChild(fn)
 
     def make_synopsis_title(self, body):
         """
