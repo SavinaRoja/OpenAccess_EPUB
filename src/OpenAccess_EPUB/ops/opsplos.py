@@ -141,17 +141,13 @@ class OPSPLoS(OPSMeta):
         self.convert_xref_elements(body)
         self.convert_boxed_text_elements(body)
         self.convert_verse_group_elements(body)
-        
-        #TODO: Supplementary-material
+        self.convert_supplementary_material_elements(body)
         #TODO: List elements
         #TODO: Definition lists
-
 
         #These come last for a reason
         self.convert_sec_elements(body)
         self.convert_div_titles(body)
-
-
 
         #Finally, write to a document
         with open(os.path.join(self.ops_dir, self.main_frag[:-4]), 'w') as op:
@@ -730,6 +726,52 @@ class OPSPLoS(OPSMeta):
             boxed_text_parent.insertBefore(sec, boxed_text)
             boxed_text_parent.removeChild(boxed_text)
 
+    def convert_supplementary_material_elements(self, body):
+        """
+        Supplementary material are not, nor are they generally expected to be,
+        packaged into the epub file. Though this is a technical possibility,
+        and certain epub reading systems (such as those run on a PC) might be
+        reasonably able to handle the external handling of diverse file formats
+        I presume that supplementary material will remain separate from the
+        document. So special cases aside, external links to supplementary
+        material will be employed; this will require internet connection for
+        access.
+
+        As for content in <supplementary-material>, they appear to strictly
+        contain 1 <label> element, followed by a <caption><title><p></caption>
+        substructure.
+        """
+        for supplementary in body.getElementsByTagName('supplementary-material'):
+            transfer_id = False
+            attributes = self.getAllAttributes(supplementary, remove=False)
+            doi = attributes['xlink:href'].split('info:doi/')[1]
+            supplementary_parent = supplementary.parentNode
+            labels = self.getChildrenByTagName('label', supplementary)
+            if labels:
+                label = labels[0]
+                label.tagName = 'a'
+                label.setAttribute('href', 'http://dx.doi.org/{0}'.format(doi))
+                label.setAttribute('id', attributes['id'])
+                self.appendNewText('. ', label)
+                transfer_id = True
+                supplementary_parent.insertBefore(label, supplementary)
+            caption = self.getChildrenByTagName('caption', supplementary)
+            if caption:
+                titles = self.getChildrenByTagName('title', caption[0])
+                paragraphs = self.getChildrenByTagName('p', caption[0])
+                if titles:
+                    title = titles[0]
+                    title.tagName = 'b'
+                    if not transfer_id:
+                        title.setAttribute('id', attributes['id'])
+                    supplementary_parent.insertBefore(title, supplementary)
+                if paragraphs:
+                    paragraph = paragraphs[0]
+                    if not transfer_id:
+                        paragraph.setAttribute('id', attributes['id'])
+                    supplementary_parent.insertBefore(paragraph, supplementary)
+            supplementary_parent.removeChild(supplementary)
+
     def convert_verse_group_elements(self, body):
         """
         A song, poem, or verse
@@ -969,7 +1011,10 @@ class OPSPLoS(OPSMeta):
         copyright_string += utils.nodeText(permissions.year) + ' '
         #Holder won't always be there
         if permissions.holder:
-            copyright_string += utils.nodeText(permissions.holder) + '.'
+            try:
+                copyright_string += utils.nodeText(permissions.holder) + '.'
+            except AttributeError:  # Some articles have empty <copyright-holder>s
+                pass
         #I don't know if the license will always be included
         if permissions.license:  # I hope this is a general solution
             license_p = self.getChildrenByTagName('license-p', permissions.license)[0]
