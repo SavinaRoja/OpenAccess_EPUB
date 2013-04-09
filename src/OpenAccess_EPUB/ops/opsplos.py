@@ -776,13 +776,13 @@ class OPSPLoS(OPSMeta):
         for supplementary in body.getElementsByTagName('supplementary-material'):
             transfer_id = False
             attributes = self.getAllAttributes(supplementary, remove=False)
-            doi = attributes['xlink:href'].split('info:doi/')[1]
             supplementary_parent = supplementary.parentNode
             labels = self.getChildrenByTagName('label', supplementary)
+            resource_url = utils.plos_fetch_single_representation(self.doi_frag, attributes['xlink:href'])
             if labels:
                 label = labels[0]
                 label.tagName = 'a'
-                label.setAttribute('href', 'http://dx.doi.org/{0}'.format(doi))
+                label.setAttribute('href', resource_url)
                 label.setAttribute('id', attributes['id'])
                 self.appendNewText('. ', label)
                 transfer_id = True
@@ -871,7 +871,6 @@ class OPSPLoS(OPSMeta):
                     continue  # Move on to the next footnote
 
                 #Process the footnote paragraph if it is not a corrected erratum
-                print(paragraph_text)
                 if 'id' in attributes:
                     paragraph.setAttribute('id', attributes['id'])
                 if 'fn-type' in attributes:
