@@ -905,6 +905,38 @@ class OPSPLoS(OPSMeta):
             else:  # A footnote paragraph does not exist
                 footnote_parent.removeChild(footnote)
 
+    def convert_list_elements(self, body):
+        """
+        
+        """
+        pass
+
+    def convert_def_list_elements(self, body):
+        """
+        A list in which each item consists of two parts: a word, phrase, term,
+        graphic, chemical structure, or equation paired with one of more
+        descriptions, discussions, explanations, or definitions of it.
+
+        <def-list> elements are lists of <def-item> elements which are in turn
+        composed of a pair of term (<term>) and definition (<def>). This method
+        will convert the <def-list> to a classed <div> with a styled format
+        for the terms and definitions.
+        """
+        for def_list in body.getElementsByTagName('def-list'):
+            def_list_attributes = self.getAllAttributes(def_list, remove=True)
+            def_list.tagName = 'div'
+            def_list.setAttribute('class', 'def-list')
+            if 'id' in def_list_attributes:
+                def_list.setAttribute('id', def_list_attributes['id'])
+            def_item_list = self.getChildrenByTagName('def-item', def_list)
+            for def_item in def_item_list:
+                term = self.getChildrenByTagName('term', def_item)[0]
+                term.tagName = 'p'
+                term.setAttribute('class', 'def-item-term')
+                definition = self.getChildrenByTagName('def', def_item)[0]
+                definition.tagName = 'p'
+                definition.setAttribute('class', 'def-item-def')
+
     def make_synopsis_title(self, body):
         """
         Makes the title for the synopsis.

@@ -40,3 +40,13 @@ p.verse-line
 font-style:italic;
 line-height:50%;
 }
+p.def-item-term
+{
+font-style:bold;
+}
+p.def-item-def
+{
+font-style:italic;
+margin:5%;
+}
+
