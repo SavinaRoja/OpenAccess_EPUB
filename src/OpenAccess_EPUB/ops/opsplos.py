@@ -146,6 +146,8 @@ class OPSPLoS(OPSMeta):
         #TODO: List elements
         #TODO: Definition lists
         #TODO: Back matter stuffs
+        #TODO: ref-list
+        #TODO: def-list
 
         #These come last for a reason
         self.convert_sec_elements(body)
@@ -382,6 +384,7 @@ class OPSPLoS(OPSMeta):
         figs = body.getElementsByTagName('fig')
         for fig in figs:
             self.convert_fn_elements(fig)
+            self.convert_disp_formula_elements(fig)
             #Parse all fig attributes to a dict
             fig_attributes = self.getAllAttributes(fig, remove=False)
             #Determine if there is a <label>, 0 or 1, grab the node
