@@ -936,9 +936,15 @@ class OPSPLoS(OPSMeta):
                 term = self.getChildrenByTagName('term', def_item)[0]
                 term.tagName = 'p'
                 term.setAttribute('class', 'def-item-term')
+                def_list.insertBefore(term, def_item)
                 definition = self.getChildrenByTagName('def', def_item)[0]
+                def_para = self.getChildrenByTagName('p', definition)[0]
+                definition.childNodes += def_para.childNodes
+                definition.removeChild(def_para)
                 definition.tagName = 'p'
                 definition.setAttribute('class', 'def-item-def')
+                def_list.insertBefore(definition, def_item)
+                def_list.removeChild(def_item)
 
     def make_synopsis_title(self, body):
         """
