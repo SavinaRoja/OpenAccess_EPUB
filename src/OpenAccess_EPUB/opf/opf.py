@@ -384,3 +384,30 @@ class PLoSOPF(MetaOPF):
         This method handles the metadata for a PLoS article in a collection.
         """
         log.info('Using PLoS collectionMetadata')
+
+    def add_to_spine(self):
+        idref = '{0}-' + '{0}-xml'.format(self.a_doi_dashed)
+        syn_ref = self.spine.appendChild(self.doc.createElement('itemref'))
+        main_ref = self.spine.appendChild(self.doc.createElement('itemref'))
+        bib_ref = self.doc.createElement('itemref')
+        tab_ref = self.doc.createElement('itemref')
+        for r, i, l in [(syn_ref, 'synop', 'yes'), (main_ref, 'main', 'yes'),
+                        (bib_ref, 'biblio', 'yes'), (tab_ref, 'tables', 'no')]:
+            r.setAttribute('linear', l)
+            r.setAttribute('idref', idref.format(i))
+        try:
+            b = self.article.root_tag.getElementsByTagName('back')[0]
+        except IndexError:
+            pass
+        else:
+            if b.getElementsByTagName('ref'):
+                self.spine.appendChild(bib_ref)
+        #Here is the change for PLoS, this is for support of old articles
+        #which may not have the proper table format
+        table_wraps = self.article.root_tag.getElementsByTagName('table-wrap')
+        tables = False
+        for table_wrap in table_wraps:
+            if table_wrap.getElementsByTagName('alternatives') and table_wrap.getElementsByTagName('table'):
+                tables = True
+        if tables:
+            self.spine.appendChild(tab_ref)

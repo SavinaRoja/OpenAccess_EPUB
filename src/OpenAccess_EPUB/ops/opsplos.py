@@ -130,8 +130,6 @@ class OPSPLoS(OPSMeta):
                 body.appendChild(item.cloneNode(deep=True))
 
         #Handle node conversion
-        self.convert_fig_elements(body)
-        self.convert_table_wrap_elements(body)
         self.convert_disp_formula_elements(body)
         self.convert_inline_formula_elements(body)
         self.convert_named_content_elements(body)
@@ -143,6 +141,8 @@ class OPSPLoS(OPSMeta):
         self.convert_verse_group_elements(body)
         self.convert_supplementary_material_elements(body)
         self.convert_fn_elements(body)
+        self.convert_fig_elements(body)
+        self.convert_table_wrap_elements(body)
         #TODO: List elements
         #TODO: Definition lists
         #TODO: Back matter stuffs
@@ -383,8 +383,8 @@ class OPSPLoS(OPSMeta):
         """
         figs = body.getElementsByTagName('fig')
         for fig in figs:
-            self.convert_fn_elements(fig)
-            self.convert_disp_formula_elements(fig)
+            #self.convert_fn_elements(fig)
+            #self.convert_disp_formula_elements(fig)
             #Parse all fig attributes to a dict
             fig_attributes = self.getAllAttributes(fig, remove=False)
             #Determine if there is a <label>, 0 or 1, grab the node
@@ -647,23 +647,49 @@ class OPSPLoS(OPSMeta):
 
             #Insert the img element
             disp_parent.insertBefore(img_element, disp)
+            #Create content for the label
             if label_node:
                 disp_parent.insertBefore(label_node, img_element)
                 label_node.tagName = 'b'
 
-            #Create content for the label
+            #Remove the old disp-formula element
             disp_parent.removeChild(disp)
 
     def convert_inline_formula_elements(self, body):
         """
         <inline-formula> elements must be converted to OPS conforming elements
+
+        These elements may contain <inline-graphic> elements, textual content,
+        or both.
         """
         for inline in body.getElementsByTagName('inline-formula'):
+            #Grab all the attributes of the formula element
             inline_attributes = self.getAllAttributes(inline, remove=True)
+            #Convert the inline-formula element to a div and give it a class
             inline.tagName = 'span'
-            if 'id' in inline_attributes:
-                inline.setAttribute('id', inline_attributes['id'])
             inline.setAttribute('class', 'inline-formula')
+            #Determine if there is an <inline-graphic>
+            try:
+                inline_graphic = self.getChildrenByTagName('inline-graphic', inline)[0]
+            except IndexError:
+                inline_graphic = None
+            else:
+                #Convert the inline-graphic element to an img element
+                inline_graphic.tagName = 'img'
+                #Get all of the attributes, with removal on
+                inline_graphic_attributes = self.getAllAttributes(inline_graphic, remove=True)
+                #Create a file reference for the image using the xlink:href attribute value
+                graphic_xlink_href = inline_graphic_attributes['xlink:href']
+                file_name = graphic_xlink_href.split('.')[-1] + '.png'
+                img_dir = 'images-' + self.doi_frag
+                img_path = '/'.join([img_dir, file_name])
+                #Set the source to the image path
+                inline_graphic.setAttribute('src', img_path)
+                #Give it an inline-formula class
+                inline_graphic.setAttribute('class', 'disp-formula')
+                #Alt text
+                inline_graphic.setAttribute('alt', 'An Inline Formula')
+
 
     def convert_named_content_elements(self, body):
         """
@@ -834,7 +860,7 @@ class OPSPLoS(OPSMeta):
                 #Grab the first, and only, paragraph
                 paragraph = footnote_paragraphs[0]
                 #Graph the paragraph text
-                paragraph_text = utils.serializeText(paragraph)
+                paragraph_text = utils.serializeText(paragraph, stringlist=[])
                 #See if it is a corrected erratum
                 corrected_erratum = False
                 if paragraph_text.startswith('Erratum') and 'Corrected' in paragraph_text:
@@ -842,9 +868,10 @@ class OPSPLoS(OPSMeta):
                 #Now remove the footnote if it is a corrected erratum
                 if corrected_erratum:
                     footnote_parent.removeChild(footnote)
-                    continue # Move on to the next footnote
+                    continue  # Move on to the next footnote
 
                 #Process the footnote paragraph if it is not a corrected erratum
+                print(paragraph_text)
                 if 'id' in attributes:
                     paragraph.setAttribute('id', attributes['id'])
                 if 'fn-type' in attributes:
@@ -1016,7 +1043,7 @@ class OPSPLoS(OPSMeta):
                     self.appendNewText(', ', editors_div)
                     addr = refer_aff.getElementsByTagName('addr-line')
                     if addr:
-                        editors_div.childNodes += addr.childNodes
+                        editors_div.childNodes += addr[0].childNodes
                     else:
                         editors_div.childNodes += refer_aff.childNodes
 
