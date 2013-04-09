@@ -145,8 +145,11 @@ class OPSPLoS(OPSMeta):
         self.convert_verse_group_elements(body)
         self.convert_supplementary_material_elements(body)
         self.convert_fn_elements(body)
+        self.convert_def_list_elements(body)
+
         self.convert_fig_elements(body)
         self.convert_table_wrap_elements(body)
+        
         #TODO: List elements
         #TODO: Definition lists
         #TODO: Back matter stuffs
