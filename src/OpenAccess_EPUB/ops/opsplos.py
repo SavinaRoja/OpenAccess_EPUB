@@ -106,6 +106,10 @@ class OPSPLoS(OPSMeta):
         self.convert_xref_elements(body)
         self.convert_named_content_elements(body)
 
+        #These come last for a reason
+        self.convert_sec_elements(body)
+        self.convert_div_titles(body, depth=1)
+
         #Finally, write to a document
         with open(os.path.join(self.ops_dir, self.synop_frag[:-4]), 'w') as op:
             op.write(self.doc.toxml(encoding='utf-8'))
