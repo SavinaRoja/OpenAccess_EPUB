@@ -146,6 +146,7 @@ class OPSPLoS(OPSMeta):
         self.convert_supplementary_material_elements(body)
         self.convert_fn_elements(body)
         self.convert_def_list_elements(body)
+        self.convert_ref_list_elements(body)
 
         self.convert_fig_elements(body)
         self.convert_table_wrap_elements(body)
@@ -945,6 +946,35 @@ class OPSPLoS(OPSMeta):
                 definition.setAttribute('class', 'def-item-def')
                 def_list.insertBefore(definition, def_item)
                 def_list.removeChild(def_item)
+
+    def convert_ref_list_elements(self, body):
+        """
+        List of references (citations) for an article, which is often called
+        “References”, “Bibliography”, or “Additional Reading”.
+
+        No distinction is made between lists of cited references and lists of
+        suggested references.
+
+        This method should not be confused with the method(s) employed for the
+        formatting of a proper bibliography, though they are related.
+        Similarly, this is an area of major openness in development, I lack
+        access to PLOS' algorithm for proper citation formatting.
+        """
+        #TODO: DOES NOT FUNCTION AS INTENDED; make a proper one someday
+        for ref_list in body.getElementsByTagName('ref-list'):
+            ref_list_attributes = self.getAllAttributes(ref_list, remove=True)
+            ref_list.tagName = 'div'
+            ref_list.setAttribute('class', 'ref-list')
+            try:
+                label = self.getChildrenByTagName('label', ref_list)[0]
+            except IndexError:
+                pass
+            else:
+                label.tagName = 'h3'
+            for ref in self.getChildrenByTagName('ref', ref_list):
+                ref_text = utils.serializeText(ref, stringlist=[])
+                ref_list_p = self.appendNewElementWithText('p', ref_text, ref_list)
+                ref_list.removeChild(ref)
 
     def make_synopsis_title(self, body):
         """
