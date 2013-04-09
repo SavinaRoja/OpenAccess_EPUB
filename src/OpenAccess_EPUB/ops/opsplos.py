@@ -1004,6 +1004,11 @@ class OPSPLoS(OPSMeta):
                 body.appendChild(abstract.node)
                 abstract.node.tagName = 'div'
                 abstract.node.setAttribute('id', 'author-summary')
+            if abstract.type =='editors-summary':
+                self.appendNewElementWithText('h2', 'Editors\' Summary', body)
+                body.appendChild(abstract.node)
+                abstract.node.tagName = 'div'
+                abstract.node.setAttribute('id', 'editors-summary')
 
     def make_synopsis_citation(self, body):
         """
