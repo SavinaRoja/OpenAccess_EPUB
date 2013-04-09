@@ -199,12 +199,17 @@ class OPSPLoS(OPSMeta):
         body = self.doc.getElementsByTagName('body')[0]
 
         for table in self.html_tables:
+            if table.tagName == 'table-wrap-foot':
+                foot_div = self.appendNewElement('div', body)
+                foot_div.setAttribute('class', 'table-wrap-foot')
+                foot_div.childNodes = table.childNodes
+                continue
             label = table.getAttribute('label')
             if label:
                 table.removeAttribute('label')
-                l = self.appendNewElement('div', body)
-                b = self.appendNewElement('b', l)
-                self.appendNewText(label, b)
+                label_div = self.appendNewElement('div', body)
+                label_div_b = self.appendNewElement('b', label_div)
+                self.appendNewText(label, label_div_b)
             #Move the table to the body
             body.appendChild(table)
             for d in table.getElementsByTagName('div'):
@@ -214,8 +219,9 @@ class OPSPLoS(OPSMeta):
 
         #Handle node conversion
         self.convert_emphasis_elements(body)
-        #self.convert_disp_formula_elements(body)
-        #self.convert_inline_formula_elements(body)
+        self.convert_fn_elements(body)
+        self.convert_disp_formula_elements(body)
+        self.convert_inline_formula_elements(body)
         self.convert_xref_elements(body)
 
         with open(os.path.join(self.ops_dir, self.tab_frag[:-4]), 'w') as op:
@@ -460,10 +466,14 @@ class OPSPLoS(OPSMeta):
             #Parse all attributes to a dict
             tab_attributes = self.getAllAttributes(tab, remove=False)
             #Determine if there is a <label>, 0 or 1, grab the node
+            #label_text is for serialized text for the tabled version
             try:
                 label_node = self.getChildrenByTagName('label', tab)[0]
             except IndexError:  # No label tag
                 label_node = None
+                label_text = ''
+            else:
+                label_text = utils.serializeText(label_node, stringlist=[])
             #Determine if there is a <caption>, grab the node
             try:
                 caption_node = self.getChildrenByTagName('caption', tab)[0]
@@ -483,7 +493,14 @@ class OPSPLoS(OPSMeta):
             #Label and move the html table node to the list of html tables
             if table_node:
                 table_node.setAttribute('id', tab_attributes['id'])
+                table_node.setAttribute('label', label_text)
                 self.html_tables.append(table_node)
+                try:
+                    foot = self.getChildrenByTagName('table-wrap-foot', tab)[0]
+                except IndexError:
+                    pass
+                else:
+                    self.html_tables.append(foot)
 
             #Create a file reference for the image
             graphic_xlink_href = graphic_node.getAttribute('xlink:href')
@@ -1004,7 +1021,8 @@ class OPSPLoS(OPSMeta):
                 body.appendChild(abstract.node)
                 abstract.node.tagName = 'div'
                 abstract.node.setAttribute('id', 'author-summary')
-            if abstract.type =='editors-summary':
+            if abstract.type == 'editors-summary':
+                self.expungeAttributes(abstract.node)
                 self.appendNewElementWithText('h2', 'Editors\' Summary', body)
                 body.appendChild(abstract.node)
                 abstract.node.tagName = 'div'
