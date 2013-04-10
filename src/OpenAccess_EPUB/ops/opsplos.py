@@ -39,13 +39,12 @@ class OPSPLoS(OPSMeta):
         self.make_fragment_identifiers()
         self.ops_dir = os.path.join(output_dir, 'OPS')
         self.html_tables = []
-        self.create_synopsis()
         self.create_main()
         self.create_biblio()
         if self.html_tables:
             self.create_tables()
 
-    def create_(self):
+    def create_main(self):
         """
         This method encapsulates the process required to generate the primary
         body of the article. This includes the heading, article info, and main
@@ -59,9 +58,12 @@ class OPSPLoS(OPSMeta):
 
         #The section that contains the Article Title, List of Authors and
         #Affiliations, and Abstracts is referred to as the Heading
-        self.make_heading(body)  #This function will implement the Heading
+        self.make_heading(body)
 
-        #The ArticleInfo section 
+        #The ArticleInfo section contains the (self) Citation, Editors, Dates,
+        #Copyright, Funding Statement, Competing Interests Statement,
+        #Correspondence, and Footnotes. Maybe more...
+        self.make_article_info(body)
 
     def make_heading(self, receiving_node):
         """
@@ -86,77 +88,58 @@ class OPSPLoS(OPSMeta):
         #Horizontal rule as a visual break between Heading and ArticleInfo
         self.appendNewElement('hr', receiving_node)
 
-    def create_synopsis(self):
+    def make_article_info(self, receiving_node):
         """
-        This method encapsulates the functions necessary to create the synopsis
-        segment of the article.
+        The Article Info contains the (self) Citation, Editors, Dates,
+        Copyright, Funding Statement, Competing Interests Statement,
+        Correspondence, and Footnotes. Maybe more...
+
+        This content follows the Heading and precedes the Main segment in the
+        output.
+
+        This function accepts the receiving_node argument, which will receive
+        all generated output as new childNodes.
         """
-        #Make the synopsis file and get its body element
-        self.doc = self.make_document('synop')
-        body = self.doc.getElementsByTagName('body')[0]
+        #Creation of the self Citation
+        self.make_article_info_citation(receiving_node)
+        #Creation of the Editors
+        list_of_editors = self.get_editors_list()
+        self.make_article_info_editors(list_of_editors, receiving_node)
+        #Creation of the important Dates segment
+        self.make_article_info_dates(receiving_node)
+        #Creation of the Copyright statement
+        self.make_article_info_copyright(receiving_node)
+        #Creation of the Funding statement
+        self.make_article_info_funding(receiving_node)
+        #Creation of the Competing Interests statement
+        self.make_article_info_competing_interest(receiving_node)
+        #Creation of the Correspondences (contact information) for the article
+        self.make_article_info_correspondences(receiving_node)
+        #Creation of the Footnotes (other) for the ArticleInfo
+        self.make_article_info_footnotes_other(receiving_node)
+        #Horizontal rule as a visual break between ArticleInfo and Main
+        self.appendNewElement('hr', receiving_node)
 
-        #Create a large title element for the article
-        self.make_synopsis_title(body)
+    def post_processing_node_conversion(self, node):
+        """
+        This is a top-level function for calling a suite of methods which
+        translate JPTS 3.0 XML to OPS XML for PLoS content.
 
-        #Compile the list of authors and editors
-        authors = self.get_authors_list()
-        editors = self.get_editors_list()
+        These methods will search the DOM tree beneath the specified Node with
+        its getElementsByTagName('tagname') method; they will find elements
+        at any depth beneath the Node and attempt conversion/translation.
+        """
+        #This current listing was simply grabbed from the old create_synopsis
+        #method and will receive later review and development
+        #TODO: Review this function and decide what to do with it
+        self.convert_emphasis_elements(node)
+        self.convert_address_linking_elements(node)
+        self.convert_xref_elements(node)
+        self.convert_named_content_elements(node)
+        self.convert_sec_elements(node)
+        self.convert_div_titles(node, depth=1)
 
-        #Construct the authors section of the synopsis
-        self.make_synopsis_authors(authors, body)
-
-        #Construct the authors affiliation section
-        self.make_synopsis_affiliations(body)
-
-        #Construct the content for abstracts
-        self.make_synopsis_abstracts(body)
-
-        #Add a visual cue that the article info is distinct
-        self.appendNewElement('hr', body)
-
-        #Create the citation content
-        self.make_synopsis_citation(body)
-
-        #Create the editors section of the synopsis
-        self.make_synopsis_editors(editors, body)
-
-        #Create the important dates section
-        self.make_synopsis_dates(body)
-
-        #Create the copyright statement
-        self.make_synopsis_copyright(body)
-
-        #Create the funding section
-        self.make_synopsis_funding(body)
-
-        #Create the competing interests statement
-        self.make_synopsis_competing_interests(body)
-
-        #Create the content for the article's correspondence
-        self.make_synopsis_correspondences(body)
-
-        #Make synopsis footnotes other
-        self.make_synopsis_footnotes_other(body)
-
-        #Add a visual cue that the article info is distinct
-        self.appendNewElement('hr', body)
-
-        #Post processing node conversion
-        self.convert_emphasis_elements(body)
-        self.convert_address_linking_elements(body)
-        self.convert_xref_elements(body)
-        self.convert_named_content_elements(body)
-
-        #These come last for a reason
-        self.convert_sec_elements(body)
-        self.convert_div_titles(body, depth=1)
-
-        #Finally, write to a document
-        with open(os.path.join(self.ops_dir, self.synop_frag[:-4]), 'w') as op:
-            op.write(self.doc.toxml(encoding='utf-8'))
-            #op.write(self.doc.toprettyxml(encoding='utf-8'))
-
-    def create_main(self):
+    def create_main2(self):
         """
         This method encapsulates the functions necessary to create the main
         segment of the article.
@@ -425,7 +408,6 @@ class OPSPLoS(OPSMeta):
         """
         This will create useful fragment identifier strings.
         """
-        self.synop_frag = 'synop.{0}.xml'.format(self.doi_frag) + '#{0}'
         self.main_frag = 'main.{0}.xml'.format(self.doi_frag) + '#{0}'
         self.bib_frag = 'biblio.{0}.xml'.format(self.doi_frag) + '#{0}'
         self.tab_frag = 'tables.{0}.xml'.format(self.doi_frag) + '#{0}'
@@ -1143,17 +1125,21 @@ class OPSPLoS(OPSMeta):
                 abstract.node.tagName = 'div'
                 abstract.node.setAttribute('id', 'editors-summary')
 
-    def make_synopsis_citation(self, body):
+    def make_article_info_citation(self, receiving_node):
         """
-        Creates a citation node for the synopsis of the article.
+        Creates a self citation node for the ArticleInfo of the article.
+
+        This method relies on self.format_self_citation() as an implementation
+        of converting an article's metadata to a plain string, and then adds
+        composes content for the display of that string in the ArticleInfo.
         """
         citation_text = self.format_self_citation()
-        citation_div = self.appendNewElement('div', body)
+        citation_div = self.appendNewElement('div', receiving_node)
         citation_div.setAttribute('id', 'article-citation')
         self.appendNewElementWithText('b', 'Citation: ', citation_div)
         self.appendNewText(citation_text, citation_div)
 
-    def make_synopsis_editors(self, editors, body):
+    def make_article_info_editors(self, editors, body):
         if not editors:  # No editors
             return
         editors_div = self.appendNewElement('div', body)
@@ -1188,7 +1174,7 @@ class OPSPLoS(OPSMeta):
                     else:
                         editors_div.childNodes += refer_aff.childNodes
 
-    def make_synopsis_dates(self, body):
+    def make_article_info_dates(self, body):
         """
         Makes the section containing important dates for the article: typically
         Received, Accepted, and Published.
@@ -1213,7 +1199,7 @@ class OPSPLoS(OPSMeta):
         self.appendNewElementWithText('b', 'Published: ', dates_div)
         self.appendNewText(self.format_date_string(published), dates_div)
 
-    def make_synopsis_copyright(self, body):
+    def make_article_info_copyright(self, body):
         """
         Makes the copyright section for the ArticleInfo. For PLoS, this means
         handling the information contained in the metadata <permissions>
@@ -1242,7 +1228,7 @@ class OPSPLoS(OPSMeta):
             copyright_string += ' ' + utils.nodeText(license_p)
         self.appendNewText(copyright_string, copyright_div)
 
-    def make_synopsis_funding(self, body):
+    def make_article_info_funding(self, body):
         """
         Creates the element for declaring Funding in the article info.
         """
@@ -1255,7 +1241,7 @@ class OPSPLoS(OPSMeta):
         #As far as I can tell, PLoS only uses one funding-statement
         funding_div.childNodes += funding[0].funding_statement[0].childNodes
 
-    def make_synopsis_competing_interests(self, body):
+    def make_article_info_competing_interests(self, body):
         """
         Creates the element for declaring competing interests in the article
         info.
@@ -1279,7 +1265,7 @@ class OPSPLoS(OPSMeta):
         conflict_p = self.getChildrenByTagName('p', conflict)[0]
         conflict_div.childNodes += conflict_p.childNodes
 
-    def make_synopsis_correspondences(self, body):
+    def make_article_info_correspondences(self, body):
         """
         Articles generally provide a first contact, typically an email address
         for one of the authors. This will supply that content.
@@ -1300,7 +1286,7 @@ class OPSPLoS(OPSMeta):
             corresp_subdiv.setAttribute('id', corresp_fn.getAttribute('id'))
             corresp_subdiv.childNodes = corresp_fn.childNodes
 
-    def make_synopsis_footnotes_other(self, body):
+    def make_article_info_footnotes_other(self, body):
         """
         This will catch all of the footnotes of type 'other' in the <fn-group>
         of the <back> element.
