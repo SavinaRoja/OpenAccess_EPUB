@@ -45,6 +45,47 @@ class OPSPLoS(OPSMeta):
         if self.html_tables:
             self.create_tables()
 
+    def create_(self):
+        """
+        This method encapsulates the process required to generate the primary
+        body of the article. This includes the heading, article info, and main
+        text, including some elements of the back matter. It does not include
+        the bibliography or the separate tables document, both of which are
+        technically optional and make sense as "nonlinear elements.
+        """
+        #The first job is to create a file and get a handle on its body element
+        self.document = self.make_document('main')
+        body = self.document.getElementsByTagName('body')[0]
+
+        #The section that contains the Article Title, List of Authors and
+        #Affiliations, and Abstracts is referred to as the Heading
+        self.make_heading(body)  #This function will implement the Heading
+
+        #The ArticleInfo section 
+
+    def make_heading(self, receiving_node):
+        """
+        The Heading includes the Article Title, List of Authors and
+        Affiliations, and Abstracts.
+
+        In terms of output content, this is the first element and is followed
+        by the ArticleInfo.
+
+        This function accepts the receiving_node argument, which will receive
+        all generated output as new childNodes.
+        """
+        #Creation of the title
+        self.make_heading_title(receiving_node)
+        #Creation of the Authors
+        list_of_authors = self.get_authors_list()
+        self.make_heading_authors(list_of_authors, receiving_node)
+        #Creation of the Authors Affiliations text
+        self.make_heading_affiliations(receiving_node)
+        #Creation of the Absract content for the Heading
+        self.make_heading_abstracts(receiving_node)
+        #Horizontal rule as a visual break between Heading and ArticleInfo
+        self.appendNewElement('hr', receiving_node)
+
     def create_synopsis(self):
         """
         This method encapsulates the functions necessary to create the synopsis
@@ -976,27 +1017,11 @@ class OPSPLoS(OPSMeta):
                 ref_list_p = self.appendNewElementWithText('p', ref_text, ref_list)
                 ref_list.removeChild(ref)
 
-    def make_synopsis_title(self, body):
-        """
-        Makes the title for the synopsis.
-        """
-        title = self.appendNewElement('h1', body)
-        self.setSomeAttributes(title, {'id': 'title',
-                                       'class': 'article-title'})
-        title.childNodes = self.metadata.title.article_title.childNodes
-
     def get_authors_list(self):
         """
         Gets a list of all authors described in the metadata.
         """
-        authors = []
-        for contrib in self.metadata.contrib:
-            if contrib.attrs['contrib-type'] == 'author':
-                authors.append(contrib)
-            else:
-                if not contrib.attrs['contrib-type']:
-                    print('No contrib-type provided for contibutor!')
-        return authors
+        return [i for i in self.metadata.contrib if i.attrs['contrib-type']=='author']
 
     def get_editors_list(self):
         """
@@ -1004,13 +1029,27 @@ class OPSPLoS(OPSMeta):
         """
         return [i for i in self.metadata.contrib if i.attrs['contrib-type']=='editor']
 
-    def make_synopsis_authors(self, authors, body):
+    def make_heading_title(self, receiving_node):
         """
-        Constructs the authors content after the title in of the synopsis;
-        creates nodes and text.
+        Makes the Article Title for the Heading.
+
+        Metadata element, content derived from FrontMatter
         """
-        #Make and append a new element to the passed body node
-        author_element = self.appendNewElement('h3', body)
+        
+        title = self.appendNewElement('h1', receiving_node)
+        self.setSomeAttributes(title, {'id': 'title',
+                                       'class': 'article-title'})
+        title.childNodes = self.metadata.title.article_title.childNodes
+
+    def make_heading_authors(self, authors, receiving_node):
+        """
+        Constructs the Authors content for the Heading. This should display
+        directly after the Article Title.
+
+        Metadata element, content derived from FrontMatter
+        """
+        #Make and append a new element to the passed receiving_node
+        author_element = self.appendNewElement('h3', receiving_node)
         author_element.setAttribute('class', 'authors')
         #Construct content for the author element
         first = True
@@ -1043,12 +1082,15 @@ class OPSPLoS(OPSMeta):
                     sup_link.setAttribute('href', self.synop_frag.format(xref.rid))
                     self.appendNewText(sup_text, sup_link)
 
-    def make_synopsis_affiliations(self, body):
+    def make_heading_affiliations(self, receiving_node):
         """
-        Makes the content that displays affiliations.
+        Makes the content for the Author Affiliations, displays after the
+        Authors segment in the Heading.
+
+        Metadata element, content derived from FrontMatter
         """
         if self.metadata.affs:
-            affs_div = self.appendNewElement('div', body)
+            affs_div = self.appendNewElement('div', receiving_node)
             affs_div.setAttribute('id', 'affiliations')
 
         #A simple way that seems to work by PLoS convention, but does not treat
@@ -1070,11 +1112,13 @@ class OPSPLoS(OPSMeta):
             addr_line_text = utils.nodeText(addr_line_node)
             self.appendNewText(addr_line_text + ', ', cur_aff_span)
 
-    def make_synopsis_abstracts(self, body):
+    def make_heading_abstracts(self, receiving_node):
         """
         An article may contain data for various kinds of abstracts. This method
-        works on those that are included in the synopsis, handling the content
-        conversion and the ordering.
+        works on those that are included in the Heading. This is displayed
+        after the Authors and Affiliations.
+
+        Metadata element, content derived from FrontMatter
         """
         for abstract in self.metadata.abstract:
             #Remove <title> elements in the abstracts
@@ -1082,20 +1126,20 @@ class OPSPLoS(OPSMeta):
                 abstract.node.removeChild(title)
             if abstract.type == '':  # If no type is listed -> main abstract
                 self.expungeAttributes(abstract.node)
-                self.appendNewElementWithText('h2', 'Abstract', body)
-                body.appendChild(abstract.node)
+                self.appendNewElementWithText('h2', 'Abstract', receiving_node)
+                receiving_node.appendChild(abstract.node)
                 abstract.node.tagName = 'div'
                 abstract.node.setAttribute('id', 'abstract')
             if abstract.type == 'summary':
                 self.expungeAttributes(abstract.node)
-                self.appendNewElementWithText('h2', 'Author Summary', body)
-                body.appendChild(abstract.node)
+                self.appendNewElementWithText('h2', 'Author Summary', receiving_node)
+                receiving_node.appendChild(abstract.node)
                 abstract.node.tagName = 'div'
                 abstract.node.setAttribute('id', 'author-summary')
             if abstract.type == 'editors-summary':
                 self.expungeAttributes(abstract.node)
-                self.appendNewElementWithText('h2', 'Editors\' Summary', body)
-                body.appendChild(abstract.node)
+                self.appendNewElementWithText('h2', 'Editors\' Summary', receiving_node)
+                receiving_node.appendChild(abstract.node)
                 abstract.node.tagName = 'div'
                 abstract.node.setAttribute('id', 'editors-summary')
 
