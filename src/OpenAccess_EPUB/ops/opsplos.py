@@ -65,6 +65,49 @@ class OPSPLoS(OPSMeta):
         #Correspondence, and Footnotes. Maybe more...
         self.make_article_info(body)
 
+        #Here I make a complete copy of the article's body tag to the the main
+        #document's DOM
+        try:
+            article_body = self.article.getElementsByTagName('body')[0]
+        except IndexError:  # Article has no body...
+            return None
+        else:
+            for item in article_body.childNodes:
+                body.appendChild(item.cloneNode(deep=True))
+
+        #Handle node conversion
+        self.convert_disp_formula_elements(body)
+        self.convert_inline_formula_elements(body)
+        self.convert_named_content_elements(body)
+        self.convert_disp_quote_elements(body)
+        self.convert_emphasis_elements(body)
+        self.convert_address_linking_elements(body)
+        self.convert_xref_elements(body)
+        self.convert_boxed_text_elements(body)
+        self.convert_verse_group_elements(body)
+        self.convert_supplementary_material_elements(body)
+        self.convert_fn_elements(body)
+        self.convert_def_list_elements(body)
+        self.convert_ref_list_elements(body)
+
+        self.convert_fig_elements(body)
+        self.convert_table_wrap_elements(body)
+
+        #TODO: List elements
+        #TODO: Definition lists
+        #TODO: Back matter stuffs
+        #TODO: ref-list
+        #TODO: def-list
+
+        #These come last for a reason
+        self.convert_sec_elements(body)
+        self.convert_div_titles(body)
+
+        #Finally, write to a document
+        with open(os.path.join(self.ops_dir, self.main_frag[:-4]), 'w') as op:
+            op.write(self.document.toxml(encoding='utf-8'))
+            #op.write(self.doc.toprettyxml(encoding='utf-8'))
+
     def make_heading(self, receiving_node):
         """
         The Heading includes the Article Title, List of Authors and
@@ -112,7 +155,7 @@ class OPSPLoS(OPSMeta):
         #Creation of the Funding statement
         self.make_article_info_funding(receiving_node)
         #Creation of the Competing Interests statement
-        self.make_article_info_competing_interest(receiving_node)
+        self.make_article_info_competing_interests(receiving_node)
         #Creation of the Correspondences (contact information) for the article
         self.make_article_info_correspondences(receiving_node)
         #Creation of the Footnotes (other) for the ArticleInfo
@@ -138,57 +181,6 @@ class OPSPLoS(OPSMeta):
         self.convert_named_content_elements(node)
         self.convert_sec_elements(node)
         self.convert_div_titles(node, depth=1)
-
-    def create_main2(self):
-        """
-        This method encapsulates the functions necessary to create the main
-        segment of the article.
-        """
-
-        self.doc = self.make_document('main')
-        body = self.doc.getElementsByTagName('body')[0]
-        #Here I make a complete copy of the article's body tag to the the main
-        #document's DOM
-        try:
-            article_body = self.article.getElementsByTagName('body')[0]
-        except IndexError:  # Article has no body...
-            return None
-        else:
-            for item in article_body.childNodes:
-                body.appendChild(item.cloneNode(deep=True))
-
-        #Handle node conversion
-        self.convert_disp_formula_elements(body)
-        self.convert_inline_formula_elements(body)
-        self.convert_named_content_elements(body)
-        self.convert_disp_quote_elements(body)
-        self.convert_emphasis_elements(body)
-        self.convert_address_linking_elements(body)
-        self.convert_xref_elements(body)
-        self.convert_boxed_text_elements(body)
-        self.convert_verse_group_elements(body)
-        self.convert_supplementary_material_elements(body)
-        self.convert_fn_elements(body)
-        self.convert_def_list_elements(body)
-        self.convert_ref_list_elements(body)
-
-        self.convert_fig_elements(body)
-        self.convert_table_wrap_elements(body)
-        
-        #TODO: List elements
-        #TODO: Definition lists
-        #TODO: Back matter stuffs
-        #TODO: ref-list
-        #TODO: def-list
-
-        #These come last for a reason
-        self.convert_sec_elements(body)
-        self.convert_div_titles(body)
-
-        #Finally, write to a document
-        with open(os.path.join(self.ops_dir, self.main_frag[:-4]), 'w') as op:
-            op.write(self.doc.toxml(encoding='utf-8'))
-            #op.write(self.doc.toprettyxml(encoding='utf-8'))
 
     def create_biblio(self):
         """
@@ -497,7 +489,7 @@ class OPSPLoS(OPSMeta):
                    u'fig': self.main_frag,
                    u'supplementary-material': self.main_frag,
                    u'table': self.main_frag,
-                   u'aff': self.synop_frag,
+                   u'aff': self.main_frag,
                    u'sec': self.main_frag,
                    u'table-fn': self.tab_frag,
                    u'boxed-text': self.main_frag,
@@ -869,7 +861,6 @@ class OPSPLoS(OPSMeta):
 
         Metadata element, content derived from FrontMatter
         """
-        
         title = self.appendNewElement('h1', receiving_node)
         self.setSomeAttributes(title, {'id': 'title',
                                        'class': 'article-title'})
@@ -913,7 +904,7 @@ class OPSPLoS(OPSMeta):
                         sup_text = utils.nodeText(sup_element)
                     new_sup = self.appendNewElement('sup', author_element)
                     sup_link = self.appendNewElement('a', new_sup)
-                    sup_link.setAttribute('href', self.synop_frag.format(xref.rid))
+                    sup_link.setAttribute('href', self.main_frag.format(xref.rid))
                     self.appendNewText(sup_text, sup_link)
 
     def make_heading_affiliations(self, receiving_node):

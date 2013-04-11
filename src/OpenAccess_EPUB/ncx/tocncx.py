@@ -103,15 +103,15 @@ those conforming to the relaxed constraints of OPS 2.0'''))
         This is used by the structureParse method to create some elements which
         do not require structure parsing in order to create.
         """
-        #The title page element we will always expect, always in synop
+        #The title page element we will always expect
         nav = self.appendNewElement('navPoint', self.navmap)
         nav.setAttribute('id', 'titlepage')
         nav.setAttribute('playOrder', str(self.playOrder))
         self.playOrder += 1
         navlbl = self.appendNewElement('navLabel', nav)
-        navlbl.appendChild(self.makeText('Title Page'))
+        navlbl.appendChild(self.makeText('Title'))
         navcon = self.appendNewElement('content', nav)
-        navcon.setAttribute('src', 'synop.{0}.xml#title'.format(self.a_doi))
+        navcon.setAttribute('src', 'main.{0}.xml#title'.format(self.a_doi))
 
     def navMaptToReferences(self):
         """
