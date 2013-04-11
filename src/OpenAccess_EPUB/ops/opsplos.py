@@ -1156,6 +1156,10 @@ class OPSPLoS(OPSMeta):
         #TODO: prefix-words, one possible solution would be to have this method
         #edit the CSS to provide formatting support for arbitrary prefixes...
 
+        for list_el in body.getElementsByTagName('list'):
+            if list_el.parentNode.tagName == 'p':
+                self.elevateNode(list_el)
+
         #list_el is used instead of list (list is reserved)
         for list_el in body.getElementsByTagName('list'):
             list_el_attributes = self.getAllAttributes(list_el, remove=True)
