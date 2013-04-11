@@ -89,15 +89,12 @@ class OPSPLoS(OPSMeta):
         self.convert_fn_elements(body)
         self.convert_def_list_elements(body)
         self.convert_ref_list_elements(body)
+        self.convert_list_elements(body)
 
         self.convert_fig_elements(body)
         self.convert_table_wrap_elements(body)
 
-        #TODO: List elements
-        #TODO: Definition lists
         #TODO: Back matter stuffs
-        #TODO: ref-list
-        #TODO: def-list
 
         #These come last for a reason
         self.convert_sec_elements(body)
@@ -126,10 +123,8 @@ class OPSPLoS(OPSMeta):
         self.make_heading_authors(list_of_authors, receiving_node)
         #Creation of the Authors Affiliations text
         self.make_heading_affiliations(receiving_node)
-        #Creation of the Absract content for the Heading
+        #Creation of the Abstract content for the Heading
         self.make_heading_abstracts(receiving_node)
-        #Horizontal rule as a visual break between Heading and ArticleInfo
-        self.appendNewElement('hr', receiving_node)
 
     def make_article_info(self, receiving_node):
         """
@@ -143,25 +138,25 @@ class OPSPLoS(OPSMeta):
         This function accepts the receiving_node argument, which will receive
         all generated output as new childNodes.
         """
+        article_info_div = self.appendNewElement('div', receiving_node)
+        article_info_div.setAttribute('id', 'ArticleInfo')
         #Creation of the self Citation
-        self.make_article_info_citation(receiving_node)
+        self.make_article_info_citation(article_info_div)
         #Creation of the Editors
         list_of_editors = self.get_editors_list()
-        self.make_article_info_editors(list_of_editors, receiving_node)
+        self.make_article_info_editors(list_of_editors, article_info_div)
         #Creation of the important Dates segment
-        self.make_article_info_dates(receiving_node)
+        self.make_article_info_dates(article_info_div)
         #Creation of the Copyright statement
-        self.make_article_info_copyright(receiving_node)
+        self.make_article_info_copyright(article_info_div)
         #Creation of the Funding statement
-        self.make_article_info_funding(receiving_node)
+        self.make_article_info_funding(article_info_div)
         #Creation of the Competing Interests statement
-        self.make_article_info_competing_interests(receiving_node)
+        self.make_article_info_competing_interests(article_info_div)
         #Creation of the Correspondences (contact information) for the article
-        self.make_article_info_correspondences(receiving_node)
+        self.make_article_info_correspondences(article_info_div)
         #Creation of the Footnotes (other) for the ArticleInfo
-        self.make_article_info_footnotes_other(receiving_node)
-        #Horizontal rule as a visual break between ArticleInfo and Main
-        self.appendNewElement('hr', receiving_node)
+        self.make_article_info_footnotes_other(article_info_div)
 
     def post_processing_node_conversion(self, node):
         """
@@ -255,6 +250,347 @@ class OPSPLoS(OPSMeta):
         self.main_frag = 'main.{0}.xml'.format(self.doi_frag) + '#{0}'
         self.bib_frag = 'biblio.{0}.xml'.format(self.doi_frag) + '#{0}'
         self.tab_frag = 'tables.{0}.xml'.format(self.doi_frag) + '#{0}'
+
+
+
+    def get_authors_list(self):
+        """
+        Gets a list of all authors described in the metadata.
+        """
+        return [i for i in self.metadata.contrib if i.attrs['contrib-type']=='author']
+
+    def get_editors_list(self):
+        """
+        Gets a list of all editors described in the metadata.
+        """
+        return [i for i in self.metadata.contrib if i.attrs['contrib-type']=='editor']
+
+    def make_heading_title(self, receiving_node):
+        """
+        Makes the Article Title for the Heading.
+
+        Metadata element, content derived from FrontMatter
+        """
+        title = self.appendNewElement('h1', receiving_node)
+        self.setSomeAttributes(title, {'id': 'title',
+                                       'class': 'article-title'})
+        title.childNodes = self.metadata.title.article_title.childNodes
+
+    def make_heading_authors(self, authors, receiving_node):
+        """
+        Constructs the Authors content for the Heading. This should display
+        directly after the Article Title.
+
+        Metadata element, content derived from FrontMatter
+        """
+        #Make and append a new element to the passed receiving_node
+        author_element = self.appendNewElement('h3', receiving_node)
+        author_element.setAttribute('class', 'authors')
+        #Construct content for the author element
+        first = True
+        for author in authors:
+            if first:
+                first = False
+            else:
+                self.appendNewText(', ', author_element)
+            if author.collab:  # If collab, just add rich content
+                #Assume only one collab
+                author_element.childNodes += author.collab[0].childNodes
+            elif not author.anonymous:
+                name = author.name[0].given + ' ' + author.name[0].surname
+                self.appendNewText(name, author_element)
+            else:
+                name = 'Anonymous'
+                self.appendNewText(name, author_element)
+            for xref in author.xref:
+                if xref.ref_type in ['corresp', 'aff']:
+                    try:
+                        sup_element = self.getChildrenByTagName('sup', xref.node)[0]
+                    except IndexError:
+                        log.info('Author xref did not contain <sup> element')
+                        #sup_text = utils.nodeText(xref.node)
+                        sup_text = ''
+                    else:
+                        sup_text = utils.nodeText(sup_element)
+                    new_sup = self.appendNewElement('sup', author_element)
+                    sup_link = self.appendNewElement('a', new_sup)
+                    sup_link.setAttribute('href', self.main_frag.format(xref.rid))
+                    self.appendNewText(sup_text, sup_link)
+
+    def make_heading_affiliations(self, receiving_node):
+        """
+        Makes the content for the Author Affiliations, displays after the
+        Authors segment in the Heading.
+
+        Metadata element, content derived from FrontMatter
+        """
+        if self.metadata.affs:
+            affs_div = self.appendNewElement('div', receiving_node)
+            affs_div.setAttribute('id', 'affiliations')
+
+        #A simple way that seems to work by PLoS convention, but does not treat
+        #the full scope of the <aff> element
+        for aff in self.metadata.affs:
+            aff_id = aff.getAttribute('id')
+            if not 'aff' in aff_id:  # Skip affs for editors...
+                continue
+            #Get the label node and the addr-line node
+            #<label> might be missing, especially for one author works
+            label_node = self.getChildrenByTagName('label', aff)
+            #I expect there to always be the <addr-line>
+            addr_line_node = self.getChildrenByTagName('addr-line', aff)[0]
+            cur_aff_span = self.appendNewElement('span', affs_div)
+            cur_aff_span.setAttribute('id', aff_id)
+            if label_node:
+                label_text = utils.nodeText(label_node[0])
+                label_b = self.appendNewElementWithText('b', label_text, cur_aff_span)
+            addr_line_text = utils.nodeText(addr_line_node)
+            self.appendNewText(addr_line_text + ', ', cur_aff_span)
+
+    def make_heading_abstracts(self, receiving_node):
+        """
+        An article may contain data for various kinds of abstracts. This method
+        works on those that are included in the Heading. This is displayed
+        after the Authors and Affiliations.
+
+        Metadata element, content derived from FrontMatter
+        """
+        for abstract in self.metadata.abstract:
+            #Remove <title> elements in the abstracts
+            for title in self.getChildrenByTagName('title', abstract.node):
+                abstract.node.removeChild(title)
+            if abstract.type == '':  # If no type is listed -> main abstract
+                self.expungeAttributes(abstract.node)
+                self.appendNewElementWithText('h2', 'Abstract', receiving_node)
+                receiving_node.appendChild(abstract.node)
+                abstract.node.tagName = 'div'
+                abstract.node.setAttribute('id', 'abstract')
+            if abstract.type == 'summary':
+                self.expungeAttributes(abstract.node)
+                self.appendNewElementWithText('h2', 'Author Summary', receiving_node)
+                receiving_node.appendChild(abstract.node)
+                abstract.node.tagName = 'div'
+                abstract.node.setAttribute('id', 'author-summary')
+            if abstract.type == 'editors-summary':
+                self.expungeAttributes(abstract.node)
+                self.appendNewElementWithText('h2', 'Editors\' Summary', receiving_node)
+                receiving_node.appendChild(abstract.node)
+                abstract.node.tagName = 'div'
+                abstract.node.setAttribute('id', 'editors-summary')
+
+    def make_article_info_citation(self, receiving_node):
+        """
+        Creates a self citation node for the ArticleInfo of the article.
+
+        This method relies on self.format_self_citation() as an implementation
+        of converting an article's metadata to a plain string, and then adds
+        composes content for the display of that string in the ArticleInfo.
+        """
+        citation_text = self.format_self_citation()
+        citation_div = self.appendNewElement('div', receiving_node)
+        citation_div.setAttribute('id', 'article-citation')
+        self.appendNewElementWithText('b', 'Citation: ', citation_div)
+        self.appendNewText(citation_text, citation_div)
+
+    def make_article_info_editors(self, editors, body):
+        if not editors:  # No editors
+            return
+        editors_div = self.appendNewElement('div', body)
+        if len(editors) > 1:  # Pluralize if more than one editor
+            self.appendNewElementWithText('b', 'Editors: ', editors_div)
+        else:
+            self.appendNewElementWithText('b', 'Editor: ', editors_div)
+        first = True
+        for editor in editors:
+            if first:
+                first = False
+            else:
+                self.appendNewText('; ', editors_div)
+            if not editor.anonymous:
+                name = editor.name[0].surname
+                if editor.name[0].given:
+                    name = editor.name[0].given + ' ' + name
+            else:
+                name = 'Anonymous'
+            self.appendNewText(name, editors_div)
+            #Add some text for the editor affiliations
+            for xref in editor.xref:
+                if xref.ref_type == 'aff':
+                    #Relate this xref to the appropriate aff tag
+                    ref_id = xref.rid
+                    refer_aff = self.metadata.affs_by_id[ref_id]
+                    #Put in appropriate text
+                    self.appendNewText(', ', editors_div)
+                    addr = refer_aff.getElementsByTagName('addr-line')
+                    if addr:
+                        editors_div.childNodes += addr[0].childNodes
+                    else:
+                        editors_div.childNodes += refer_aff.childNodes
+
+    def make_article_info_dates(self, body):
+        """
+        Makes the section containing important dates for the article: typically
+        Received, Accepted, and Published.
+        """
+        dates_div = self.appendNewElement('div', body)
+        dates_div.setAttribute('id', 'article-dates')
+
+        #Received - Optional
+        received = self.metadata.history['received']
+        if received:
+            self.appendNewElementWithText('b', 'Received: ', dates_div)
+            self.appendNewText(self.format_date_string(received) + ' ', dates_div)
+
+        #Accepted - Optional
+        accepted = self.metadata.history['accepted']
+        if accepted:
+            self.appendNewElementWithText('b', 'Accepted: ', dates_div)
+            self.appendNewText(self.format_date_string(accepted) + ' ', dates_div)
+
+        #Published - Required
+        published = self.metadata.pub_date['epub']
+        self.appendNewElementWithText('b', 'Published: ', dates_div)
+        self.appendNewText(self.format_date_string(published), dates_div)
+
+    def make_article_info_copyright(self, body):
+        """
+        Makes the copyright section for the ArticleInfo. For PLoS, this means
+        handling the information contained in the metadata <permissions>
+        element.
+        """
+        permissions = self.metadata.permissions
+        if not permissions:
+            return
+        copyright_div = self.appendNewElement('div', body)
+        copyright_div.setAttribute('id', 'copyright')
+        self.appendNewElementWithText('b', 'Copyright: ', copyright_div)
+
+        #Construct the string for the copyright statement
+        copyright_string = u' \u00A9 '
+        #I expect year to always be there
+        copyright_string += utils.nodeText(permissions.year) + ' '
+        #Holder won't always be there
+        if permissions.holder:
+            try:
+                copyright_string += utils.nodeText(permissions.holder) + '.'
+            except AttributeError:  # Some articles have empty <copyright-holder>s
+                pass
+        #I don't know if the license will always be included
+        if permissions.license:  # I hope this is a general solution
+            license_p = self.getChildrenByTagName('license-p', permissions.license)[0]
+            copyright_string += ' ' + utils.nodeText(license_p)
+        self.appendNewText(copyright_string, copyright_div)
+
+    def make_article_info_funding(self, body):
+        """
+        Creates the element for declaring Funding in the article info.
+        """
+        funding = self.metadata.funding_group
+        if not funding:
+            return
+        funding_div = self.appendNewElement('div', body)
+        funding_div.setAttribute('id', 'funding')
+        self.appendNewElementWithText('b', 'Funding: ', funding_div)
+        #As far as I can tell, PLoS only uses one funding-statement
+        funding_div.childNodes += funding[0].funding_statement[0].childNodes
+
+    def make_article_info_competing_interests(self, body):
+        """
+        Creates the element for declaring competing interests in the article
+        info.
+        """
+        #Check for author-notes
+        author_notes = self.metadata.author_notes
+        if not author_notes:  # skip if not found
+            return
+        #Check for conflict of interest statement
+        fn_nodes = self.getChildrenByTagName('fn', author_notes)
+        conflict = None
+        for fn in fn_nodes:
+            if fn.getAttribute('fn-type') == 'conflict':
+                conflict = fn
+        if not conflict:  # skip if not found
+            return
+        #Go about creating the content
+        conflict_div = self.appendNewElement('div', body)
+        conflict_div.setAttribute('id', 'conflict')
+        self.appendNewElementWithText('b', 'Competing Interests: ', conflict_div)
+        conflict_p = self.getChildrenByTagName('p', conflict)[0]
+        conflict_div.childNodes += conflict_p.childNodes
+
+    def make_article_info_correspondences(self, body):
+        """
+        Articles generally provide a first contact, typically an email address
+        for one of the authors. This will supply that content.
+        """
+        #Check for author-notes
+        author_notes = self.metadata.author_notes
+        if not author_notes:  # skip if not found
+            return
+        #Check for correspondences
+        correspondence = self.getChildrenByTagName('corresp', author_notes)
+        if not correspondence:  # skip if none found
+            return
+        #Go about creating the content
+        corresp_div = self.appendNewElement('div', body)
+        corresp_div.setAttribute('id', 'correspondence')
+        for corresp_fn in correspondence:
+            corresp_subdiv = self.appendNewElement('div', corresp_div)
+            corresp_subdiv.setAttribute('id', corresp_fn.getAttribute('id'))
+            corresp_subdiv.childNodes = corresp_fn.childNodes
+
+    def make_article_info_footnotes_other(self, body):
+        """
+        This will catch all of the footnotes of type 'other' in the <fn-group>
+        of the <back> element.
+        """
+        #Check for backmatter, skip if it doesn't exist
+        if not self.backmatter:
+            return
+        #Check for backmatter fn-groups, skip if empty
+        fn_groups = self.backmatter.fn_group
+        if not fn_groups:
+            return
+        #Look for fn nodes of fn-type 'other'
+        other_fns = []
+        for fn_group in fn_groups:
+            for fn in self.getChildrenByTagName('fn', fn_group):
+                if fn.getAttribute('fn-type') == 'other':
+                    other_fns.append(fn)
+        if other_fns:
+            other_fn_div = self.appendNewElement('div', body)
+            other_fn_div.setAttribute('id', 'back-fn-other')
+        for other_fn in other_fns:
+            other_fn_div.childNodes += other_fn.childNodes
+
+    def format_date_string(self, date_tuple):
+        """
+        Receives a date_tuple object, defined in jptsmeta, and outputs a string
+        for placement in the article content.
+        """
+        months = ['', 'January', 'February', 'March', 'April', 'May', 'June',
+                  'July', 'August', 'September', 'October', 'November', 'December']
+        date_string = ''
+        if date_tuple.season:
+            return '{0}, {1}'.format(date_tuple.season, date_tuple.year)
+        else:
+            if not date_tuple.month and not date_tuple.day:
+                return '{0}'.format(date_tuple.year)
+            if date_tuple.month:
+                date_string += months[int(date_tuple.month)]
+            if date_tuple.day:
+                date_string += ' ' + date_tuple.day
+            return ', '.join([date_string, date_tuple.year])
+
+    def format_self_citation(self):
+        """
+        PLoS articles present a citation for the article itself. This method
+        will return the citation for the article as a string.
+        """
+        #This is not yet fully implemented.
+        #I need clarification/documentation from PLoS
+        #So for now I just put in the DOI
+        return self.doi
 
     def convert_fig_elements(self, body):
         """
@@ -778,9 +1114,65 @@ class OPSPLoS(OPSMeta):
 
     def convert_list_elements(self, body):
         """
-        
+        A sequence of two or more items, which may or may not be ordered.
+
+        The <list> element has an optional <label> element and optional <title>
+        element, followed by one or more <list-item> elements. This is element
+        is recursive as the <list-item> elements may contain further <list> or
+        <def-list> elements. Much of the potential complexity in dealing with
+        lists comes from this recursion.
+
+        This element has the list-type attribute which has the following
+        suggested values:
+
+        order -  Ordered list. Prefix character is a number or a letter,
+            depending on style.
+        bullet - Unordered or bulleted list. Prefix character is a bullet,
+            dash, or other symbol.
+        alpha-lower - Ordered list. Prefix character is a lowercase
+            alphabetical character.
+        alpha-upper - Ordered list. Prefix character is an uppercase
+            alphabetical character.
+        roman-lower - Ordered list. Prefix character is a lowercase roman
+            numeral.
+        roman-upper - Ordered list. Prefix character is an uppercase roman
+            numeral.
+        simple - Simple or plain list (No prefix character before each item)
+
+        Prefix-words are not properly supported at this time due to the
+        impracticality in EPUB2. Perhaps in the future, or in EPUB3.
+        The code provides a notice of the improperly handled prefix-word, and
+        manual review should be employed.
         """
-        pass
+        #I have yet to gather many examples of this element, and may have to
+        #write a recursive method for the processing of lists depending on how
+        #PLoS produces their XML, for now this method is ignorant of nesting
+
+        #TODO: prefix-words, one possible solution would be to have this method
+        #edit the CSS to provide formatting support for arbitrary prefixes...
+
+        #list_el is used instead of list (list is reserved)
+        for list_el in body.getElementsByTagName('list'):
+            list_el_attributes = self.getAllAttributes(list_el, remove=True)
+            list_el_parent = list_el.parentNode
+            list_el_type = list_el_attributes['list-type']
+            #Unordered list if '', 'bullet', or 'simple'
+            if list_el_type in ['', 'bullet', 'simple']:
+                list_el.tagName = 'ul'
+                #'' and 'bullet' are treated as the same default case
+                #If the unordered list is simple, we wish to suppress bullets
+                if list_el_type == 'simple':  # Use CSS to suppress
+                    list_el.setAttribute('class', 'simple')
+            #Ordered list if otherwise
+            else:
+                list_el.tagName = 'ol'
+                list_el.setAttribute('class', list_el_type)
+            #Pass on the id if it exists
+            if 'id' in list_el_attributes:
+                list_el.setAttribute('id', list_el_attributes['id'])
+            #Convert the <list-item> element tags to 'li'
+            for list_item in self.getChildrenByTagName('list-item', list_el):
+                list_item.tagName = 'li'
 
     def convert_def_list_elements(self, body):
         """
@@ -842,345 +1234,6 @@ class OPSPLoS(OPSMeta):
                 ref_text = utils.serializeText(ref, stringlist=[])
                 ref_list_p = self.appendNewElementWithText('p', ref_text, ref_list)
                 ref_list.removeChild(ref)
-
-    def get_authors_list(self):
-        """
-        Gets a list of all authors described in the metadata.
-        """
-        return [i for i in self.metadata.contrib if i.attrs['contrib-type']=='author']
-
-    def get_editors_list(self):
-        """
-        Gets a list of all editors described in the metadata.
-        """
-        return [i for i in self.metadata.contrib if i.attrs['contrib-type']=='editor']
-
-    def make_heading_title(self, receiving_node):
-        """
-        Makes the Article Title for the Heading.
-
-        Metadata element, content derived from FrontMatter
-        """
-        title = self.appendNewElement('h1', receiving_node)
-        self.setSomeAttributes(title, {'id': 'title',
-                                       'class': 'article-title'})
-        title.childNodes = self.metadata.title.article_title.childNodes
-
-    def make_heading_authors(self, authors, receiving_node):
-        """
-        Constructs the Authors content for the Heading. This should display
-        directly after the Article Title.
-
-        Metadata element, content derived from FrontMatter
-        """
-        #Make and append a new element to the passed receiving_node
-        author_element = self.appendNewElement('h3', receiving_node)
-        author_element.setAttribute('class', 'authors')
-        #Construct content for the author element
-        first = True
-        for author in authors:
-            if first:
-                first = False
-            else:
-                self.appendNewText(', ', author_element)
-            if author.collab:  # If collab, just add rich content
-                #Assume only one collab
-                author_element.childNodes += author.collab[0].childNodes
-            elif not author.anonymous:
-                name = author.name[0].given + ' ' + author.name[0].surname
-                self.appendNewText(name, author_element)
-            else:
-                name = 'Anonymous'
-                self.appendNewText(name, author_element)
-            for xref in author.xref:
-                if xref.ref_type in ['corresp', 'aff']:
-                    try:
-                        sup_element = self.getChildrenByTagName('sup', xref.node)[0]
-                    except IndexError:
-                        log.info('Author xref did not contain <sup> element')
-                        #sup_text = utils.nodeText(xref.node)
-                        sup_text = ''
-                    else:
-                        sup_text = utils.nodeText(sup_element)
-                    new_sup = self.appendNewElement('sup', author_element)
-                    sup_link = self.appendNewElement('a', new_sup)
-                    sup_link.setAttribute('href', self.main_frag.format(xref.rid))
-                    self.appendNewText(sup_text, sup_link)
-
-    def make_heading_affiliations(self, receiving_node):
-        """
-        Makes the content for the Author Affiliations, displays after the
-        Authors segment in the Heading.
-
-        Metadata element, content derived from FrontMatter
-        """
-        if self.metadata.affs:
-            affs_div = self.appendNewElement('div', receiving_node)
-            affs_div.setAttribute('id', 'affiliations')
-
-        #A simple way that seems to work by PLoS convention, but does not treat
-        #the full scope of the <aff> element
-        for aff in self.metadata.affs:
-            aff_id = aff.getAttribute('id')
-            if not 'aff' in aff_id:  # Skip affs for editors...
-                continue
-            #Get the label node and the addr-line node
-            #<label> might be missing, especially for one author works
-            label_node = self.getChildrenByTagName('label', aff)
-            #I expect there to always be the <addr-line>
-            addr_line_node = self.getChildrenByTagName('addr-line', aff)[0]
-            cur_aff_span = self.appendNewElement('span', affs_div)
-            cur_aff_span.setAttribute('id', aff_id)
-            if label_node:
-                label_text = utils.nodeText(label_node[0])
-                label_b = self.appendNewElementWithText('b', label_text, cur_aff_span)
-            addr_line_text = utils.nodeText(addr_line_node)
-            self.appendNewText(addr_line_text + ', ', cur_aff_span)
-
-    def make_heading_abstracts(self, receiving_node):
-        """
-        An article may contain data for various kinds of abstracts. This method
-        works on those that are included in the Heading. This is displayed
-        after the Authors and Affiliations.
-
-        Metadata element, content derived from FrontMatter
-        """
-        for abstract in self.metadata.abstract:
-            #Remove <title> elements in the abstracts
-            for title in self.getChildrenByTagName('title', abstract.node):
-                abstract.node.removeChild(title)
-            if abstract.type == '':  # If no type is listed -> main abstract
-                self.expungeAttributes(abstract.node)
-                self.appendNewElementWithText('h2', 'Abstract', receiving_node)
-                receiving_node.appendChild(abstract.node)
-                abstract.node.tagName = 'div'
-                abstract.node.setAttribute('id', 'abstract')
-            if abstract.type == 'summary':
-                self.expungeAttributes(abstract.node)
-                self.appendNewElementWithText('h2', 'Author Summary', receiving_node)
-                receiving_node.appendChild(abstract.node)
-                abstract.node.tagName = 'div'
-                abstract.node.setAttribute('id', 'author-summary')
-            if abstract.type == 'editors-summary':
-                self.expungeAttributes(abstract.node)
-                self.appendNewElementWithText('h2', 'Editors\' Summary', receiving_node)
-                receiving_node.appendChild(abstract.node)
-                abstract.node.tagName = 'div'
-                abstract.node.setAttribute('id', 'editors-summary')
-
-    def make_article_info_citation(self, receiving_node):
-        """
-        Creates a self citation node for the ArticleInfo of the article.
-
-        This method relies on self.format_self_citation() as an implementation
-        of converting an article's metadata to a plain string, and then adds
-        composes content for the display of that string in the ArticleInfo.
-        """
-        citation_text = self.format_self_citation()
-        citation_div = self.appendNewElement('div', receiving_node)
-        citation_div.setAttribute('id', 'article-citation')
-        self.appendNewElementWithText('b', 'Citation: ', citation_div)
-        self.appendNewText(citation_text, citation_div)
-
-    def make_article_info_editors(self, editors, body):
-        if not editors:  # No editors
-            return
-        editors_div = self.appendNewElement('div', body)
-        if len(editors) > 1:  # Pluralize if more than one editor
-            self.appendNewElementWithText('b', 'Editors: ', editors_div)
-        else:
-            self.appendNewElementWithText('b', 'Editor: ', editors_div)
-        first = True
-        for editor in editors:
-            if first:
-                first = False
-            else:
-                self.appendNewText('; ', editors_div)
-            if not editor.anonymous:
-                name = editor.name[0].surname
-                if editor.name[0].given:
-                    name = editor.name[0].given + ' ' + name
-            else:
-                name = 'Anonymous'
-            self.appendNewText(name, editors_div)
-            #Add some text for the editor affiliations
-            for xref in editor.xref:
-                if xref.ref_type == 'aff':
-                    #Relate this xref to the appropriate aff tag
-                    ref_id = xref.rid
-                    refer_aff = self.metadata.affs_by_id[ref_id]
-                    #Put in appropriate text
-                    self.appendNewText(', ', editors_div)
-                    addr = refer_aff.getElementsByTagName('addr-line')
-                    if addr:
-                        editors_div.childNodes += addr[0].childNodes
-                    else:
-                        editors_div.childNodes += refer_aff.childNodes
-
-    def make_article_info_dates(self, body):
-        """
-        Makes the section containing important dates for the article: typically
-        Received, Accepted, and Published.
-        """
-        dates_div = self.appendNewElement('div', body)
-        dates_div.setAttribute('id', 'article-dates')
-
-        #Received - Optional
-        received = self.metadata.history['received']
-        if received:
-            self.appendNewElementWithText('b', 'Received: ', dates_div)
-            self.appendNewText(self.format_date_string(received) + ' ', dates_div)
-
-        #Accepted - Optional
-        accepted = self.metadata.history['accepted']
-        if accepted:
-            self.appendNewElementWithText('b', 'Accepted: ', dates_div)
-            self.appendNewText(self.format_date_string(accepted) + ' ', dates_div)
-
-        #Published - Required
-        published = self.metadata.pub_date['epub']
-        self.appendNewElementWithText('b', 'Published: ', dates_div)
-        self.appendNewText(self.format_date_string(published), dates_div)
-
-    def make_article_info_copyright(self, body):
-        """
-        Makes the copyright section for the ArticleInfo. For PLoS, this means
-        handling the information contained in the metadata <permissions>
-        element.
-        """
-        permissions = self.metadata.permissions
-        if not permissions:
-            return
-        copyright_div = self.appendNewElement('div', body)
-        copyright_div.setAttribute('id', 'copyright')
-        self.appendNewElementWithText('b', 'Copyright: ', copyright_div)
-
-        #Construct the string for the copyright statement
-        copyright_string = u' \u00A9 '
-        #I expect year to always be there
-        copyright_string += utils.nodeText(permissions.year) + ' '
-        #Holder won't always be there
-        if permissions.holder:
-            try:
-                copyright_string += utils.nodeText(permissions.holder) + '.'
-            except AttributeError:  # Some articles have empty <copyright-holder>s
-                pass
-        #I don't know if the license will always be included
-        if permissions.license:  # I hope this is a general solution
-            license_p = self.getChildrenByTagName('license-p', permissions.license)[0]
-            copyright_string += ' ' + utils.nodeText(license_p)
-        self.appendNewText(copyright_string, copyright_div)
-
-    def make_article_info_funding(self, body):
-        """
-        Creates the element for declaring Funding in the article info.
-        """
-        funding = self.metadata.funding_group
-        if not funding:
-            return
-        funding_div = self.appendNewElement('div', body)
-        funding_div.setAttribute('id', 'funding')
-        self.appendNewElementWithText('b', 'Funding: ', funding_div)
-        #As far as I can tell, PLoS only uses one funding-statement
-        funding_div.childNodes += funding[0].funding_statement[0].childNodes
-
-    def make_article_info_competing_interests(self, body):
-        """
-        Creates the element for declaring competing interests in the article
-        info.
-        """
-        #Check for author-notes
-        author_notes = self.metadata.author_notes
-        if not author_notes:  # skip if not found
-            return
-        #Check for conflict of interest statement
-        fn_nodes = self.getChildrenByTagName('fn', author_notes)
-        conflict = None
-        for fn in fn_nodes:
-            if fn.getAttribute('fn-type') == 'conflict':
-                conflict = fn
-        if not conflict:  # skip if not found
-            return
-        #Go about creating the content
-        conflict_div = self.appendNewElement('div', body)
-        conflict_div.setAttribute('id', 'conflict')
-        self.appendNewElementWithText('b', 'Competing Interests: ', conflict_div)
-        conflict_p = self.getChildrenByTagName('p', conflict)[0]
-        conflict_div.childNodes += conflict_p.childNodes
-
-    def make_article_info_correspondences(self, body):
-        """
-        Articles generally provide a first contact, typically an email address
-        for one of the authors. This will supply that content.
-        """
-        #Check for author-notes
-        author_notes = self.metadata.author_notes
-        if not author_notes:  # skip if not found
-            return
-        #Check for correspondences
-        correspondence = self.getChildrenByTagName('corresp', author_notes)
-        if not correspondence:  # skip if none found
-            return
-        #Go about creating the content
-        corresp_div = self.appendNewElement('div', body)
-        corresp_div.setAttribute('id', 'correspondence')
-        for corresp_fn in correspondence:
-            corresp_subdiv = self.appendNewElement('div', corresp_div)
-            corresp_subdiv.setAttribute('id', corresp_fn.getAttribute('id'))
-            corresp_subdiv.childNodes = corresp_fn.childNodes
-
-    def make_article_info_footnotes_other(self, body):
-        """
-        This will catch all of the footnotes of type 'other' in the <fn-group>
-        of the <back> element.
-        """
-        #Check for backmatter, skip if it doesn't exist
-        if not self.backmatter:
-            return
-        #Check for backmatter fn-groups, skip if empty
-        fn_groups = self.backmatter.fn_group
-        if not fn_groups:
-            return
-        #Look for fn nodes of fn-type 'other'
-        other_fns = []
-        for fn_group in fn_groups:
-            for fn in self.getChildrenByTagName('fn', fn_group):
-                if fn.getAttribute('fn-type') == 'other':
-                    other_fns.append(fn)
-        if other_fns:
-            other_fn_div = self.appendNewElement('div', body)
-            other_fn_div.setAttribute('id', 'back-fn-other')
-        for other_fn in other_fns:
-            other_fn_div.childNodes += other_fn.childNodes
-
-    def format_date_string(self, date_tuple):
-        """
-        Receives a date_tuple object, defined in jptsmeta, and outputs a string
-        for placement in the article content.
-        """
-        months = ['', 'January', 'February', 'March', 'April', 'May', 'June',
-                  'July', 'August', 'September', 'October', 'November', 'December']
-        date_string = ''
-        if date_tuple.season:
-            return '{0}, {1}'.format(date_tuple.season, date_tuple.year)
-        else:
-            if not date_tuple.month and not date_tuple.day:
-                return '{0}'.format(date_tuple.year)
-            if date_tuple.month:
-                date_string += months[int(date_tuple.month)]
-            if date_tuple.day:
-                date_string += ' ' + date_tuple.day
-            return ', '.join([date_string, date_tuple.year])
-
-    def format_self_citation(self):
-        """
-        PLoS articles present a citation for the article itself. This method
-        will return the citation for the article as a string.
-        """
-        #This is not yet fully implemented.
-        #I need clarification/documentation from PLoS
-        #So for now I just put in the DOI
-        return self.doi
 
     def announce(self):
         """
