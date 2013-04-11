@@ -106,7 +106,7 @@ class OPSPLoS(OPSMeta):
         #Finally, write to a document
         with open(os.path.join(self.ops_dir, self.main_frag[:-4]), 'w') as op:
             op.write(self.document.toxml(encoding='utf-8'))
-            #op.write(self.doc.toprettyxml(encoding='utf-8'))
+            #op.write(self.document.toprettyxml(encoding='utf-8'))
 
     def make_heading(self, receiving_node):
         """
@@ -1029,13 +1029,13 @@ class OPSPLoS(OPSMeta):
         received = self.metadata.history['received']
         if received:
             self.appendNewElementWithText('b', 'Received: ', dates_div)
-            self.appendNewText(self.format_date_string(received), dates_div)
+            self.appendNewText(self.format_date_string(received + ' '), dates_div)
 
         #Accepted - Optional
         accepted = self.metadata.history['accepted']
         if accepted:
             self.appendNewElementWithText('b', 'Accepted: ', dates_div)
-            self.appendNewText(self.format_date_string(accepted), dates_div)
+            self.appendNewText(self.format_date_string(accepted + ' '), dates_div)
 
         #Published - Required
         published = self.metadata.pub_date['epub']
