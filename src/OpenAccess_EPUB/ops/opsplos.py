@@ -600,6 +600,9 @@ class OPSPLoS(OPSMeta):
         OPS xhtml. Aside from translating <fig> to <img>, the content model
         must be edited.
         """
+        for fig in body.getElementsByTagName('fig'):
+            if fig.parentNode.tagName == 'p':
+                self.elevateNode(fig)
         figs = body.getElementsByTagName('fig')
         for fig in figs:
             #self.convert_fn_elements(fig)
