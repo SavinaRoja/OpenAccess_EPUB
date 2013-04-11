@@ -7,7 +7,7 @@ padding:0 10px;
 margin:20px 0 40px 0;
 border-left:5px solid #CCE3F6;
 }
-div.articleInfo
+#ArticleInfo
 {
 border-top: 1px dashed;
 border-bottom: 1px dashed;
@@ -49,4 +49,22 @@ p.def-item-def
 font-style:italic;
 margin-left:5%;
 }
-
+ul.simple
+{
+list-style-type:none;
+}
+ol.alpha-lower
+{
+list-style-type:lower-alpha;
+}
+ol.alpha-upper
+{
+list-style-type:upper-alpha;
+}
+ol.roman-lower
+{
+list-style-type:lower-roman;
+}
+ol.roman_upper
+{
+list-style-type:upper-roman;
