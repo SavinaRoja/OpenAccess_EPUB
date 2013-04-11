@@ -131,11 +131,10 @@ class MetaOPF(object):
 
     def add_to_spine(self):
         idref = '{0}-' + '{0}-xml'.format(self.a_doi_dashed)
-        syn_ref = self.spine.appendChild(self.doc.createElement('itemref'))
         main_ref = self.spine.appendChild(self.doc.createElement('itemref'))
         bib_ref = self.doc.createElement('itemref')
         tab_ref = self.doc.createElement('itemref')
-        for r, i, l in [(syn_ref, 'synop', 'yes'), (main_ref, 'main', 'yes'),
+        for r, i, l in [(main_ref, 'main', 'yes'),
                         (bib_ref, 'biblio', 'yes'), (tab_ref, 'tables', 'no')]:
             r.setAttribute('linear', l)
             r.setAttribute('idref', idref.format(i))
@@ -387,11 +386,10 @@ class PLoSOPF(MetaOPF):
 
     def add_to_spine(self):
         idref = '{0}-' + '{0}-xml'.format(self.a_doi_dashed)
-        syn_ref = self.spine.appendChild(self.doc.createElement('itemref'))
         main_ref = self.spine.appendChild(self.doc.createElement('itemref'))
         bib_ref = self.doc.createElement('itemref')
         tab_ref = self.doc.createElement('itemref')
-        for r, i, l in [(syn_ref, 'synop', 'yes'), (main_ref, 'main', 'yes'),
+        for r, i, l in [(main_ref, 'main', 'yes'),
                         (bib_ref, 'biblio', 'yes'), (tab_ref, 'tables', 'no')]:
             r.setAttribute('linear', l)
             r.setAttribute('idref', idref.format(i))
