@@ -116,15 +116,18 @@ class OPSPLoS(OPSMeta):
         This function accepts the receiving_node argument, which will receive
         all generated output as new childNodes.
         """
+        #Create a div for Heading, exposing it to linking and formatting
+        heading_div = self.appendNewElement('div', receiving_node)
+        heading_div.setAttribute('id', 'Heading')
         #Creation of the title
-        self.make_heading_title(receiving_node)
+        self.make_heading_title(heading_div)
         #Creation of the Authors
         list_of_authors = self.get_authors_list()
-        self.make_heading_authors(list_of_authors, receiving_node)
+        self.make_heading_authors(list_of_authors, heading_div)
         #Creation of the Authors Affiliations text
-        self.make_heading_affiliations(receiving_node)
+        self.make_heading_affiliations(heading_div)
         #Creation of the Abstract content for the Heading
-        self.make_heading_abstracts(receiving_node)
+        self.make_heading_abstracts(heading_div)
 
     def make_article_info(self, receiving_node):
         """
@@ -138,6 +141,7 @@ class OPSPLoS(OPSMeta):
         This function accepts the receiving_node argument, which will receive
         all generated output as new childNodes.
         """
+        #Create a div for ArticleInfo, exposing it to linking and formatting
         article_info_div = self.appendNewElement('div', receiving_node)
         article_info_div.setAttribute('id', 'ArticleInfo')
         #Creation of the self Citation
@@ -250,8 +254,6 @@ class OPSPLoS(OPSMeta):
         self.main_frag = 'main.{0}.xml'.format(self.doi_frag) + '#{0}'
         self.bib_frag = 'biblio.{0}.xml'.format(self.doi_frag) + '#{0}'
         self.tab_frag = 'tables.{0}.xml'.format(self.doi_frag) + '#{0}'
-
-
 
     def get_authors_list(self):
         """
