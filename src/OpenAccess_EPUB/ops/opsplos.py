@@ -866,6 +866,7 @@ class OPSPLoS(OPSMeta):
             img_element.setAttribute('alt', 'A Table')
             img_element.setAttribute('id', tab_attributes['id'])
             img_element.setAttribute('src', img_path)
+            img_element.setAttribute('class', 'table')
 
             #Create content for the label and caption
             if caption_node or label_node:  # These will go into a <div> before <img>

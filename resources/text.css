@@ -31,6 +31,12 @@ display:block;
 margin-left:auto;
 margin-right:auto;
 }
+img.table
+{
+display:block;
+margin-left:auto;
+margin-right:auto;
+}
 b.disp-formula-label
 {
 display:block;
