@@ -105,7 +105,7 @@ class MetaOPF(object):
         mimetypes = {'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 'xml':
                      'application/xhtml+xml', 'png': 'image/png', 'css':
                      'text/css', 'ncx': 'application/x-dtbncx+xml', 'gif':
-                     'image/gif', 'tif': 'image/tif'}
+                     'image/gif', 'tif': 'image/tif', 'pdf': 'application/pdf'}
         current_dir = os.getcwd()
         os.chdir(self.location)
         for path, _subname, filenames in os.walk('OPS'):
