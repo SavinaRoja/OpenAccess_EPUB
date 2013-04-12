@@ -47,8 +47,8 @@ def OAEParser():
                         images. This overrides the program's attempts to get
                         the images from the default directory, the image cache,
                         or the internet.''')
-    parser.add_argument('-c', '--clean', action='store_false', default=True,
-                        help='''Use to toggle off cleanup. Without this flag, \
+    parser.add_argument('-c', '--clean', action='store_true', default=False,
+                        help='''Use to toggle on cleanup. With this flag, \
                                 the pre-zipped output will be removed.''')
     parser.add_argument('-N', '--no-epubcheck', action='store_false',
                         default=EPUBCHECK,
@@ -117,6 +117,7 @@ def makeEPUB(document, outdirect, images):
     #Run content processing per publisher
     if DOI.split('/')[0] == '10.1371':  # PLoS's publisher DOI
         ops.OPSPLoS(document, outdirect)
+        #TODO: Workflow change, parse table of contents from OPS processed document
         toc = ncx.TocNCX(__version__)
         toc.parseArticle(document)
         toc.write(outdirect)
@@ -192,8 +193,8 @@ def main(args):
              args.images)  # Path specifying where to find the images
 
     #Cleanup removes the produced output directory, keeps the ePub file.
-    #if args.clean:  # Can be toggled in settings.
-        #shutil.rmtree(output_name)
+    if args.clean:  # Can be toggled in settings.
+        shutil.rmtree(output_name)
 
     #Running epubcheck on the output verifies the validity of the ePub,
     #requires a local installation of java and epubcheck.
