@@ -773,6 +773,7 @@ class OPSPLoS(OPSMeta):
             img_element.setAttribute('alt', 'A Figure')
             img_element.setAttribute('id', fig_attributes['id'])
             img_element.setAttribute('src', img_path)
+            img_element.setAttribute('class', 'figure')
             #Insert the img element
             fig_parent.insertBefore(img_element, fig)
 

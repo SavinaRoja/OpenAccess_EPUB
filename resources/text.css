@@ -25,6 +25,12 @@ img.disp-formula
 {
 display:block;
 }
+img.figure
+{
+display:block;
+margin-left:auto;
+margin-right:auto;
+}
 b.disp-formula-label
 {
 display:block;
