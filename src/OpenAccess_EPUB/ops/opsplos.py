@@ -604,6 +604,10 @@ class OPSPLoS(OPSMeta):
         self.make_back_acknowledgments(receiving_node)
         #Author Contributions
         self.make_back_author_contributions(receiving_node)
+        #Glossaries
+        self.make_back_glossary(receiving_node)
+        #Notes
+        self.make_back_notes(receiving_node)
 
     def make_back_acknowledgments(self, receiving_node):
         """
@@ -618,7 +622,7 @@ class OPSPLoS(OPSMeta):
             return
         #Look for the ack node
         try:
-            ack = self.back.getElementsByTagName('ack')[0]
+            ack = self.getChildrenByTagName('ack', self.back)[0]
         except IndexError:
             return
         #Just change the tagName to 'div' and provide the id
@@ -665,6 +669,37 @@ class OPSPLoS(OPSMeta):
         contributions.insertBefore(contributions_title, contributions.firstChild)
         #Append the ack, now adjusted to 'div', to the receiving node
         receiving_node.appendChild(contributions)
+
+    def make_back_glossary(self, receiving_node):
+        """
+        Glossaries are a fairly common item in papers for PLoS, but it also
+        seems that they are rarely incorporated into the PLoS web-site or PDF
+        formats. They are included in the ePub output however because they are
+        helpful and because we can.
+        """
+        #Check if self.back exists
+        if not self.back:
+            return
+        for glossary in self.getChildrenByTagName('glossary', self.back):
+            glossary.tagName = 'div'
+            glossary.setAttribute('class', 'back-glossary')
+            receiving_node.appendChild(glossary)
+
+    def make_back_notes(self, receiving_node):
+        """
+        The notes element in PLoS articles can be employed for posting notices
+        of corrections or adjustments in proof. The <notes> element has a very
+        diverse content model, but PLoS practice appears to be fairly
+        consistent: a single <sec> containing a <title> and a <p>
+        """
+        #Check if self.back exists
+        if not self.back:
+            return
+        for notes in self.getChildrenByTagName('notes', self.back):
+            notes_sec = self.getChildrenByTagName('sec', notes)[0]
+            notes_sec.tagName = 'div'
+            notes_sec.setAttribute('class', 'back-notes')
+            receiving_node.appendChild(notes_sec)
 
     def format_date_string(self, date_tuple):
         """
