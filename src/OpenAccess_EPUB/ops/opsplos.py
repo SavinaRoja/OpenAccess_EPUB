@@ -596,7 +596,6 @@ class OPSPLoS(OPSMeta):
             self.back = self.article.getElementsByTagName('back')[0]
         except IndexError:  # If there is none, quit
             self.back = None
-            return
         #Each of the methods below will append 0, 1, or more Nodes to the passed
         #receiving node; Their order is in what I believe is a standard format
         #for PLoS publications
@@ -604,12 +603,20 @@ class OPSPLoS(OPSMeta):
         #Acknowledgments, typically 0 or 1
         self.make_back_acknowledgments(receiving_node)
         #Author Contributions
+        self.make_back_author_contributions(receiving_node)
 
     def make_back_acknowledgments(self, receiving_node):
         """
+        The <ack> is an important piece of back matter information, and will be
+        including immediately after the main text.
+
         This element should only occur once, if at all. It would be possible to
         support multiple Nodes, but such a use case is unknown.
         """
+        #Check if self.back exists
+        if not self.back:
+            return
+        #Look for the ack node
         try:
             ack = self.back.getElementsByTagName('ack')[0]
         except IndexError:
@@ -625,6 +632,39 @@ class OPSPLoS(OPSMeta):
         ack.insertBefore(ack_title, ack.firstChild)
         #Append the ack, now adjusted to 'div', to the receiving node
         receiving_node.appendChild(ack)
+
+    def make_back_author_contributions(self, receiving_node):
+        """
+        TThough this goes in the back of the document with the rest of the back
+        matter, it is not an element found under <back>.
+
+        I don't expect to see more than one of these. Compare this method to
+        make_article_info_competing_interests()
+        """
+        #Check for author-notes
+        author_notes = self.metadata.author_notes
+        if not author_notes:  # skip if not found
+            return
+        #Check for conflict of interest statement
+        fn_nodes = self.getChildrenByTagName('fn', author_notes)
+        contributions = None
+        for fn in fn_nodes:
+            if fn.getAttribute('fn-type') == 'con':
+                contributions = fn
+        if not contributions:  # skip if not found
+            return
+        #Go about creating the content, change tagName and set id
+        contributions.tagName = 'div'
+        contributions.setAttribute('id', 'author-contributions')
+        contributions.removeAttribute('fn-type')
+        #Create a <title> element; this is not an OPS element but we expect
+        #it to be picked up and depth-formatted later by convert_div_titles()
+        contributions_title = self.document.createElement('title')
+        self.appendNewText('Author Contributions', contributions_title)
+        #Place the title as the first childNode
+        contributions.insertBefore(contributions_title, contributions.firstChild)
+        #Append the ack, now adjusted to 'div', to the receiving node
+        receiving_node.appendChild(contributions)
 
     def format_date_string(self, date_tuple):
         """
