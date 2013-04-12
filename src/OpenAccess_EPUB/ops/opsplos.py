@@ -65,6 +65,8 @@ class OPSPLoS(OPSMeta):
         #Correspondence, and Footnotes. Maybe more...
         self.make_article_info(body)
 
+        #Handling the main Body of the text is done by first copying everything
+        #over and then converting/translating to the OPS XML spec.
         #Here I make a complete copy of the article's body tag to the the main
         #document's DOM
         try:
@@ -74,6 +76,11 @@ class OPSPLoS(OPSMeta):
         else:
             for item in article_body.childNodes:
                 body.appendChild(item.cloneNode(deep=True))
+
+        #The Back Section of an article may contain important information aside
+        #from the Bibliography. Unlike the Body, this method will look for
+        #supported elements and add them appropriately to the XML
+        self.make_back_matter(body)
 
         #Handle node conversion
         self.convert_disp_formula_elements(body)
@@ -564,6 +571,60 @@ class OPSPLoS(OPSMeta):
             other_fn_div.setAttribute('id', 'back-fn-other')
         for other_fn in other_fns:
             other_fn_div.childNodes += other_fn.childNodes
+
+    def make_back_matter(self, receiving_node):
+        """
+        The <back> element may have 0 or 1 <label> elements and 0 or 1 <title>
+        elements. Then it may have any combination of the following: <ack>,
+        <app-group>, <bio>, <fn-group>, <glossary>, <ref-list>, <notes>, and
+        <sec>. <sec> is employed here as a catch-all for material that does not
+        fall under the other categories.
+
+        The Back should generally be thought of as a non-linear element, though
+        some of its content will be parsed to the linear flow of the document.
+        This can be thought of as critically important meta-information that
+        should accompany the main text (e.g. Acknowledgments and Contributions)
+
+        Because the content of <back> contains a set of tags that intersects
+        with that of the Body, this method should always be called before the
+        general post-processing steps; keep in mind that this is also the
+        opportunity to permit special handling of content in the Back
+        """
+        #Back is not to be treated as a content section, I also don't expect to
+        #see nodes for label or title
+        try:  # Grab the back node
+            self.back = self.article.getElementsByTagName('back')[0]
+        except IndexError:  # If there is none, quit
+            self.back = None
+            return
+        #Each of the methods below will append 0, 1, or more Nodes to the passed
+        #receiving node; Their order is in what I believe is a standard format
+        #for PLoS publications
+
+        #Acknowledgments, typically 0 or 1
+        self.make_back_acknowledgments(receiving_node)
+        #Author Contributions
+
+    def make_back_acknowledgments(self, receiving_node):
+        """
+        This element should only occur once, if at all. It would be possible to
+        support multiple Nodes, but such a use case is unknown.
+        """
+        try:
+            ack = self.back.getElementsByTagName('ack')[0]
+        except IndexError:
+            return
+        #Just change the tagName to 'div' and provide the id
+        ack.tagName = 'div'
+        ack.setAttribute('id', 'acknowledgments')
+        #Create a <title> element; this is not an OPS element but we expect
+        #it to be picked up and depth-formatted later by convert_div_titles()
+        ack_title = self.document.createElement('title')
+        self.appendNewText('Acknowledgments', ack_title)
+        #Place the title as the first childNode
+        ack.insertBefore(ack_title, ack.firstChild)
+        #Append the ack, now adjusted to 'div', to the receiving node
+        receiving_node.appendChild(ack)
 
     def format_date_string(self, date_tuple):
         """
