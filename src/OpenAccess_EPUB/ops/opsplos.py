@@ -771,7 +771,8 @@ class OPSPLoS(OPSMeta):
             #Create the img element
             img_element = self.doc.createElement('img')
             img_element.setAttribute('alt', 'A Figure')
-            img_element.setAttribute('id', fig_attributes['id'])
+            if 'id' in fig_attributes:
+                img_element.setAttribute('id', fig_attributes['id'])
             img_element.setAttribute('src', img_path)
             img_element.setAttribute('class', 'figure')
             #Insert the img element
@@ -841,7 +842,8 @@ class OPSPLoS(OPSMeta):
                 table_node = False
             #Label and move the html table node to the list of html tables
             if table_node:
-                table_node.setAttribute('id', tab_attributes['id'])
+                if 'id' in tab_attributes:
+                    table_node.setAttribute('id', tab_attributes['id'])
                 table_node.setAttribute('label', label_text)
                 self.html_tables.append(table_node)
                 try:
@@ -864,7 +866,8 @@ class OPSPLoS(OPSMeta):
             #Create the img element
             img_element = self.doc.createElement('img')
             img_element.setAttribute('alt', 'A Table')
-            img_element.setAttribute('id', tab_attributes['id'])
+            if 'id' in tab_attributes:
+                img_element.setAttribute('id', tab_attributes['id'])
             img_element.setAttribute('src', img_path)
             img_element.setAttribute('class', 'table')
 
@@ -917,7 +920,7 @@ class OPSPLoS(OPSMeta):
         for sec in sec_elements:
             sec.tagName = 'div'
             self.renameAttributes(sec, [('sec-type', 'class')])
-            if not sec.getAttribute('id'):  # Give it am id if it is missing
+            if not sec.getAttribute('id'):  # Give it an id if it is missing
                 sec.setAttribute('id', 'OA-EPUB-{0}'.format(str(count)))
                 count += 1
 
@@ -1012,7 +1015,8 @@ class OPSPLoS(OPSMeta):
             #Create the img element
             img_element = self.doc.createElement('img')
             img_element.setAttribute('alt', 'A Display Formula')
-            img_element.setAttribute('id', disp_attributes['id'])
+            if 'id' in disp_attributes:
+                img_element.setAttribute('id', disp_attributes['id'])
             img_element.setAttribute('class', 'disp-formula')
             img_element.setAttribute('src', img_path)
 
@@ -1125,7 +1129,8 @@ class OPSPLoS(OPSMeta):
                 title[0].tagName = 'b'
             sec.tagName = 'div'
             sec.setAttribute('class', 'boxed-text')
-            sec.setAttribute('id', boxed_text_attrs['id'])
+            if 'id' in boxed_text_attrs:
+                sec.setAttribute('id', boxed_text_attrs['id'])
             boxed_text_parent.insertBefore(sec, boxed_text)
             boxed_text_parent.removeChild(boxed_text)
 
@@ -1154,7 +1159,8 @@ class OPSPLoS(OPSMeta):
                 label = labels[0]
                 label.tagName = 'a'
                 label.setAttribute('href', resource_url)
-                label.setAttribute('id', attributes['id'])
+                if 'id' in attributes:
+                    label.setAttribute('id', attributes['id'])
                 self.appendNewText('. ', label)
                 transfer_id = True
                 supplementary_parent.insertBefore(label, supplementary)
@@ -1166,12 +1172,14 @@ class OPSPLoS(OPSMeta):
                     title = titles[0]
                     title.tagName = 'b'
                     if not transfer_id:
-                        title.setAttribute('id', attributes['id'])
+                        if 'id' in attributes:
+                            title.setAttribute('id', attributes['id'])
                     supplementary_parent.insertBefore(title, supplementary)
                 if paragraphs:
                     paragraph = paragraphs[0]
                     if not transfer_id:
-                        paragraph.setAttribute('id', attributes['id'])
+                        if 'id' in attributes:
+                            paragraph.setAttribute('id', attributes['id'])
                     supplementary_parent.insertBefore(paragraph, supplementary)
             supplementary_parent.removeChild(supplementary)
 
