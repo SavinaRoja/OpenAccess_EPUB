@@ -38,7 +38,13 @@ def nodeText(node):
     parsing and original xml formatting. This function should strip such
     artifacts.
     """
-    return u'{0}'.format(node.firstChild.data.strip())
+    #Get data from first child of the node
+    try:
+        first_child_data = node.firstChild.data
+    except AttributeError:  # Usually caused by an empty node
+        return u''
+    else:
+        return u'{0}'.format(first_child_data.strip())
 
 
 def makeEPUBBase(location):
