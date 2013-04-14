@@ -311,6 +311,7 @@ class OPSPLoS(OPSMeta):
             else:
                 name = 'Anonymous'
                 self.appendNewText(name, author_element)
+            #TODO: Handle author footnote references, also put footnotes in the ArticleInfo
             for xref in author.xref:
                 if xref.ref_type in ['corresp', 'aff']:
                     try:
