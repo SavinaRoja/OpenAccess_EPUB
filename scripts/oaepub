@@ -15,6 +15,8 @@ def main():
     #Configure logging, use name from input
     if args.input:
         logname = utils.getFileRoot(args.input) + '.log'
+    elif args.batch:
+        logname = utils.getFileRoot(args.batch) + '.log'
     elif args.zip:
         logname = utils.getFileRoot(args.zip) + '.log'
     logpath = os.path.join(args.output, logname)

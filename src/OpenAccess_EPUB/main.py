@@ -48,7 +48,7 @@ def OAEParser():
                         the images from the default directory, the image cache,
                         or the internet.''')
     parser.add_argument('-c', '--clean', action='store_true', default=False,
-                        help='''Use to toggle on cleanup. With this flag, \
+                        help='''Use to toggle on cleanup. With this flag,
                                 the pre-zipped output will be removed.''')
     parser.add_argument('-N', '--no-epubcheck', action='store_false',
                         default=EPUBCHECK,
@@ -56,8 +56,8 @@ def OAEParser():
                         epubcheck.''')
     modes = parser.add_mutually_exclusive_group()
     modes.add_argument('-i', '--input', action='store', default=False,
-                       help='''Input may be a path to a local directory, a \
-                              URL to a PLoS journal article, or a PLoS DOI \
+                       help='''Input may be a path to a local directory, a
+                              URL to a PLoS journal article, or a PLoS DOI
                               string''')
     modes.add_argument('-z', '--zip', action='store', default=False,
                        help='''Input mode supporting Frontiers production from
@@ -65,7 +65,7 @@ def OAEParser():
                                with this mode, both zipfiles are required to be
                                in the same directory.''')
     modes.add_argument('-b', '--batch', action='store', default=False,
-                       help='''Use to specify a batch directory; each \
+                       help='''Use to specify a batch directory; each
                                article inside will be processed.''')
     #modes.add_argument('-C', '--collection', action='store', default=False,
     #                   help='''Use to create an ePub file containing \
@@ -93,7 +93,105 @@ def dir_exists(outdirect):
         sys.exit('Aborting process!')
 
 
-def makeEPUB(document, outdirect, images):
+def single_input(args):
+    """
+    Single Input Mode works to convert a single input XML file into EPUB.
+
+    This is probably the most typical use case and is the most highly
+    configurable, see the argument parser and oaepub --help
+    """
+    #Determination of input type and processing
+    #Input can be a path to a local XML file, a URL string, or a DOI string
+    #In the case of the latter two, the XML file must be fetched
+    if args.input:
+        if 'http://www' in args.input:
+            parsed_article, raw_name = utils.input.url_input(args.input)
+        elif args.input[:4] == 'doi:':
+            parsed_article, raw_name = utils.input.doi_input(args.input)
+        else:
+            parsed_article, raw_name = utils.input.local_input(args.input)
+
+    #Generate the output path name, this will be the directory name for the
+    #output. This output directory will later be zipped into an EPUB
+    output_name = os.path.join(args.output, raw_name)
+
+    #Make the EPUB
+    make_epub(parsed_article,
+              output_name,
+              args.images,   # Path specifying where to find the images
+              batch=False)
+
+    #Cleanup removes the produced output directory, keeps the ePub file
+    if args.clean:  # Defaults to False, --clean or -c to toggle on
+        shutil.rmtree(output_name)
+
+    #Running epubcheck on the output verifies the validity of the ePub,
+    #requires a local installation of java and epubcheck.
+    if args.no_epubcheck:
+        epubcheck('{0}.epub'.format(output_name))
+
+
+def batch_input(args):
+    """
+    Batch Input Mode works to convert all of the article XML files in a
+    specified directory into individual article EPUB files.
+
+    Batch Input Mode is employed under a few simplifying assumptions: any
+    pre-existing folder for article EPUB conversion will be eliminated without
+    asking user permission, all output that except the .epub and .log files
+    will be removed, and image files in a custom directory are not being used.
+
+    Unlike the other input modes, Batch Input Mode output is always relative to
+    the batch directory rather than the working directory of oaepub execution.
+
+    Batch Input Mode has default epubcheck behavior, it will place a system call
+    to epubcheck unless specified otherwise (--no-epubcheck or -N flags).
+    """
+    #Iterate over all listed files in the batch directory
+    for item in os.listdir(args.batch):
+        item_path = os.path.join(args.batch, item)
+        #Skip directories and files without .xml extension
+        root, extension = os.path.splitext(item)
+        if not os.path.isfile(item_path):
+            continue
+        if not extension == '.xml':
+            continue
+
+        #Parse the article
+        parsed_article, raw_name = utils.input.local_input(item_path)
+
+        #Create the output name
+        output_name = os.path.join(args.batch, raw_name)
+
+        #Make the EPUB
+        make_epub(parsed_article,
+                  output_name,
+                  None,  # Does not use custom image path
+                  batch=True)
+
+        #Cleanup output directory, keeps EPUB and log
+        shutil.rmtree(output_name)
+
+        #Running epubcheck on the output verifies the validity of the ePub,
+        #requires a local installation of java and epubcheck.
+        #if args.no_epubcheck:
+            #epubcheck('{0}.epub'.format(output_name))
+
+def collection_input(args):
+    """
+    
+    """
+    pass
+
+
+def zipped_input(args):
+    """
+    
+    """
+    pass
+
+
+def make_epub(document, outdirect, images, batch):
     """
     Encapsulates the primary processing work-flow. Before this method is
     called, pre-processing has occurred to define important directory and file
@@ -104,7 +202,10 @@ def makeEPUB(document, outdirect, images):
 
     #Copy files from base_epub to the new output
     if os.path.isdir(outdirect):
-        dir_exists(outdirect)
+        if batch:
+            shutil.rmtree(outdirect)
+        else:
+            dir_exists(outdirect)
     shutil.copytree(BASE_EPUB, outdirect)
 
     #Get the Digital Object Identifier
@@ -172,31 +273,13 @@ def main(args):
     if not os.path.isdir(BASE_EPUB):
         utils.makeEPUBBase(BASE_EPUB)
 
-    #Single Input Mode
-    #Determination of input type and processing
-    if args.input:  # Input target is an xml file, either local or online
-        if 'http://www' in args.input:
-            doc, fn = utils.input.urlInput(args.input)
-        elif args.input[:4] == 'doi:':
-            doc, fn = utils.input.doiInput(args.input)
-        else:
-            doc, fn = utils.input.localInput(args.input)
-    elif args.zip:  # Zipped input, containing necessary xml and images
-        doc, fn = utils.input.frontiersZipInput(args.zip, args.output)
-
-    #Generate the output name
-    output_name = os.path.join(args.output, fn)
-
-    #Make the ePub!
-    makeEPUB(doc,  # The parsed Article class
-             output_name,  # The name of the output file
-             args.images)  # Path specifying where to find the images
-
-    #Cleanup removes the produced output directory, keeps the ePub file.
-    if args.clean:  # Can be toggled in settings.
-        shutil.rmtree(output_name)
-
-    #Running epubcheck on the output verifies the validity of the ePub,
-    #requires a local installation of java and epubcheck.
-    if args.no_epubcheck:
-        epubcheck('{0}.epub'.format(output_name))
+    #Make appropriate calls depending on input type
+    #These are all mutually exclusive arguments in the argument parser
+    if args.input:  # Convert single article to EPUB
+        single_input(args)
+    elif args.batch:  # Convert large numbers of XML files to EPUB
+        batch_input(args)
+    elif args.collection:  # Convert multiple XML articles into single EPUB
+        collection_input(args)
+    elif args.zipped:  # Convert Frontiers zipfile into single EPUB
+        zipped_input(args)

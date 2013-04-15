@@ -17,7 +17,7 @@ import logging
 log = logging.getLogger('utils.input')
 
 
-def getFileName(full_path):
+def get_file_root(full_path):
     """
     This method provides the standard mode of deriving the file root name from
     a given path to the file; excludes the file extension and all parent
@@ -27,17 +27,17 @@ def getFileName(full_path):
     return os.path.splitext(filename)[0]
 
 
-def localInput(xml_path):
+def local_input(xml_path):
     """
     This method accepts xml path data as an argument, instantiates the Article,
     and returns the two.
     """
     log.info('Local Input - {0}'.format(xml_path))
     art = Article(xml_path)
-    return art, getFileName(xml_path)
+    return art, get_file_root(xml_path)
 
 
-def doiInput(doi_string):
+def doi_input(doi_string):
     """
     This method accepts a DOI string and attempts to download the appropriate
     xml file. If successful, it returns a path to that file along with an
@@ -80,13 +80,13 @@ def doiInput(doi_string):
         with open(filename, 'wb') as xml_file:
             xml_file.write(open_xml.read())
         art = Article(filename)
-        return art, getFileName(filename)
+        return art, get_file_root(filename)
     else:
         print('{0} is not supported for DOI Input'.format(publisher))
         sys.exit(1)
 
 
-def urlInput(url_string):
+def url_input(url_string):
     """
     This method accepts a URL as an input and attempts to download the
     appropriate xml file from that page. This method is highly dependent on
@@ -114,7 +114,7 @@ def urlInput(url_string):
                 xml_file.write(open_xml.read())
             art = Article(filename)
             #log.debug('Received XML path - {0}'.format(xml_path))
-            return art, getFileName(filename)
+            return art, get_file_root(filename)
     else:  # We don't support this input or publisher
         print('Invalid Link: Bad URL or unsupported publisher')
         print('Supported publishers are: {0}'.format(', '.join(support)))
