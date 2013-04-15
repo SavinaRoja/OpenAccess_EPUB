@@ -15,11 +15,13 @@ def main():
     #Configure logging, use name from input
     if args.input:
         logname = utils.getFileRoot(args.input) + '.log'
+        logpath = os.path.join(args.output, logname)
     elif args.batch:
         logname = utils.getFileRoot(args.batch) + '.log'
+        logpath = os.path.join(args.batch, logname)
     elif args.zip:
         logname = utils.getFileRoot(args.zip) + '.log'
-    logpath = os.path.join(args.output, logname)
+        logpath = os.path.join(args.output, logname)
     logging.basicConfig(filename=logpath, level=logging.DEBUG)
     logging.info('OpenAccess_EPUB Log v.{0}'.format(oae.__version__))
     #Run the main script
