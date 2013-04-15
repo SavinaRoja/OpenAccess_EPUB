@@ -135,10 +135,12 @@ def stripDOMLayer(oldnodelist, depth=1):
     return oldnodelist
 
 
-def serializeText(fromnode, stringlist=[], sep=u''):
+def serializeText(fromnode, stringlist=None, sep=u''):
     """
     Recursively extract the text data from a node and it's children
     """
+    if stringlist is None:
+        stringlist = []
     for item in fromnode.childNodes:
         if item.nodeType == item.TEXT_NODE and not item.data == u'\n':
             stringlist.append(item.data)
