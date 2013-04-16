@@ -286,8 +286,9 @@ class PLoSOPF(MetaOPF):
         self.metadata.appendChild(dc.title(title, self.doc))
 
         #Make the dc:rights using the metadata in permissions
-        license = utils.serializeText(ameta.permissions.license)
-        self.metadata.appendChild(dc.rights(license, self.doc))
+        if ameta.permissions:
+            license = utils.serializeText(ameta.permissions.license)
+            self.metadata.appendChild(dc.rights(license, self.doc))
 
         #Make the dc:creator elements for each contributing author
         #Note that the file-as name is: Surname, G(iven Initial)
