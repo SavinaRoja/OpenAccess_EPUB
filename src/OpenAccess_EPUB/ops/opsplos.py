@@ -417,6 +417,7 @@ class OPSPLoS(OPSMeta):
                 first = False
             else:
                 self.appendNewText('; ', editors_div)
+            #TODO: Handle editors as collab, journal.pgen.0020030
             if not editor.anonymous:
                 name = editor.name[0].surname
                 if editor.name[0].given:
