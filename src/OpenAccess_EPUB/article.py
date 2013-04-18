@@ -1,14 +1,17 @@
-import utils
+import utils.element_methods
 import os.path
 import sys
 import shutil
-import xml.dom.minidom
+import xml.dom.minidom as minidom
 import jpts
 import urllib2
 import logging
 from time import sleep
 
 log = logging.getLogger('Article')
+
+#Monkey patching in some extended methods for xml.dom.minidom classes
+minidom.Element.getChildrenByTagName = utils.element_methods.getChildrenByTagName
 
 
 class Article(object):
@@ -34,7 +37,7 @@ class Article(object):
         attribute.
         """
         log.info('Parsing file - {0}'.format(xml_file))
-        doc = xml.dom.minidom.parse(xml_file)
+        doc = minidom.parse(xml_file)
         #Here we check the doctype for the DTD under which the article was
         #published. This affects how we will parse metadata and content.
         dtds = {u'-//NLM//DTD Journal Publishing DTD v2.0 20040830//EN':

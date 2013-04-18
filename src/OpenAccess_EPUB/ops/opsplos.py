@@ -316,7 +316,8 @@ class OPSPLoS(OPSMeta):
             for xref in author.xref:
                 if xref.ref_type in ['corresp', 'aff']:
                     try:
-                        sup_element = self.getChildrenByTagName('sup', xref.node)[0]
+                        sup_element = xref.node.getChildrenByTagName('sup')[0]
+                        #sup_element = self.getChildrenByTagName('sup', xref.node)[0]
                     except IndexError:
                         log.info('Author xref did not contain <sup> element')
                         #sup_text = utils.nodeText(xref.node)
