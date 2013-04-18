@@ -283,23 +283,6 @@ class OPSMeta(object):
                 el_list += n.getElementsByTagName(tagname)
         return el_list
 
-    def getChildrenByTagName(self, searchterm, node):
-        """
-        This method differs from getElementsByTagName() by only searching the
-        childNodes of the specified node. The node must also be specified along
-        with the searchterm.
-        """
-        nodelist = []
-        for c in node.childNodes:
-            try:
-                tag = c.tagName
-            except AttributeError:  # Text nodes have no tagName
-                pass
-            else:
-                if tag == searchterm:
-                    nodelist.append(c)
-        return nodelist
-
     def announce(self):
         """
         Announces initiation of the class.

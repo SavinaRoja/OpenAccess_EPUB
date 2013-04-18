@@ -317,7 +317,6 @@ class OPSPLoS(OPSMeta):
                 if xref.ref_type in ['corresp', 'aff']:
                     try:
                         sup_element = xref.node.getChildrenByTagName('sup')[0]
-                        #sup_element = self.getChildrenByTagName('sup', xref.node)[0]
                     except IndexError:
                         log.info('Author xref did not contain <sup> element')
                         #sup_text = utils.nodeText(xref.node)
@@ -348,9 +347,9 @@ class OPSPLoS(OPSMeta):
                 continue
             #Get the label node and the addr-line node
             #<label> might be missing, especially for one author works
-            label_node = self.getChildrenByTagName('label', aff)
+            label_node = aff.getChildrenByTagName('label')
             #I expect there to always be the <addr-line>
-            addr_line_node = self.getChildrenByTagName('addr-line', aff)[0]
+            addr_line_node = aff.getChildrenByTagName('addr-line')[0]
             cur_aff_span = self.appendNewElement('span', affs_div)
             cur_aff_span.setAttribute('id', aff_id)
             if label_node:
@@ -369,7 +368,7 @@ class OPSPLoS(OPSMeta):
         """
         for abstract in self.metadata.abstract:
             #Remove <title> elements in the abstracts
-            for title in self.getChildrenByTagName('title', abstract.node):
+            for title in abstract.node.getChildrenByTagName('title'):
                 abstract.node.removeChild(title)
             if abstract.type == '':  # If no type is listed -> main abstract
                 self.expungeAttributes(abstract.node)
@@ -490,7 +489,7 @@ class OPSPLoS(OPSMeta):
                 pass
         #I don't know if the license will always be included
         if permissions.license:  # I hope this is a general solution
-            license_p = self.getChildrenByTagName('license-p', permissions.license)[0]
+            license_p = permissions.license.getChildrenByTagName('license-p')[0]
             copyright_string += ' ' + utils.nodeText(license_p)
         self.appendNewText(copyright_string, copyright_div)
 
@@ -517,7 +516,7 @@ class OPSPLoS(OPSMeta):
         if not author_notes:  # skip if not found
             return
         #Check for conflict of interest statement
-        fn_nodes = self.getChildrenByTagName('fn', author_notes)
+        fn_nodes = author_notes.getChildrenByTagName('fn')
         conflict = None
         for fn in fn_nodes:
             if fn.getAttribute('fn-type') == 'conflict':
@@ -528,7 +527,7 @@ class OPSPLoS(OPSMeta):
         conflict_div = self.appendNewElement('div', body)
         conflict_div.setAttribute('id', 'conflict')
         self.appendNewElementWithText('b', 'Competing Interests: ', conflict_div)
-        conflict_p = self.getChildrenByTagName('p', conflict)[0]
+        conflict_p = conflict.getChildrenByTagName('p')[0]
         conflict_div.childNodes += conflict_p.childNodes
 
     def make_article_info_correspondences(self, body):
@@ -541,7 +540,7 @@ class OPSPLoS(OPSMeta):
         if not author_notes:  # skip if not found
             return
         #Check for correspondences
-        correspondence = self.getChildrenByTagName('corresp', author_notes)
+        correspondence = author_notes.getChildrenByTagName('corresp')
         if not correspondence:  # skip if none found
             return
         #Go about creating the content
@@ -567,7 +566,7 @@ class OPSPLoS(OPSMeta):
         #Look for fn nodes of fn-type 'other'
         other_fns = []
         for fn_group in fn_groups:
-            for fn in self.getChildrenByTagName('fn', fn_group):
+            for fn in fn_group.getChildrenByTagName('fn'):
                 if fn.getAttribute('fn-type') == 'other':
                     other_fns.append(fn)
         if other_fns:
@@ -626,7 +625,7 @@ class OPSPLoS(OPSMeta):
             return
         #Look for the ack node
         try:
-            ack = self.getChildrenByTagName('ack', self.back)[0]
+            ack = self.back.getChildrenByTagName('ack')[0]
         except IndexError:
             return
         #Just change the tagName to 'div' and provide the id
@@ -654,7 +653,7 @@ class OPSPLoS(OPSMeta):
         if not author_notes:  # skip if not found
             return
         #Check for conflict of interest statement
-        fn_nodes = self.getChildrenByTagName('fn', author_notes)
+        fn_nodes = author_notes.getChildrenByTagName('fn')
         contributions = None
         for fn in fn_nodes:
             if fn.getAttribute('fn-type') == 'con':
@@ -684,7 +683,7 @@ class OPSPLoS(OPSMeta):
         #Check if self.back exists
         if not self.back:
             return
-        for glossary in self.getChildrenByTagName('glossary', self.back):
+        for glossary in self.back.getChildrenByTagName('glossary'):
             glossary.tagName = 'div'
             glossary.setAttribute('class', 'back-glossary')
             receiving_node.appendChild(glossary)
@@ -699,8 +698,8 @@ class OPSPLoS(OPSMeta):
         #Check if self.back exists
         if not self.back:
             return
-        for notes in self.getChildrenByTagName('notes', self.back):
-            notes_sec = self.getChildrenByTagName('sec', notes)[0]
+        for notes in self.back.getChildrenByTagName('notes'):
+            notes_sec = notes.getChildrenByTagName('sec')[0]
             notes_sec.tagName = 'div'
             notes_sec.setAttribute('class', 'back-notes')
             receiving_node.appendChild(notes_sec)
@@ -751,17 +750,17 @@ class OPSPLoS(OPSMeta):
             fig_attributes = self.getAllAttributes(fig, remove=False)
             #Determine if there is a <label>, 0 or 1, grab the node
             try:
-                label_node = self.getChildrenByTagName('label', fig)[0]
+                label_node = fig.getChildrenByTagName('label')[0]
             except IndexError:  # No label tag
                 label_node = None
             #Determine if there is a <caption>, grab the node
             try:
-                caption_node = self.getChildrenByTagName('caption', fig)[0]
+                caption_node = fig.getChildrenByTagName('caption')[0]
             except IndexError:
                 caption_node = None
 
             #Get the graphic node in the fig, treat as mandatory
-            graphic_node = self.getChildrenByTagName('graphic', fig)[0]
+            graphic_node = fig.getChildrenByTagName('graphic')[0]
             #Create a file reference for the image
             graphic_xlink_href = graphic_node.getAttribute('xlink:href')
             file_name = graphic_xlink_href.split('.')[-1] + '.png'
@@ -793,12 +792,12 @@ class OPSPLoS(OPSMeta):
                 #The caption element may have <title> 0 or 1, and <p> 0 or more
                 if caption_node:
                     #Detect caption title
-                    caption_title = self.getChildrenByTagName('title', caption_node)
+                    caption_title = caption_node.getChildrenByTagName('title')
                     if caption_title:
                         img_caption_div_b.childNodes += caption_title[0].childNodes
                         self.appendNewText(' ', img_caption_div_b)
                     #Detect <p>s
-                    caption_ps = self.getChildrenByTagName('p', caption_node)
+                    caption_ps = caption_node.getChildrenByTagName('p')
                     for each_p in caption_ps:
                         img_caption_div.childNodes += each_p.childNodes
                 #Now that we have created the img caption div content, insert
@@ -822,7 +821,7 @@ class OPSPLoS(OPSMeta):
             #Determine if there is a <label>, 0 or 1, grab the node
             #label_text is for serialized text for the tabled version
             try:
-                label_node = self.getChildrenByTagName('label', tab)[0]
+                label_node = tab.getChildrenByTagName('label')[0]
             except IndexError:  # No label tag
                 label_node = None
                 label_text = ''
@@ -830,18 +829,18 @@ class OPSPLoS(OPSMeta):
                 label_text = utils.serializeText(label_node, stringlist=[])
             #Determine if there is a <caption>, grab the node
             try:
-                caption_node = self.getChildrenByTagName('caption', tab)[0]
+                caption_node = tab.getChildrenByTagName('caption')[0]
             except IndexError:
                 caption_node = None
 
             #Get the alternatives node, for some articles it will hold the graphic
             #The graphic is mandatory
-            alternatives = self.getChildrenByTagName('alternatives', tab)
+            alternatives = tab.getChildrenByTagName('alternatives')
             if alternatives:  # New articles are this way
-                graphic_node = self.getChildrenByTagName('graphic', alternatives[0])[0]
-                table_node = self.getChildrenByTagName('table', alternatives[0])[0]
+                graphic_node = alternatives[0].getChildrenByTagName('graphic')[0]
+                table_node = alternatives[0].getChildrenByTagName('table')[0]
             else:  # Old articles seem to be this way
-                graphic_node = self.getChildrenByTagName('graphic', tab)[0]
+                graphic_node = tab.getChildrenByTagName('graphic')[0]
                 #TODO: Find some way to properly render out the HTML comments
                 table_node = False
             #Label and move the html table node to the list of html tables
@@ -851,7 +850,7 @@ class OPSPLoS(OPSMeta):
                 table_node.setAttribute('label', label_text)
                 self.html_tables.append(table_node)
                 try:
-                    foot = self.getChildrenByTagName('table-wrap-foot', tab)[0]
+                    foot = tab.getChildrenByTagName('table-wrap-foot')[0]
                 except IndexError:
                     pass
                 else:
@@ -886,12 +885,12 @@ class OPSPLoS(OPSMeta):
                 #The caption element may have <title> 0 or 1, and <p> 0 or more
                 if caption_node:
                     #Detect caption title
-                    caption_title = self.getChildrenByTagName('title', caption_node)
+                    caption_title = caption_node.getChildrenByTagName('title')
                     if caption_title:
                         img_caption_div.childNodes += caption_title[0].childNodes
                         self.appendNewText(' ', img_caption_div)
                     #Detect <p>s
-                    caption_ps = self.getChildrenByTagName('p', caption_node)
+                    caption_ps = caption_node.getChildrenByTagName('p')
                     for each_p in caption_ps:
                         img_caption_div.childNodes += each_p.childNodes
                 #Now that we have created the img caption div content, insert
@@ -935,10 +934,10 @@ class OPSPLoS(OPSMeta):
         """
         depth_tags = ['h2', 'h3', 'h4', 'h5', 'h6']
         #Look for divs
-        for div in self.getChildrenByTagName('div', node):
+        for div in node.getChildrenByTagName('div'):
             #Look for a label
             try:
-                div_label = self.getChildrenByTagName('label', div)[0]
+                div_label = div.getChildrenByTagName('label')[0]
             except IndexError:
                 div_label_text = ''
             else:
@@ -949,7 +948,7 @@ class OPSPLoS(OPSMeta):
                     div.removeChild(div_label)
             #Look for a title
             try:
-                div_title = self.getChildrenByTagName('title', div)[0]
+                div_title = div.getChildrenByTagName('title')[0]
             except IndexError:
                 div_title = None
             else:
@@ -1001,12 +1000,12 @@ class OPSPLoS(OPSMeta):
             disp_attributes = self.getAllAttributes(disp, remove=False)
             #Determine if there is a <label>, 0 or 1, grab_node
             try:
-                label_node = self.getChildrenByTagName('label', disp)[0]
+                label_node = disp.getChildrenByTagName('label')[0]
             except IndexError:  # No label tag
                 label_node = None
 
             #Get the graphic node in the fig, treat as mandatory
-            graphic_node = self.getChildrenByTagName('graphic', disp)[0]
+            graphic_node = disp.getChildrenByTagName('graphic')[0]
             #Create a file reference for the image
             graphic_xlink_href = graphic_node.getAttribute('xlink:href')
             file_name = graphic_xlink_href.split('.')[-1] + '.png'
@@ -1049,7 +1048,7 @@ class OPSPLoS(OPSMeta):
             inline.setAttribute('class', 'inline-formula')
             #Determine if there is an <inline-graphic>
             try:
-                inline_graphic = self.getChildrenByTagName('inline-graphic', inline)[0]
+                inline_graphic = inline.getChildrenByTagName('inline-graphic')[0]
             except IndexError:
                 inline_graphic = None
             else:
@@ -1102,14 +1101,13 @@ class OPSPLoS(OPSMeta):
                     grandparent.removeChild(disp_quote_parent)
                 #The grandparent is now the new parent
                 disp_quote_parent = grandparent
-            paragraph = self.getChildrenByTagName('p', disp_quote)[0]
+            paragraph = disp_quote.getChildrenByTagName('p')[0]
             top_hr = self.doc.createElement('hr')
             bottom_hr = self.doc.createElement('hr')
             for element in [top_hr, paragraph, bottom_hr]:
                 element.setAttribute('class', 'disp-quote')
                 disp_quote_parent.insertBefore(element, disp_quote)
             disp_quote_parent.removeChild(disp_quote)
-            
 
     def convert_boxed_text_elements(self, body):
         """
@@ -1125,8 +1123,8 @@ class OPSPLoS(OPSMeta):
         for boxed_text in body.getElementsByTagName('boxed-text'):
             boxed_text_attrs = self.getAllAttributes(boxed_text, remove=False)
             boxed_text_parent = boxed_text.parentNode
-            sec = self.getChildrenByTagName('sec', boxed_text)[0]
-            title = self.getChildrenByTagName('title', sec)
+            sec = boxed_text.getChildrenByTagName('sec')[0]
+            title = sec.getChildrenByTagName('title')
             top_hr = self.doc.createElement('hr')
             bottom_hr = self.doc.createElement('hr')
             if title:
@@ -1157,7 +1155,7 @@ class OPSPLoS(OPSMeta):
             transfer_id = False
             attributes = self.getAllAttributes(supplementary, remove=False)
             supplementary_parent = supplementary.parentNode
-            labels = self.getChildrenByTagName('label', supplementary)
+            labels = supplementary.getChildrenByTagName('label')
             resource_url = utils.plos_fetch_single_representation(self.doi_frag, attributes['xlink:href'])
             if labels:
                 label = labels[0]
@@ -1168,10 +1166,10 @@ class OPSPLoS(OPSMeta):
                 self.appendNewText('. ', label)
                 transfer_id = True
                 supplementary_parent.insertBefore(label, supplementary)
-            caption = self.getChildrenByTagName('caption', supplementary)
+            caption = supplementary.getChildrenByTagName('caption')
             if caption:
-                titles = self.getChildrenByTagName('title', caption[0])
-                paragraphs = self.getChildrenByTagName('p', caption[0])
+                titles = caption[0].getChildrenByTagName('title')
+                paragraphs = caption[0].getChildrenByTagName('p')
                 if titles:
                     title = titles[0]
                     title.tagName = 'b'
@@ -1202,9 +1200,9 @@ class OPSPLoS(OPSMeta):
         to italicized lines.
         """
         for verse_group in body.getElementsByTagName('verse-group'):
-            label = self.getChildrenByTagName('label', verse_group)
-            title = self.getChildrenByTagName('title', verse_group)
-            subtitle = self.getChildrenByTagName('subtitle', verse_group)
+            label = verse_group.getChildrenByTagName('label')
+            title = verse_group.getChildrenByTagName('title')
+            subtitle = verse_group.getChildrenByTagName('subtitle')
             verse_group.tagName = 'div'
             verse_group.setAttribute('id', 'verse-group')
             if any([label, title, subtitle]):
@@ -1216,7 +1214,7 @@ class OPSPLoS(OPSMeta):
                     new_verse_title.childNodes += title[0].childNodes
                 if subtitle:
                     new_verse_title.childNodes += subtitle[0].childNodes
-            for verse_line in self.getChildrenByTagName('verse-line', verse_group):
+            for verse_line in verse_group.getChildrenByTagName('verse-line'):
                 verse_line.tagName = 'p'
                 verse_line.setAttribute('class', 'verse-line')
 
@@ -1238,7 +1236,7 @@ class OPSPLoS(OPSMeta):
             attributes = self.getAllAttributes(footnote, remove=False)
             footnote_parent = footnote.parentNode
             #Find the footnoteparagraph
-            footnote_paragraphs = self.getChildrenByTagName('p', footnote)
+            footnote_paragraphs = footnote.getChildrenByTagName('p')
             if footnote_paragraphs:  # A footnote paragraph exists
                 #Grab the first, and only, paragraph
                 paragraph = footnote_paragraphs[0]
@@ -1330,7 +1328,7 @@ class OPSPLoS(OPSMeta):
             if 'id' in list_el_attributes:
                 list_el.setAttribute('id', list_el_attributes['id'])
             #Convert the <list-item> element tags to 'li'
-            for list_item in self.getChildrenByTagName('list-item', list_el):
+            for list_item in list_el.getChildrenByTagName('list-item'):
                 list_item.tagName = 'li'
 
     def convert_def_list_elements(self, body):
@@ -1350,18 +1348,18 @@ class OPSPLoS(OPSMeta):
             def_list.setAttribute('class', 'def-list')
             if 'id' in def_list_attributes:
                 def_list.setAttribute('id', def_list_attributes['id'])
-            def_item_list = self.getChildrenByTagName('def-item', def_list)
+            def_item_list = def_list.getChildrenByTagName('def-item')
             for def_item in def_item_list:
-                term = self.getChildrenByTagName('term', def_item)[0]
+                term = def_item.getChildrenByTagName('term')[0]
                 term.tagName = 'p'
                 term.setAttribute('class', 'def-item-term')
                 def_list.insertBefore(term, def_item)
                 try:
-                    definition = self.getChildrenByTagName('def', def_item)[0]
+                    definition = def_item.getChildrenByTagName('def')[0]
                 except IndexError:
                     print('WARNING! Missing definition in def-item!')
                 else:
-                    def_para = self.getChildrenByTagName('p', definition)[0]
+                    def_para = definition.getChildrenByTagName('p')[0]
                     definition.childNodes += def_para.childNodes
                     definition.removeChild(def_para)
                     definition.tagName = 'p'
@@ -1388,12 +1386,12 @@ class OPSPLoS(OPSMeta):
             ref_list.tagName = 'div'
             ref_list.setAttribute('class', 'ref-list')
             try:
-                label = self.getChildrenByTagName('label', ref_list)[0]
+                label = ref_list.getChildrenByTagName('label')[0]
             except IndexError:
                 pass
             else:
                 label.tagName = 'h3'
-            for ref in self.getChildrenByTagName('ref', ref_list):
+            for ref in ref_list.getChildrenByTagName('ref'):
                 ref_text = utils.serializeText(ref, stringlist=[])
                 ref_list_p = self.appendNewElementWithText('p', ref_text, ref_list)
                 ref_list.removeChild(ref)
