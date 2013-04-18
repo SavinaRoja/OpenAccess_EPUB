@@ -62,29 +62,6 @@ class OPSMeta(object):
         with open(name, 'wb') as out:
             out.write(document.toprettyxml(encoding='utf-8'))
 
-    def expungeAttributes(self, element):
-        """
-        This method will remove all attributes of any provided element.
-        """
-        while element.attributes.length:
-            element.removeAttribute(element.attributes.item(0).name)
-
-    def getAllAttributes(self, element, remove=False):
-        """
-        This method will acquire all attributes of the provided element and
-        return a dictionary of the form attributes[name] = value. If remove is
-        set to True, it will delete all the attributes once complete.
-        """
-        attrs = {}
-        i = 0
-        while i < element.attributes.length:
-            attr = element.attributes.item(i)
-            attrs[attr.name] = attr.value
-            i += 1
-        if remove:
-            self.expungeAttributes(element)
-        return attrs
-
     def getSomeAttributes(self, element, names=[], remove=False):
         """
         This method accepts a list of strings corresponding to attribute names.
@@ -240,7 +217,7 @@ class OPSMeta(object):
         """
         #Convert email to a mailto link addressed to the text it contains
         for e in self.getDescendantsByTagName(node, 'email'):
-            self.expungeAttributes(e)
+            e.removeAllAttributes()
             e.tagName = 'a'
             mailto = 'mailto:{0}'.format(utils.nodeText(e))
             e.setAttribute('href', mailto)
@@ -250,7 +227,7 @@ class OPSMeta(object):
             eid = e.getAttribute('id')
             e.tagName = 'a'
             xh = e.getAttribute('xlink:href')
-            self.expungeAttributes(e)
+            e.removeAllAttributes()
             if xh:
                 e.setAttribute('href', xh)
             else:

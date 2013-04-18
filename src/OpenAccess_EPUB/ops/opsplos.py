@@ -371,19 +371,19 @@ class OPSPLoS(OPSMeta):
             for title in abstract.node.getChildrenByTagName('title'):
                 abstract.node.removeChild(title)
             if abstract.type == '':  # If no type is listed -> main abstract
-                self.expungeAttributes(abstract.node)
+                abstract.node.removeAllAttributes()
                 self.appendNewElementWithText('h2', 'Abstract', receiving_node)
                 receiving_node.appendChild(abstract.node)
                 abstract.node.tagName = 'div'
                 abstract.node.setAttribute('id', 'abstract')
             if abstract.type == 'summary':
-                self.expungeAttributes(abstract.node)
+                self.removeAllAttributes(abstract.node)
                 self.appendNewElementWithText('h2', 'Author Summary', receiving_node)
                 receiving_node.appendChild(abstract.node)
                 abstract.node.tagName = 'div'
                 abstract.node.setAttribute('id', 'author-summary')
             if abstract.type == 'editors-summary':
-                self.expungeAttributes(abstract.node)
+                self.removeAllAttributes(abstract.node)
                 self.appendNewElementWithText('h2', 'Editors\' Summary', receiving_node)
                 receiving_node.appendChild(abstract.node)
                 abstract.node.tagName = 'div'
@@ -747,7 +747,7 @@ class OPSPLoS(OPSMeta):
             #self.convert_fn_elements(fig)
             #self.convert_disp_formula_elements(fig)
             #Parse all fig attributes to a dict
-            fig_attributes = self.getAllAttributes(fig, remove=False)
+            fig_attributes = fig.getAllAttributes(remove=False)
             #Determine if there is a <label>, 0 or 1, grab the node
             try:
                 label_node = fig.getChildrenByTagName('label')[0]
@@ -817,7 +817,7 @@ class OPSPLoS(OPSMeta):
         table_wraps = body.getElementsByTagName('table-wrap')
         for tab in table_wraps:
             #Parse all attributes to a dict
-            tab_attributes = self.getAllAttributes(tab, remove=False)
+            tab_attributes = tab.getAllAttributes(remove=False)
             #Determine if there is a <label>, 0 or 1, grab the node
             #label_text is for serialized text for the tabled version
             try:
@@ -984,7 +984,7 @@ class OPSPLoS(OPSMeta):
                    u'app': self.main_frag}
         for x in self.getDescendantsByTagName(node, 'xref'):
             x.tagName = 'a'
-            x_attrs = self.getAllAttributes(x, remove=True)
+            x_attrs = x.getAllAttributes(remove=True)
             ref_type = x_attrs['ref-type']
             rid = x_attrs['rid']
             address = ref_map[ref_type].format(rid)
@@ -997,7 +997,7 @@ class OPSPLoS(OPSMeta):
         disp_formulas = body.getElementsByTagName('disp-formula')
         for disp in disp_formulas:
             #Parse all fig attributes to a dict
-            disp_attributes = self.getAllAttributes(disp, remove=False)
+            disp_attributes = disp.getAllAttributes(remove=False)
             #Determine if there is a <label>, 0 or 1, grab_node
             try:
                 label_node = disp.getChildrenByTagName('label')[0]
@@ -1042,7 +1042,7 @@ class OPSPLoS(OPSMeta):
         """
         for inline in body.getElementsByTagName('inline-formula'):
             #Grab all the attributes of the formula element
-            inline_attributes = self.getAllAttributes(inline, remove=True)
+            inline_attributes = inline.getAllAttributes(remove=True)
             #Convert the inline-formula element to a div and give it a class
             inline.tagName = 'span'
             inline.setAttribute('class', 'inline-formula')
@@ -1055,7 +1055,7 @@ class OPSPLoS(OPSMeta):
                 #Convert the inline-graphic element to an img element
                 inline_graphic.tagName = 'img'
                 #Get all of the attributes, with removal on
-                inline_graphic_attributes = self.getAllAttributes(inline_graphic, remove=True)
+                inline_graphic_attributes = inline_graphic.getAllAttributes(remove=True)
                 #Create a file reference for the image using the xlink:href attribute value
                 graphic_xlink_href = inline_graphic_attributes['xlink:href']
                 file_name = graphic_xlink_href.split('.')[-1] + '.png'
@@ -1078,7 +1078,7 @@ class OPSPLoS(OPSMeta):
         """
         for named_content in body.getElementsByTagName('named-content'):
             named_content.tagName = 'span'
-            attrs = self.getAllAttributes(named_content, remove=True)
+            attrs = named_content.getAllAttributes(remove=True)
             if 'content-type' in attrs:
                 named_content.setAttribute('class', attrs['content-type'])
 
@@ -1121,7 +1121,7 @@ class OPSPLoS(OPSMeta):
         well as processing the title.
         """
         for boxed_text in body.getElementsByTagName('boxed-text'):
-            boxed_text_attrs = self.getAllAttributes(boxed_text, remove=False)
+            boxed_text_attrs = boxed_text.getAllAttributes(remove=False)
             boxed_text_parent = boxed_text.parentNode
             sec = boxed_text.getChildrenByTagName('sec')[0]
             title = sec.getChildrenByTagName('title')
@@ -1153,7 +1153,7 @@ class OPSPLoS(OPSMeta):
         """
         for supplementary in body.getElementsByTagName('supplementary-material'):
             transfer_id = False
-            attributes = self.getAllAttributes(supplementary, remove=False)
+            attributes = supplementary.getAllAttributes(remove=False)
             supplementary_parent = supplementary.parentNode
             labels = supplementary.getChildrenByTagName('label')
             resource_url = utils.plos_fetch_single_representation(self.doi_frag, attributes['xlink:href'])
@@ -1233,7 +1233,7 @@ class OPSPLoS(OPSMeta):
         footnotes = body.getElementsByTagName('fn')
         for footnote in footnotes:
             #Get the attributes
-            attributes = self.getAllAttributes(footnote, remove=False)
+            attributes = footnote.getAllAttributes(remove=False)
             footnote_parent = footnote.parentNode
             #Find the footnoteparagraph
             footnote_paragraphs = footnote.getChildrenByTagName('p')
@@ -1310,7 +1310,7 @@ class OPSPLoS(OPSMeta):
 
         #list_el is used instead of list (list is reserved)
         for list_el in body.getElementsByTagName('list'):
-            list_el_attributes = self.getAllAttributes(list_el, remove=True)
+            list_el_attributes = list_el.getAllAttributes(remove=True)
             list_el_parent = list_el.parentNode
             list_el_type = list_el_attributes['list-type']
             #Unordered list if '', 'bullet', or 'simple'
@@ -1343,7 +1343,7 @@ class OPSPLoS(OPSMeta):
         for the terms and definitions.
         """
         for def_list in body.getElementsByTagName('def-list'):
-            def_list_attributes = self.getAllAttributes(def_list, remove=True)
+            def_list_attributes = def_list.getAllAttributes(remove=True)
             def_list.tagName = 'div'
             def_list.setAttribute('class', 'def-list')
             if 'id' in def_list_attributes:
@@ -1382,7 +1382,7 @@ class OPSPLoS(OPSMeta):
         """
         #TODO: DOES NOT FUNCTION AS INTENDED; make a proper one someday
         for ref_list in body.getElementsByTagName('ref-list'):
-            ref_list_attributes = self.getAllAttributes(ref_list, remove=True)
+            ref_list_attributes = ref_list.getAllAttributes(remove=True)
             ref_list.tagName = 'div'
             ref_list.setAttribute('class', 'ref-list')
             try:

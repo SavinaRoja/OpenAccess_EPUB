@@ -36,3 +36,30 @@ def getChildrenByTagName(self, tagName):
             if tag == tagName:
                 child_list.append(child)
     return child_list
+
+
+def removeAllAttributes(self):
+    """
+    This method will remove all attributes of any provided element.
+    """
+    while self.attributes.length:
+        self.removeAttribute(self.attributes.item(0).name)
+
+
+def getAllAttributes(self, remove=False):
+    """
+    Returns a dictionary of all the attributes for an Element; takes the form
+    of dict[attribute_name]=attribute_value.
+
+    If the optional argument "remove" is set to True, this method will also
+    remove all of the attributes from the element.
+
+    The only object that should receive this method is Element.
+    """
+    attributes = {}
+    keys = self.attributes.keys()
+    for key in keys:
+        attributes[key] = self.getAttribute(key)
+    if remove:
+        self.removeAllAttributes()
+    return attributes
