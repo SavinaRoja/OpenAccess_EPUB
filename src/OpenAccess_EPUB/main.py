@@ -144,14 +144,14 @@ def batch_input(args):
     Unlike the other input modes, Batch Input Mode output is always relative to
     the batch directory rather than the working directory of oaepub execution.
 
-    Batch Input Mode has default epubcheck behavior, it will place a system call
-    to epubcheck unless specified otherwise (--no-epubcheck or -N flags).
+    Batch Input Mode has default epubcheck behavior, it will place a system
+    call to epubcheck unless specified otherwise (--no-epubcheck or -N flags).
     """
     #Iterate over all listed files in the batch directory
     for item in os.listdir(args.batch):
         item_path = os.path.join(args.batch, item)
         #Skip directories and files without .xml extension
-        root, extension = os.path.splitext(item)
+        _root, extension = os.path.splitext(item)
         if not os.path.isfile(item_path):
             continue
         if not extension == '.xml':
