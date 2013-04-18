@@ -67,6 +67,39 @@ def getAllAttributes(self, remove=False):
     return attributes
 
 
+def elevateNode(self, adopt=''):
+        """
+        This method serves a specialized function. It will effectively elevate
+        the level of a node by inserting it at the same level as its parent,
+        immediately after the parent in the tree.
+        
+        
+        There are some cases where a little surgery must take place in the
+        manipulation of an XML document to produce valid ePub. This method
+        covers the case where a node must be placed at the same level of its
+        parent. All siblings that come after this node will be removed from
+        the parent node as well, they will be added as children to a new parent
+        node that will be of the same type as the first. For example:
+        <p>Monty Python's <flying>Circus</flying> is <b>great</b>!</p>
+        would be converted by elevateNode(flying_node) to:
+        <p>Monty Python's </p><flying>Circus</flying><p> is <b>great</b>!</p>
+        Take care when using this method and make sure it does what you want.
+        """
+        #These must be collected before modifying the xml
+        parent = node.parentNode
+        parent_sibling = parent.nextSibling
+        grandparent = parent.parentNode
+        node_index = parent.childNodes.index(node)
+        #Now we make modifications
+        grandparent.insertBefore(node, parent_sibling)
+        if not adopt:
+            adopt = parent.tagName
+        adopt_element = self.doc.createElement(adopt)
+        grandparent.insertBefore(adopt_element, parent_sibling)
+        for child in parent.childNodes[node_index + 1:]:
+            adopt_element.appendChild(child)
+
+
 def removeSelf(self):
     """
     Removes the node from its parent. This is a convenience method which
@@ -76,7 +109,6 @@ def removeSelf(self):
     """
     parent = self.parentNode
     parent.removeChild(self)
-
 
 
 def replaceSelfWith(self, newChild):

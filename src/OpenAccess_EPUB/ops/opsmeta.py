@@ -108,33 +108,6 @@ class OPSMeta(object):
                 element.removeAttribute(ori)
                 element.setAttribute(new, val)
 
-    def elevateNode(self, node, adopt=''):
-        """
-        There are some cases where a little surgery must take place in the
-        manipulation of an XML document to produce valid ePub. This method
-        covers the case where a node must be placed at the same level of its
-        parent. All siblings that come after this node will be removed from
-        the parent node as well, they will be added as children to a new parent
-        node that will be of the same type as the first. For example:
-        <p>Monty Python's <flying>Circus</flying> is <b>great</b>!</p>
-        would be converted by elevateNode(flying_node) to:
-        <p>Monty Python's </p><flying>Circus</flying><p> is <b>great</b>!</p>
-        Take care when using this method and make sure it does what you want.
-        """
-        #These must be collected before modifying the xml
-        parent = node.parentNode
-        parent_sibling = parent.nextSibling
-        grandparent = parent.parentNode
-        node_index = parent.childNodes.index(node)
-        #Now we make modifications
-        grandparent.insertBefore(node, parent_sibling)
-        if not adopt:
-            adopt = parent.tagName
-        adopt_element = self.doc.createElement(adopt)
-        grandparent.insertBefore(adopt_element, parent_sibling)
-        for child in parent.childNodes[node_index + 1:]:
-            adopt_element.appendChild(child)
-
     def appendNewElement(self, newelement, parent):
         """
         A common idiom is to create an element and then immediately append it
