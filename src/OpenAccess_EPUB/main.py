@@ -177,16 +177,23 @@ def batch_input(args):
         #if args.no_epubcheck:
             #epubcheck('{0}.epub'.format(output_name))
 
+
 def collection_input(args):
     """
-    
+    Collection Input Mode is intended for the combination of multiple articles
+    into a single ePub file. This may be useful for producing "Volumes", custom
+    reading lists for classroom use, and compendia on common subjects.
+
+    There is a lot of potential for how this might be used, development will
+    proceed in the direction of interest.
     """
     pass
 
 
 def zipped_input(args):
     """
-    
+    Zipped Input Mode is primarily intended as a workflow for Frontiers
+    articles, where the article xml and relevant images are zipped together.
     """
     pass
 
