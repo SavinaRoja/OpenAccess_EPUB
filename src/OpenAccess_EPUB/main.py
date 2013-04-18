@@ -215,6 +215,9 @@ def make_epub(document, outdirect, images, batch):
             dir_exists(outdirect)
     shutil.copytree(BASE_EPUB, outdirect)
 
+    if document.metadata.dtdVersion() == '2.0':
+        return
+
     #Get the Digital Object Identifier
     DOI = document.getDOI()
 
