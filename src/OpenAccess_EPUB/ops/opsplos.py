@@ -10,16 +10,6 @@ import logging
 
 log = logging.getLogger('OPSPLoS')
 
-class InputError(Exception):
-    """
-    This is a custom exception for unexpected input from a publisher.
-    """
-    def __init__(self, detail):
-        self.detail = detail
-
-    def __str__(self):
-        return self.detail
-
 
 class OPSPLoS(OPSMeta):
     """
@@ -807,7 +797,7 @@ class OPSPLoS(OPSMeta):
             fig_parent.insertBefore(self.doc.createElement('hr'), fig)
 
             #Remove the original <fig>
-            fig_parent.removeChild(fig)
+            fig.removeSelf()
 
     def convert_table_wrap_elements(self, body):
         """
@@ -1031,7 +1021,7 @@ class OPSPLoS(OPSMeta):
                 label_node.tagName = 'b'
 
             #Remove the old disp-formula element
-            disp_parent.removeChild(disp)
+            disp.removeSelf()
 
     def convert_inline_formula_elements(self, body):
         """
@@ -1235,7 +1225,7 @@ class OPSPLoS(OPSMeta):
             #Get the attributes
             attributes = footnote.getAllAttributes(remove=False)
             footnote_parent = footnote.parentNode
-            #Find the footnoteparagraph
+            #Find the footnote paragraph
             footnote_paragraphs = footnote.getChildrenByTagName('p')
             if footnote_paragraphs:  # A footnote paragraph exists
                 #Grab the first, and only, paragraph
@@ -1248,7 +1238,7 @@ class OPSPLoS(OPSMeta):
                     corrected_erratum = True
                 #Now remove the footnote if it is a corrected erratum
                 if corrected_erratum:
-                    footnote_parent.removeChild(footnote)
+                    footnote.removeSelf()
                     continue  # Move on to the next footnote
 
                 #Process the footnote paragraph if it is not a corrected erratum
@@ -1259,11 +1249,10 @@ class OPSPLoS(OPSMeta):
                     paragraph.setAttribute('class', paragraph_class)
                 else:
                     paragraph.setAttribute('class', 'fn')
-                footnote_parent.insertBefore(paragraph, footnote)
-                footnote_parent.removeChild(footnote)
+                footnote.replaceSelfWith(paragraph)
 
             else:  # A footnote paragraph does not exist
-                footnote_parent.removeChild(footnote)
+                footnote.removeSelf()
 
     def convert_list_elements(self, body):
         """

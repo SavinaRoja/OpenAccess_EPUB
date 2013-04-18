@@ -108,17 +108,6 @@ class OPSMeta(object):
                 element.removeAttribute(ori)
                 element.setAttribute(new, val)
 
-    def removeNode(self, node, unlink=False):
-        """
-        This method will remove the specified node from its parentNode. If
-        it will no longer be needed, specify unlink=True to call its unlink()
-        method. This will clear memory faster.
-        """
-        parent = node.parentNode
-        parent.removeChild(node)
-        if unlink:
-            node.unlink()
-
     def elevateNode(self, node, adopt=''):
         """
         There are some cases where a little surgery must take place in the

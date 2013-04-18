@@ -41,6 +41,8 @@ def getChildrenByTagName(self, tagName):
 def removeAllAttributes(self):
     """
     This method will remove all attributes of any provided element.
+
+    The only object that should receive this method is Element.
     """
     while self.attributes.length:
         self.removeAttribute(self.attributes.item(0).name)
@@ -63,3 +65,27 @@ def getAllAttributes(self, remove=False):
     if remove:
         self.removeAllAttributes()
     return attributes
+
+
+def removeSelf(self):
+    """
+    Removes the node from its parent. This is a convenience method which
+    accesses the node's parentNode, then calls parent.removeChild() on itself.
+
+    The Node Object should receive this method.
+    """
+    parent = self.parentNode
+    parent.removeChild(self)
+
+
+
+def replaceSelfWith(self, newChild):
+    """
+    Replace an existing node with a new node. This is a convenience method
+    which accesses the node's parentNode, then calls parent.replaceChild()
+    on the node with the newChild.
+
+    The Node Object should receive this method.
+    """
+    parent = self.parentNode
+    parent.replaceChild(newChild, self)
