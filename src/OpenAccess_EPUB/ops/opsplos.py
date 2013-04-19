@@ -731,7 +731,7 @@ class OPSPLoS(OPSMeta):
         """
         for fig in body.getElementsByTagName('fig'):
             if fig.parentNode.tagName == 'p':
-                self.elevateNode(fig)
+                fig.elevateNode()
         figs = body.getElementsByTagName('fig')
         for fig in figs:
             #self.convert_fn_elements(fig)
@@ -1086,7 +1086,7 @@ class OPSPLoS(OPSMeta):
             disp_quote_parent = disp_quote.parentNode
             if disp_quote_parent.tagName == 'p':
                 grandparent = disp_quote_parent.parentNode
-                self.elevateNode(disp_quote)
+                disp_quote.elevateNode()
                 if not disp_quote_parent.childNodes:
                     grandparent.removeChild(disp_quote_parent)
                 #The grandparent is now the new parent
@@ -1295,7 +1295,7 @@ class OPSPLoS(OPSMeta):
 
         for list_el in body.getElementsByTagName('list'):
             if list_el.parentNode.tagName == 'p':
-                self.elevateNode(list_el)
+                list_el.elevateNode()
 
         #list_el is used instead of list (list is reserved)
         for list_el in body.getElementsByTagName('list'):

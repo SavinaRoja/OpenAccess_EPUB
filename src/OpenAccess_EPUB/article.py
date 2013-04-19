@@ -13,6 +13,7 @@ log = logging.getLogger('Article')
 #Monkey patching in some extended methods for xml.dom.minidom classes
 minidom.Node.removeSelf = utils.element_methods.removeSelf
 minidom.Node.replaceSelfWith = utils.element_methods.replaceSelfWith
+minidom.Node.elevateNode = utils.element_methods.elevateNode
 minidom.Element.getChildrenByTagName = utils.element_methods.getChildrenByTagName
 minidom.Element.removeAllAttributes = utils.element_methods.removeAllAttributes
 minidom.Element.getAllAttributes = utils.element_methods.getAllAttributes
