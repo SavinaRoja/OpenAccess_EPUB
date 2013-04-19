@@ -77,7 +77,7 @@ def elevateNode(self, adoptName=''):
         this new parent node will be the same as the original parent, but it
         may be altered using the adoptName optional argument, string input will
         supply the new tagName.
-        
+
         The Node object should receive this method.
         """
         #These must be collected before modifying the xml

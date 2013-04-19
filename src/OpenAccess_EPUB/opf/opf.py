@@ -185,7 +185,7 @@ class FrontiersOPF(MetaOPF):
         #Note that the file-as name is: Surname, G(iven Initial)
         for contrib in ameta.contrib:
             if contrib.attrs['contrib-type'] == 'author':
-                name = contrib.getName()[0]  # Work with only first name listed
+                name = contrib.name[0]  # Work with only first name listed
                 surname = name.surname
                 given = name.given
                 try:
@@ -294,9 +294,7 @@ class PLoSOPF(MetaOPF):
         #Note that the file-as name is: Surname, G(iven Initial)
         for contrib in ameta.contrib:
             if contrib.attrs['contrib-type'] == 'author':
-                if contrib.collab:
-                    auth = utils.serializeText(contrib.collab[0])
-                    file_as = auth
+                
                 elif contrib.anonymous:
                     auth = 'Anonymous'
                     file_as = auth
@@ -318,18 +316,19 @@ class PLoSOPF(MetaOPF):
         #Make the dc:contributor elements for editors
         for contrib in ameta.contrib:
             if contrib.attrs['contrib-type'] == 'editor':
-                name = contrib.getName()[0]
-                try:
-                    given_initial = name.given[0]
-                except TypeError:
-                    editor_name = name.surname
-                    file_name = name.surname
-                #except IndexError:
-                #    editor_name = name.surname
-                #    file_name = name.surname
+                if contrib.collab:
+                    editor_name = utils.serializeText(contrib.collab[0])
+                    file_as = editor_name
                 else:
-                    editor_name = name.given + ' ' + name.surname
-                    file_name = name.surname + ', ' + given_initial
+                    name = contrib.getName()[0]
+                    try:
+                        given_initial = name.given[0]
+                    except TypeError:
+                        editor_name = name.surname
+                        file_name = name.surname
+                    else:
+                        editor_name = name.given + ' ' + name.surname
+                        file_name = name.surname + ', ' + given_initial
                 dc_contrib = dc.contributor(editor_name, self.doc, file_as=file_name, role='edt')
                 self.metadata.appendChild(dc_contrib)
 
