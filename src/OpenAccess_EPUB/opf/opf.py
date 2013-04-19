@@ -294,7 +294,9 @@ class PLoSOPF(MetaOPF):
         #Note that the file-as name is: Surname, G(iven Initial)
         for contrib in ameta.contrib:
             if contrib.attrs['contrib-type'] == 'author':
-                
+                if contrib.collab:
+                    auth = utils.serializeText(contrib.collab[0])
+                    file_as = auth
                 elif contrib.anonymous:
                     auth = 'Anonymous'
                     file_as = auth
