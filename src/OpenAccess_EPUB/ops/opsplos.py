@@ -1387,6 +1387,28 @@ class OPSPLoS(OPSMeta):
                 ref_list_p = self.appendNewElementWithText('p', ref_text, ref_list)
                 ref_list.removeChild(ref)
 
+    def convert_graphic_elements(self, body):
+        """
+        This is a method for the odd special cases where <graphic> elements are
+        standalone, or rather, not a part of a standard graphical element such
+        as a figure or a table. This method should always be employed after the
+        standard cases have already been handled.
+        """
+        #Pull the graphic out of a paragraph if it is in one
+        for graphic in body.getElementsByTagName('graphic'):
+            if graphic.parentNode.tagName == 'p':
+                graphic.elevateNode()
+        graphics = body.getElementsByTagName('graphic')
+        for graphic in graphics:
+            graphic_attributes = graphic.getAllAttributes(remove=True)
+            graphic.tagName = 'img'
+            if 'xlink:href' in graphic_attributes:
+                xlink_href = graphic_attributes['xlink:href']
+                file_name = graphic_xlink_href.split('.')[-1] + '.png'
+                img_dir = 'images-' + self.doi_frag
+                img_path = '/'.join([img_dir, file_name])
+                graphic.setAttribute('src', img_path)
+
     def announce(self):
         """
         Announces the class initiation
