@@ -54,7 +54,7 @@ class Article(object):
         try:
             self.dtd = dtds[doc.doctype.publicId]
             dtdStatus = 'Article published with Journal Publishing DTD v{0}'
-            print(dtdStatus.format(self.dtd))
+            log.debug(dtdStatus.format(self.dtd))
         except KeyError:
             print('The article\'s DOCTYPE declares an unsupported Journal \
 Publishing DTD: \n{0}'.format(doc.doctype.publicId))
