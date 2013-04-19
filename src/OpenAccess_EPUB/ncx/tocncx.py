@@ -172,6 +172,8 @@ those conforming to the relaxed constraints of OPS 2.0'''))
                         nav = self.doc.createElement('navTarget')
                         self.lof.appendChild(nav)
                     elif tagname == u'table-wrap':
+                        if not child.getChildrenByTagName('alternatives') and not child.getChildrenByTagName('graphic'):
+                            continue
                         nav = self.doc.createElement('navTarget')
                         self.lot.appendChild(nav)
                     mid = child.getAttribute('id')

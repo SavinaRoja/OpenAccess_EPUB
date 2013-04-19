@@ -156,6 +156,7 @@ def batch_input(args):
             continue
         if not extension == '.xml':
             continue
+        print(item_path)
 
         #Parse the article
         parsed_article, raw_name = utils.input.local_input(item_path)

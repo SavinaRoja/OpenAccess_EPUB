@@ -60,7 +60,7 @@ DEFAULT_CSS = LOCAL_DIR
 CACHE_CSS = os.path.join(CACHE_LOCATION, 'css')
 
 #Where to find the system's epubcheck.jar file
-EPUBCHECK = '/home/rulelab/pablo/epubcheck/epubcheck-3.0b3.jar'
+EPUBCHECK = '/home/pablo/Downloads/epubcheck-3.0/epubcheck-3.0.jar'
 
 LOG.debug('Cache Location: {0}'.format(CACHE_LOCATION))
 LOG.debug('Local Directory: {0}'.format(LOCAL_DIR))

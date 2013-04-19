@@ -831,15 +831,19 @@ class OPSPLoS(OPSMeta):
                 caption_node = None
 
             #Get the alternatives node, for some articles it will hold the graphic
-            #The graphic is mandatory
             alternatives = tab.getChildrenByTagName('alternatives')
             if alternatives:  # New articles are this way
                 graphic_node = alternatives[0].getChildrenByTagName('graphic')[0]
                 table_node = alternatives[0].getChildrenByTagName('table')[0]
-            else:  # Old articles seem to be this way
-                graphic_node = tab.getChildrenByTagName('graphic')[0]
+            elif tab.getChildrenByTagName('graphic'): # Old articles seem to be this way
                 #TODO: Find some way to properly render out the HTML comments
+                graphic_node = tab.getChildrenByTagName('graphic')[0]
                 table_node = False
+            else:  # Article with neither graphic nor alternative, must have table
+                table = tab.getChildrenByTagName('table')[0]
+                tab.replaceSelfWith(table)
+                continue
+                
             #Label and move the html table node to the list of html tables
             if table_node:
                 if 'id' in tab_attributes:
