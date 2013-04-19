@@ -407,7 +407,7 @@ class OPSPLoS(OPSMeta):
                 first = False
             else:
                 self.appendNewText('; ', editors_div)
-            #TODO: Handle editors as collab, journal.pgen.0020030
+
             if editor.anonymous:
                 self.appendNewText('Anonymous', editors_div)
             elif editor.collab:
