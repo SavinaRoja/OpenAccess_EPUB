@@ -306,7 +306,7 @@ class PLoSOPF(MetaOPF):
                     given = name.given
                     try:
                         gi = given[0]
-                    except IndexError:
+                    except (IndexError, TypeError):
                         auth = surname
                         file_as = surname
                     else:

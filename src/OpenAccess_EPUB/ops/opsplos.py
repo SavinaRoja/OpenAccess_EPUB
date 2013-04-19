@@ -298,7 +298,10 @@ class OPSPLoS(OPSMeta):
                 #Assume only one collab
                 author_element.childNodes += author.collab[0].childNodes
             elif not author.anonymous:
-                name = author.name[0].given + ' ' + author.name[0].surname
+                if author.name[0].given:
+                    name = author.name[0].given + ' ' + author.name[0].surname
+                else:
+                    name = author.name[0].surname
                 self.appendNewText(name, author_element)
             else:
                 name = 'Anonymous'
