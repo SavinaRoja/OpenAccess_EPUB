@@ -978,11 +978,15 @@ class OPSPLoS(OPSMeta):
                    u'other': self.main_frag,
                    u'disp-formula': self.main_frag,
                    u'fn': self.main_frag,
-                   u'app': self.main_frag}
+                   u'app': self.main_frag,
+                   u'': self.main_frag}
         for x in self.getDescendantsByTagName(node, 'xref'):
             x.tagName = 'a'
             x_attrs = x.getAllAttributes(remove=True)
-            ref_type = x_attrs['ref-type']
+            if 'ref-type' in x_attrs:
+                ref_type = x_attrs['ref-type']
+            else:
+                ref_type = u''
             rid = x_attrs['rid']
             address = ref_map[ref_type].format(rid)
             x.setAttribute('href', address)
