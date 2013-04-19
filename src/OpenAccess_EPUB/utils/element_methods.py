@@ -84,7 +84,7 @@ def elevateNode(self, adoptName=''):
         parent = self.parentNode
         parent_sibling = parent.nextSibling
         grandparent = parent.parentNode
-        node_index = parent.childNodes.index(node)
+        node_index = parent.childNodes.index(self)
         #Now we make modifications
         grandparent.insertBefore(self, parent_sibling)
         if not adoptName:
