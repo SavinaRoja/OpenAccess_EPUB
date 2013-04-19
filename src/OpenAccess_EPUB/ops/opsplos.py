@@ -91,6 +91,8 @@ class OPSPLoS(OPSMeta):
         self.convert_fig_elements(body)
         self.convert_table_wrap_elements(body)
 
+        self.convert_graphic_elements(body)
+
         #TODO: Back matter stuffs
 
         #These come last for a reason
@@ -1394,17 +1396,14 @@ class OPSPLoS(OPSMeta):
         as a figure or a table. This method should always be employed after the
         standard cases have already been handled.
         """
-        #Pull the graphic out of a paragraph if it is in one
-        for graphic in body.getElementsByTagName('graphic'):
-            if graphic.parentNode.tagName == 'p':
-                graphic.elevateNode()
         graphics = body.getElementsByTagName('graphic')
         for graphic in graphics:
             graphic_attributes = graphic.getAllAttributes(remove=True)
             graphic.tagName = 'img'
+            graphic.setAttribute('alt', 'unowned-graphic')
             if 'xlink:href' in graphic_attributes:
                 xlink_href = graphic_attributes['xlink:href']
-                file_name = graphic_xlink_href.split('.')[-1] + '.png'
+                file_name = xlink_href.split('.')[-1] + '.png'
                 img_dir = 'images-' + self.doi_frag
                 img_path = '/'.join([img_dir, file_name])
                 graphic.setAttribute('src', img_path)
