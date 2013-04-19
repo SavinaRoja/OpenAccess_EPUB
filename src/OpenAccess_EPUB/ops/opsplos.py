@@ -367,13 +367,13 @@ class OPSPLoS(OPSMeta):
                 abstract.node.tagName = 'div'
                 abstract.node.setAttribute('id', 'abstract')
             if abstract.type == 'summary':
-                self.removeAllAttributes(abstract.node)
+                abstract.node.removeAllAttributes()
                 self.appendNewElementWithText('h2', 'Author Summary', receiving_node)
                 receiving_node.appendChild(abstract.node)
                 abstract.node.tagName = 'div'
                 abstract.node.setAttribute('id', 'author-summary')
             if abstract.type == 'editors-summary':
-                self.removeAllAttributes(abstract.node)
+                abstract.node.removeAllAttributes()
                 self.appendNewElementWithText('h2', 'Editors\' Summary', receiving_node)
                 receiving_node.appendChild(abstract.node)
                 abstract.node.tagName = 'div'
