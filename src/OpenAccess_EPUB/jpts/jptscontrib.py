@@ -10,6 +10,8 @@ import logging
 log = logging.getLogger('jptscontrib')
 
 
+#TODO: I've got to come through and clean some of this stuff up
+
 class ContribGroup(object):
     """
     <contrib-group> is an optional, zero or more, element used to group
@@ -54,24 +56,6 @@ class ContribGroup(object):
         self.role = self.getRole()
         self.xref = self.getXref()
 
-    def getChildrenByTagName(self, searchterm):
-        """
-        Many of the elements that may exist under <contrib-node> can also
-        be found under <contrib>. Only those that are direct descendants of a
-        node should be considered, so this method is to be used in place of
-        getElementsByTagName() which looks beyond immediate children.
-        """
-        nodelist = []
-        for c in self.Node.childNodes:
-            try:
-                tag = c.tagName
-            except AttributeError:  # Text nodes have no tagName
-                pass
-            else:
-                if tag == searchterm:
-                    nodelist.append(c)
-        return nodelist
-
     def getContrib(self):
         return self.Node.getElementsByTagName('contrib')
 
@@ -86,7 +70,7 @@ class ContribGroup(object):
         elements. This method returns a list of address elements directly
         below the parent node.
         """
-        return self.getChildrenByTagName('address')
+        return self.Node.getChildrenByTagName('address')
 
     def getAff(self):
         """
@@ -97,7 +81,7 @@ class ContribGroup(object):
         It has diverse content specifications and implementation is likely to
         vary widely between publishers.
         """
-        affs = self.getChildrenByTagName('aff')
+        affs = self.Node.getChildrenByTagName('aff')
         at = collections.namedtuple('Aff', 'Node, id, rid, content_type')
         afflist = []
         for aff in affs:
@@ -112,49 +96,49 @@ class ContribGroup(object):
         <author-comment> is an optional tag, 0 or more, that may contain a
         <title> element and 1 or more <p> elements.
         """
-        return self.getChildrenByTagName('author-comment')
+        return self.Node.getChildrenByTagName('author-comment')
 
     def getBio(self):
         """
         <bio> is an optional tag, 0 or more, that may contain a <title>
         element and 1 or more <p> elements.
         """
-        return self.getChildrenByTagName('bio')
+        return self.Node.getChildrenByTagName('bio')
 
     def getEmail(self):
         """
         <email> is an optional tag, 0 or more. It contains only text, numbers,
         and special characters.
         """
-        return self.getChildrenByTagName('email')
+        return self.Node.getChildrenByTagName('email')
 
     def getExtLink(self):
         """
         <ext-link> is an optional tag, 0 or more. It contains text and emphasis
         elements.
         """
-        return self.getChildrenByTagName('ext-link')
+        return self.Node.getChildrenByTagName('ext-link')
 
     def getUri(self):
         """
         <uri> is an optional tag, 0 or more. It contains only text, numbers,
         and special characters.
         """
-        return self.getChildrenByTagName('uri')
+        return self.Node.getChildrenByTagName('uri')
 
     def getOnBehalfOf(self):
         """
         <on-behalf-of> is an optional tag, 0 or more. It contains text and
         emphasis elements.
         """
-        return self.getChildrenByTagName('on-behalf-of')
+        return self.Node.getChildrenByTagName('on-behalf-of')
 
     def getRole(self):
         """
         <role> is an optional tag, 0 or more. It contains text and emphasis
         elements.
         """
-        return self.getChildrenByTagName('role')
+        return self.Node.getChildrenByTagName('role')
 
     def getXref(self):
         """
@@ -164,7 +148,7 @@ class ContribGroup(object):
         """
         xref = collections.namedtuple('Xref', 'node, id, rid, ref_type')
         xreflist = []
-        for x in self.getChildrenByTagName('xref'):
+        for x in self.Node.getChildrenByTagName('xref'):
             xid = x.getAttribute('id')
             rid = x.getAttribute('rid')
             rt = x.getAttribute('ref-type')
@@ -227,7 +211,7 @@ class Contrib(ContribGroup):
         but the JPTS does not restrict its value. For this reason, it will be
         collected as a NodeList. It does not exist in v2.0.
         """
-        return self.getChildrenByTagName('anonymous')
+        return self.Node.getChildrenByTagName('anonymous')
 
     def getCollab(self):
         """
@@ -237,7 +221,7 @@ class Contrib(ContribGroup):
         group entity is to be identified as the author, such as a corporation
         or academic institution.
         """
-        return self.getChildrenByTagName('collab')
+        return self.Node.getChildrenByTagName('collab')
 
     def getName(self):
         """
@@ -252,7 +236,7 @@ class Contrib(ContribGroup):
         """
         namelist = []
         name = collections.namedtuple('Name', 'Node, surname, given, prefix, suffix, name_style, content_type')
-        for n in self.getChildrenByTagName('name'):
+        for n in self.Node.getChildrenByTagName('name'):
             surname = utils.nodeText(n.getElementsByTagName('surname')[0])
             try:
                 given = utils.nodeText(n.getElementsByTagName('given-names')[0])
@@ -281,7 +265,7 @@ class Contrib(ContribGroup):
         <degrees>PhD</degrees><degrees>MD</degrees>.
         """
         degreeslist = []
-        for degrees in self.getChildrenByTagName('degrees'):
+        for degrees in self.Node.getChildrenByTagName('degrees'):
             degreeslist.append(utils.nodeText(degrees))
 
     def getContrib(self):

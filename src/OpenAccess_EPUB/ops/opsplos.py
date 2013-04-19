@@ -408,13 +408,15 @@ class OPSPLoS(OPSMeta):
             else:
                 self.appendNewText('; ', editors_div)
             #TODO: Handle editors as collab, journal.pgen.0020030
-            if not editor.anonymous:
+            if editor.anonymous:
+                self.appendNewText('Anonymous', editors_div)
+            elif editor.collab:
+                editors_div.childNodes += editor.collab[0].childNodes
+            else:
                 name = editor.name[0].surname
                 if editor.name[0].given:
                     name = editor.name[0].given + ' ' + name
-            else:
-                name = 'Anonymous'
-            self.appendNewText(name, editors_div)
+                self.appendNewText(name, editors_div)
             #Add some text for the editor affiliations
             for xref in editor.xref:
                 if xref.ref_type == 'aff':
