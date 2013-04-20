@@ -15,6 +15,7 @@ import sys
 import os.path
 import shutil
 import logging
+import traceback
 
 #OpenAccess_EPUB Modules
 import utils.input
@@ -147,6 +148,8 @@ def batch_input(args):
     Batch Input Mode has default epubcheck behavior, it will place a system
     call to epubcheck unless specified otherwise (--no-epubcheck or -N flags).
     """
+    
+    error_file = open('batch_tracebacks.txt', 'w')
     #Iterate over all listed files in the batch directory
     for item in os.listdir(args.batch):
         item_path = os.path.join(args.batch, item)
@@ -159,16 +162,22 @@ def batch_input(args):
         print(item_path)
 
         #Parse the article
-        parsed_article, raw_name = utils.input.local_input(item_path)
+        try:
+            parsed_article, raw_name = utils.input.local_input(item_path)
+        except:
+            traceback.print_exc(file=error_file)
 
         #Create the output name
         output_name = os.path.join(args.batch, raw_name)
 
         #Make the EPUB
-        make_epub(parsed_article,
-                  output_name,
-                  None,  # Does not use custom image path
-                  batch=True)
+        try:
+            make_epub(parsed_article,
+                      output_name,
+                      None,  # Does not use custom image path
+                      batch=True)
+        except:
+            traceback.print_exc(file=error_file)
 
         #Cleanup output directory, keeps EPUB and log
         shutil.rmtree(output_name)
@@ -177,7 +186,7 @@ def batch_input(args):
         #requires a local installation of java and epubcheck.
         #if args.no_epubcheck:
             #epubcheck('{0}.epub'.format(output_name))
-
+    error_file.close()
 
 def collection_input(args):
     """
