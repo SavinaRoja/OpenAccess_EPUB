@@ -212,7 +212,6 @@ class ParallelBatchProcess(multiprocessing.Process):
                 print('{0} Exiting'.format(proc_name))
                 self.task_queue.task_done()
                 break
-            print('{0}: {1}'.format(proc_name, next_task))
             #Normal Batch Stuff
             #Parse the article
             try:
@@ -251,7 +250,7 @@ def parallel_batch_input(args):
     tasks = multiprocessing.JoinableQueue()
 
     #Start the processes
-    num_processes = multiprocessing.cpu_count()
+    num_processes = multiprocessing.cpu_count() * 2
     print('Starting {0} processes'.format(num_processes))
     processes = [ParallelBatchProcess(tasks, error_file, args)
                  for i in xrange(num_processes)]
