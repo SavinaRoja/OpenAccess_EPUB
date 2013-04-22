@@ -18,6 +18,9 @@ def main():
     elif args.batch:
         logname = utils.getFileRoot(args.batch) + '.log'
         logpath = os.path.join(args.batch, logname)
+    elif args.parallel_batch:
+        logname = utils.getFileRoot(args.parallel_batch) + '.log'
+        logpath = os.path.join(args.parallel_batch, logname)
     elif args.zip:
         logname = utils.getFileRoot(args.zip) + '.log'
         logpath = os.path.join(args.output, logname)

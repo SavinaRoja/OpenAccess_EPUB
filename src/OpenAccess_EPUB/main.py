@@ -16,6 +16,7 @@ import os.path
 import shutil
 import logging
 import traceback
+import multiprocessing
 
 #OpenAccess_EPUB Modules
 import utils.input
@@ -68,6 +69,9 @@ def OAEParser():
     modes.add_argument('-b', '--batch', action='store', default=False,
                        help='''Use to specify a batch directory; each
                                article inside will be processed.''')
+    modes.add_argument('-p', '--parallel-batch', action='store', default=False,
+                       help='''Use to specify a batch directory for parallel
+                               processing.''')
     #modes.add_argument('-C', '--collection', action='store', default=False,
     #                   help='''Use to create an ePub file containing \
     #                           multiple resources.''')
@@ -188,6 +192,91 @@ def batch_input(args):
             #epubcheck('{0}.epub'.format(output_name))
     error_file.close()
 
+
+class ParallelBatchProcess(multiprocessing.Process):
+    """
+    
+    """
+    def __init__(self, task_queue, error_file, args):
+        multiprocessing.Process.__init__(self)
+        self.task_queue = task_queue
+        self.error_file = error_file
+        self.args = args
+        #self.result_queue = result_queue
+
+    def run(self):
+        proc_name = self.name
+        while True:
+            next_task = self.task_queue.get()
+            if next_task is None:  # Poison Pill shutdown method
+                print('{0} Exiting'.format(proc_name))
+                self.task_queue.task_done()
+                break
+            print('{0}: {1}'.format(proc_name, next_task))
+            #Normal Batch Stuff
+            #Parse the article
+            try:
+                parsed_article, raw_name = utils.input.local_input(next_task)
+            except:
+                traceback.print_exc(file=self.error_file)
+            #Create the output name
+            output_name = os.path.join(self.args.parallel_batch, raw_name)
+            #Make the EPUB
+            try:
+                make_epub(parsed_article,
+                          output_name,
+                          None,  # Does not use custom image path
+                          batch=True)
+            except:
+                traceback.print_exc(file=self.error_file)
+            #Cleanup output directory, keeps EPUB and log
+            shutil.rmtree(output_name)
+            #Running epubcheck on the output verifies the validity of the ePub,
+            #requires a local installation of java and epubcheck.
+            #if self.args.no_epubcheck:
+                #epubcheck('{0}.epub'.format(output_name))
+            #Report completed task to the JoinableQueue
+            self.task_queue.task_done()
+        return
+
+
+def parallel_batch_input(args):
+    """
+    This is a version of the Batch Input Mode that is designed to operate with
+    parallel processes to take advantage of CPUs with multiple cores. It
+    defaults to spawning as many processes as there are cores.
+    """
+    error_file = open('batch_tracebacks.txt', 'w')
+    # Establish communication queue
+    tasks = multiprocessing.JoinableQueue()
+
+    #Start the processes
+    num_processes = multiprocessing.cpu_count()
+    print('Starting {0} processes'.format(num_processes))
+    processes = [ParallelBatchProcess(tasks, error_file, args)
+                 for i in xrange(num_processes)]
+    for process in processes:
+        process.start()
+
+    #Enqueue the tasks
+    for item in os.listdir(args.parallel_batch):
+        item_path = os.path.join(args.parallel_batch, item)
+        #Skip directories and files without .xml extension
+        _root, extension = os.path.splitext(item)
+        if not os.path.isfile(item_path):
+            continue
+        if not extension == '.xml':
+            continue
+        tasks.put(item)
+
+    # Add a poison pill for each process
+    for i in xrange(num_processes):
+        tasks.put(None)
+
+    # Wait for all of the tasks to finish
+    tasks.join()
+    error_file.close()
+
 def collection_input(args):
     """
     Collection Input Mode is intended for the combination of multiple articles
@@ -299,6 +388,8 @@ def main(args):
         single_input(args)
     elif args.batch:  # Convert large numbers of XML files to EPUB
         batch_input(args)
+    elif args.parallel_batch:  # Convert large numbers of XML files to EPUB in parallel
+        parallel_batch_input(args)
     elif args.collection:  # Convert multiple XML articles into single EPUB
         collection_input(args)
     elif args.zipped:  # Convert Frontiers zipfile into single EPUB
