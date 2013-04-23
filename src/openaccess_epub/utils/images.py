@@ -3,7 +3,7 @@
 Utility suite for handling images.
 """
 
-import urllib2
+import urllib
 import time
 import re
 import os.path

@@ -152,7 +152,7 @@ class MetaOPF(object):
     def write(self):
         self.make_manifest()
         filename = os.path.join(self.location, 'OPS', 'content.opf')
-        with open(filename, 'w') as output:
+        with open(filename, 'wb') as output:
             output.write(self.doc.toprettyxml(encoding='utf-8'))
 
 

@@ -7,7 +7,7 @@ mode of execution and interaction.
 
 #If you change the version here, make sure to also change it in setup.py and
 #the module __init__.py
-__version__ = '0.2.8'
+__version__ = '0.3.0'
 
 #Standard Library Modules
 import argparse
@@ -19,12 +19,13 @@ import traceback
 import multiprocessing
 
 #OpenAccess_EPUB Modules
-import openaccess_epub.utils.input
+import openaccess_epub.utils as utils
+import openaccess_epub.utils.input as u_input
 from openaccess_epub.utils.images import get_images
-import openaccess_epub.opf
-import openaccess_epub.ncx
-import openaccess_epub.ops
-from openaccess_epub.settings import *
+import openaccess_epub.opf as opf
+import openaccess_epub.ncx as ncx
+import openaccess_epub.ops as ops
+from openaccess_epub.settings.settings import *
 
 
 log = logging.getLogger('Main')
@@ -91,7 +92,7 @@ def dir_exists(outdirect):
     is automatically deleted.
     """
     print('The directory {0} already exists.'.format(outdirect))
-    r = raw_input('Replace? [Y/n]')
+    r = input('Replace? [Y/n]')
     if r in ['y', 'Y', '']:
         shutil.rmtree(outdirect)
     else:
@@ -110,11 +111,11 @@ def single_input(args):
     #In the case of the latter two, the XML file must be fetched
     if args.input:
         if 'http://www' in args.input:
-            parsed_article, raw_name = utils.input.url_input(args.input)
+            parsed_article, raw_name = u_input.url_input(args.input)
         elif args.input[:4] == 'doi:':
-            parsed_article, raw_name = utils.input.doi_input(args.input)
+            parsed_article, raw_name = u_input.doi_input(args.input)
         else:
-            parsed_article, raw_name = utils.input.local_input(args.input)
+            parsed_article, raw_name = u_input.local_input(args.input)
 
     #Generate the output path name, this will be the directory name for the
     #output. This output directory will later be zipped into an EPUB
@@ -167,7 +168,7 @@ def batch_input(args):
 
         #Parse the article
         try:
-            parsed_article, raw_name = utils.input.local_input(item_path)
+            parsed_article, raw_name = u_input.local_input(item_path)
         except:
             traceback.print_exc(file=error_file)
 
@@ -215,7 +216,7 @@ class ParallelBatchProcess(multiprocessing.Process):
             #Normal Batch Stuff
             #Parse the article
             try:
-                parsed_article, raw_name = utils.input.local_input(next_task)
+                parsed_article, raw_name = u_input.local_input(next_task)
             except:
                 traceback.print_exc(file=self.error_file)
             #Create the output name

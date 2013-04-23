@@ -5,22 +5,11 @@ from the OPSGenerator base class in opsgenerator.py
 """
 
 import openaccess_epub.utils as utils
-from .opsmeta import OPSMeta
+from openaccess_epub.ops.opsmeta import OPSMeta
 import os.path
 import logging
 
 log = logging.getLogger('OPSFrontiers')
-
-
-class InputError(Exception):
-    """
-    This is a custom exception for unexpected input from a publisher.
-    """
-    def __init__(self, detail):
-        self.detail = detail
-
-    def __str__(self):
-        return self.detail
 
 
 class OPSFrontiers(OPSMeta):

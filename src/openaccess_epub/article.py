@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 import openaccess_epub.utils.element_methods as element_methods
-import openaccess_epub.jpts as jpts
+import openaccess_epub.utils as utils
+from openaccess_epub.jpts.jptsmetadata import JPTSMetaData20, JPTSMetaData23, JPTSMetaData30
 import os.path
 import sys
 import shutil
 import xml.dom.minidom as minidom
-import urllib2
 import logging
 from time import sleep
 
@@ -67,11 +67,11 @@ Publishing DTD: \n{0}'.format(doc.doctype.publicId))
         log.info('Publisher - {0}'.format(self.publisher))
         #Create instance of article metadata
         if self.dtd == '2.0':
-            self.metadata = jpts.JPTSMeta20(doc, self.publisher)
+            self.metadata = JPTSMetaData20(doc, self.publisher)
         elif self.dtd == '2.3':
-            self.metadata = jpts.JPTSMeta23(doc, self.publisher)
+            self.metadata = JPTSMetaData23(doc, self.publisher)
         elif self.dtd == '3.0':
-            self.metadata = jpts.JPTSMeta30(doc, self.publisher)
+            self.metadata = JPTSMetaData30(doc, self.publisher)
         #The <article> tag has a handful of potential attributes, we can check
         #to make sure the mandated ones are valid
         self.attrs = {'article-type': None, 'dtd-version': None,

@@ -1,3 +1,3 @@
 # -*- coding: utf-8 -*-
 
-from tocncx import *
+from openaccess_epub.ncx.tocncx import TocNCX

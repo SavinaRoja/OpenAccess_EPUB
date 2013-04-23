@@ -1,3 +1,3 @@
 # -*- coding: utf-8 -*-
 
-from opf import *
+from openaccess_epub.opf.opf import PLoSOPF, FrontiersOPF

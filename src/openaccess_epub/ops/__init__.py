@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
 
-from opsmeta import *
-from opsplos import *
-from opsfrontiers import *
+from openaccess_epub.ops.opsplos import OPSPLoS
+from openaccess_epub.ops.opsfrontiers import OPSFrontiers

@@ -9,8 +9,8 @@ Getting Started
 Nicer documentation for users wishing to use the program is on the wiki:
 https://github.com/SavinaRoja/OpenAccess_EPUB/wiki
 
-This program is developed in Python 2.7. It probably won't work in Python 3
-but I'll get to that someday
+I'm developing this project in Python3, and support for Python2 might be
+patchy. Python3 sidesteps unicode problems and offers some other advantages.
 
 sudo python setup.py install
 

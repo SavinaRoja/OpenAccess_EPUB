@@ -287,5 +287,5 @@ those conforming to the relaxed constraints of OPS 2.0'''))
         self.makeDocAuthor()
         self.makeDocTitle()
         filename = os.path.join(location, 'OPS', 'toc.ncx')
-        with open(filename, 'w') as output:
+        with open(filename, 'wb') as output:
             output.write(self.doc.toprettyxml(encoding='utf-8'))

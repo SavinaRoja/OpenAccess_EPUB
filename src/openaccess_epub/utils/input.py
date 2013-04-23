@@ -7,8 +7,7 @@ passing that file to the class.
 """
 
 from openaccess_epub.article import Article
-import urllib
-import urlparse
+import urllib.parse
 import sys
 import os.path
 import zipfile

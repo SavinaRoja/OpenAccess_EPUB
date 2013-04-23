@@ -5,7 +5,7 @@ from the OPSGenerator base class in opsgenerator.py
 """
 
 import openaccess_epub.utils as utils
-from opsmeta import OPSMeta
+from openaccess_epub.ops.opsmeta import OPSMeta
 import os.path
 import logging
 
@@ -101,7 +101,7 @@ class OPSPLoS(OPSMeta):
         self.convert_div_titles(body)
 
         #Finally, write to a document
-        with open(os.path.join(self.ops_dir, self.main_frag[:-4]), 'w') as op:
+        with open(os.path.join(self.ops_dir, self.main_frag[:-4]), 'wb') as op:
             op.write(self.document.toxml(encoding='utf-8'))
             #op.write(self.document.toprettyxml(encoding='utf-8'))
 
@@ -203,7 +203,7 @@ class OPSPLoS(OPSMeta):
             self.appendNewText(utils.serializeText(ref, []), p)
 
         #Finally, write to a document
-        with open(os.path.join(self.ops_dir, self.bib_frag[:-4]), 'w') as op:
+        with open(os.path.join(self.ops_dir, self.bib_frag[:-4]), 'wb') as op:
             op.write(self.doc.toxml(encoding='utf-8'))
             #op.write(self.doc.toprettyxml(encoding='utf-8'))
 

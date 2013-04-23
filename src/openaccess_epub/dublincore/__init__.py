@@ -1,3 +1,3 @@
 # -*- coding: utf-8 -*-
 
-from dublincore import *
+from openaccess_epub.dublincore.dublincore import *
