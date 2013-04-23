@@ -21,7 +21,6 @@ class OPSMeta(object):
     """
     def __init__(self):
         log.info('Initiating OPSMeta')
-        self.announce()
         self.doc = self.make_document('base')
 
     def make_document(self, titlestring):
@@ -222,9 +221,3 @@ class OPSMeta(object):
             for n in inpt:
                 el_list += n.getElementsByTagName(tagname)
         return el_list
-
-    def announce(self):
-        """
-        Announces initiation of the class.
-        """
-        print('Initiating OPSGenerator')

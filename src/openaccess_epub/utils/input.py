@@ -6,7 +6,7 @@ two things: the path to a local XML file, and an instance of Article made by
 passing that file to the class.
 """
 
-from OpenAccess_EPUB.article import Article
+from openaccess_epub.article import Article
 import urllib2
 import urlparse
 import sys

@@ -1,8 +1,8 @@
 #!/usr/bin/python
 
-import OpenAccess_EPUB as oae
-import OpenAccess_EPUB.utils as utils
-from OpenAccess_EPUB.settings import *
+import openaccess_epub as oae
+import openaccess_epub.utils as utils
+from openaccess_epub.settings import *
 import os.path
 import logging
 import shutil
@@ -25,7 +25,7 @@ def main():
         logname = utils.getFileRoot(args.zip) + '.log'
         logpath = os.path.join(args.output, logname)
     logging.basicConfig(filename=logpath, level=logging.DEBUG)
-    logging.info('OpenAccess_EPUB Log v.{0}'.format(oae.__version__))
+    logging.info('openaccess_epub Log v.{0}'.format(oae.__version__))
     #Run the main script
     oae.main(args)
     #Cache the log

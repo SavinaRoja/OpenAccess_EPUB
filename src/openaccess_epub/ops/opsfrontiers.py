@@ -911,9 +911,3 @@ class OPSFrontiers(OPSMeta):
                     if 'at' == pref and int(suffix[2:]) == num:
                         return (img_dir + item)
         raise InputError('Could not find table image, ID {0}'.format(table_id))
-
-    def announce(self):
-        """
-        Announces the class initiation
-        """
-        print('Initiating OPSFrontiers')

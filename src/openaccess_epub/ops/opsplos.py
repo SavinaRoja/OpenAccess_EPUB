@@ -1433,9 +1433,3 @@ class OPSPLoS(OPSMeta):
                 img_dir = 'images-' + self.doi_frag
                 img_path = '/'.join([img_dir, file_name])
                 graphic.setAttribute('src', img_path)
-
-    def announce(self):
-        """
-        Announces the class initiation
-        """
-        print('Initiating OPSPLoS')

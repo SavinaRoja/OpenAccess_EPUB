@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from opsgenerator import *
+from opsmeta import *
 from opsplos import *
 from opsfrontiers import *
