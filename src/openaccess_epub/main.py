@@ -270,7 +270,7 @@ def parallel_batch_input(args):
         tasks.put(item)
 
     # Add a poison pill for each process
-    for i in xrange(num_processes):
+    for i in range(num_processes):
         tasks.put(None)
 
     # Wait for all of the tasks to finish
