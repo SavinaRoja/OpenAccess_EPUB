@@ -52,6 +52,7 @@ build/*
 ############
 .project
 .pydevproject
+.settings
 
 # Packages #
 ############

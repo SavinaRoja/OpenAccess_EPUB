@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 This module contains classes representing metadata in the Journal Publishing
 Tag Set. There is a base class providing a baseline of functionality for the

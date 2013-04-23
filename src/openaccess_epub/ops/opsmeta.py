@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 This module defines a base class for the generation of Open Publication
 Structure content. These tools facilitate the creation of OPS documents

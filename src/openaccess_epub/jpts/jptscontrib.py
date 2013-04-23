@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 This module will provide useful classes and functions for representing
 article contributions as defined in the Journal Publishing Tag Set.

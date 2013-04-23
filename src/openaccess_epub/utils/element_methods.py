@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 This module defines methods intended to be used as an extended method set for
 xml.dom.minidom classes.

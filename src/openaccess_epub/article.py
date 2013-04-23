@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import utils.element_methods
 import os.path
 import sys

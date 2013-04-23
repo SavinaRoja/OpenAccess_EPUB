@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 This module provides a series of tools to aid in the creation of Dublin Core
 metadata elements which are incorporated in the OPF specification. Relevant

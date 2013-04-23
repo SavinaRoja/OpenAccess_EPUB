@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 This module supplies a class for creating the toc.ncx file. The base class may
 be extended by derived classes if needed. This class works with the Daisy

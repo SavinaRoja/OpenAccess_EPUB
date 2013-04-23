@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 The OPF file has three basic jobs: it presents metadata in the Dublin Core
 format, it presents a manifest of all the files within the ePub, and it

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 The Chicago Manual of Style specifies the textual formatting style of
 bibliographic citations. This module works with xml.dom to parse the xml

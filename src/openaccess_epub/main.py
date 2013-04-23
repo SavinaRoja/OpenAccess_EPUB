@@ -1,4 +1,4 @@
-#! /usr/bin/python
+# -*- coding: utf-8 -*-
 
 """
 This is the main execution file for OpenAccess_EPUB. It provides the primary

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 This collection of utility functions are all related to passing input documents
 to the OpenAccess_EPUB main function. They are all required to return the same

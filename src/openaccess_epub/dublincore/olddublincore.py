@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from utils import serializeText
 
 # Currently, the Dublin Core will only be extended by the OPF Spec

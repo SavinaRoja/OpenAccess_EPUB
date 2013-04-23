@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 This module defines an OPS content generator class for PLoS. It inherits
 from the OPSGenerator base class in opsgenerator.py
