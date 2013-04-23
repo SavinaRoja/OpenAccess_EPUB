@@ -254,7 +254,7 @@ def parallel_batch_input(args):
     num_processes = multiprocessing.cpu_count() * 2
     print('Starting {0} processes'.format(num_processes))
     processes = [ParallelBatchProcess(tasks, error_file, args)
-                 for i in xrange(num_processes)]
+                 for i in range(num_processes)]
     for process in processes:
         process.start()
 
