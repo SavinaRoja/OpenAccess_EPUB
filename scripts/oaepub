@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import openaccess_epub as oae
 import openaccess_epub.utils as utils

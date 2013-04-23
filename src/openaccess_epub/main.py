@@ -19,12 +19,12 @@ import traceback
 import multiprocessing
 
 #OpenAccess_EPUB Modules
-import utils.input
-from .utils.images import get_images
-import opf
-import ncx
-import ops
-from .settings import *
+import openaccess_epub.utils.input
+from openaccess_epub.utils.images import get_images
+import openaccess_epub.opf
+import openaccess_epub.ncx
+import openaccess_epub.ops
+from openaccess_epub.settings import *
 
 
 log = logging.getLogger('Main')
