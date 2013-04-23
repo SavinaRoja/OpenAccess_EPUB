@@ -4,7 +4,7 @@ This module defines an OPS content generator class for PLoS. It inherits
 from the OPSGenerator base class in opsgenerator.py
 """
 
-import OpenAccess_EPUB.utils as utils
+import openaccess_epub.utils as utils
 from opsmeta import OPSMeta
 import os.path
 import logging

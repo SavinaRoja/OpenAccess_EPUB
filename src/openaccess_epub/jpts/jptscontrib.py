@@ -5,7 +5,7 @@ article contributions as defined in the Journal Publishing Tag Set.
 """
 
 import collections
-import OpenAccess_EPUB.utils as utils
+import openaccess_epub.utils as utils
 import logging
 
 log = logging.getLogger('jptscontrib')

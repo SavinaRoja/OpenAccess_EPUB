@@ -8,8 +8,8 @@ Dublin Core metadata will require publisher-specific definitions of metadata
 conversion.
 """
 
-import OpenAccess_EPUB.dublincore as dc
-import OpenAccess_EPUB.utils as utils
+import openaccess_epub.dublincore as dc
+import openaccess_epub.utils as utils
 import datetime
 import os.path
 import xml.dom.minidom

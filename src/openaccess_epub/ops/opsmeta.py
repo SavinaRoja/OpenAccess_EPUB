@@ -7,7 +7,7 @@ translator from any XML format to OPS XML for ePub; derived classes for each
 tag set and/or publisher must provide these functions.
 """
 
-import OpenAccess_EPUB.utils as utils
+import openaccess_epub.utils as utils
 import xml.dom.minidom
 import logging
 
