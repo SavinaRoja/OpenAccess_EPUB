@@ -7,7 +7,7 @@ passing that file to the class.
 """
 
 from openaccess_epub.article import Article
-import urllib2
+import urllib
 import urlparse
 import sys
 import os.path

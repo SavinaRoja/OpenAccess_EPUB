@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import utils.element_methods
+import openaccess_epub.utils.element_methods as element_methods
 import os.path
 import sys
 import shutil
@@ -12,12 +12,12 @@ from time import sleep
 log = logging.getLogger('Article')
 
 #Monkey patching in some extended methods for xml.dom.minidom classes
-minidom.Node.removeSelf = utils.element_methods.removeSelf
-minidom.Node.replaceSelfWith = utils.element_methods.replaceSelfWith
-minidom.Node.elevateNode = utils.element_methods.elevateNode
-minidom.Element.getChildrenByTagName = utils.element_methods.getChildrenByTagName
-minidom.Element.removeAllAttributes = utils.element_methods.removeAllAttributes
-minidom.Element.getAllAttributes = utils.element_methods.getAllAttributes
+minidom.Node.removeSelf = element_methods.removeSelf
+minidom.Node.replaceSelfWith = element_methods.replaceSelfWith
+minidom.Node.elevateNode = element_methods.elevateNode
+minidom.Element.getChildrenByTagName = element_methods.getChildrenByTagName
+minidom.Element.removeAllAttributes = element_methods.removeAllAttributes
+minidom.Element.getAllAttributes = element_methods.getAllAttributes
 
 
 class Article(object):

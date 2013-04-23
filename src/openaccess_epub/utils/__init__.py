@@ -5,7 +5,7 @@ Common utility functions
 import os.path
 import zipfile
 from collections import namedtuple
-import urllib2
+import urllib
 import logging
 import time
 import shutil
