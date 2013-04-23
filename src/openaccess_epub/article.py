@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 import openaccess_epub.utils.element_methods as element_methods
+import openaccess_epub.jpts as jpts
 import os.path
 import sys
 import shutil
 import xml.dom.minidom as minidom
-import jpts
 import urllib2
 import logging
 from time import sleep

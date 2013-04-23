@@ -13,18 +13,18 @@ metadata, this class will handle everything except <body>.
 
 from collections import namedtuple
 import openaccess_epub.utils as utils
-import jptscontrib
+import openaccess_epub.jpts.jptscontrib as jptscontrib
 import logging
 
-log = logging.getLogger('JPTSMeta')
+log = logging.getLogger('JPTSMetaData')
 
 
-class JPTSMeta(object):
+class JPTSMetaData(object):
     """
     This is the base class for the Journal Publishing Tag Set metadata.
     """
     def __init__(self, document, publisher):
-        log.info('Instantiating JPTSMeta{0} class'.format(self.dtdVersion()))
+        log.info('Instantiating JPTSMetaData{0} class'.format(self.dtdVersion()))
         self.doc = document
         self.publisher_name = publisher
         self.getTopElements()
@@ -623,7 +623,7 @@ class JPTSMeta(object):
         """
         <kwd-group> is an optional element, 0 or more, in <article-meta> which
         may contain 0 or 1 <title> elements and 1 or more <kwd> elements. Note
-        that this method is overridden in the derived JPTSMeta30 to account for
+        that this method is overridden in the derived JPTSMetaData30 to account for
         <compound-kwd> elements. The content of <kwd> elements includes text,
         numbers, special characters, and emphasis elements. The potential
         attributes are id, kwd-group-type, and xml:lang. This method will
@@ -766,7 +766,7 @@ class JPTSMeta(object):
         return ''
 
 
-class JPTSMeta20(JPTSMeta):
+class JPTSMetaData20(JPTSMetaData):
     """
     This is the derived class for version 2.0 of the Journal Publishing Tag Set
     metadata.
@@ -886,7 +886,7 @@ class JPTSMeta20(JPTSMeta):
         return '2.0'
 
 
-class JPTSMeta23(JPTSMeta):
+class JPTSMetaData23(JPTSMetaData):
     """
     This is the derived class for version 2.3 of the Journal Publishing Tag Set
     metadata.
@@ -1111,7 +1111,7 @@ class JPTSMeta23(JPTSMeta):
         return '2.3'
 
 
-class JPTSMeta30(JPTSMeta):
+class JPTSMetaData30(JPTSMetaData):
     """
     This is the derived class for version 3.0 of the Journal Publishing Tag Set
     metadata.
