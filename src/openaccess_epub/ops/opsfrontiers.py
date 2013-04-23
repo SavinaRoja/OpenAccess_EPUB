@@ -616,18 +616,18 @@ class OPSFrontiers(OPSMeta):
         """
         #This is a mapping of values of the ref-type attribute to the desired
         #local file to be addressed
-        ref_map = {u'bibr': self.bib_frag,
-                   u'fig': self.main_frag,
-                   u'supplementary-material': self.main_frag,
-                   u'table': self.main_frag,
-                   u'aff': self.synop_frag,
-                   u'sec': self.main_frag,
-                   u'table-fn': self.tab_frag,
-                   u'boxed-text': self.main_frag,
-                   u'other': self.main_frag,
-                   u'disp-formula': self.main_frag,
-                   u'fn': self.main_frag,
-                   u'app': self.main_frag}
+        ref_map = {'bibr': self.bib_frag,
+                   'fig': self.main_frag,
+                   'supplementary-material': self.main_frag,
+                   'table': self.main_frag,
+                   'aff': self.synop_frag,
+                   'sec': self.main_frag,
+                   'table-fn': self.tab_frag,
+                   'boxed-text': self.main_frag,
+                   'other': self.main_frag,
+                   'disp-formula': self.main_frag,
+                   'fn': self.main_frag,
+                   'app': self.main_frag}
         for x in self.getDescendantsByTagName(node, 'xref'):
             x.tagName = 'a'
             x_attrs = self.getAllAttributes(x, remove=True)
@@ -856,7 +856,7 @@ class OPSFrontiers(OPSMeta):
             except AttributeError:
                 pass  # Text nodes have no tagName attribute
             else:
-                if tag == u'div':
+                if tag == 'div':
                     try:
                         divlabel = self.getChildrenByTagName('label', i)[0]
                     except IndexError:

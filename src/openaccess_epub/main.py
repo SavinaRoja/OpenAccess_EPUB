@@ -90,7 +90,7 @@ def dir_exists(outdirect):
     If running in batch mode, this interaction is ignored and the directory
     is automatically deleted.
     """
-    print(u'The directory {0} already exists.'.format(outdirect))
+    print('The directory {0} already exists.'.format(outdirect))
     r = raw_input('Replace? [Y/n]')
     if r in ['y', 'Y', '']:
         shutil.rmtree(outdirect)
@@ -303,7 +303,7 @@ def make_epub(document, outdirect, images, batch):
     locations. The document has been processed for metadata and now it is time
     to generate the ePub content.
     """
-    print(u'Processing output to {0}.epub'.format(outdirect))
+    print('Processing output to {0}.epub'.format(outdirect))
 
     #Copy files from base_epub to the new output
     if os.path.isdir(outdirect):

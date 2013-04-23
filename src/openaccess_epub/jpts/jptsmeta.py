@@ -901,7 +901,7 @@ class JPTSMeta23(JPTSMeta):
         """
         floats_wrap = self.doc.getElementsByTagName('floats-wrap')
         for fw in floats_wrap:
-            if fw.parentNode.tagName == u'article':
+            if fw.parentNode.tagName == 'article':
                 return fw
         return None
 
@@ -1126,7 +1126,7 @@ class JPTSMeta30(JPTSMeta):
         """
         floats_wrap = self.doc.getElementsByTagName('floats-group')
         for fw in floats_wrap:
-            if fw.parentNode.tagName == u'article':
+            if fw.parentNode.tagName == 'article':
                 return fw
         return None
 

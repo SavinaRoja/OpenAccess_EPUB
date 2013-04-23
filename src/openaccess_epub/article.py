@@ -46,12 +46,12 @@ class Article(object):
         doc = minidom.parse(xml_file)
         #Here we check the doctype for the DTD under which the article was
         #published. This affects how we will parse metadata and content.
-        dtds = {u'-//NLM//DTD Journal Publishing DTD v2.0 20040830//EN':
-                u'2.0',
-                u'-//NLM//DTD Journal Publishing DTD v2.3 20070202//EN':
-                u'2.3',
-                u'-//NLM//DTD Journal Publishing DTD v3.0 20080202//EN':
-                u'3.0'}
+        dtds = {'-//NLM//DTD Journal Publishing DTD v2.0 20040830//EN':
+                '2.0',
+                '-//NLM//DTD Journal Publishing DTD v2.3 20070202//EN':
+                '2.3',
+                '-//NLM//DTD Journal Publishing DTD v3.0 20080202//EN':
+                '3.0'}
         try:
             self.dtd = dtds[doc.doctype.publicId]
             dtdStatus = 'Article published with Journal Publishing DTD v{0}'
@@ -66,11 +66,11 @@ Publishing DTD: \n{0}'.format(doc.doctype.publicId))
         self.publisher = self.identifyPublisher()
         log.info('Publisher - {0}'.format(self.publisher))
         #Create instance of article metadata
-        if self.dtd == u'2.0':
+        if self.dtd == '2.0':
             self.metadata = jpts.JPTSMeta20(doc, self.publisher)
-        elif self.dtd == u'2.3':
+        elif self.dtd == '2.3':
             self.metadata = jpts.JPTSMeta23(doc, self.publisher)
-        elif self.dtd == u'3.0':
+        elif self.dtd == '3.0':
             self.metadata = jpts.JPTSMeta30(doc, self.publisher)
         #The <article> tag has a handful of potential attributes, we can check
         #to make sure the mandated ones are valid
@@ -94,10 +94,10 @@ Publishing DTD: \n{0}'.format(doc.doctype.publicId))
         and <article-id pub-id-type="doi"> under <article-meta>.
         """
         log.info('Determining Publisher')
-        pubs = {u'Frontiers Research Foundation': u'Frontiers',
-                u'Public Library of Science': u'PLoS'}
-        dois = {u'10.3389': u'Frontiers',
-                u'10.1371': u'PLoS'}
+        pubs = {'Frontiers Research Foundation': 'Frontiers',
+                'Public Library of Science': 'PLoS'}
+        dois = {'10.3389': 'Frontiers',
+                '10.1371': 'PLoS'}
         if self.dtd in ['2.0', '2.3']:
             #The publisher node will be the primary mode of identification
             publisher = self.root_tag.getElementsByTagName('publisher')
@@ -115,7 +115,7 @@ Publishing DTD: \n{0}'.format(doc.doctype.publicId))
             if not pname:  # If pname is undeclared, check article-id
                 art_IDs = self.root_tag.getElementsByTagName('article-id')
                 for aid in art_IDs:
-                    if aid.getAttribute('pub-id-type') == u'doi':
+                    if aid.getAttribute('pub-id-type') == 'doi':
                         idstring = aid.firstChild.data
                         pub_doi = idstring.split('/')[0]
                 try:

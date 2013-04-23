@@ -43,9 +43,9 @@ def nodeText(node):
     try:
         first_child_data = node.firstChild.data
     except AttributeError:  # Usually caused by an empty node
-        return u''
+        return ''
     else:
-        return u'{0}'.format(first_child_data.strip())
+        return '{0}'.format(first_child_data.strip())
 
 
 def makeEPUBBase(location):
@@ -136,14 +136,14 @@ def stripDOMLayer(oldnodelist, depth=1):
     return oldnodelist
 
 
-def serializeText(fromnode, stringlist=None, sep=u''):
+def serializeText(fromnode, stringlist=None, sep=''):
     """
     Recursively extract the text data from a node and it's children
     """
     if stringlist is None:
         stringlist = []
     for item in fromnode.childNodes:
-        if item.nodeType == item.TEXT_NODE and not item.data == u'\n':
+        if item.nodeType == item.TEXT_NODE and not item.data == '\n':
             stringlist.append(item.data)
         else:
             serializeText(item, stringlist, sep)
@@ -155,7 +155,7 @@ def getTagText(node):
     Grab the text data from a Node. If it is provided a NodeList, it will
     return the text data from the first contained Node.
     """
-    data = u''
+    data = ''
     try:
         children = node.childNodes
     except AttributeError:
@@ -163,7 +163,7 @@ def getTagText(node):
     else:
         if children:
             for child in children:
-                if child.nodeType == child.TEXT_NODE and child.data != u'\n':
+                if child.nodeType == child.TEXT_NODE and child.data != '\n':
                     data = child.data
             return data
 
@@ -175,23 +175,23 @@ def getFormattedNode(node):
     emphasis elements. Non-emphasis elements will be untouched.
     """
     #Some of these elements are to be supported through CSS
-    emphasis_elements = [u'bold', u'italic', u'monospace', u'overline',
-                         u'sc', u'strike', u'underline']
-    spans = {u'monospace': u'font-family:monospace',
-             u'overline': u'text-decoration:overline',
-             u'sc': u'font-variant:small-caps',
-             u'strike': u'text-decoration:line-through',
-             u'underline': u'text-decoration:underline'}
+    emphasis_elements = ['bold', 'italic', 'monospace', 'overline',
+                         'sc', 'strike', 'underline']
+    spans = {'monospace': 'font-family:monospace',
+             'overline': 'text-decoration:overline',
+             'sc': 'font-variant:small-caps',
+             'strike': 'text-decoration:line-through',
+             'underline': 'text-decoration:underline'}
 
     clone = node.cloneNode(deep=True)
     for element in emphasis_elements:
         for item in clone.getElementsByTagName(element):
-            if item.tagName == u'bold':
-                item.tagName = u'b'
-            elif item.tagName == u'italic':
-                item.tagName = u'i'
+            if item.tagName == 'bold':
+                item.tagName = 'b'
+            elif item.tagName == 'italic':
+                item.tagName = 'i'
             elif item in spans:
-                item.tagName = u'span'
+                item.tagName = 'span'
                 item.setAttribute('style', spans[item])
     return clone
 
@@ -200,7 +200,7 @@ def getTagData(node_list):
     '''Grab the (string) data from text elements
     node_list -- NodeList returned by getElementsByTagName
     '''
-    data = u''
+    data = ''
     try:
         for node in node_list:
             if node.firstChild.nodeType == node.TEXT_NODE:

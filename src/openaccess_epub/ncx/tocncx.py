@@ -150,7 +150,7 @@ those conforming to the relaxed constraints of OPS 2.0'''))
         if not dstnode:
             dstnode = self.navmap
         #Tag name strings we check for to determine structures and features
-        tagnamestrs = [u'sec', u'fig', u'table-wrap']
+        tagnamestrs = ['sec', 'fig', 'table-wrap']
         #Pre-process step: give sec tags an id attribute if they lack it
         c = 0
         for sec in srcnode.getElementsByTagName('sec'):
@@ -166,13 +166,13 @@ those conforming to the relaxed constraints of OPS 2.0'''))
                 pass
             else:
                 if tagname in tagnamestrs:
-                    if tagname == u'sec':
+                    if tagname == 'sec':
                         nav = self.doc.createElement('navPoint')
                         dstnode.appendChild(nav)
-                    elif tagname == u'fig':
+                    elif tagname == 'fig':
                         nav = self.doc.createElement('navTarget')
                         self.lof.appendChild(nav)
-                    elif tagname == u'table-wrap':
+                    elif tagname == 'table-wrap':
                         if not child.getChildrenByTagName('alternatives') and not child.getChildrenByTagName('graphic'):
                             continue
                         nav = self.doc.createElement('navTarget')
@@ -205,7 +205,7 @@ those conforming to the relaxed constraints of OPS 2.0'''))
             tocname = 'NCX For: Article Collection'
             self.doctitle.appendChild(self.makeText(tocname))
         else:
-            tocname = u'NCX For: {0}'.format(self.doi)
+            tocname = 'NCX For: {0}'.format(self.doi)
             self.doctitle.appendChild(self.makeText(tocname))
 
     def makeDocAuthor(self):

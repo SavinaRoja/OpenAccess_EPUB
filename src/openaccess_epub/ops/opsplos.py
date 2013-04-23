@@ -476,7 +476,7 @@ class OPSPLoS(OPSMeta):
         self.appendNewElementWithText('b', 'Copyright: ', copyright_div)
 
         #Construct the string for the copyright statement
-        copyright_string = u' \u00A9 '
+        copyright_string = ' \u00A9 '
         #I expect year to always be there
         copyright_string += utils.nodeText(permissions.year) + ' '
         #Holder won't always be there
@@ -972,26 +972,26 @@ class OPSPLoS(OPSMeta):
         """
         #This is a mapping of values of the ref-type attribute to the desired
         #local file to be addressed
-        ref_map = {u'bibr': self.bib_frag,
-                   u'fig': self.main_frag,
-                   u'supplementary-material': self.main_frag,
-                   u'table': self.main_frag,
-                   u'aff': self.main_frag,
-                   u'sec': self.main_frag,
-                   u'table-fn': self.tab_frag,
-                   u'boxed-text': self.main_frag,
-                   u'other': self.main_frag,
-                   u'disp-formula': self.main_frag,
-                   u'fn': self.main_frag,
-                   u'app': self.main_frag,
-                   u'': self.main_frag}
+        ref_map = {'bibr': self.bib_frag,
+                   'fig': self.main_frag,
+                   'supplementary-material': self.main_frag,
+                   'table': self.main_frag,
+                   'aff': self.main_frag,
+                   'sec': self.main_frag,
+                   'table-fn': self.tab_frag,
+                   'boxed-text': self.main_frag,
+                   'other': self.main_frag,
+                   'disp-formula': self.main_frag,
+                   'fn': self.main_frag,
+                   'app': self.main_frag,
+                   '': self.main_frag}
         for x in self.getDescendantsByTagName(node, 'xref'):
             x.tagName = 'a'
             x_attrs = x.getAllAttributes(remove=True)
             if 'ref-type' in x_attrs:
                 ref_type = x_attrs['ref-type']
             else:
-                ref_type = u''
+                ref_type = ''
             rid = x_attrs['rid']
             address = ref_map[ref_type].format(rid)
             x.setAttribute('href', address)

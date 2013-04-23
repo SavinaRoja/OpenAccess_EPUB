@@ -143,7 +143,7 @@ def fetch_frontiers_images(doi, output_dir):
     def download_image(fetch, img_file):
         try:
             image = urllib2.urlopen(fetch)
-        except urllib2.HTTPError, e:
+        except urllib2.HTTPError as e:
             if e.code == 503:  # Server overloaded
                 time.sleep(1)  # Wait one second
                 try:
@@ -262,7 +262,7 @@ def fetch_plos_images(article_doi, output_dir, document):
         full_url = base_url.format(resource)
         try:
             image = urllib2.urlopen(full_url)
-        except urllib2.HTTPError, e:
+        except urllib2.HTTPError as e:
             if e.code == 503:  # Server overload error
                 time.sleep(1)  # Wait a second
                 try:
