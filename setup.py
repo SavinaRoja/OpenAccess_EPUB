@@ -1,20 +1,20 @@
 """
-This is the setup file to install OpenAccess_EPUB.
+This is the setup file to install openaccess_epub.
 """
 
 from distutils.core import setup
 
-setup(name='OpenAccess_EPUB',
+setup(name='openaccess_epub',
       version='0.2.8',
       description='Converts OpenAccess Journal articles to ePub',
       author='Paul Barton',
       author_email='pablo.barton@gmail.com',
-      url='https://github.com/SavinaRoja/OpenAccess_EPUB',
+      url='https://github.com/SavinaRoja/openaccess_epub',
       package_dir={'': 'src'},
-      packages=['OpenAccess_EPUB', 'OpenAccess_EPUB.dublincore',
-                'OpenAccess_EPUB.jpts', 'OpenAccess_EPUB.ncx',
-                'OpenAccess_EPUB.opf', 'OpenAccess_EPUB.ops',
-                'OpenAccess_EPUB.settings', 'OpenAccess_EPUB.utils'],
+      packages=['openaccess_epub', 'openaccess_epub.dublincore',
+                'openaccess_epub.jpts', 'openaccess_epub.ncx',
+                'openaccess_epub.opf', 'openaccess_epub.ops',
+                'openaccess_epub.settings', 'openaccess_epub.utils'],
       scripts=['scripts/oaepub', 'scripts/epubzip'],
       data_files=[]
       )
