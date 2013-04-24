@@ -10,6 +10,7 @@ import logging
 import time
 import shutil
 import re
+import sys
 
 log = logging.getLogger('utils')
 

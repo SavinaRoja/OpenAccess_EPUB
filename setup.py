@@ -15,6 +15,6 @@ setup(name='openaccess_epub',
                 'openaccess_epub.jpts', 'openaccess_epub.ncx',
                 'openaccess_epub.opf', 'openaccess_epub.ops',
                 'openaccess_epub.settings', 'openaccess_epub.utils'],
-      scripts=['scripts/oaepub', 'scripts/epubzip'],
+      scripts=['scripts/oaepub', 'scripts/epubzip', 'scripts/oae-quickstart'],
       data_files=[]
       )
