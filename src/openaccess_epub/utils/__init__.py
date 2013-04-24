@@ -15,6 +15,18 @@ log = logging.getLogger('utils')
 
 Identifier = namedtuple('Identifer', 'id, type')
 
+def cache_location():
+    '''Cross-platform placement of cached files'''
+    if sys.platform == 'win32':  # Windows
+        return os.path.join(os.environ['APPDATA'], 'OpenAccess_EPUB')
+    else:  # Mac or Linux
+        path = os.path.expanduser('~')
+        if path == '~':
+            path = os.path.expanduser('~user')
+            if path == '~user':
+                sys.exit('Could not find the correct cache location')
+        return os.path.join(path, '.OpenAccess_EPUB')
+
 
 def getFileRoot(path):
     """
