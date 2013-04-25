@@ -7,13 +7,21 @@ import os.path
 import logging
 import shutil
 
+#Import the global config file as a module
+import imp
+config_path = os.path.join(CACHE_LOCATION, 'config.py')
+try:
+    config = imp.load_source('config', config_path)
+except IOError:
+    print('Could not find {0}, please run oae-quickstart'.format(config_path))
+    sys.exit()
 
 def main():
     """The main method of the launch script"""
     args = oae.OAEParser()
-    #Configure logging, use name from input
+    #Configure logging, 
     if args.input:
-        logname = utils.getFileRoot(args.input) + '.log'
+        logname = os.path.splitext(os.path.basename())[0] + '.log'
         logpath = os.path.join(args.output, logname)
     elif args.batch:
         logname = utils.getFileRoot(args.batch) + '.log'
@@ -28,9 +36,6 @@ def main():
     logging.info('openaccess_epub Log v.{0}'.format(oae.__version__))
     #Run the main script
     oae.main(args)
-    #Cache the log
-    if SAVE_LOG:
-        shutil.copy2(logpath, CACHE_LOG)
 
 
 if __name__ == '__main__':
