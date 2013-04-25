@@ -201,7 +201,8 @@ is to place them in the same directory as the input.''')
     user_prompt(config_dict, 'default-output', 'Output path?:',
                 default=default_config['default-output'],
                 validator=nonempty)
-    
+    print('''
+''')
 
 
     for key in config_dict.keys():
