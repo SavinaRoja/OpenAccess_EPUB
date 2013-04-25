@@ -33,7 +33,7 @@ import os.path
 import sys
 import logging
 
-quickstart_version = 0.0.1
+quickstart_version = '0.0.1'
 
 # oaepub needs to be able to reliably find this config file; it will always be
 # located in the directory returned by openaccess_epub.utils.cache_location().
