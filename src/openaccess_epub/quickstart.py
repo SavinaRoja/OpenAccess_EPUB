@@ -88,14 +88,14 @@ def inner_main(args):
     default_config={'now': time.asctime(),
                     'oae-version': OAE_VERSION,
                     'cache-location': CACHE_LOCATION,
-                    'input-relative': 'images',
-                    'use-input-relative': 'y',
-                    'execution-relative': 'images',
-                    'use-execution-relative': 'n',
+                    'input-relative-images': 'images',
+                    'use-input-relative-images': 'y',
                     'image-cache': os.path.join(CACHE_LOCATION, 'img_cache'),
                     'use-image-cache': 'n',
                     'use-image-fetching': 'y',
-                    'default-output': '.{0}'.format(os.sep)}
+                    'default-output': '.{0}'.format(os.sep),
+                    'input-relative-css': '.{0}'.format(os.sep),
+                    'epubcheck': os.path.join(CACHE_LOCATION, 'epubcheck-3.0.jar')}
 
     if args[-1] == '-d':  # Use all default options flag
         config = config_formatter(CONFIG_TEXT, default_config)
@@ -111,12 +111,9 @@ def inner_main(args):
     print('''
 Please enter values for the following settings. To accept the default value
 for the settings, shown in brackets, just push Enter.
-''')
 
-    print('''\
 -------------------------------------------------------------------------------\
 ''')
-
     print('''
 OpenAccess_EPUB defines a default cache location for the storage of various
 data (and the global config.py file), this location is:\n\n{0}
@@ -133,7 +130,6 @@ images for the input articles according to the following strategies (in order
 of preference):
 
  Input-Relative: a path relative to the input file
- Execution-Relative: a path relative to the directory of script execution
  Cached Images: locate the images in a cache
  Fetched Online: attempts to download from the Internet (may fail)
 
@@ -143,29 +139,14 @@ to turn them off.''')
     print('''
 Where should OpenAccess_EPUB look for images relative to the input file?
 Multiple path values may be specified if separated by commas.''')
-    user_prompt(config_dict, 'input-relative', 'Input-relative images: path?',
-                default=default_config['input-relative'], validator=nonempty)
+    user_prompt(config_dict, 'input-relative-images', 'Input-relative images: path?',
+                default=default_config['input-relative-images'], validator=nonempty)
     print('''
 Should OpenAccess_EPUB look for images relative to the input file by default?\
 ''')
-    user_prompt(config_dict, 'use-input-relative',
+    user_prompt(config_dict, 'use-input-relative-images',
                 'Use input-relative images: (Y/n)',
-                default=default_config['use-input-relative'],
-                validator=boolean)
-    #Execution-relative image details
-    print('''
-Where should OpenAccess_EPUB look for images relative to the execution path?
-Multiple path values may be specified if separated by commas.''')
-    user_prompt(config_dict, 'execution-relative',
-                'Execution-relative images: path?',
-                default=default_config['execution-relative'],
-                validator=nonempty)
-    print('''
-Should OpenAccess_EPUB look for images relative to the execution path by
-default?''')
-    user_prompt(config_dict, 'use-execution-relative',
-                'Use execution-relative images: (Y/n)',
-                default=default_config['use-execution-relative'],
+                default=default_config['use-input-relative-images'],
                 validator=boolean)
     #Image cache details
     print('''
@@ -182,8 +163,9 @@ consume extra disk space for storage.''')
                 validator=boolean)
     #Image fetching online details
     print('''
-Should OpenAccess_EPUB attempt to download the images from the Internet, this
-is not supported for all publishers and not 100% guaranteed to succeed.''')
+Should OpenAccess_EPUB attempt to download the images from the Internet? This
+is not supported for all publishers and not 100% guaranteed to succeed, you may
+need to download them manually if this does not work.''')
     user_prompt(config_dict, 'use-image-fetching', 'Attempt image download (Y/n)',
                 default=default_config['use-image-fetching'],
                 validator=boolean)
@@ -202,11 +184,32 @@ is to place them in the same directory as the input.''')
                 default=default_config['default-output'],
                 validator=nonempty)
     print('''
-''')
+ -- Configure CSS Behavior --
 
+ePub files use CSS for improved styling, and ePub-readers must support a basic
+subset of CSS functions. Beyond the default CSS OpenAccess_EPUB provides, it 
+may be configured to use custom CSS that is relative to the input. Where should
+OpenAccess_EPUB look for input-relative CSS?''')
+    user_prompt(config_dict, 'input-relative-css', 'Input-relative CSS path?',
+                default=default_config['input-relative-css'],
+                validator=nonempty)
+    print('''
+ -- Configure EpubCheck --
 
-    for key in config_dict.keys():
-        print('{0}: {1}'.format(key, config_dict[key]))
+EpubCheck is a program written and maintained by the IDPF as a tool to validate
+ePub. In order to use it, your system must have Java installed and it is
+recommended to use the latest version. The website for the program is here:
+
+http://code.google.com/p/epubcheck/
+
+Once you have downloaded the zip file for the program, extract the .jar file
+to your file system and then enter an absolute path to the .jar file.''')
+    user_prompt(config_dict, 'epubcheck', 'Absolute path to epubcheck?',
+                default=default_config['epubcheck'], validator=nonempty)
+
+    config = config_formatter(CONFIG_TEXT, default_config)
+    with open(os.path.join(CACHE_LOCATION, 'config.py'), 'wb') as conf_out:
+        conf_out.write(bytes(config, 'UTF-8'))
 
 def main(argv=sys.argv):
     try:
