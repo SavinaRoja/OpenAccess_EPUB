@@ -7,7 +7,7 @@ mode of execution and interaction.
 
 #If you change the version here, make sure to also change it in setup.py and
 #the module __init__.py
-__version__ = '0.3.0'
+__version__ = '0.3.1'
 
 #Standard Library Modules
 import argparse
@@ -25,8 +25,18 @@ from openaccess_epub.utils.images import get_images
 import openaccess_epub.opf as opf
 import openaccess_epub.ncx as ncx
 import openaccess_epub.ops as ops
-from openaccess_epub.settings.settings import *
 
+CACHE_LOCATION = utils.cache_location()
+LOCAL_DIR = os.getcwd()
+
+#Import the global config file as a module
+import imp
+config_path = os.path.join(CACHE_LOCATION, 'config.py')
+try:
+    config = imp.load_source('config', config_path)
+except IOError:
+    print('Could not find {0}, please run oae-quickstart'.format(config_path))
+    sys.exit()
 
 log = logging.getLogger('Main')
 
@@ -39,24 +49,20 @@ def OAEParser():
     parser.add_argument('--version', action='version',
                         version='OpenAccess_EPUB {0}'.format(__version__))
     parser.add_argument('-o', '--output', action='store',
-                        default=DEFAULT_OUTPUT,
-                        help='Use to specify a desired output directory')
-    parser.add_argument('-l', '--log-to', action='store',
-                        default=DEFAULT_LOG,
-                        help='Use to specify a non-default log directory')
+                        default=config.default_output,
+                        help='Specify a non-default output location.')
     parser.add_argument('-I', '--images', action='store',
                         default=None,
                         help='''Specify a path to the directory containing the
                         images. This overrides the program's attempts to get
-                        the images from the default directory, the image cache,
-                        or the internet.''')
+                        the images from the input-relative directory, the image
+                        cache, or the Internet.''')
     parser.add_argument('-c', '--clean', action='store_true', default=False,
                         help='''Use to toggle on cleanup. With this flag,
                                 the pre-zipped output will be removed.''')
     parser.add_argument('-N', '--no-epubcheck', action='store_false',
-                        default=EPUBCHECK,
-                        help='''Use this tag to turn off epub validation with
-                        epubcheck.''')
+                        default=True,
+                        help='''Use this to skip ePub validation by EpubCheck.''')
     modes = parser.add_mutually_exclusive_group()
     modes.add_argument('-i', '--input', action='store', default=False,
                        help='''Input may be a path to a local directory, a
@@ -78,8 +84,6 @@ def OAEParser():
     #                           multiple resources.''')
     modes.add_argument('-cI', '--clear-image-cache', action='store_true',
                        default=False, help='''Clears the image cache''')
-    modes.add_argument('-cX', '--clear-xml-cache', action='store_true',
-                       default=False, help='''Clears the xml cache''')
     modes.add_argument('-cC', '--clear-cache', action='store_true',
                        default=False, help='''Clears the entire cache''')
     return parser.parse_args()
@@ -98,6 +102,11 @@ def dir_exists(outdirect):
     else:
         sys.exit('Aborting process!')
 
+def get_abs_file_path(file_path):
+    if os.path.isabs(file_path):
+        return file_path
+    else:
+        return utils.evaluate_relative_path(LOCAL_DIR, file_path)
 
 def single_input(args):
     """
@@ -107,34 +116,37 @@ def single_input(args):
     configurable, see the argument parser and oaepub --help
     """
     #Determination of input type and processing
-    #Input can be a path to a local XML file, a URL string, or a DOI string
-    #In the case of the latter two, the XML file must be fetched
-    if args.input:
-        if 'http://www' in args.input:
-            parsed_article, raw_name = u_input.url_input(args.input)
-        elif args.input[:4] == 'doi:':
-            parsed_article, raw_name = u_input.doi_input(args.input)
-        else:
-            parsed_article, raw_name = u_input.local_input(args.input)
+    #Fetch by URL
+    if 'http://www' in args.input:
+        abs_input_path = os.path.join(LOCAL_DIR, raw_name+'.xml')
+        parsed_article, raw_name = u_input.url_input(args.input)
+    #Fetch by DOI
+    elif args.input[:4] == 'doi:':
+        abs_input_path = os.path.join(LOCAL_DIR, raw_name+'.xml')
+        parsed_article, raw_name = u_input.doi_input(args.input)
+    #Local XML input
+    else:
+        abs_input_path = get_abs_file_path(args.input)
+        parsed_article, raw_name = u_input.local_input(args.input)
 
     #Generate the output path name, this will be the directory name for the
     #output. This output directory will later be zipped into an EPUB
-    output_name = os.path.join(args.output, raw_name)
+    output_path = os.path.join(get_abs_file_path(args.output), raw_name)
 
     #Make the EPUB
     make_epub(parsed_article,
-              output_name,
+              output_path,
               args.images,   # Path specifying where to find the images
               batch=False)
 
     #Cleanup removes the produced output directory, keeps the ePub file
     if args.clean:  # Defaults to False, --clean or -c to toggle on
-        shutil.rmtree(output_name)
+        shutil.rmtree(output_path)
 
     #Running epubcheck on the output verifies the validity of the ePub,
     #requires a local installation of java and epubcheck.
     if args.no_epubcheck:
-        epubcheck('{0}.epub'.format(output_name))
+        epubcheck('{0}.epub'.format(output_path))
 
 
 def batch_input(args):
@@ -297,7 +309,7 @@ def zipped_input(args):
     pass
 
 
-def make_epub(document, outdirect, images, batch):
+def make_epub(document, outdirect, explicit_images, batch):
     """
     Encapsulates the primary processing work-flow. Before this method is
     called, pre-processing has occurred to define important directory and file
@@ -312,7 +324,8 @@ def make_epub(document, outdirect, images, batch):
             shutil.rmtree(outdirect)
         else:
             dir_exists(outdirect)
-    shutil.copytree(BASE_EPUB, outdirect)
+    epub_base = os.path.join(CACHE_LOCATION, 'base_epub')
+    shutil.copytree(epub_base, outdirect)
 
     if document.metadata.dtdVersion() == '2.0':
         return
@@ -321,8 +334,7 @@ def make_epub(document, outdirect, images, batch):
     DOI = document.getDOI()
 
     #Get the images
-    get_images(DOI, outdirect, images, DEFAULT_IMAGES, CACHE_IMAGES, CACHING,
-               document)
+    get_images(DOI, outdirect, explicit_images, config, document)
 
     #Run content processing per publisher
     if DOI.split('/')[0] == '10.1371':  # PLoS's publisher DOI
@@ -347,7 +359,7 @@ def epubcheck(epubname):
     """
     This method takes the name of an epub file as an argument. This name is
     the input for the java execution of a locally installed epubcheck-.jar. The
-    location of this .jar file is configured in settings.py.
+    location of this .jar file is configured in config.py.
     """
     r, e = os.path.splitext(epubname)
     if not e:
@@ -357,30 +369,19 @@ def epubcheck(epubname):
     elif not e == '.epub':
         print('Warning: Filename extension is not \'.epub\', appending it...')
         epubname += '.epub'
-    os.execlp('java', 'OpenAccess_EPUB', '-jar', EPUBCHECK, epubname)
-
+    os.execlp('java', 'OpenAccess_EPUB', '-jar', config.epubcheck, epubname)
 
 def main(args):
     """
     This is the main code execution block.
     """
-    #Certain locations are defined by the user or by default for production
-    #Here we make them if they don't already exist
-    if not os.path.isdir(args.log_to):
-        os.mkdir(args.log_to)
-    if not os.path.isdir(args.output):
-        os.mkdir(args.output)
+    #Make the parent directory for the output
+    utils.mkdir_p(args.output)
 
-    #The cache is a static directory which can hold various items
-    #Image caching is important for some users.
-    if not os.path.isdir(CACHE_LOCATION):
-        utils.buildCache(CACHE_LOCATION)
-    if not os.path.isdir(CACHE_LOG):
-        os.mkdir(CACHE_LOG)
-    if not os.path.isdir(CACHE_IMAGES):
-        utils.images.init_image_cache(CACHE_IMAGES)
-    if not os.path.isdir(BASE_EPUB):
-        utils.makeEPUBBase(BASE_EPUB)
+    #Make sure that the base_epub is in place
+    utils.make_epub_base()  # Static location
+    #Even if they don't plan on using the image cache, make sure it exists
+    utils.images.make_image_cache(config.image_cache)  # User configurable
 
     #Make appropriate calls depending on input type
     #These are all mutually exclusive arguments in the argument parser

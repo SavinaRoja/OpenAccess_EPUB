@@ -7,6 +7,7 @@ passing that file to the class.
 """
 
 from openaccess_epub.article import Article
+import openaccess_epub.utils
 import urllib.parse
 import sys
 import os.path
@@ -29,8 +30,10 @@ def get_file_root(full_path):
 
 def local_input(xml_path):
     """
+    
     This method accepts xml path data as an argument, instantiates the Article,
     and returns the two.
+    
     """
     log.info('Local Input - {0}'.format(xml_path))
     art = Article(xml_path)
@@ -55,8 +58,8 @@ def doi_input(doi_string):
     log.debug('DOI URL: {0}'.format(doi_url))
     #Report a problem specifying that the page could not be reached
     try:
-        page = urllib2.urlopen(doi_url)
-    except urllib2.URLError:
+        page = urllib.urlopen(doi_url)
+    except urllib.URLError:
         err = '{0} could not be found. Check if the input was incorrect'
         print(err.format(doi_url))
         sys.exit(1)
@@ -75,7 +78,7 @@ def doi_input(doi_string):
         rep = '&representation=XML'
         access = '{0}://{1}{2}{3}{4}'.format(address.scheme, address.netloc,
                                     fetch, aid, rep)
-        open_xml = urllib2.urlopen(access)
+        open_xml = urllib.urlopen(access)
         filename = open_xml.headers['Content-Disposition'].split('\"')[1]
         with open(filename, 'wb') as xml_file:
             xml_file.write(open_xml.read())
@@ -104,7 +107,7 @@ def url_input(url_string):
                                                  address.netloc,
                                                  _fetch, _id, _rep)
             print('Opening {0}'.format(access.__str__()))
-            open_xml = urllib2.urlopen(access)
+            open_xml = urllib.urlopen(access)
         except:
             print('Unable to get XML from this address.')
             sys.exit(1)

@@ -3,12 +3,14 @@
 Utility suite for handling images.
 """
 
-import urllib
+import urllib.request
+import urllib.error
 import time
 import re
 import os.path
 import shutil
 import logging
+import openaccess_epub.utils as utils
 
 
 log = logging.getLogger('utils.images')
@@ -48,8 +50,44 @@ def move_images_to_cache(source, destination):
             shutil.copytree(source, destination)
 
 
-def get_images(doi, outdirect, manual_images, default_images, cache_images,
-                caching, document):
+def explicit_images(images, config, img_dir):
+    """
+    The method used to handle an explicitly defined image directory by the
+    user as a parsed argument.
+    """
+    log.info('Explicit image directory specified: {0}'.format(images))
+    shutil.copytree(manual_images, img_dir)
+    if config.use_image_cache:
+        move_images_to_cache(manual_images, article_cache)
+    return True
+
+
+def input_relative_images(config, img_dir):
+    """
+    The method used to handle Input-Relative image inclusion.
+    """
+    for dir in config.input_relative_images:
+        if os.path.isdir(dir):
+            log.info('Input-Relative image directory found: {0}'.format(dir))
+            shutil.copytree(dir, img_dir)
+            if config.use_image_cache:
+                move_images_to_cache(dir, article_cache)
+            return True
+    return False
+
+
+def image_cache(article_cache, img_dir):
+    """
+    The method to be used by get_images() for copying images out of the cache.
+    """
+    if os.path.isdir(article_cache):
+        log.info('Cached image directory found: {0}'.format(article_cache))
+        shutil.copytree(article_cache, img_dir)
+        return True
+    return False
+
+
+def get_images(doi, outdirect, images, config, document):
     """
     This controls the logic for placing the appropriate image files into the
     ePub directory.
@@ -65,7 +103,6 @@ def get_images(doi, outdirect, manual_images, default_images, cache_images,
 
     Caching=True will ensure that the images are added to the cache.
     """
-
     #Split the DOI
     journal_doi, article_doi = doi.split('/')
     log.debug('journal-doi-{0}'.format(journal_doi))
@@ -76,57 +113,55 @@ def get_images(doi, outdirect, manual_images, default_images, cache_images,
     log.info('Constructed image directory as {0}'.format(img_dir))
 
     #Construct path to cache for article
-    article_cache = os.path.join(cache_images, journal_doi, article_doi)
+    article_cache = os.path.join(config.image_cache, journal_doi, article_doi)
 
-    #Use manual image directory if used
-    if manual_images:
-        log.info('Manual image directory specified: {0}'.format(manual_images))
-        shutil.copytree(manual_images, img_dir)
-        if caching:
-            move_images_to_cache(manual_images, article_cache)
-        return True
+    #Use manual image directory, explicit images
+    if images:
+        #Explicit images prevents all other image methods
+        return explicit_images(images, config, img_dir)
 
-    #Use default image directory if it is there
-    if os.path.isdir(default_images):
-        log.info('Default image directory found: {0}'.format(default_images))
-        shutil.copytree(default_images, img_dir)
-        if caching:
-            move_images_to_cache(default_images, article_cache)
-        return True
+    #Input-Relative import, looks for any one of the listed options
+    if config.use_input_relative_images:
+        #Prevents other image methods only if successful
+        if input_relative_images(config, img_dir):
+            return True
 
     #Use cache for article if it exists
-    if os.path.isdir(article_cache):
-        log.info('Cached image directory found: {0}'.format(article_cache))
-        shutil.copytree(article_cache, img_dir)
-        return True
+    if config.use_image_cache:
+        #Prevents other image methods only if successful
+        if image_cache(article_cache, img_dir):
+            return True
 
-    #Download images from internet
-    os.mkdir(img_dir)
-    if journal_doi == '10.3389':
-        fetch_frontiers_images(article_doi, img_dir)
-        if caching:
-            move_images_to_cache(img_dir, article_cache)
-        return True
-    elif journal_doi == '10.1371':
-        success = fetch_plos_images(article_doi, img_dir, document)
-        if success:
-            if caching:
+    #Download images from Internet
+    if config.use_image_fetching:
+        os.mkdir(img_dir)
+        if journal_doi == '10.3389':
+            fetch_frontiers_images(article_doi, img_dir)
+            if config.use_image_cache:
                 move_images_to_cache(img_dir, article_cache)
             return True
-        return False
-    else:
-        print('Fetching images for this publisher is not supported!')
-        return False
+        elif journal_doi == '10.1371':
+            success = fetch_plos_images(article_doi, img_dir, document)
+            if success:
+                if config.use_image_cache:
+                    move_images_to_cache(img_dir, article_cache)
+                return True
+            return False
+        else:
+            print('Fetching images for this publisher is not supported!')
+            return False
+    return False
 
 
-def init_image_cache(img_cache):
+def make_image_cache(img_cache):
     """
     Initiates the image cache if it does not exist
     """
     log.info('Initiating the image cache at {0}'.format(img_cache))
-    os.mkdir(img_cache)
-    os.mkdir(os.path.join(img_cache, '10.1371'))
-    os.mkdir(os.path.join(img_cache, '10.3389'))
+    if not os.path.isdir(img_cache):
+        utils.mkdir_p(img_cache)
+        utils.mkdir_p(os.path.join(img_cache, '10.1371'))
+        utils.mkdir_p(os.path.join(img_cache, '10.3389'))
 
 
 def fetch_frontiers_images(doi, output_dir):
@@ -142,16 +177,16 @@ def fetch_frontiers_images(doi, output_dir):
 
     def download_image(fetch, img_file):
         try:
-            image = urllib2.urlopen(fetch)
-        except urllib2.HTTPError as e:
+            image = urllib.request.urlopen(fetch)
+        except urllib.error.HTTPError as e:
             if e.code == 503:  # Server overloaded
                 time.sleep(1)  # Wait one second
                 try:
-                    image = urllib2.urlopen(fetch)
+                    image = urllib.request.urlopen(fetch)
                 except:
                     return None
             elif e.code == 500:
-                print('urllib2.HTTPError {0}'.format(e.code))
+                print('urllib.error.HTTPError {0}'.format(e.code))
             return None
         else:
             with open(img_file, 'wb') as outimage:
@@ -198,13 +233,13 @@ def fetch_frontiers_images(doi, output_dir):
     #We use the DOI of the article to locate the page.
     doistr = 'http://dx.doi.org/{0}'.format(doi)
     logging.debug('Accessing DOI address-{0}'.format(doistr))
-    page = urllib2.urlopen(doistr)
+    page = urllib.request.urlopen(doistr)
     if page.geturl()[-8:] == 'abstract':
         full = page.geturl()[:-8] + 'full'
     elif page.geturl()[-4:] == 'full':
         full = page.geturl()
     print(full)
-    page = urllib2.urlopen(full)
+    page = urllib.request.urlopen(full)
     with open('temp', 'w') as temp:
         temp.write(page.read())
     images = []
@@ -261,16 +296,16 @@ def fetch_plos_images(article_doi, output_dir, document):
             resource = xlink_href + '/largerimage'
         full_url = base_url.format(resource)
         try:
-            image = urllib2.urlopen(full_url)
-        except urllib2.HTTPError as e:
+            image = urllib.request.urlopen(full_url)
+        except urllib.error.HTTPError as e:
             if e.code == 503:  # Server overload error
                 time.sleep(1)  # Wait a second
                 try:
-                    image = urllib2.urlopen(full_url)
+                    image = urllib.request.urlopen(full_url)
                 except:
                     return False  # Happened twice, give up
             else:
-                log.error('urllib2.HTTPError {0}'.format(e.code))
+                log.error('urllib.error.HTTPError {0}'.format(e.code))
             return False
         else:
             img_name = xlink_href.split('.')[-1] + '.png'

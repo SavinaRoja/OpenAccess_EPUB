@@ -5,7 +5,8 @@ openaccess_epub.quickstart
 Used for configuring an installation of OpenAccess_EPUB
 """
 
-from openaccess_epub.utils import cache_location, evaluate_relative_path
+from openaccess_epub.utils import cache_location, evaluate_relative_path, \
+     mkdir_p
 from openaccess_epub import __version__ as OAE_VERSION
 import os.path
 import sys
@@ -150,6 +151,9 @@ def inner_main(args):
     The inner control loops for user interaction during quickstart
     configuration.
     """
+
+    #Make the cache directory
+    mkdir_p(CACHE_LOCATION)
 
     default_config={'now': time.asctime(),
                     'oae-version': OAE_VERSION,

@@ -12,9 +12,16 @@ import shutil
 import re
 import sys
 
+from openaccess_epub.utils.css import DEFAULT_CSS
+
 log = logging.getLogger('utils')
 
 Identifier = namedtuple('Identifer', 'id, type')
+
+def mkdir_p(dir):
+    if os.path.isdir(dir):
+        return
+    os.makedirs(dir)
 
 def evaluate_relative_path(working=os.getcwd(), relative=''):
     """
@@ -72,7 +79,7 @@ def nodeText(node):
         return '{0}'.format(first_child_data.strip())
 
 
-def makeEPUBBase(location):
+def make_epub_base():
     """
     Contains the  functionality to create the ePub directory hierarchy from
     scratch. Typical practice will not require this method, but use this to
@@ -86,10 +93,11 @@ def makeEPUBBase(location):
     base_epub/OPS/css
     base_epub/OPS/css/article.css
     """
-    log.info('Making the Base ePub at {0}'.format(location))
-    #Create root directory
-    if not os.path.isdir(location):
-        os.makedirs(location)
+    location = os.path.join(cache_location(), 'base_epub')
+    if os.path.isdir(location):
+        return
+    log.info('Making the ePub base at {0}'.format(location))
+    mkdir_p(location)
     #Create mimetype file in root directory
     mime_path = os.path.join(location, 'mimetype')
     with open(mime_path, 'w') as mimetype:
@@ -112,20 +120,8 @@ def makeEPUBBase(location):
     #Create the css directory in OPS, then copy the file from resources
     os.mkdir(os.path.join(location, 'OPS', 'css'))
     css_path = os.path.join(location, 'OPS', 'css', 'article.css')
-    with open(css_path, 'w') as css:
-        log.info('Fetching a filler CSS file from GitHub')
-        dl_css = urllib2.urlopen('https://raw.github.com/SavinaRoja/OpenAccess_EPUB/master/resources/text.css')
-        css.write(dl_css.read())
-
-
-def buildCache(location):
-    log.info('Building the cache at {0}'.format(location))
-    os.mkdir(location)
-    os.mkdir(os.path.join(location, 'img_cache'))
-    os.mkdir(os.path.join(location, 'logs'))
-    os.mkdir(os.path.join(location, 'css'))
-    makeEPUBBase(location)
-
+    with open(css_path, 'wb') as css:
+        css.write(bytes(DEFAULT_CSS, 'UTF-8'))
 
 def createDCElement(document, name, data, attributes = None):
     """
@@ -346,7 +342,7 @@ def scrapePLoSIssueCollection(issue_url):
     Uses Beautiful Soup to scrape the PLoS page of an issue. It is used
     instead of xml.dom.minidom because of malformed html/xml
     """
-    iu = urllib2.urlopen(issue_url)
+    iu = urllib.urlopen(issue_url)
     with open('temp','w') as temp:
         temp.write(iu.read())
     with open('temp', 'r') as temp:
