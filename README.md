@@ -21,7 +21,7 @@ For Linux users:
 
 For Mac and Windows, enter:
 
-`python setup.py install`
+`python3 setup.py install`
 
 Windows systems may require additional configuration (see the wiki).
 
