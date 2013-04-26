@@ -49,8 +49,9 @@ def OAEParser():
     parser.add_argument('--version', action='version',
                         version='OpenAccess_EPUB {0}'.format(__version__))
     parser.add_argument('-o', '--output', action='store',
-                        default=config.default_output,
-                        help='Specify a non-default output location.')
+                        default=None,
+                        help='''Specify a non-default directory for the
+                        placement of output.''')
     parser.add_argument('-I', '--images', action='store',
                         default=None,
                         help='''Specify a path to the directory containing the
@@ -102,12 +103,6 @@ def dir_exists(outdirect):
     else:
         sys.exit('Aborting process!')
 
-def get_abs_file_path(file_path):
-    if os.path.isabs(file_path):
-        return file_path
-    else:
-        return utils.evaluate_relative_path(LOCAL_DIR, file_path)
-
 def single_input(args):
     """
     Single Input Mode works to convert a single input XML file into EPUB.
@@ -126,12 +121,12 @@ def single_input(args):
         parsed_article, raw_name = u_input.doi_input(args.input)
     #Local XML input
     else:
-        abs_input_path = get_abs_file_path(args.input)
-        parsed_article, raw_name = u_input.local_input(args.input)
+        abs_input_path = utils.get_absolute_path(args.input)
+        parsed_article, raw_name = u_input.local_input(abs_input_path)
 
     #Generate the output path name, this will be the directory name for the
     #output. This output directory will later be zipped into an EPUB
-    output_path = os.path.join(get_abs_file_path(args.output), raw_name)
+    output_path = os.path.join(utils.get_output_directory(args), raw_name)
 
     #Make the EPUB
     make_epub(parsed_article,
@@ -375,8 +370,6 @@ def main(args):
     """
     This is the main code execution block.
     """
-    #Make the parent directory for the output
-    utils.mkdir_p(args.output)
 
     #Make sure that the base_epub is in place
     utils.make_epub_base()  # Static location

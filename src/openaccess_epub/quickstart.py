@@ -281,8 +281,8 @@ recommended to use the latest version. The website for the program is here:
 
 http://code.google.com/p/epubcheck/
 
-Once you have downloaded the zip file for the program, extract the .jar file
-to your file system and then enter an absolute path to the .jar file.''')
+Once you have downloaded the zip file for the program, unzip the archive and
+write a path to the .jar file here.''')
     user_prompt(config_dict, 'epubcheck', 'Absolute path to epubcheck?:',
                 default=default_config['epubcheck'], validator=absolute_path)
 

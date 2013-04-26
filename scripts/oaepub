@@ -7,6 +7,8 @@ import os.path
 import logging
 import shutil
 
+CACHE_LOCATION = utils.cache_location()
+
 #Import the global config file as a module
 import imp
 config_path = os.path.join(CACHE_LOCATION, 'config.py')
@@ -21,8 +23,12 @@ def main():
     args = oae.OAEParser()
     #Configure logging, 
     if args.input:
-        logname = os.path.splitext(os.path.basename())[0] + '.log'
-        logpath = os.path.join(args.output, logname)
+        #Get the name of the article xml file, replacing .xml with .log
+        log_name = os.path.splitext(os.path.basename(args.input))[0] + '.log'
+        output_dir = utils.get_output_directory(args)
+        log_path = os.path.join(output_dir, log_name)
+        if not os.path.isdir(output_dir):
+            utils.mkdir_p(output_dir)
     elif args.batch:
         logname = utils.getFileRoot(args.batch) + '.log'
         logpath = os.path.join(args.batch, logname)
@@ -32,7 +38,7 @@ def main():
     elif args.zip:
         logname = utils.getFileRoot(args.zip) + '.log'
         logpath = os.path.join(args.output, logname)
-    logging.basicConfig(filename=logpath, level=logging.DEBUG)
+    logging.basicConfig(filename=log_path, level=logging.DEBUG)
     logging.info('openaccess_epub Log v.{0}'.format(oae.__version__))
     #Run the main script
     oae.main(args)
