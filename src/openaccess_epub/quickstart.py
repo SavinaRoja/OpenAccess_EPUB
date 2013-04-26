@@ -180,6 +180,7 @@ def inner_main(args):
         config = config_formatter(CONFIG_TEXT, default_config)
         with open(os.path.join(CACHE_LOCATION, 'config.py'), 'wb') as conf_out:
             conf_out.write(bytes(config, 'UTF-8'))
+        print('The config file has been written to {0}'.format(os.path.join(CACHE_LOCATION, 'config.py')))
         return
 
     config_dict = {'now': time.asctime(),

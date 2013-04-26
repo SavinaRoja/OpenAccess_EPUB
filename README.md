@@ -1,31 +1,49 @@
 OpenAccess_EPUB is a program for converting OpenAccess Academic Journal
 articles into the ePub format.
 
-This program is currently being developed to support PLoS and Frontiers
-journals but is designed with the addition of new journal support in mind.
+OpenAccess_EPUB is currently being developed at a core level. In the course
+of recent revisions I have been focusing on finalizing robust PLoS support.
+After work on PLoS has reached a level of easily-maintained completion, I will
+likely turn some attention towards Frontiers, eLife, and other OpenAccess
+publishers.
 
 Getting Started
 ---------------
-Nicer documentation for users wishing to use the program is on the wiki:
-https://github.com/SavinaRoja/OpenAccess_EPUB/wiki
+To get started with OpenAccess_EPUB, one should download the source code and
+then navigate to the top-level directory in the source code. Then install the
+program with Python3 (the program's officially supported Python version). The
+command shown below may or may not work verbatim, replace "python3" with the
+appropriate link to the Python3 executable.
 
-I'm developing this project in Python3, and support for Python2 might be
-patchy. Python3 sidesteps unicode problems and offers some other advantages.
+For Linux users:
 
-sudo python setup.py install
+`sudo python3 setup.py install`
 
 For Mac and Windows, enter:
 
-python setup.py install
+`python setup.py install`
 
-Windows systems may require additional configuration (see the wiki). Now you
-may begin to use the program by typing "oaepub" at the command-line. The basic
-input for the program is always an XML file for the article you wish to
-convert. One way to find this is the side bar of any Frontiers or PLoS article
-web page. After downloading it, navigate by command-line to that directory and
-try:
+Windows systems may require additional configuration (see the wiki).
 
-oaepub -i your-xml-file.xml
+The next step is to execute OpenAccess_EPUB's configuration script. This will
+allow one to define some helpful default behavior.
+
+`oae-quickstart`
+
+Using the configuration script with the "-d" flag will automatically generate
+the system configuration file with all default values. It should inform you of
+where the config file is located for inspection.
+
+Now you are prepared to use OpenAccess_EPUB's main script "oaepub". The
+following command would instruct OpenAccess_EPUB to convert the article.xml
+file into an ePub file.
+
+`oaepub -i my/article.xml`
+
+Many more options are available as command line flags, and you can learn more
+about them by executing:
+
+`oaepub --help`
 
 How to Contribute
 -----------------
