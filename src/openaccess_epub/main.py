@@ -126,22 +126,22 @@ def single_input(args):
 
     #Generate the output path name, this will be the directory name for the
     #output. This output directory will later be zipped into an EPUB
-    output_path = os.path.join(utils.get_output_directory(args), raw_name)
+    output_name = os.path.join(utils.get_output_directory(args), raw_name)
 
     #Make the EPUB
     make_epub(parsed_article,
-              output_path,
+              output_name,
               args.images,   # Path specifying where to find the images
               batch=False)
 
     #Cleanup removes the produced output directory, keeps the ePub file
     if args.clean:  # Defaults to False, --clean or -c to toggle on
-        shutil.rmtree(output_path)
+        shutil.rmtree(output_name)
 
     #Running epubcheck on the output verifies the validity of the ePub,
     #requires a local installation of java and epubcheck.
     if args.no_epubcheck:
-        epubcheck('{0}.epub'.format(output_path))
+        epubcheck('{0}.epub'.format(output_name))
 
 
 def batch_input(args):
@@ -180,7 +180,7 @@ def batch_input(args):
             traceback.print_exc(file=error_file)
 
         #Create the output name
-        output_name = os.path.join(args.batch, raw_name)
+        output_name = os.path.join(utils.get_output_directory(args), raw_name)
 
         #Make the EPUB
         try:
@@ -227,8 +227,7 @@ class ParallelBatchProcess(multiprocessing.Process):
             except:
                 traceback.print_exc(file=self.error_file)
             #Create the output name
-            output_name = os.path.join(self.args.parallel_batch, raw_name)
-            #Make the EPUB
+            output_name = os.path.join(utils.get_output_directory(args), raw_name)
             try:
                 make_epub(parsed_article,
                           output_name,

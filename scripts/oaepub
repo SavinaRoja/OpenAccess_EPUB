@@ -25,19 +25,18 @@ def main():
     if args.input:
         #Get the name of the article xml file, replacing .xml with .log
         log_name = os.path.splitext(os.path.basename(args.input))[0] + '.log'
-        output_dir = utils.get_output_directory(args)
-        log_path = os.path.join(output_dir, log_name)
-        if not os.path.isdir(output_dir):
-            utils.mkdir_p(output_dir)
     elif args.batch:
-        logname = utils.getFileRoot(args.batch) + '.log'
-        logpath = os.path.join(args.batch, logname)
+        log_name = os.path.split(utils.get_absolute_path(args.batch))[0] + '.log'
     elif args.parallel_batch:
-        logname = utils.getFileRoot(args.parallel_batch) + '.log'
-        logpath = os.path.join(args.parallel_batch, logname)
+        log_name = os.path.split(utils.get_absolute_path(args.parallel_batch))[0] + '.log'
     elif args.zip:
-        logname = utils.getFileRoot(args.zip) + '.log'
-        logpath = os.path.join(args.output, logname)
+        log_name = os.path.split(utils.get_absolute_path(args.batch))[0] + '.log'
+        logname = os.path.splitext(os.path.basename(args.zip))[0] + '.log'
+    
+    output_dir = utils.get_output_directory(args)
+    log_path = os.path.join(output_dir, log_name)
+    if not os.path.isdir(output_dir):
+        utils.mkdir_p(output_dir)
     logging.basicConfig(filename=log_path, level=logging.DEBUG)
     logging.info('openaccess_epub Log v.{0}'.format(oae.__version__))
     #Run the main script
