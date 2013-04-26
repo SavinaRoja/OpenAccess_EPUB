@@ -109,7 +109,11 @@ def get_output_directory(args):
                 return evaluate_relative_path(abs_input_parent, config.default_output)
             elif args.batch:  # The case of Batch Mode
                 #Batch should only work on a supplied directory
-                abs_batch_path = get_absolute_path(args.bath)
+                abs_batch_path = get_absolute_path(args.batch)
+                return abs_batch_path
+            elif args.parallel_batch:
+                #Batch should only work on a supplied directory
+                abs_batch_path = get_absolute_path(args.parallel_batch)
                 return abs_batch_path
             else:  # Un-handled or currently unsupported options
                 print('The output location could not be determined...')

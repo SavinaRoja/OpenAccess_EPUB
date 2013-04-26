@@ -227,7 +227,7 @@ class ParallelBatchProcess(multiprocessing.Process):
             except:
                 traceback.print_exc(file=self.error_file)
             #Create the output name
-            output_name = os.path.join(utils.get_output_directory(args), raw_name)
+            output_name = os.path.join(utils.get_output_directory(self.args), raw_name)
             try:
                 make_epub(parsed_article,
                           output_name,

@@ -20,7 +20,6 @@ class OPSPLoS(OPSMeta):
     def __init__(self, article, output_dir):
         OPSMeta.__init__(self)
         log.info('Initiating OPSPLoS')
-        print('Generating OPS content...')
         self.article = article.root_tag
         self.metadata = article.metadata
         self.backmatter = article.metadata.backmatter
@@ -243,7 +242,7 @@ class OPSPLoS(OPSMeta):
         self.convert_inline_formula_elements(body)
         self.convert_xref_elements(body)
 
-        with open(os.path.join(self.ops_dir, self.tab_frag[:-4]), 'w') as op:
+        with open(os.path.join(self.ops_dir, self.tab_frag[:-4]), 'wb') as op:
             op.write(self.doc.toxml(encoding='utf-8'))
             #op.write(self.doc.toprettyxml(encoding='utf-8'))
 
