@@ -39,6 +39,23 @@ def getChildrenByTagName(self, tagName):
     return child_list
 
 
+def getOptionalChild(self, tagName, not_found=None):
+    """
+    This method is used to return the first child with the supplied tagName
+    when the child may or may not exist.
+
+    This saves repetitive coding of blocks to check for child existence.
+
+    The optional not_found argument (default None) can be used to define what
+    should be returned by the method if the child does not exist.
+    """
+    try:
+        child = self.getChildrenByTagName(tagName)[0]
+    except IndexError:
+        child = not_found
+    return child
+
+
 def removeAllAttributes(self):
     """
     This method will remove all attributes of any provided element.

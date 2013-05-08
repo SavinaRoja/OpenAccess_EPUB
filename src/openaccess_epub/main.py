@@ -189,6 +189,7 @@ def batch_input(args):
                       None,  # Does not use custom image path
                       batch=True)
         except:
+            error_file.write(item_path + '\n')
             traceback.print_exc(file=error_file)
 
         #Cleanup output directory, keeps EPUB and log
