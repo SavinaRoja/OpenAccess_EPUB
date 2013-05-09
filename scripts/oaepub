@@ -26,9 +26,9 @@ def main():
         #Get the name of the article xml file, replacing .xml with .log
         log_name = os.path.splitext(os.path.basename(args.input))[0] + '.log'
     elif args.batch:
-        log_name = os.path.split(utils.get_absolute_path(args.batch))[0] + '.log'
+        log_name = os.path.split(utils.get_absolute_path(args.batch))[1] + '.log'
     elif args.parallel_batch:
-        log_name = os.path.split(utils.get_absolute_path(args.parallel_batch))[0] + '.log'
+        log_name = os.path.split(utils.get_absolute_path(args.parallel_batch))[1] + '.log'
     elif args.zip:
         log_name = os.path.split(utils.get_absolute_path(args.batch))[0] + '.log'
         logname = os.path.splitext(os.path.basename(args.zip))[0] + '.log'

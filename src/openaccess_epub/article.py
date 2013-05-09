@@ -18,6 +18,7 @@ minidom.Node.elevateNode = element_methods.elevateNode
 minidom.Element.getChildrenByTagName = element_methods.getChildrenByTagName
 minidom.Element.removeAllAttributes = element_methods.removeAllAttributes
 minidom.Element.getAllAttributes = element_methods.getAllAttributes
+minidom.Element.getOptionalChild = element_methods.getOptionalChild
 
 
 class Article(object):
