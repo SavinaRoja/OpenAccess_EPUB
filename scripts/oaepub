@@ -2,7 +2,6 @@
 
 import openaccess_epub as oae
 import openaccess_epub.utils as utils
-from openaccess_epub.settings import *
 import os.path
 import logging
 import shutil
