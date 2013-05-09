@@ -1142,13 +1142,19 @@ class OPSPLoS(OPSMeta):
         for boxed_text in body.getElementsByTagName('boxed-text'):
             boxed_text_attrs = boxed_text.getAllAttributes(remove=False)
             boxed_text_parent = boxed_text.parentNode
-            sec = boxed_text.getChildrenByTagName('sec')[0]
-            title = sec.getChildrenByTagName('title')
             top_hr = self.doc.createElement('hr')
             bottom_hr = self.doc.createElement('hr')
-            if title:
-                title[0].tagName = 'b'
-            sec.tagName = 'div'
+            sec = boxed_text.getOptionalChild('sec')
+            #sec = boxed_text.getChildrenByTagName('sec')[0]
+            if sec:
+                sec.tagName = 'div'
+                title = sec.getOptionalChild('title')
+                #title = sec.getChildrenByTagName('title')
+                if title:
+                    title.tagName = 'b'
+            else:
+                sec = self.doc.createElement('div')
+                sec.childNodes = boxed_text.childNodes
             sec.setAttribute('class', 'boxed-text')
             if 'id' in boxed_text_attrs:
                 sec.setAttribute('id', boxed_text_attrs['id'])
