@@ -8,7 +8,7 @@ Used for configuring an installation of OpenAccess_EPUB
 from openaccess_epub.utils import cache_location, evaluate_relative_path, \
      mkdir_p
 from openaccess_epub import __version__ as OAE_VERSION
-import os.path
+import os
 import sys
 import time
 
@@ -30,11 +30,16 @@ CONFIG_TEXT='''# -*- coding: utf-8 -*-
 # Please note that some of the configurations in this file may be overridden by
 # flags passed manually to the oaepub script.
 
-import os.path
+import os
 import sys
 import logging
 
-quickstart_version = '0.0.1'
+quickstart_version = '0.0.2'
+
+# All paths shown in this file use forward slashes "/" as path separators. If
+# you are on a Windows platform ensure that any paths you edit follow this
+# convention or you are certain to have errors; the paths will be converted
+# to Windows-appropriate backslashes as necessary by OpenAccess_EPUB.
 
 # oaepub needs to be able to reliably find this config file; it will always be
 # located in the directory returned by openaccess_epub.utils.cache_location().
@@ -163,9 +168,9 @@ def inner_main(args):
                     'image-cache': os.path.join(CACHE_LOCATION, 'img_cache'),
                     'use-image-cache': 'n',
                     'use-image-fetching': 'y',
-                    'default-output': '.{0}'.format(os.sep),
-                    'input-relative-css': '.{0}'.format(os.sep),
-                    'epubcheck': os.path.join(CACHE_LOCATION, 'epubcheck-3.0.jar')}
+                    'default-output': '.',
+                    'input-relative-css': '.',
+                    'epubcheck': os.path.join(CACHE_LOCATION, 'epubcheck-3.0', 'epubcheck-3.0.jar')}
 
     if args[-1] == '-d':  # Use all default options flag
         #Pass through the validation/modification steps
@@ -286,10 +291,12 @@ Once you have downloaded the zip file for the program, unzip the archive and
 write a path to the .jar file here.''')
     user_prompt(config_dict, 'epubcheck', 'Absolute path to epubcheck?:',
                 default=default_config['epubcheck'], validator=absolute_path)
-
+    #Write the config.py file
     config = config_formatter(CONFIG_TEXT, config_dict)
     with open(os.path.join(CACHE_LOCATION, 'config.py'), 'wb') as conf_out:
         conf_out.write(bytes(config, 'UTF-8'))
+    print('''
+Done configuring OpenAccess_EPUB!''')
 
 def main(argv=sys.argv):
     try:
