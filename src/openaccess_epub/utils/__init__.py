@@ -26,15 +26,6 @@ def cache_location():
                 sys.exit('Could not find the correct cache location')
         return os.path.join(path, '.OpenAccess_EPUB')
 
-#Import the global config file as a module
-import imp
-config_path = os.path.join(cache_location(), 'config.py')
-try:
-    config = imp.load_source('config', config_path)
-except IOError:
-    print('Could not find {0}, please run oae-quickstart'.format(config_path))
-    sys.exit()
-
 log = logging.getLogger('utils')
 
 Identifier = namedtuple('Identifer', 'id, type')
@@ -82,6 +73,14 @@ def get_output_directory(args):
 
     All paths returned by this function are absolute.
     """
+    #Import the global config file as a module
+    import imp
+    config_path = os.path.join(cache_location(), 'config.py')
+    try:
+        config = imp.load_source('config', config_path)
+    except IOError:
+        print('Could not find {0}, please run oae-quickstart'.format(config_path))
+        sys.exit()
     #args.output is the explicit user instruction, None if unspecified
     if args.output:
         #args.output may be an absolute path
