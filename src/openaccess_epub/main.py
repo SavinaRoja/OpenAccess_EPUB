@@ -29,15 +29,6 @@ import openaccess_epub.ops as ops
 CACHE_LOCATION = utils.cache_location()
 LOCAL_DIR = os.getcwd()
 
-#Import the global config file as a module
-import imp
-config_path = os.path.join(CACHE_LOCATION, 'config.py')
-try:
-    config = imp.load_source('config', config_path)
-except IOError:
-    print('Could not find {0}, please run oae-quickstart'.format(config_path))
-    sys.exit()
-
 log = logging.getLogger('Main')
 
 
@@ -103,7 +94,7 @@ def dir_exists(outdirect):
     else:
         sys.exit('Aborting process!')
 
-def single_input(args):
+def single_input(args, config):
     """
     Single Input Mode works to convert a single input XML file into EPUB.
 
@@ -144,7 +135,7 @@ def single_input(args):
         epubcheck('{0}.epub'.format(output_name))
 
 
-def batch_input(args):
+def batch_input(args, config):
     """
     Batch Input Mode works to convert all of the article XML files in a
     specified directory into individual article EPUB files.
@@ -247,7 +238,7 @@ class ParallelBatchProcess(multiprocessing.Process):
         return
 
 
-def parallel_batch_input(args):
+def parallel_batch_input(args, config):
     """
     This is a version of the Batch Input Mode that is designed to operate with
     parallel processes to take advantage of CPUs with multiple cores. It
@@ -284,7 +275,7 @@ def parallel_batch_input(args):
     tasks.join()
     error_file.close()
 
-def collection_input(args):
+def collection_input(args, config):
     """
     Collection Input Mode is intended for the combination of multiple articles
     into a single ePub file. This may be useful for producing "Volumes", custom
@@ -296,7 +287,7 @@ def collection_input(args):
     pass
 
 
-def zipped_input(args):
+def zipped_input(args, config):
     """
     Zipped Input Mode is primarily intended as a workflow for Frontiers
     articles, where the article xml and relevant images are zipped together.
@@ -366,6 +357,22 @@ def epubcheck(epubname):
         epubname += '.epub'
     os.execlp('java', 'OpenAccess_EPUB', '-jar', config.epubcheck, epubname)
 
+def get_config_module():
+    """
+    If the config.py file exists, import it as a module. If it does not exist,
+    call sys.exit() to quit.
+    """
+    #Import the global config file as a module
+    import imp
+    config_path = os.path.join(CACHE_LOCATION, 'config.py')
+    try:
+        config = imp.load_source('config', config_path)
+    except IOError:
+        print('Could not find {0}, please run oae-quickstart'.format(config_path))
+        sys.exit()
+    else:
+        return config
+
 def main(args):
     """
     This is the main code execution block.
@@ -373,18 +380,22 @@ def main(args):
 
     #Make sure that the base_epub is in place
     utils.make_epub_base()  # Static location
+    
+    #Import the config module, this fails and exits if it does not exist
+    config = get_config_module()
+    
     #Even if they don't plan on using the image cache, make sure it exists
     utils.images.make_image_cache(config.image_cache)  # User configurable
 
     #Make appropriate calls depending on input type
     #These are all mutually exclusive arguments in the argument parser
     if args.input:  # Convert single article to EPUB
-        single_input(args)
+        single_input(args, config)
     elif args.batch:  # Convert large numbers of XML files to EPUB
-        batch_input(args)
+        batch_input(args, config)
     elif args.parallel_batch:  # Convert large numbers of XML files to EPUB in parallel
-        parallel_batch_input(args)
+        parallel_batch_input(args, config)
     elif args.collection:  # Convert multiple XML articles into single EPUB
-        collection_input(args)
+        collection_input(args, config)
     elif args.zipped:  # Convert Frontiers zipfile into single EPUB
-        zipped_input(args)
+        zipped_input(args, config)
