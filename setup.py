@@ -5,7 +5,7 @@ This is the setup file to install openaccess_epub.
 from distutils.core import setup
 
 setup(name='openaccess_epub',
-      version='0.3.1',
+      version='0.3.2',
       description='Converts OpenAccess Journal articles to ePub',
       author='Paul Barton',
       author_email='pablo.barton@gmail.com',
