@@ -34,12 +34,11 @@ import os
 import sys
 import logging
 
-quickstart_version = '0.0.2'
+quickstart_version = '0.0.3'
 
-# All paths shown in this file use forward slashes "/" as path separators. If
-# you are on a Windows platform ensure that any paths you edit follow this
-# convention or you are certain to have errors; the paths will be converted
-# to Windows-appropriate backslashes as necessary by OpenAccess_EPUB.
+# Python uses back slashes, "\", as escape characters so if you are on Windows
+# make sure to use "\\" for every back slash in a path. You can also use unix-
+# style paths with forward slashes "/", it should work on all platforms.
 
 # oaepub needs to be able to reliably find this config file; it will always be
 # located in the directory returned by openaccess_epub.utils.cache_location().
@@ -150,6 +149,11 @@ def config_formatter(config_string, config_dict):
     the config text.
     """
     return(config_string.format(**config_dict))
+
+def unix_path_coercion():
+    """
+    
+    """
 
 def inner_main(args):
     """
