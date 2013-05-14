@@ -20,12 +20,12 @@ CONFIG_TEXT='''# -*- coding: utf-8 -*-
 # OpenAccess_EPUB configuration file, created by oae-quickstart on
 # {now}.
 #
-# The script detected OpenAccess_EPUB v.{oae-version} at that time.
+# The script detected OpenAccess_EPUB v.{oae-version}
 #
 # At this point in time, all possible values for configuration are represented
 # in this file. Suggested defaults exist for all values, but each may receive
-# alternatives from the user. To reconfigure or reset to defaults, simply run
-# oae-quickstart again.
+# alternatives from the user. To reconfigure, simply run oae-quickstart again.
+# To quickly reset all values to default, run oae-quickstart -d
 #
 # Please note that some of the configurations in this file may be overridden by
 # flags passed manually to the oaepub script.
@@ -34,9 +34,9 @@ import os
 import sys
 import logging
 
-quickstart_version = '0.0.3'
+quickstart_version = '0.0.4'
 
-# Python uses back slashes, "\", as escape characters so if you are on Windows
+# Python uses back slashes, "\\", as escape characters so if you are on Windows
 # make sure to use "\\" for every back slash in a path. You can also use unix-
 # style paths with forward slashes "/", this should work on all platforms.
 
@@ -101,14 +101,14 @@ class ValidationError(Exception):
 def nonempty(x):
     if not x:
         raise ValidationError('Please enter some text.')
-    return x
+    return unix_path_coercion(x)
 
 def absolute_path(user_path):
     """
     Some paths must be made absolute, this will attempt to convert them.
     """
     if os.path.abspath(user_path):
-        return user_path
+        return unix_path_coercion(user_path)
     else:
         try:
             evaluate_relative_path(LOCAL_DIR, working_path)
@@ -122,7 +122,7 @@ def boolean(x):
 
 def list_opts(x):
     try:
-        return ', '.join(['\'' + opt.strip() + '\'' for opt in x.split(',')])
+        return ', '.join(['\'' + unix_path_coercion(opt.strip()) + '\'' for opt in x.split(',')])
     except:
         raise ValidationError('Could not understand your input')
 
