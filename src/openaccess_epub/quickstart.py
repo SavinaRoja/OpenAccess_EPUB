@@ -38,7 +38,7 @@ quickstart_version = '0.0.3'
 
 # Python uses back slashes, "\", as escape characters so if you are on Windows
 # make sure to use "\\" for every back slash in a path. You can also use unix-
-# style paths with forward slashes "/", it should work on all platforms.
+# style paths with forward slashes "/", this should work on all platforms.
 
 # oaepub needs to be able to reliably find this config file; it will always be
 # located in the directory returned by openaccess_epub.utils.cache_location().
@@ -150,10 +150,12 @@ def config_formatter(config_string, config_dict):
     """
     return(config_string.format(**config_dict))
 
-def unix_path_coercion():
+def unix_path_coercion(input_path):
     """
-    
+    The prompts during the quickstart run that receive paths will be coerced to
+    use unix-style forward slashes with this function.
     """
+    return input_path.replace('\\', '/')
 
 def inner_main(args):
     """
