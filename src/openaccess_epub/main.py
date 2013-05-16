@@ -7,7 +7,7 @@ mode of execution and interaction.
 
 #If you change the version here, make sure to also change it in setup.py and
 #the module __init__.py
-__version__ = '0.3.4'
+__version__ = '0.3.5'
 
 #Standard Library Modules
 import argparse
