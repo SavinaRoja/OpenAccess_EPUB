@@ -7,7 +7,7 @@ mode of execution and interaction.
 
 #If you change the version here, make sure to also change it in setup.py and
 #the module __init__.py
-__version__ = '0.3.3'
+__version__ = '0.3.4'
 
 #Standard Library Modules
 import argparse
@@ -171,9 +171,11 @@ def batch_input(args, config):
 
         #Parse the article
         try:
-            parsed_article, raw_name = u_input.local_input(item_path)
+            raw_name = u_input.local_input(item_path)
         except:
             traceback.print_exc(file=error_file)
+        else:
+            parsed_article = Article(os.path.join(args.batch, raw_name+'.xml'))
 
         #Create the output name
         output_name = os.path.join(utils.get_output_directory(args), raw_name)
