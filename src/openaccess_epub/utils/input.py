@@ -8,7 +8,7 @@ output files.
 """
 
 import openaccess_epub.utils
-import urllib.parse
+import urllib
 import sys
 import os
 import zipfile
@@ -57,8 +57,8 @@ def doi_input(doi_string, download=True):
     log.debug('DOI URL: {0}'.format(doi_url))
     #Report a problem specifying that the page could not be reached
     try:
-        page = urllib.urlopen(doi_url)
-    except urllib.URLError:
+        page = urllib.request.urlopen(doi_url)
+    except urllib.error.URLError:
         err = '{0} could not be found. Check if the input was incorrect'
         print(err.format(doi_url))
         sys.exit(1)
@@ -69,7 +69,7 @@ def doi_input(doi_string, download=True):
         print('This publisher is not yet supported by OpenAccess_EPUB')
         sys.exit(1)
     if publisher == 'PLoS':
-        address = urlparse.urlparse(page.geturl())
+        address = urllib.parse.urlparse(page.geturl())
         log.debug('Rendered address: {0}'.format(address))
         path = address.path.replace(':', '%3A').replace('/', '%2F')
         fetch = '/article/fetchObjectAttachment.action?uri='
@@ -77,7 +77,7 @@ def doi_input(doi_string, download=True):
         rep = '&representation=XML'
         access = '{0}://{1}{2}{3}{4}'.format(address.scheme, address.netloc,
                                     fetch, aid, rep)
-        open_xml = urllib.urlopen(access)
+        open_xml = urllib.request.urlopen(access)
         filename = open_xml.headers['Content-Disposition'].split('\"')[1]
         if download:
             with open(filename, 'wb') as xml_file:
@@ -96,9 +96,9 @@ def url_input(url_string, download=True):
     """
     log.info('URL Input - {0}'.format(url_string))
     support = ['PLoS']
-    if '%2F10.1371%2F' in url_string:  # This is a PLoS page
+    if '/10.1371/' in url_string or '%2F10.1371%2F' in url_string:  # This is a PLoS page
         try:
-            address = urlparse.urlparse(url_string)
+            address = urllib.parse.urlparse(url_string)
             _fetch = '/article/fetchObjectAttachment.action?uri='
             _id = address.path.split('/')[2]
             _rep = '&representation=XML'
@@ -106,7 +106,7 @@ def url_input(url_string, download=True):
                                                  address.netloc,
                                                  _fetch, _id, _rep)
             print('Opening {0}'.format(access.__str__()))
-            open_xml = urllib.urlopen(access)
+            open_xml = urllib.request.urlopen(access)
         except:
             print('Unable to get XML from this address.')
             sys.exit(1)

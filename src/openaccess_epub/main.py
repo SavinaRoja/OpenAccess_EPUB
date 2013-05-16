@@ -25,6 +25,7 @@ from openaccess_epub.utils.images import get_images
 import openaccess_epub.opf as opf
 import openaccess_epub.ncx as ncx
 import openaccess_epub.ops as ops
+from openaccess_epub.article import Article as Article
 
 CACHE_LOCATION = utils.cache_location()
 LOCAL_DIR = os.getcwd()
@@ -104,16 +105,19 @@ def single_input(args, config):
     #Determination of input type and processing
     #Fetch by URL
     if 'http://www' in args.input:
+        raw_name = u_input.url_input(args.input)
         abs_input_path = os.path.join(LOCAL_DIR, raw_name+'.xml')
-        parsed_article, raw_name = u_input.url_input(args.input)
+        parsed_article = Article(abs_input_path)
     #Fetch by DOI
     elif args.input[:4] == 'doi:':
+        raw_name = u_input.doi_input(args.input)
         abs_input_path = os.path.join(LOCAL_DIR, raw_name+'.xml')
-        parsed_article, raw_name = u_input.doi_input(args.input)
+        parsed_article = Article(abs_input_path)
     #Local XML input
     else:
         abs_input_path = utils.get_absolute_path(args.input)
-        parsed_article, raw_name = u_input.local_input(abs_input_path)
+        raw_name = u_input.local_input(abs_input_path)
+        parsed_article = Article(abs_input_path)
 
     #Generate the output path name, this will be the directory name for the
     #output. This output directory will later be zipped into an EPUB
@@ -121,10 +125,10 @@ def single_input(args, config):
 
     #Make the EPUB
     make_epub(parsed_article,
-              output_name,
-              args.images,   # Path specifying where to find the images
+              outdirect=output_name,
+              explicit_images=args.images,   # Explicit image path
               batch=False,
-              config)
+              config=config)
 
     #Cleanup removes the produced output directory, keeps the ePub file
     if args.clean:  # Defaults to False, --clean or -c to toggle on
@@ -177,10 +181,10 @@ def batch_input(args, config):
         #Make the EPUB
         try:
             make_epub(parsed_article,
-                      output_name,
-                      None,  # Does not use custom image path
-                      batch=True,
-                      config)
+                      outdirect=output_name,
+                      explicit_images=None,   # No explicit image path
+                      batch=False,
+                      config=config)
         except:
             error_file.write(item_path + '\n')
             traceback.print_exc(file=error_file)
@@ -224,10 +228,10 @@ class ParallelBatchProcess(multiprocessing.Process):
             output_name = os.path.join(utils.get_output_directory(self.args), raw_name)
             try:
                 make_epub(parsed_article,
-                          output_name,
-                          None,  # Does not use custom image path
-                          batch=True,
-                          config)
+                          outdirect=output_name,
+                          explicit_images=None,   # No explicit image path
+                          batch=False,
+                          config=config)
             except:
                 traceback.print_exc(file=self.error_file)
             #Cleanup output directory, keeps EPUB and log

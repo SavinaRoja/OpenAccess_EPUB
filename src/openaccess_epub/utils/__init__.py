@@ -13,6 +13,7 @@ import re
 import sys
 
 from openaccess_epub.utils.css import DEFAULT_CSS
+from openaccess_epub.utils.input import doi_input, url_input
 
 def cache_location():
     '''Cross-platform placement of cached files'''
@@ -97,9 +98,13 @@ def get_output_directory(args):
         #or config.default_output may be a relative path, relative to input
         else:
             if args.input:  # The case of single input
-                if 'http://www' in args.input or args.input[:4] == 'doi:':
-                    #These are fetched options, always fetched to directory
-                    #of execution
+                if 'http://www' in args.input:
+                    #Fetched from internet by URL
+                    raw_name = url_input(args.input, download=False)
+                    abs_input_path = os.path.join(os.getcwd(), raw_name+'.xml')
+                elif args.input[:4] == 'doi:':
+                    #Fetched from internet by DOI
+                    raw_name = doi_input(args.input, download=False)
                     abs_input_path = os.path.join(os.getcwd(), raw_name+'.xml')
                 else:
                     #Local option, could be anywhere
