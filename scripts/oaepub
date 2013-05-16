@@ -23,7 +23,12 @@ def main():
     #Configure logging, 
     if args.input:
         #Get the name of the article xml file, replacing .xml with .log
-        log_name = os.path.splitext(os.path.basename(args.input))[0] + '.log'
+        if 'http:' in args.input:
+            log_name = utils.url_input(args.input, download=False) + '.log'
+        elif 'doi:' in args.input:
+            log_name = utils.doi_input(args.input, download=False) + '.log'
+        else:
+            log_name = os.path.splitext(os.path.basename(args.input))[0] + '.log'
     elif args.batch:
         log_name = os.path.split(utils.get_absolute_path(args.batch))[1] + '.log'
     elif args.parallel_batch:
