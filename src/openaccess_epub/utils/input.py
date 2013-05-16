@@ -8,7 +8,7 @@ output files.
 """
 
 import openaccess_epub.utils
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import sys
 import os
 import zipfile
@@ -16,6 +16,34 @@ import shutil
 import logging
 
 log = logging.getLogger('utils.input')
+
+
+def plos_doi_to_xmlurl(doi_string):
+    """
+    Attempts to resolve a PLoS DOI into a URL path to the XML file.
+    """
+    #Create URL to request DOI resolution from http://dx.doi.org
+    doi_url = 'http://dx.doi.org/{0}'.format(doi_string)
+    log.debug('DOI URL: {0}'.format(doi_url))
+    #Open the page, follow the redirect
+    try:
+        resolved_page = urllib.request.urlopen(doi_url)
+    except urllib.error.URLError as err:
+        print('Unable to resolve DOI URL, or could not connect')
+        raise err
+    else:
+        #Given the redirection, attempt to shape new request for PLoS servers
+        resolved_address = resolved_page.geturl()
+        log.debug('DOI resolved to {0}'.format(resolved_address))
+        parsed = urllib.parse.urlparse(resolved_address)
+        xml_url = '{0}://{1}'.format(parsed.scheme, parsed.netloc)
+        xml_url += '/article/fetchObjectAttachment.action?uri='
+        xml_path = parsed.path.replace(':', '%3A').replace('/', '%2F')
+        xml_path = xml_path.split('article%2F')[1]
+        xml_url += '{0}{1}'.format(xml_path, '&representation=XML')
+        log.debug('Shaped PLoS request for XML {0}'.format(xml_url))
+        #Return this url to the calling function
+        return xml_url
 
 
 def get_file_root(full_path):
@@ -48,79 +76,35 @@ def doi_input(doi_string, download=True):
     the article xml on that page.
     """
     log.info('DOI Input - {0}'.format(doi_string))
-    pub_doi = {'10.1371': 'PLoS', '10.3389': 'Frontiers'}
-    #A user might accidentally copy/paste the "doi:" part of a DOI
-    if doi_string[:4]:
-        doi_string = doi_string[4:]
-    #Compose the URL to access at http://dx.doi.org
-    doi_url = 'http://dx.doi.org/{0}'.format(doi_string)
-    log.debug('DOI URL: {0}'.format(doi_url))
-    #Report a problem specifying that the page could not be reached
-    try:
-        page = urllib.request.urlopen(doi_url)
-    except urllib.error.URLError:
-        err = '{0} could not be found. Check if the input was incorrect'
-        print(err.format(doi_url))
-        sys.exit(1)
-    #How we proceed from here depends on the particular publisher
-    try:
-        publisher = pub_doi[doi_string.split('/')[0]]
-    except KeyError:
+    if '10.1371' in doi_string:  # Corresponds to PLoS
+        xml_url = plos_doi_to_xmlurl(doi_string)
+    else:
         print('This publisher is not yet supported by OpenAccess_EPUB')
         sys.exit(1)
-    if publisher == 'PLoS':
-        address = urllib.parse.urlparse(page.geturl())
-        log.debug('Rendered address: {0}'.format(address))
-        path = address.path.replace(':', '%3A').replace('/', '%2F')
-        fetch = '/article/fetchObjectAttachment.action?uri='
-        aid = path.split('article%2F')[1]
-        rep = '&representation=XML'
-        access = '{0}://{1}{2}{3}{4}'.format(address.scheme, address.netloc,
-                                    fetch, aid, rep)
-        open_xml = urllib.request.urlopen(access)
+    return url_input(xml_url, download)
+
+
+def url_input(url_string, download=True):
+    """
+    This method expects a direct URL link to an xml file. It will apply no
+    modifications to the received URL string, so ensure good input.
+    """
+    log.info('URL Input - {0}'.format(url_string))
+    try:
+        open_xml = urllib.request.urlopen(url_string)
+    except urllib.error.URLError as err:
+        print('utils.input.url_input received a bad URL, or could not connect')
+        raise err
+    else:
+        #Employ a quick check on the mimetype of the link
+        if not open_xml.headers['Content-Type'] == 'text/xml':
+            print('URL request does not appear to be XML')
+            sys.exit(1)  # Nonzero value for "abnormal" termination
         filename = open_xml.headers['Content-Disposition'].split('\"')[1]
         if download:
             with open(filename, 'wb') as xml_file:
                 xml_file.write(open_xml.read())
         return get_file_root(filename)
-    else:
-        print('{0} is not supported for DOI Input'.format(publisher))
-        sys.exit(1)
-
-
-def url_input(url_string, download=True):
-    """
-    This method accepts a URL as an input and attempts to download the
-    appropriate xml file from that page. This method is highly dependent on
-    publisher conventions and may not be appropriate for all pusblishers.
-    """
-    log.info('URL Input - {0}'.format(url_string))
-    support = ['PLoS']
-    if '/10.1371/' in url_string or '%2F10.1371%2F' in url_string:  # This is a PLoS page
-        try:
-            address = urllib.parse.urlparse(url_string)
-            _fetch = '/article/fetchObjectAttachment.action?uri='
-            _id = address.path.split('/')[2]
-            _rep = '&representation=XML'
-            access = '{0}://{1}{2}{3}{4}'.format(address.scheme,
-                                                 address.netloc,
-                                                 _fetch, _id, _rep)
-            print('Opening {0}'.format(access.__str__()))
-            open_xml = urllib.request.urlopen(access)
-        except:
-            print('Unable to get XML from this address.')
-            sys.exit(1)
-        else:
-            filename = open_xml.headers['Content-disposition'].split('\"')[1]
-            if download:
-                with open(filename, 'wb') as xml_file:
-                    xml_file.write(open_xml.read())
-            #log.debug('Received XML path - {0}'.format(xml_path))
-            return get_file_root(filename)
-    else:  # We don't support this input or publisher
-        print('Invalid Link: Bad URL or unsupported publisher')
-        print('Supported publishers are: {0}'.format(', '.join(support)))
-        sys.exit(1)
 
 
 def frontiersZipInput(zip_path, output_prefix, download=None):

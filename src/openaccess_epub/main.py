@@ -104,7 +104,7 @@ def single_input(args, config):
     """
     #Determination of input type and processing
     #Fetch by URL
-    if 'http://www' in args.input:
+    if 'http:' in args.input:
         raw_name = u_input.url_input(args.input)
         abs_input_path = os.path.join(LOCAL_DIR, raw_name+'.xml')
         parsed_article = Article(abs_input_path)
