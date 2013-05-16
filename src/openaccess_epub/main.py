@@ -95,13 +95,15 @@ def dir_exists(outdirect):
     else:
         sys.exit('Aborting process!')
 
-def single_input(args, config):
+def single_input(args, config=None):
     """
     Single Input Mode works to convert a single input XML file into EPUB.
 
     This is probably the most typical use case and is the most highly
     configurable, see the argument parser and oaepub --help
     """
+    if config is None:
+        config = get_config_module()
     #Determination of input type and processing
     #Fetch by URL
     if 'http:' in args.input:
@@ -140,7 +142,7 @@ def single_input(args, config):
         epubcheck('{0}.epub'.format(output_name), config)
 
 
-def batch_input(args, config):
+def batch_input(args, config=None):
     """
     Batch Input Mode works to convert all of the article XML files in a
     specified directory into individual article EPUB files.
@@ -156,7 +158,8 @@ def batch_input(args, config):
     Batch Input Mode has default epubcheck behavior, it will place a system
     call to epubcheck unless specified otherwise (--no-epubcheck or -N flags).
     """
-    
+    if config is None:
+        config = get_config_module()
     error_file = open('batch_tracebacks.txt', 'w')
     #Iterate over all listed files in the batch directory
     for item in os.listdir(args.batch):
@@ -284,7 +287,7 @@ def parallel_batch_input(args, config):
     tasks.join()
     error_file.close()
 
-def collection_input(args, config):
+def collection_input(args, config=None):
     """
     Collection Input Mode is intended for the combination of multiple articles
     into a single ePub file. This may be useful for producing "Volumes", custom
@@ -293,18 +296,19 @@ def collection_input(args, config):
     There is a lot of potential for how this might be used, development will
     proceed in the direction of interest.
     """
-    pass
+    if config is None:
+        config = get_config_module()
 
-
-def zipped_input(args, config):
+def zipped_input(args, config=None):
     """
     Zipped Input Mode is primarily intended as a workflow for Frontiers
     articles, where the article xml and relevant images are zipped together.
     """
-    pass
+    if config is None:
+        config = get_config_module()
 
 
-def make_epub(document, outdirect, explicit_images, batch, config):
+def make_epub(document, outdirect, explicit_images, batch, config=None):
     """
     Encapsulates the primary processing work-flow. Before this method is
     called, pre-processing has occurred to define important directory and file
@@ -312,7 +316,8 @@ def make_epub(document, outdirect, explicit_images, batch, config):
     to generate the ePub content.
     """
     print('Processing output to {0}.epub'.format(outdirect))
-
+    if config is None:
+        config = get_config_module()
     #Copy files from base_epub to the new output
     if os.path.isdir(outdirect):
         if batch:
@@ -350,12 +355,14 @@ def make_epub(document, outdirect, explicit_images, batch, config):
     utils.epubZip(outdirect)
 
 
-def epubcheck(epubname, config):
+def epubcheck(epubname, config=None):
     """
     This method takes the name of an epub file as an argument. This name is
     the input for the java execution of a locally installed epubcheck-.jar. The
     location of this .jar file is configured in config.py.
     """
+    if config is None:
+        config = get_config_module()
     r, e = os.path.splitext(epubname)
     if not e:
         print('Warning: Filename extension is empty, appending \'.epub\'...')
@@ -378,7 +385,7 @@ def get_config_module():
         config = imp.load_source('config', config_path)
     except IOError:
         print('Could not find {0}, please run oae-quickstart'.format(config_path))
-        sys.exit()
+        sys.exit(1)
     else:
         return config
 
