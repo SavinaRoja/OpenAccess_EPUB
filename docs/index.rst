@@ -1,5 +1,5 @@
 .. OpenAccess_EPUB documentation master file, created by
-   sphinx-quickstart on Fri Apr  5 13:38:25 2013.
+   sphinx-quickstart on Thu May 16 18:12:45 2013.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
@@ -10,6 +10,10 @@ Contents:
 
 .. toctree::
    :maxdepth: 2
+   
+   introduction
+
+.. automodule:: openaccess_epub
 
 Indices and tables
 ==================
