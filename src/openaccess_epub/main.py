@@ -123,7 +123,8 @@ def single_input(args, config):
     make_epub(parsed_article,
               output_name,
               args.images,   # Path specifying where to find the images
-              batch=False)
+              batch=False,
+              config)
 
     #Cleanup removes the produced output directory, keeps the ePub file
     if args.clean:  # Defaults to False, --clean or -c to toggle on
@@ -132,7 +133,7 @@ def single_input(args, config):
     #Running epubcheck on the output verifies the validity of the ePub,
     #requires a local installation of java and epubcheck.
     if args.no_epubcheck:
-        epubcheck('{0}.epub'.format(output_name))
+        epubcheck('{0}.epub'.format(output_name), config)
 
 
 def batch_input(args, config):
@@ -178,7 +179,8 @@ def batch_input(args, config):
             make_epub(parsed_article,
                       output_name,
                       None,  # Does not use custom image path
-                      batch=True)
+                      batch=True,
+                      config)
         except:
             error_file.write(item_path + '\n')
             traceback.print_exc(file=error_file)
@@ -189,7 +191,7 @@ def batch_input(args, config):
         #Running epubcheck on the output verifies the validity of the ePub,
         #requires a local installation of java and epubcheck.
         #if args.no_epubcheck:
-            #epubcheck('{0}.epub'.format(output_name))
+            #epubcheck('{0}.epub'.format(output_name), config)
     error_file.close()
 
 
@@ -224,7 +226,8 @@ class ParallelBatchProcess(multiprocessing.Process):
                 make_epub(parsed_article,
                           output_name,
                           None,  # Does not use custom image path
-                          batch=True)
+                          batch=True,
+                          config)
             except:
                 traceback.print_exc(file=self.error_file)
             #Cleanup output directory, keeps EPUB and log
@@ -232,7 +235,7 @@ class ParallelBatchProcess(multiprocessing.Process):
             #Running epubcheck on the output verifies the validity of the ePub,
             #requires a local installation of java and epubcheck.
             #if self.args.no_epubcheck:
-                #epubcheck('{0}.epub'.format(output_name))
+                #epubcheck('{0}.epub'.format(output_name), config)
             #Report completed task to the JoinableQueue
             self.task_queue.task_done()
         return
@@ -295,7 +298,7 @@ def zipped_input(args, config):
     pass
 
 
-def make_epub(document, outdirect, explicit_images, batch):
+def make_epub(document, outdirect, explicit_images, batch, config):
     """
     Encapsulates the primary processing work-flow. Before this method is
     called, pre-processing has occurred to define important directory and file
@@ -341,7 +344,7 @@ def make_epub(document, outdirect, explicit_images, batch):
     utils.epubZip(outdirect)
 
 
-def epubcheck(epubname):
+def epubcheck(epubname, config):
     """
     This method takes the name of an epub file as an argument. This name is
     the input for the java execution of a locally installed epubcheck-.jar. The
