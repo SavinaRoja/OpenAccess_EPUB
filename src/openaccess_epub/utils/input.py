@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 """
-This collection of utility functions are all related to passing input documents
-to the OpenAccess_EPUB main function. They are all required to return the same
-two things: the path to a local XML file, and an instance of Article made by
-passing that file to the class.
+The methods in this module all utilize their string argument to specify and
+(optionally) download an input xml file. They all return the base name of their
+input file; that is, the extension-less name of the file. These base names then
+provide the basis for instantiating Article class objects and the naming of
+output files.
 """
 
-from openaccess_epub.article import Article
 import openaccess_epub.utils
 import urllib.parse
 import sys
-import os.path
+import os
 import zipfile
 import shutil
 import logging
@@ -28,7 +28,7 @@ def get_file_root(full_path):
     return os.path.splitext(filename)[0]
 
 
-def local_input(xml_path):
+def local_input(xml_path, download=None):
     """
     
     This method accepts xml path data as an argument, instantiates the Article,
@@ -36,11 +36,10 @@ def local_input(xml_path):
     
     """
     log.info('Local Input - {0}'.format(xml_path))
-    art = Article(xml_path)
-    return art, get_file_root(xml_path)
+    return get_file_root(xml_path)
 
 
-def doi_input(doi_string):
+def doi_input(doi_string, download=True):
     """
     This method accepts a DOI string and attempts to download the appropriate
     xml file. If successful, it returns a path to that file along with an
@@ -80,16 +79,16 @@ def doi_input(doi_string):
                                     fetch, aid, rep)
         open_xml = urllib.urlopen(access)
         filename = open_xml.headers['Content-Disposition'].split('\"')[1]
-        with open(filename, 'wb') as xml_file:
-            xml_file.write(open_xml.read())
-        art = Article(filename)
-        return art, get_file_root(filename)
+        if download:
+            with open(filename, 'wb') as xml_file:
+                xml_file.write(open_xml.read())
+        return get_file_root(filename)
     else:
         print('{0} is not supported for DOI Input'.format(publisher))
         sys.exit(1)
 
 
-def url_input(url_string):
+def url_input(url_string, download=True):
     """
     This method accepts a URL as an input and attempts to download the
     appropriate xml file from that page. This method is highly dependent on
@@ -113,18 +112,18 @@ def url_input(url_string):
             sys.exit(1)
         else:
             filename = open_xml.headers['Content-disposition'].split('\"')[1]
-            with open(filename, 'wb') as xml_file:
-                xml_file.write(open_xml.read())
-            art = Article(filename)
+            if download:
+                with open(filename, 'wb') as xml_file:
+                    xml_file.write(open_xml.read())
             #log.debug('Received XML path - {0}'.format(xml_path))
-            return art, get_file_root(filename)
+            return get_file_root(filename)
     else:  # We don't support this input or publisher
         print('Invalid Link: Bad URL or unsupported publisher')
         print('Supported publishers are: {0}'.format(', '.join(support)))
         sys.exit(1)
 
 
-def frontiersZipInput(zip_path, output_prefix):
+def frontiersZipInput(zip_path, output_prefix, download=None):
     """
     This method provides support for Frontiers production using base zipfiles
     as the input for ePub creation. It expects a valid pathname for one of the
@@ -160,7 +159,6 @@ def frontiersZipInput(zip_path, output_prefix):
         else:
             if not os.path.isdir(output_meta):
                 os.makedirs(output_meta)
-            article = Article(xml)
             shutil.copy(xml, os.path.join(output_meta))
             os.remove(xml)
             os.rmdir(zip_dir)
@@ -175,4 +173,4 @@ def frontiersZipInput(zip_path, output_prefix):
         for i in os.listdir(unzipped_images):
             shutil.copy(os.path.join(unzipped_images, i), images_output)
         shutil.rmtree(zip_dir)
-    return article, file_root
+    return file_root
