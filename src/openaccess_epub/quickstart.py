@@ -34,7 +34,7 @@ import os
 import sys
 import logging
 
-quickstart_version = '0.0.4'
+quickstart_version = '0.0.5'
 
 # Python uses back slashes, "\\", as escape characters so if you are on Windows
 # make sure to use "\\" for every back slash in a path. You can also use unix-
@@ -168,7 +168,7 @@ def inner_main(args):
 
     default_config={'now': time.asctime(),
                     'oae-version': OAE_VERSION,
-                    'cache-location': CACHE_LOCATION,
+                    'cache-location': unix_path_coercion(CACHE_LOCATION),
                     'input-relative-images': 'images',
                     'use-input-relative-images': 'y',
                     'image-cache': os.path.join(CACHE_LOCATION, 'img_cache'),
@@ -196,7 +196,7 @@ def inner_main(args):
 
     config_dict = {'now': time.asctime(),
                    'oae-version': OAE_VERSION,
-                   'cache-location': CACHE_LOCATION}
+                   'cache-location': unix_path_coercion(CACHE_LOCATION)}
 
     print('\nWelcome to the quickstart configuration for OpenAccess_EPUB')
     print('''
