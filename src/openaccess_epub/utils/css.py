@@ -28,9 +28,11 @@ span.footnote { display:block;}
 /*The disp-quote is for extended quotations, extracts, etc. they should be
 notably separate in display from the main text body.*/
 .disp-quote {
+    border-bottom:5px solid #333;
+    border-top:1px solid #ccc;
     display:block;
     margin-left:5%;
-}
+}}
 
 /*The common forms of images in articles are figures, formulas, and tables;
 Special style rules for these img elements go here.*/
@@ -93,4 +95,13 @@ ul.simple {
 ol.alpha-lower { list-style-type:lower-alpha;}
 ol.alpha-upper { list-style-type:upper-alpha;}
 ol.roman-lower { list-style-type:lower-roman;}
-ol.roman_upper { list-style-type:upper-roman;}'''
+ol.roman_upper { list-style-type:upper-roman;}
+
+/*Rules for different kinds of named-content, class by type*/
+/*pullquotes are treated the same as disp-quotes*/
+span.pullquote {
+    border-bottom:5px solid #333;
+    border-top:1px solid #ccc;
+    display:block;
+    margin-left:5%;
+}'''
