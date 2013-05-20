@@ -830,20 +830,28 @@ class OPSPLoS(OPSMeta):
             except IndexError:
                 caption_node = None
 
-            #Get the alternatives node, for some articles it will hold the graphic
-            alternatives = tab.getChildrenByTagName('alternatives')
-            if alternatives:  # New articles are this way
-                graphic_node = alternatives[0].getChildrenByTagName('graphic')[0]
-                table_node = alternatives[0].getChildrenByTagName('table')[0]
-            elif tab.getChildrenByTagName('graphic'): # Old articles seem to be this way
-                #TODO: Find some way to properly render out the HTML comments
-                graphic_node = tab.getChildrenByTagName('graphic')[0]
-                table_node = False
-            else:  # Article with neither graphic nor alternative, must have table
-                table = tab.getChildrenByTagName('table')[0]
-                tab.replaceSelfWith(table)
-                continue
-                
+            #Get the alternatives node, for almost all articles, it will hold
+            #the <graphic> and the <table>
+            #I am assuming only one graphic and only one table per table-wrap
+            alternatives = tab.getOptionalChild('alternatives')
+            if alternatives:
+                graphic_node = alternatives.getOptionalChild('graphic')
+                table_node = alternatives.getOptionalChild('table')
+            #If the article doesn't have the <alternatives> node, or either of
+            #these are not under alternatives, check directly under table-wrap
+            else:
+                graphic_node = None
+                table_node = None
+            if not graphic_node:
+                graphic_node = tab.getOptionalChild('graphic')
+            if not table_node:
+                table_node = tab.getOptionalChild('table')
+
+            if not graphic_node and table_node:
+                tab.replaceSelfWith(table_node)
+                continue  # Just replace table-wrap with this node and move on
+            #Past this point, there must be a graphic... fails if neither
+
             #Label and move the html table node to the list of html tables
             if table_node:
                 if 'id' in tab_attributes:
@@ -956,7 +964,11 @@ class OPSPLoS(OPSMeta):
                 if not div_title.childNodes:
                     div.removeChild(div_title)
                 else:
-                    div_title.tagName = depth_tags[depth]
+                    if depth < len(depth_tags):
+                        div_title.tagName = depth_tags[depth]
+                    else:
+                        div_title.tagName = 'span'
+                        div_title.setAttribute('class', 'extendedheader{0}'.format(depth+2))
                     if div_label_text:
                         label_node = self.doc.createTextNode(div_label_text)
                         div_title.insertBefore(label_node, div_title.firstChild)
@@ -1009,7 +1021,28 @@ class OPSPLoS(OPSMeta):
             except IndexError:  # No label tag
                 label_node = None
 
-            #Get the graphic node in the fig, treat as mandatory
+            #Get the graphic node in the disp, not always present
+            graphic_node = disp.getOptionalChild('graphic')
+            #If graphic not present
+            if not graphic_node:  #Assume there is math text instead
+                text_span = self.doc.createElement('span')
+                if 'id' in disp_attributes:
+                    text_span.setAttribute('id', disp_attributes['id'])
+                text_span.setAttribute('class', 'disp-formula')
+                text_span.childNodes = disp.childNodes
+                #Create OPS content, using image path, and label
+                disp_parent = disp.parentNode
+                #Insert the img element
+                disp_parent.insertBefore(text_span, disp)
+                #Create content for the label
+                if label_node:
+                    disp_parent.insertBefore(label_node, text_span)
+                    label_node.tagName = 'b'
+                #Remove the old disp-formula element
+                disp.removeSelf()
+                continue
+            
+            #If graphic present
             graphic_node = disp.getChildrenByTagName('graphic')[0]
             #Create a file reference for the image
             graphic_xlink_href = graphic_node.getAttribute('xlink:href')
