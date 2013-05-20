@@ -22,10 +22,8 @@ should be distinguishable from the main text.*/
     border-bottom: 1px dashed;
 }
 
-/**/
-span.footnote {
-    display:block;
-}
+/*Footnotes*/
+span.footnote { display:block;}
 
 /*The disp-quote is for extended quotations, extracts, etc. they should be
 notably separate in display from the main text body.*/
@@ -37,9 +35,7 @@ notably separate in display from the main text body.*/
 /*The common forms of images in articles are figures, formulas, and tables;
 Special style rules for these img elements go here.*/
 /*disp-formula*/
-img.disp-formula {
-    display:block;
-}
+img.disp-formula { display:block;}
 b.disp-formula-label {
     display:block;
     text-align:right;
@@ -55,6 +51,18 @@ img.table {
     display:block;
     margin-left:auto;
     margin-right:auto;
+}
+/*Extended Headers*/
+span.extendedheader7 {
+    display:block;
+    font-size:x-small;
+    font-weight:bold;
+    margin:1em 0em 1em 1em;}
+span.extendedheader8 {display:block;
+    font-size:x-small;
+    font-weight:normal;
+    margin:1em 0em 1em 1em;}
+}
 
 /*Rules for boxed-text*/
 div.boxed-text {
@@ -82,15 +90,7 @@ indicators.*/
 ul.simple {
     list-style-type:none;
 }
-ol.alpha-lower {
-    list-style-type:lower-alpha;
-}
-ol.alpha-upper {
-    list-style-type:upper-alpha;
-}
-ol.roman-lower {
-    list-style-type:lower-roman;
-}
-ol.roman_upper {
-    list-style-type:upper-roman;
-}'''
+ol.alpha-lower { list-style-type:lower-alpha;}
+ol.alpha-upper { list-style-type:upper-alpha;}
+ol.roman-lower { list-style-type:lower-roman;}
+ol.roman_upper { list-style-type:upper-roman;}'''
