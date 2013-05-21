@@ -344,13 +344,17 @@ class OPSPLoS(OPSMeta):
             #<label> might be missing, especially for one author works
             label_node = aff.getChildrenByTagName('label')
             #I expect there to always be the <addr-line>
-            addr_line_node = aff.getChildrenByTagName('addr-line')[0]
+            addr_line_node = aff.getOptionalChild('addr-line')
+            if addr_line_node:
+                addr_line_text = utils.nodeText(addr_line_node)
+            else:
+                addr_line_text = utils.getTagText(aff)
             cur_aff_span = self.appendNewElement('span', affs_div)
             cur_aff_span.setAttribute('id', aff_id)
             if label_node:
                 label_text = utils.nodeText(label_node[0])
                 label_b = self.appendNewElementWithText('b', label_text, cur_aff_span)
-            addr_line_text = utils.nodeText(addr_line_node)
+            
             self.appendNewText(addr_line_text + ', ', cur_aff_span)
 
     def make_heading_abstracts(self, receiving_node):
