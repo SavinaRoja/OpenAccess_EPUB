@@ -69,6 +69,8 @@ span.extendedheader8 {display:block;
 
 /*Rules for boxed-text*/
 div.boxed-text {
+    border-bottom:1px solid #333;
+    border-top:1px solid #333;
     margin:5%;
     background-color:#EEEEEE;
 }

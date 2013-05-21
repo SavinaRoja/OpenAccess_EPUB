@@ -25,7 +25,7 @@ class TocNCX(object):
         self.dois = []
         self.collection_mode = collection_mode
         self.version = version
-        self.initNcxDocument()
+        self.init_NCX_document()
         #playOrder is tracked as an integer counter
         self.playOrder = 1
         #maxdepth is tracked as an integer counter
@@ -33,7 +33,7 @@ class TocNCX(object):
         #List of articles included
         self.articles = []
 
-    def initNcxDocument(self):
+    def init_NCX_document(self):
         """
         This method creates the initial DOM document for the toc.ncx file
         """
@@ -53,7 +53,7 @@ class TocNCX(object):
         self.head, self.doctitle, self.docauthor, self.navmap = self.ncx.childNodes
         #Add a label with text 'Table of Contents' to navMap
         lbl = self.appendNewElement('navLabel', self.navmap)
-        lbl.appendChild(self.makeText('Table of Contents'))
+        lbl.appendChild(self.make_text('Table of Contents'))
         #Create some optional subelements
         #These are not added to the document yet, as they may not be needed
         self.lof = self.doc.createElement('navList')
@@ -73,7 +73,7 @@ those conforming to the relaxed constraints of OPS 2.0'''))
             meta_tag.setAttribute('name', meta)
             self.head.appendChild(meta_tag)
 
-    def makeText(self, textstring):
+    def make_text(self, textstring):
         text = self.doc.createElement('text')
         text.appendChild(self.doc.createTextNode(textstring))
         return text
@@ -110,7 +110,7 @@ those conforming to the relaxed constraints of OPS 2.0'''))
         nav.setAttribute('playOrder', str(self.playOrder))
         self.playOrder += 1
         navlbl = self.appendNewElement('navLabel', nav)
-        navlbl.appendChild(self.makeText('Title'))
+        navlbl.appendChild(self.make_text('Title'))
         navcon = self.appendNewElement('content', nav)
         navcon.setAttribute('src', 'main.{0}.xml#title'.format(self.a_doi))
 
@@ -130,7 +130,7 @@ those conforming to the relaxed constraints of OPS 2.0'''))
                 nav.setAttribute('playOrder', str(self.playOrder))
                 self.playOrder += 1
                 navlbl = self.appendNewElement('navLabel', nav)
-                navlbl.appendChild(self.makeText('References'))
+                navlbl.appendChild(self.make_text('References'))
                 navcon = self.appendNewElement('content', nav)
                 artdoi = self.doi.split('/')[1]
                 navcon.setAttribute('src', 'biblio.{0}.xml#references'.format(artdoi))
@@ -190,7 +190,7 @@ those conforming to the relaxed constraints of OPS 2.0'''))
                         navlblstr = utils.serializeText(title_node, stringlist=[])
                         if not navlblstr:
                             navlblstr = mid
-                    navlbl.appendChild(self.makeText(navlblstr))
+                    navlbl.appendChild(self.make_text(navlblstr))
                     navcon = nav.appendChild(self.doc.createElement('content'))
                     navcon.setAttribute('src', 'main.{0}.xml#{1}'.format(self.a_doi, mid))
                     self.structureParse(child, nav, depth, first=False)
@@ -203,10 +203,10 @@ those conforming to the relaxed constraints of OPS 2.0'''))
         """
         if self.collection_mode:
             tocname = 'NCX For: Article Collection'
-            self.doctitle.appendChild(self.makeText(tocname))
+            self.doctitle.appendChild(self.make_text(tocname))
         else:
             tocname = 'NCX For: {0}'.format(self.doi)
-            self.doctitle.appendChild(self.makeText(tocname))
+            self.doctitle.appendChild(self.make_text(tocname))
 
     def makeDocAuthor(self):
         """
@@ -219,7 +219,7 @@ those conforming to the relaxed constraints of OPS 2.0'''))
         #this employed the first author of the first article and, I will
         #probably adjust it back to that eventually.
         authlabel = 'Paul Barton, Developer of OpenAccess_EPUB'
-        self.docauthor.appendChild(self.makeText(authlabel))
+        self.docauthor.appendChild(self.make_text(authlabel))
 
     def appendNewElement(self, newelement, parent):
         """
@@ -263,7 +263,7 @@ those conforming to the relaxed constraints of OPS 2.0'''))
         element to the ncx element
         """
         navlbl = self.doc.createElement('navLabel')
-        navlbl.appendChild(self.makeText('List of Figures'))
+        navlbl.appendChild(self.make_text('List of Figures'))
         self.lof.insertBefore(navlbl, self.lof.firstChild)
         self.ncx.appendChild(self.lof)
 
@@ -273,7 +273,7 @@ those conforming to the relaxed constraints of OPS 2.0'''))
         element to the ncx element
         """
         navlbl = self.doc.createElement('navLabel')
-        navlbl.appendChild(self.makeText('List of Tables'))
+        navlbl.appendChild(self.make_text('List of Tables'))
         self.lot.insertBefore(navlbl, self.lot.firstChild)
         self.ncx.appendChild(self.lot)
 

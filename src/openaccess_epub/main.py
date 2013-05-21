@@ -338,7 +338,8 @@ def make_epub(document, outdirect, explicit_images, batch, config=None):
 
     #Run content processing per publisher
     if DOI.split('/')[0] == '10.1371':  # PLoS's publisher DOI
-        ops.OPSPLoS(document, outdirect)
+        ops_doc = ops.OPSPLoS(document, outdirect)
+        print(ops_doc.main_body)
         #TODO: Workflow change, parse table of contents from OPS processed document
         toc = ncx.TocNCX(__version__)
         toc.parseArticle(document)

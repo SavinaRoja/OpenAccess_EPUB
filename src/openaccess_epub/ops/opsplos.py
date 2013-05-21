@@ -29,7 +29,7 @@ class OPSPLoS(OPSMeta):
         self.make_fragment_identifiers()
         self.ops_dir = os.path.join(output_dir, 'OPS')
         self.html_tables = []
-        self.create_main()
+        self.main_body = self.create_main()
         self.create_biblio()
         if self.html_tables:
             self.create_tables()
@@ -103,6 +103,7 @@ class OPSPLoS(OPSMeta):
         with open(os.path.join(self.ops_dir, self.main_frag[:-4]), 'wb') as op:
             op.write(self.document.toxml(encoding='utf-8'))
             #op.write(self.document.toprettyxml(encoding='utf-8'))
+        return body
 
     def make_heading(self, receiving_node):
         """
@@ -185,8 +186,8 @@ class OPSPLoS(OPSMeta):
         This method encapsulates the functions necessary to create the biblio
         segment of the article.
         """
-        self.doc = self.make_document('biblio')
-        body = self.doc.getElementsByTagName('body')[0]
+        self.document = self.make_document('biblio')
+        body = self.document.getElementsByTagName('body')[0]
         body.setAttribute('id', 'references')
         try:
             back = self.article.getElementsByTagName('back')[0]
@@ -203,8 +204,8 @@ class OPSPLoS(OPSMeta):
 
         #Finally, write to a document
         with open(os.path.join(self.ops_dir, self.bib_frag[:-4]), 'wb') as op:
-            op.write(self.doc.toxml(encoding='utf-8'))
-            #op.write(self.doc.toprettyxml(encoding='utf-8'))
+            op.write(self.document.toxml(encoding='utf-8'))
+            #op.write(self.document.toprettyxml(encoding='utf-8'))
 
     def create_tables(self):
         """
@@ -771,9 +772,9 @@ class OPSPLoS(OPSMeta):
             #Create OPS content, using image path, label, and caption
             fig_parent = fig.parentNode
             #Create a horizontal rule
-            fig_parent.insertBefore(self.doc.createElement('hr'), fig)
+            fig_parent.insertBefore(self.document.createElement('hr'), fig)
             #Create the img element
-            img_element = self.doc.createElement('img')
+            img_element = self.document.createElement('img')
             img_element.setAttribute('alt', 'A Figure')
             if 'id' in fig_attributes:
                 img_element.setAttribute('id', fig_attributes['id'])
@@ -784,7 +785,7 @@ class OPSPLoS(OPSMeta):
 
             #Create content for the label and caption
             if caption_node or label_node:  # These will go into a <div> after <img>
-                img_caption_div = self.doc.createElement('div')
+                img_caption_div = self.document.createElement('div')
                 img_caption_div.setAttribute('class', 'figure-caption')
                 img_caption_div_b = self.appendNewElement('b', img_caption_div)
                 if label_node:
@@ -805,7 +806,7 @@ class OPSPLoS(OPSMeta):
                 fig_parent.insertBefore(img_caption_div, fig)
 
             #Create a horizontal rule
-            fig_parent.insertBefore(self.doc.createElement('hr'), fig)
+            fig_parent.insertBefore(self.document.createElement('hr'), fig)
 
             #Remove the original <fig>
             fig.removeSelf()
@@ -878,9 +879,9 @@ class OPSPLoS(OPSMeta):
             #Create OPS content, using image path, label, and caption
             tab_parent = tab.parentNode
             #Create a horizontal rule
-            tab_parent.insertBefore(self.doc.createElement('hr'), tab)
+            tab_parent.insertBefore(self.document.createElement('hr'), tab)
             #Create the img element
-            img_element = self.doc.createElement('img')
+            img_element = self.document.createElement('img')
             img_element.setAttribute('alt', 'A Table')
             if 'id' in tab_attributes:
                 img_element.setAttribute('id', tab_attributes['id'])
@@ -889,7 +890,7 @@ class OPSPLoS(OPSMeta):
 
             #Create content for the label and caption
             if caption_node or label_node:  # These will go into a <div> before <img>
-                img_caption_div = self.doc.createElement('div')
+                img_caption_div = self.document.createElement('div')
                 img_caption_div.setAttribute('class', 'table-caption')
                 img_caption_div_b = self.appendNewElement('b', img_caption_div)
                 if label_node:
@@ -914,13 +915,13 @@ class OPSPLoS(OPSMeta):
 
             #Create a link to the html version of the table
             if table_node:
-                html_table_link = self.doc.createElement('a')
+                html_table_link = self.document.createElement('a')
                 html_table_link.setAttribute('href', self.tab_frag.format(tab_attributes['id']))
                 self.appendNewText('HTML version of this table', html_table_link)
                 tab_parent.insertBefore(html_table_link, tab)
 
             #Create a horizontal rule
-            tab_parent.insertBefore(self.doc.createElement('hr'), tab)
+            tab_parent.insertBefore(self.document.createElement('hr'), tab)
 
             #Remove the original <table-wrap>
             tab_parent.removeChild(tab)
@@ -974,7 +975,7 @@ class OPSPLoS(OPSMeta):
                         div_title.tagName = 'span'
                         div_title.setAttribute('class', 'extendedheader{0}'.format(depth+2))
                     if div_label_text:
-                        label_node = self.doc.createTextNode(div_label_text)
+                        label_node = self.document.createTextNode(div_label_text)
                         div_title.insertBefore(label_node, div_title.firstChild)
             self.convert_div_titles(div, depth=depth + 1)
 
@@ -1029,7 +1030,7 @@ class OPSPLoS(OPSMeta):
             graphic_node = disp.getOptionalChild('graphic')
             #If graphic not present
             if not graphic_node:  #Assume there is math text instead
-                text_span = self.doc.createElement('span')
+                text_span = self.document.createElement('span')
                 if 'id' in disp_attributes:
                     text_span.setAttribute('id', disp_attributes['id'])
                 text_span.setAttribute('class', 'disp-formula')
@@ -1058,7 +1059,7 @@ class OPSPLoS(OPSMeta):
             disp_parent = disp.parentNode
 
             #Create the img element
-            img_element = self.doc.createElement('img')
+            img_element = self.document.createElement('img')
             img_element.setAttribute('alt', 'A Display Formula')
             if 'id' in disp_attributes:
                 img_element.setAttribute('id', disp_attributes['id'])
@@ -1150,18 +1151,14 @@ class OPSPLoS(OPSMeta):
         for boxed_text in body.getElementsByTagName('boxed-text'):
             boxed_text_attrs = boxed_text.getAllAttributes(remove=False)
             boxed_text_parent = boxed_text.parentNode
-            top_hr = self.doc.createElement('hr')
-            bottom_hr = self.doc.createElement('hr')
             sec = boxed_text.getOptionalChild('sec')
-            #sec = boxed_text.getChildrenByTagName('sec')[0]
             if sec:
                 sec.tagName = 'div'
                 title = sec.getOptionalChild('title')
-                #title = sec.getChildrenByTagName('title')
                 if title:
                     title.tagName = 'b'
             else:
-                sec = self.doc.createElement('div')
+                sec = self.document.createElement('div')
                 sec.childNodes = boxed_text.childNodes
             sec.setAttribute('class', 'boxed-text')
             if 'id' in boxed_text_attrs:
@@ -1239,7 +1236,7 @@ class OPSPLoS(OPSMeta):
             verse_group.tagName = 'div'
             verse_group.setAttribute('id', 'verse-group')
             if any([label, title, subtitle]):
-                new_verse_title = self.doc.createElement('b')
+                new_verse_title = self.document.createElement('b')
                 verse_group.insertBefore(verse_group.firstChild)
                 if label:
                     new_verse_title.childNodes += label[0].childNodes

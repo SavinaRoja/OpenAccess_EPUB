@@ -21,7 +21,7 @@ class OPSMeta(object):
     """
     def __init__(self):
         log.info('Initiating OPSMeta')
-        self.doc = self.make_document('base')
+        self.document = self.make_document('base')
 
     def make_document(self, titlestring):
         """
@@ -114,7 +114,7 @@ class OPSMeta(object):
         to another. This method allows that to be done more concisely. It
         returns the newly created and appended element.
         """
-        new = self.doc.createElement(newelement)
+        new = self.document.createElement(newelement)
         parent.appendChild(new)
         return new
 
@@ -124,7 +124,7 @@ class OPSMeta(object):
         it to another element. This method makes that more concise. It does not
         return the newly created and appended text node
         """
-        new = self.doc.createTextNode(newtext)
+        new = self.document.createTextNode(newtext)
         parent.appendChild(new)
 
     def appendNewElementWithText(self, newelement, newtext, parent):
