@@ -78,7 +78,7 @@ those conforming to the relaxed constraints of OPS 2.0'''))
         text.appendChild(self.doc.createTextNode(textstring))
         return text
 
-    def parseArticle(self, article):
+    def parse_article(self, article):
         """
         Process the contents of an article to build the NCX
         """
@@ -88,20 +88,20 @@ those conforming to the relaxed constraints of OPS 2.0'''))
         self.a_doi = self.doi.split('/')[1]
         body = article.body
         self.articles.append(article)
-        self.navMapToTitlePage()
+        self.nav_map_title_page()
         #If we are only packing one article
         if body:
             if not self.collection_mode:
-                self.structureParse(body)
+                self.structure_parse(body)
             if self.lof.childNodes:
                 self.makeFiguresList()
             if self.lot.childNodes:
                 self.makeTablesList()
-        self.navMaptToReferences()
+        self.nav_map_references()
 
-    def navMapToTitlePage(self):
+    def nav_map_title_page(self):
         """
-        This is used by the structureParse method to create some elements which
+        This is used by the structure_parse method to create some elements which
         do not require structure parsing in order to create.
         """
         #The title page element we will always expect
@@ -114,10 +114,10 @@ those conforming to the relaxed constraints of OPS 2.0'''))
         navcon = self.appendNewElement('content', nav)
         navcon.setAttribute('src', 'main.{0}.xml#title'.format(self.a_doi))
 
-    def navMaptToReferences(self):
+    def nav_map_references(self):
         """
         The references page should be added if there are references, this is
-        used by the structureParse method
+        used by the structure_parse method
         """
         try:
             back = self.article.root_tag.getElementsByTagName('back')[0]
@@ -135,7 +135,7 @@ those conforming to the relaxed constraints of OPS 2.0'''))
                 artdoi = self.doi.split('/')[1]
                 navcon.setAttribute('src', 'biblio.{0}.xml#references'.format(artdoi))
 
-    def structureParse(self, srcnode, dstnode=None, depth=0, first=True):
+    def structure_parse(self, srcnode, dstnode=None, depth=0, first=True):
         """
         This recursive function travels the contents of an article's body node
         looking for <sec>, <fig>, and <table-wrap> tags. It only locates these
@@ -193,8 +193,8 @@ those conforming to the relaxed constraints of OPS 2.0'''))
                     navlbl.appendChild(self.make_text(navlblstr))
                     navcon = nav.appendChild(self.doc.createElement('content'))
                     navcon.setAttribute('src', 'main.{0}.xml#{1}'.format(self.a_doi, mid))
-                    self.structureParse(child, nav, depth, first=False)
-        #self.navMaptToReferences()
+                    self.structure_parse(child, nav, depth, first=False)
+        #self.nav_map_references()
 
     def makeDocTitle(self):
         """

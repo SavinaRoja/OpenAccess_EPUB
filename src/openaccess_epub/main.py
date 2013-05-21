@@ -342,13 +342,13 @@ def make_epub(document, outdirect, explicit_images, batch, config=None):
         print(ops_doc.main_body)
         #TODO: Workflow change, parse table of contents from OPS processed document
         toc = ncx.TocNCX(__version__)
-        toc.parseArticle(document)
+        toc.parse_article(document)
         toc.write(outdirect)
         myopf = opf.PLoSOPF(__version__, outdirect, False)
     elif DOI.split('/')[0] == '10.3389':  # Frontiers' publisher DOI
         ops.OPSFrontiers(document, outdirect)
         toc = ncx.TocNCX(__version__)
-        toc.parseArticle(document)
+        toc.parse_article(document)
         toc.write(outdirect)
         myopf = opf.FrontiersOPF(__version__, outdirect, False)
     myopf.parse_article(document)
