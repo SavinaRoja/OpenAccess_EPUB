@@ -27,12 +27,12 @@ span.footnote { display:block;}
 
 /*The disp-quote is for extended quotations, extracts, etc. they should be
 notably separate in display from the main text body.*/
-.disp-quote {
-    border-bottom:5px solid #333;
-    border-top:1px solid #ccc;
+div.disp-quote {
+    border-bottom:1px solid #ccc;
+    border-top:5px solid #333;
     display:block;
     margin-left:5%;
-}}
+}
 
 /*The common forms of images in articles are figures, formulas, and tables;
 Special style rules for these img elements go here.*/
@@ -59,11 +59,12 @@ span.extendedheader7 {
     display:block;
     font-size:x-small;
     font-weight:bold;
-    margin:1em 0em 1em 1em;}
+    margin:1em 0em 1em 1em;
+}
 span.extendedheader8 {display:block;
     font-size:x-small;
     font-weight:normal;
-    margin:1em 0em 1em 1em;}
+    margin:1em 0em 1em 1em;
 }
 
 /*Rules for boxed-text*/
@@ -100,8 +101,8 @@ ol.roman_upper { list-style-type:upper-roman;}
 /*Rules for different kinds of named-content, class by type*/
 /*pullquotes are treated the same as disp-quotes*/
 span.pullquote {
-    border-bottom:5px solid #333;
-    border-top:1px solid #ccc;
+    border-bottom:1px solid #ccc;
+    border-top:5px solid #333;
     display:block;
     margin-left:5%;
 }'''

@@ -1129,41 +1129,12 @@ class OPSPLoS(OPSMeta):
         Extract or extended quoted passage from another work, usually made
         typographically distinct from surrounding text
 
-        <disp-quote> elements have a relatively complex content model, but it
-        appears that PLoS typically employs a simple <p> child element to hold
-        all of the text, until otherwise found, this method handles the
-        conversion under this assumption.
+        <disp-quote> elements have a relatively complex content model, but PLoS
+        appears to employ either <p>s or <list>s.
         """
         for disp_quote in body.getElementsByTagName('disp-quote'):
-            disp_quote_parent = disp_quote.parentNode
-            if disp_quote_parent.tagName == 'p':
-                grandparent = disp_quote_parent.parentNode
-                disp_quote.elevateNode()
-                if not disp_quote_parent.childNodes:
-                    grandparent.removeChild(disp_quote_parent)
-                #The grandparent is now the new parent
-                disp_quote_parent = grandparent
-            top_hr = self.doc.createElement('hr')
-            bottom_hr = self.doc.createElement('hr')
-            #Most <disp-quote>s contain only a single <p>
-            #But journal.pone.0002246 shows a list instead, assume the general
-            #case of one or the other form
-            if disp_quote.getChildrenByTagName('list'):
-                list = disp_quote.getChildrenByTagName('list')[0]
-                disp_quote_parent.insertBefore(top_hr, disp_quote)
-                top_hr.setAttribute('class', 'disp-quote')
-                for list_item in list.getChildrenByTagName('list-item'):
-                    list_p = list_item.getChildrenByTagName('p')[0]
-                    list_p.setAttribute('class', 'disp-quote')
-                    disp_quote_parent.insertBefore(list_p, disp_quote)
-                disp_quote_parent.insertBefore(bottom_hr, disp_quote)
-                bottom_hr.setAttribute('class', 'disp-quote')
-            else:
-                paragraph = disp_quote.getChildrenByTagName('p')[0]
-                for element in [top_hr, paragraph, bottom_hr]:
-                    element.setAttribute('class', 'disp-quote')
-                    disp_quote_parent.insertBefore(element, disp_quote)
-            disp_quote_parent.removeChild(disp_quote)
+            disp_quote.tagName = 'div'
+            disp_quote.setAttribute('class', 'disp-quote')
 
     def convert_boxed_text_elements(self, body):
         """
