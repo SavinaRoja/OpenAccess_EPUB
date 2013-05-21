@@ -139,22 +139,6 @@ def getFileRoot(path):
     return root
 
 
-def nodeText(node):
-    """
-    This is to be used when a node may only contain text, numbers or special
-    characters. This function will return the text contained in the node.
-    Sometimes this text data contains spurious newlines and spaces due to
-    parsing and original xml formatting. This function should strip such
-    artifacts.
-    """
-    #Get data from first child of the node
-    try:
-        first_child_data = node.firstChild.data
-    except AttributeError:  # Usually caused by an empty node
-        return ''
-    else:
-        return '{0}'.format(first_child_data.strip())
-
 
 def make_epub_base():
     """
@@ -247,6 +231,36 @@ def serializeText(fromnode, stringlist=None, sep=''):
     return sep.join(stringlist)
 
 
+def nodeText(node):
+    """
+    This is to be used when a node may only contain text, numbers or special
+    characters. This function will return the text contained in the node.
+    Sometimes this text data contains spurious newlines and spaces due to
+    parsing and original xml formatting. This function should strip such
+    artifacts.
+    """
+    #Get data from first child of the node
+    try:
+        first_child_data = node.firstChild.data
+    except AttributeError:  # Usually caused by an empty node
+        return ''
+    else:
+        return '{0}'.format(first_child_data.strip())
+
+def getTagData(node_list):
+    '''Grab the (string) data from text elements
+    node_list -- NodeList returned by getElementsByTagName
+    '''
+    data = ''
+    try:
+        for node in node_list:
+            if node.firstChild.nodeType == node.TEXT_NODE:
+                data = node.firstChild.data
+        return data
+    except TypeError:
+        getTagData([node_list])
+
+
 def getTagText(node):
     """
     Grab the text data from a Node. If it is provided a NodeList, it will
@@ -261,7 +275,7 @@ def getTagText(node):
         if children:
             for child in children:
                 if child.nodeType == child.TEXT_NODE and child.data != '\n':
-                    data = child.data
+                    data += child.data
             return data
 
 
@@ -291,20 +305,6 @@ def getFormattedNode(node):
                 item.tagName = 'span'
                 item.setAttribute('style', spans[item])
     return clone
-
-
-def getTagData(node_list):
-    '''Grab the (string) data from text elements
-    node_list -- NodeList returned by getElementsByTagName
-    '''
-    data = ''
-    try:
-        for node in node_list:
-            if node.firstChild.nodeType == node.TEXT_NODE:
-                data = node.firstChild.data
-        return data
-    except TypeError:
-        getTagData([node_list])
 
 
 def epubZip(outdirect):
