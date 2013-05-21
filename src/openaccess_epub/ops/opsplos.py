@@ -1373,7 +1373,10 @@ class OPSPLoS(OPSMeta):
         for list_el in body.getElementsByTagName('list'):
             list_el_attributes = list_el.getAllAttributes(remove=True)
             list_el_parent = list_el.parentNode
-            list_el_type = list_el_attributes['list-type']
+            try:
+                list_el_type = list_el_attributes['list-type']
+            except KeyError:
+                list_el_type = 'order'
             #Unordered list if '', 'bullet', or 'simple'
             if list_el_type in ['', 'bullet', 'simple']:
                 list_el.tagName = 'ul'
