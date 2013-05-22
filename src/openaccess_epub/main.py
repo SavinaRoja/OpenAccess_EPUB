@@ -217,17 +217,26 @@ def collection_input(args, config=None):
     metadata from any single article to the whole would be inappropriate.
 
     Unlike other input modes, Collection Mode is strictly dependent on the
-    local directory of execution. All XML files in the local directory of
-    execution will be used as input and be added to the collection.
+    local directory of execution. If there is a file named "order.txt" in the
+    local directory, this file should contain the name of one input XML file
+    on each line; the files will be added to the ePub output by line-order.
+    If there is "order.txt" file, Collection Mode will assume that all XML
+    files are input and the article in order in the collection will be random.
 
     Collection Input Mode has default epubcheck behavior, it will place a system
     call to epubcheck unless specified otherwise (--no-epubcheck or -N flags).
     """
     if config is None:
         config = get_config_module()
-    xml_files = list_xml_files(dir=os.getcwd())
-    print(xml_files)
-
+    try:
+        order = open('order.txt', 'r')
+    except IOError:  # No order.txt
+        xml_files = list_xml_files(dir=os.getcwd())
+    else:
+        #Add all nonempty lines, in order, to the xml_files list
+        xml_files = [i.strip() for i in order.readlines() if i.strip()]
+    finally:
+        order.close()
 
 
 class ParallelBatchProcess(multiprocessing.Process):
@@ -415,10 +424,9 @@ def list_xml_files(dir):
     for item in os.listdir(dir):
         item_path = os.path.join(dir, item)
         #Skip directories and files without .xml extension
-        _root, extension = os.path.splitext(item)
-        if os.path.isdir(item_path) or extension != '.xml':
-            continue
-        xml_files.append(item_path)
+        _root, extension = os.path.splitext(item_path)
+        if os.path.isfile(item_path) and extension == '.xml':
+            xml_files.append(item_path)
     return xml_files
 
 def main(args):
