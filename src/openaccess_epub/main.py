@@ -238,6 +238,32 @@ def collection_input(args, config=None):
     finally:
         order.close()
 
+    #The output .epub file will receive a standard name
+    output_name = os.path.split(os.getcwd())[1] + '_collection'
+
+    #The standard make_epub() method will not work for Collection Mode
+    #So the work done here is an adaptation of it
+    print('Processing output to {0}.epub'.format(output_name))
+    #Copy files from base_epub to the new output
+    if os.path.isdir(outdirect):
+        if batch:
+            shutil.rmtree(outdirect)
+        else:
+            dir_exists(outdirect)
+    epub_base = os.path.join(CACHE_LOCATION, 'base_epub')
+    shutil.copytree(epub_base, outdirect)
+    
+    #Now it is time to operate on each of the xml files
+    for xml_file in xml_files:
+        abs_input_path = utils.get_absolute_path(args.input)
+        raw_name = u_input.local_input(abs_input_path)  # is this used?
+        parsed_article = Article(abs_input_path)
+    
+    #Running epubcheck on the output verifies the validity of the ePub,
+    #requires a local installation of java and epubcheck.
+    if args.no_epubcheck:
+        epubcheck('{0}.epub'.format(output_name), config)
+
 
 class ParallelBatchProcess(multiprocessing.Process):
     """
