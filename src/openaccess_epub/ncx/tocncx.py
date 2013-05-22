@@ -94,9 +94,9 @@ those conforming to the relaxed constraints of OPS 2.0'''))
             if not self.collection_mode:
                 self.structure_parse(body)
             if self.lof.childNodes:
-                self.makeFiguresList()
+                self.make_list_of_figures()
             if self.lot.childNodes:
-                self.makeTablesList()
+                self.make_list_of_tables()
         self.nav_map_references()
 
     def nav_map_title_page(self):
@@ -196,7 +196,7 @@ those conforming to the relaxed constraints of OPS 2.0'''))
                     self.structure_parse(child, nav, depth, first=False)
         #self.nav_map_references()
 
-    def makeDocTitle(self):
+    def make_doctitle(self):
         """
         Fills in the <docTitle> node, works for both single and collection
         mode.
@@ -208,7 +208,7 @@ those conforming to the relaxed constraints of OPS 2.0'''))
             tocname = 'NCX For: {0}'.format(self.doi)
             self.doctitle.appendChild(self.make_text(tocname))
 
-    def makeDocAuthor(self):
+    def make_docauthor(self):
         """
         Fills in the <docAuthor> node.
         mode.
@@ -240,7 +240,7 @@ those conforming to the relaxed constraints of OPS 2.0'''))
         new = self.doc.createTextNode(newtext)
         parent.appendChild(new)
 
-    def setMetas(self):
+    def set_metas(self):
         """
         After all the articles have been processed, this method provides values
         to each of the meta items.
@@ -257,7 +257,7 @@ those conforming to the relaxed constraints of OPS 2.0'''))
             else:
                 meta.setAttribute('content', '0')
 
-    def makeFiguresList(self):
+    def make_list_of_figures(self):
         """
         Prepends the List of Figures with appropriate navLabel and adds the
         element to the ncx element
@@ -267,7 +267,7 @@ those conforming to the relaxed constraints of OPS 2.0'''))
         self.lof.insertBefore(navlbl, self.lof.firstChild)
         self.ncx.appendChild(self.lof)
 
-    def makeTablesList(self):
+    def make_list_of_tables(self):
         """
         Prepends the List of Tables with appropriate navLabel and adds the
         element to the ncx element
@@ -283,9 +283,9 @@ those conforming to the relaxed constraints of OPS 2.0'''))
         necessary functions required to finalize the document and then writes
         the file to disk.
         """
-        self.setMetas()
-        self.makeDocAuthor()
-        self.makeDocTitle()
+        self.set_metas()
+        self.make_docauthor()
+        self.make_doctitle()
         filename = os.path.join(location, 'OPS', 'toc.ncx')
         with open(filename, 'wb') as output:
             output.write(self.doc.toprettyxml(encoding='utf-8'))
