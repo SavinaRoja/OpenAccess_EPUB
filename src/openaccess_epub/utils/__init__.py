@@ -119,6 +119,8 @@ def get_output_directory(args):
                 #Batch should only work on a supplied directory
                 abs_batch_path = get_absolute_path(args.parallel_batch)
                 return abs_batch_path
+            elif args.collection:
+                return os.getcwd()
             else:  # Un-handled or currently unsupported options
                 print('The output location could not be determined...')
                 sys.exit()
