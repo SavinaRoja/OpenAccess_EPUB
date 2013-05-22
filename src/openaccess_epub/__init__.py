@@ -5,4 +5,4 @@ uilities that enable the conversion of xml files to epub for academic journals.
 """
 
 from .main import OAEParser, main
-__version__ = '0.3.5'
+__version__ = '0.3.6'
