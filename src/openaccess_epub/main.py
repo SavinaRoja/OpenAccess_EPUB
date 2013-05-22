@@ -259,6 +259,15 @@ def collection_input(args, config=None):
         raw_name = u_input.local_input(abs_input_path)  # is this used?
         parsed_article = Article(abs_input_path)
     
+        if parsed_article.metadata.dtdVersion() == '2.0':  #Not supported
+            print('Article published with JPTS DTDv2.0, not supported!')
+            sys.exit(1)
+        #Get the Digital Object Identifier
+        DOI = document.getDOI()
+    
+    #TODO: Image stuff
+    #TODO: Content stuff
+    
     #Running epubcheck on the output verifies the validity of the ePub,
     #requires a local installation of java and epubcheck.
     if args.no_epubcheck:
