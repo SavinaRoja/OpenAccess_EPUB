@@ -106,7 +106,10 @@ those conforming to the relaxed constraints of OPS 2.0'''))
         """
         #The title page element we will always expect
         nav = self.appendNewElement('navPoint', self.navmap)
-        nav.setAttribute('id', 'titlepage')
+        if self.collection_mode:
+            nav.setAttribute('id', 'titlepage-{0}'.format(self.a_doi))
+        else:
+            nav.setAttribute('id', 'titlepage')
         nav.setAttribute('playOrder', str(self.playOrder))
         self.playOrder += 1
         navlbl = self.appendNewElement('navLabel', nav)
@@ -126,7 +129,10 @@ those conforming to the relaxed constraints of OPS 2.0'''))
         else:
             if back.getElementsByTagName('ref'):
                 nav = self.appendNewElement('navPoint', self.navmap)
-                nav.setAttribute('id', 'references')
+                if self.collection_mode:
+                    nav.setAttribute('id', 'references-{0}'.format(self.a_doi))
+                else:
+                    nav.setAttribute('id', 'references')
                 nav.setAttribute('playOrder', str(self.playOrder))
                 self.playOrder += 1
                 navlbl = self.appendNewElement('navLabel', nav)

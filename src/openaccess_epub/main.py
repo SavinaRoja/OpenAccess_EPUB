@@ -249,6 +249,9 @@ def collection_input(args, config=None):
     epub_base = os.path.join(CACHE_LOCATION, 'base_epub')
     shutil.copytree(epub_base, output_name)
     
+    toc = ncx.TocNCX(version=__version__, collection_mode=True)
+    myopf = opf.PLoSOPF(__version__, output_name, collection_mode=True)
+    
     #Now it is time to operate on each of the xml files
     for xml_file in xml_files:
         raw_name = u_input.local_input(xml_file)  # is this used?
@@ -282,6 +285,15 @@ def collection_input(args, config=None):
                     sys.exit(1)
 
         #TODO: Content stuff
+        if journal_doi == '10.1371':  # PLoS's publisher DOI
+            ops_doc = ops.OPSPLoS(parsed_article, output_name)
+            #TODO: Workflow change, parse table of contents from OPS processed document
+            toc.parse_article(parsed_article)
+            myopf.parse_article(parsed_article)
+    toc.write(output_name)
+    myopf.write()
+    utils.epubZip(output_name)
+    
 
     #Running epubcheck on the output verifies the validity of the ePub,
     #requires a local installation of java and epubcheck.
@@ -413,7 +425,6 @@ def make_epub(document, outdirect, explicit_images, batch, config=None):
     #Run content processing per publisher
     if DOI.split('/')[0] == '10.1371':  # PLoS's publisher DOI
         ops_doc = ops.OPSPLoS(document, outdirect)
-        print(ops_doc.main_body)
         #TODO: Workflow change, parse table of contents from OPS processed document
         toc = ncx.TocNCX(__version__)
         toc.parse_article(document)
