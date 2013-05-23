@@ -12,6 +12,7 @@ Contents:
    :maxdepth: 2
    
    introduction
+   inputmodes
 
 .. automodule:: openaccess_epub
 
