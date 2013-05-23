@@ -235,7 +235,6 @@ def collection_input(args, config=None):
     else:
         #Add all nonempty lines, in order, to the xml_files list
         xml_files = [i.strip() for i in order.readlines() if i.strip()]
-    finally:
         order.close()
 
     #The output .epub file will receive a standard name
@@ -245,29 +244,45 @@ def collection_input(args, config=None):
     #So the work done here is an adaptation of it
     print('Processing output to {0}.epub'.format(output_name))
     #Copy files from base_epub to the new output
-    if os.path.isdir(outdirect):
-        if batch:
-            shutil.rmtree(outdirect)
-        else:
-            dir_exists(outdirect)
+    if os.path.isdir(output_name):
+        dir_exists(output_name)
     epub_base = os.path.join(CACHE_LOCATION, 'base_epub')
-    shutil.copytree(epub_base, outdirect)
+    shutil.copytree(epub_base, output_name)
     
     #Now it is time to operate on each of the xml files
     for xml_file in xml_files:
-        abs_input_path = utils.get_absolute_path(args.input)
-        raw_name = u_input.local_input(abs_input_path)  # is this used?
-        parsed_article = Article(abs_input_path)
+        raw_name = u_input.local_input(xml_file)  # is this used?
+        parsed_article = Article(xml_file)
     
         if parsed_article.metadata.dtdVersion() == '2.0':  #Not supported
             print('Article published with JPTS DTDv2.0, not supported!')
             sys.exit(1)
         #Get the Digital Object Identifier
-        DOI = document.getDOI()
-    
-    #TODO: Image stuff
-    #TODO: Content stuff
-    
+        doi = parsed_article.getDOI()
+        journal_doi, article_doi = doi.split('/')
+        
+        #Check for images
+        img_dir = os.path.join(output_name, 'OPS', 'images-{0}'.format(article_doi))
+        expected_local = 'images-{0}'.format(raw_name)
+        if os.path.isdir(expected_local):
+            utils.images.local_images(expected_local, img_dir)
+        else:
+            article_cache = os.path.join(config.image_cache, journal_doi, article_doi)
+            if os.path.isdir(article_cache):
+                utils.images.image_cache(article_cache, img_dir)
+            else:
+                print('Images for {0} (DOI: {1}) could not be found!'.format(xml_file, doi))
+                r = input('Try to download them? [Y/n]')
+                if r in ['y', 'Y', '']:
+                    os.mkdir(img_dir)
+                    utils.images.fetch_plos_images(article_doi, img_dir, parsed_article)
+                    if config.use_image_cache:
+                        utils.images.move_images_to_cache(img_dir, article_cache)
+                else:
+                    sys.exit(1)
+
+        #TODO: Content stuff
+
     #Running epubcheck on the output verifies the validity of the ePub,
     #requires a local installation of java and epubcheck.
     if args.no_epubcheck:

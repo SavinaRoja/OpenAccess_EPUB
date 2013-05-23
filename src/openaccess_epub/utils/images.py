@@ -145,8 +145,7 @@ def get_images(doi, outdirect, images, config, document):
             if success:
                 if config.use_image_cache:
                     move_images_to_cache(img_dir, article_cache)
-                return True
-            return False
+            return success
         else:
             print('Fetching images for this publisher is not supported!')
             return False

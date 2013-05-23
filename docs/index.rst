@@ -14,8 +14,6 @@ Contents:
    introduction
    inputmodes
 
-.. automodule:: openaccess_epub
-
 Indices and tables
 ==================
 
