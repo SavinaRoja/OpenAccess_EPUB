@@ -56,12 +56,12 @@ class TocNCX(object):
         lbl.appendChild(self.make_text('Table of Contents'))
         #Create some optional subelements
         #These are not added to the document yet, as they may not be needed
-        self.lof = self.doc.createElement('navList')
-        self.lof.setAttribute('class', 'lof')
-        self.lof.setAttribute('id', 'lof')
-        self.lot = self.doc.createElement('navList')
-        self.lot.setAttribute('class', 'lot')
-        self.lot.setAttribute('id', 'lot')
+        self.list_of_figures = self.doc.createElement('navList')
+        self.list_of_figures.setAttribute('class', 'lof')
+        self.list_of_figures.setAttribute('id', 'lof')
+        self.list_of_tables = self.doc.createElement('navList')
+        self.list_of_tables.setAttribute('class', 'lot')
+        self.list_of_tables.setAttribute('id', 'lot')
         #The <head> element requires some basic content
         self.head.appendChild(self.doc.createComment('''The following metadata
 items, except for dtb:generator, are required for all NCX documents, including
@@ -88,20 +88,25 @@ those conforming to the relaxed constraints of OPS 2.0'''))
         self.a_doi = self.doi.split('/')[1]
         body = article.body
         self.articles.append(article)
-        self.nav_map_title_page()
-        #If we are only packing one article
-        if body:
-            if not self.collection_mode:
-                self.structure_parse(body)
-            if self.lof.childNodes:
-                self.make_list_of_figures()
-            if self.lot.childNodes:
-                self.make_list_of_tables()
-        self.nav_map_references()
+        self.titlepage_navmap()
+        #If we are using collection mode
+        if not body:
+            return
+        if self.collection_mode:
+            self.navmap_document_structure(body)
+        #Of if not in collection mode
+        else:
+            self.navmap_document_structure(body)
+        #Independent of mode
+        if self.list_of_figures.childNodes:
+            self.make_list_of_figures()
+        if self.list_of_tables.childNodes:
+            self.make_list_of_tables()
+        self.references_navmap()
 
-    def nav_map_title_page(self):
+    def titlepage_navmap(self):
         """
-        This is used by the structure_parse method to create some elements which
+        This is used by the navmap_document_structure method to create some elements which
         do not require structure parsing in order to create.
         """
         #The title page element we will always expect
@@ -117,10 +122,10 @@ those conforming to the relaxed constraints of OPS 2.0'''))
         navcon = self.appendNewElement('content', nav)
         navcon.setAttribute('src', 'main.{0}.xml#title'.format(self.a_doi))
 
-    def nav_map_references(self):
+    def references_navmap(self):
         """
         The references page should be added if there are references, this is
-        used by the structure_parse method
+        used by the navmap_document_structure method
         """
         try:
             back = self.article.root_tag.getElementsByTagName('back')[0]
@@ -141,7 +146,7 @@ those conforming to the relaxed constraints of OPS 2.0'''))
                 artdoi = self.doi.split('/')[1]
                 navcon.setAttribute('src', 'biblio.{0}.xml#references'.format(artdoi))
 
-    def structure_parse(self, srcnode, dstnode=None, depth=0, first=True):
+    def navmap_document_structure(self, srcnode, dstnode=None, depth=0, first=True):
         """
         This recursive function travels the contents of an article's body node
         looking for <sec>, <fig>, and <table-wrap> tags. It only locates these
@@ -156,7 +161,7 @@ those conforming to the relaxed constraints of OPS 2.0'''))
         if not dstnode:
             dstnode = self.navmap
         #Tag name strings we check for to determine structures and features
-        tagnamestrs = ['sec', 'fig', 'table-wrap']
+        tagnames = ['sec', 'fig', 'table-wrap']
         #Pre-process step: give sec tags an id attribute if they lack it
         c = 0
         for sec in srcnode.getElementsByTagName('sec'):
@@ -171,20 +176,23 @@ those conforming to the relaxed constraints of OPS 2.0'''))
             except AttributeError:  # Text nodes have no attribute tagName
                 pass
             else:
-                if tagname in tagnamestrs:
+                if tagname in tagnames:
                     if tagname == 'sec':
                         nav = self.doc.createElement('navPoint')
                         dstnode.appendChild(nav)
                     elif tagname == 'fig':
                         nav = self.doc.createElement('navTarget')
-                        self.lof.appendChild(nav)
+                        self.list_of_figures.appendChild(nav)
                     elif tagname == 'table-wrap':
                         if not child.getChildrenByTagName('alternatives') and not child.getChildrenByTagName('graphic'):
                             continue
                         nav = self.doc.createElement('navTarget')
-                        self.lot.appendChild(nav)
+                        self.list_of_tables.appendChild(nav)
                     mid = child.getAttribute('id')
-                    nav.setAttribute('id', mid)
+                    if self.collection_mode:
+                        nav.setAttribute('id', '{0}-{1}'.format(self.a_doi, mid))
+                    else:
+                        nav.setAttribute('id', mid)
                     nav.setAttribute('playOrder', str(self.playOrder))
                     self.playOrder += 1
                     navlbl = nav.appendChild(self.doc.createElement('navLabel'))
@@ -199,8 +207,8 @@ those conforming to the relaxed constraints of OPS 2.0'''))
                     navlbl.appendChild(self.make_text(navlblstr))
                     navcon = nav.appendChild(self.doc.createElement('content'))
                     navcon.setAttribute('src', 'main.{0}.xml#{1}'.format(self.a_doi, mid))
-                    self.structure_parse(child, nav, depth, first=False)
-        #self.nav_map_references()
+                    self.navmap_document_structure(child, nav, depth, first=False)
+        #self.references_navmap()
 
     def make_doctitle(self):
         """
@@ -270,8 +278,8 @@ those conforming to the relaxed constraints of OPS 2.0'''))
         """
         navlbl = self.doc.createElement('navLabel')
         navlbl.appendChild(self.make_text('List of Figures'))
-        self.lof.insertBefore(navlbl, self.lof.firstChild)
-        self.ncx.appendChild(self.lof)
+        self.list_of_figures.insertBefore(navlbl, self.list_of_figures.firstChild)
+        self.ncx.appendChild(self.list_of_figures)
 
     def make_list_of_tables(self):
         """
@@ -280,8 +288,8 @@ those conforming to the relaxed constraints of OPS 2.0'''))
         """
         navlbl = self.doc.createElement('navLabel')
         navlbl.appendChild(self.make_text('List of Tables'))
-        self.lot.insertBefore(navlbl, self.lot.firstChild)
-        self.ncx.appendChild(self.lot)
+        self.list_of_tables.insertBefore(navlbl, self.list_of_tables.firstChild)
+        self.ncx.appendChild(self.list_of_tables)
 
     def write(self, location):
         """
