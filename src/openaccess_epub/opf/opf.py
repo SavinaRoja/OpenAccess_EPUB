@@ -10,13 +10,13 @@ conversion.
 
 import openaccess_epub.dublincore as dc
 import openaccess_epub.utils as utils
-import datetime
-import os.path
+import openaccess_epub
+import time
+import os
 import xml.dom.minidom
 import logging
 
 log = logging.getLogger('OPF')
-
 
 class MetaOPF(object):
     """
@@ -60,11 +60,6 @@ class MetaOPF(object):
             self.package.appendChild(self.doc.createElement(el))
         self.metadata, self.manifest, self.spine, self.guide = self.package.childNodes
         self.spine.setAttribute('toc', 'ncx')
-        #Here we create a custom collection unique identifier string
-        #Consists of software name and version along with timestamp
-        t = datetime.datetime(1, 1, 1)
-        self.ccuid = 'OpenAccess_EPUBv{0}-{1}'.format('__version__',
-                                                      t.utcnow().__str__())
 
     def parse_article(self, article):
         """
@@ -149,8 +144,20 @@ class MetaOPF(object):
         if self.article.root_tag.getElementsByTagName('table-wrap'):
             self.spine.appendChild(tab_ref)
 
+    def finalize_metadata(self):
+        """Do any final metadata operations before writing."""
+        if self.collection_mode:  #The primary use case for finalization
+            #Make the dc:identifier with program, version, and timestamp
+            unique = None
+            dc_identifier = dc.identifier(self.doi, self.doc, primary=True)
+            dc_identifier.setAttribute('opf:scheme', 'DOI')
+            self.metadata.appendChild(dc_identifier)
+        else:
+            pass
+
     def write(self):
         self.make_manifest()
+        self.finalize_metadata()
         filename = os.path.join(self.location, 'OPS', 'content.opf')
         with open(filename, 'wb') as output:
             output.write(self.doc.toprettyxml(encoding='utf-8'))
@@ -364,6 +371,7 @@ class PLoSOPF(MetaOPF):
         #Create the dc:relation for related articles
         #This is not yet implemented
         #self.metadata.appendChild(dc.relation(relation, self.doc))
+        #TODO: Implement this?
 
         #Create the dc:publisher element
         self.metadata.appendChild(dc.publisher('Public Library of Science', self.doc))
@@ -386,6 +394,15 @@ class PLoSOPF(MetaOPF):
         This method handles the metadata for a PLoS article in a collection.
         """
         log.info('Using PLoS collectionMetadata')
+        #For brevity
+        ameta = article_metadata
+
+        #Make the dc:identifier using the DOI of the article
+        collection_unique = 'OpenAccess_EPUB v.{0}-{1}'.format(__version__, time.asctime())
+        dc_identifier = dc.identifier(self.doi, self.doc, primary=True)
+        dc_identifier.setAttribute('opf:scheme', 'DOI')
+        self.metadata.appendChild(dc_identifier)
+        
 
     def add_to_spine(self):
         idref = '{0}-' + '{0}-xml'.format(self.a_doi_dashed)

@@ -5,10 +5,6 @@ This is the main execution file for OpenAccess_EPUB. It provides the primary
 mode of execution and interaction.
 """
 
-#If you change the version here, make sure to also change it in setup.py and
-#the module __init__.py
-__version__ = '0.3.6'
-
 #Standard Library Modules
 import argparse
 import sys
@@ -19,6 +15,7 @@ import traceback
 import multiprocessing
 
 #OpenAccess_EPUB Modules
+from ._version import __version__
 import openaccess_epub.utils as utils
 import openaccess_epub.utils.input as u_input
 from openaccess_epub.utils.images import get_images
