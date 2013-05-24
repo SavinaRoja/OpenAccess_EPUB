@@ -148,26 +148,26 @@ class OPSMeta(object):
         to provide the scope of function, it will operate on all descendants
         of the passed node(s).
         """
-        for b in self.getDescendantsByTagName(node, 'bold'):
+        for b in node.getElementsByTagName('bold'):
             b.tagName = 'b'
-        for i in self.getDescendantsByTagName(node, 'italic'):
+        for i in node.getElementsByTagName('italic'):
             i.tagName = 'i'
-        for m in self.getDescendantsByTagName(node, 'monospace'):
+        for m in node.getElementsByTagName('monospace'):
             m.tagName = 'span'
             m.setAttribute('style', 'font-family:monospace')
-        for o in self.getDescendantsByTagName(node, 'overline'):
+        for o in node.getElementsByTagName('overline'):
             o.tagName = 'span'
             o.setAttribute('style', 'text-decoration:overline')
-        for s in self.getDescendantsByTagName(node, 'sans-serif'):
+        for s in node.getElementsByTagName('sans-serif'):
             s.tagName = 'span'
             s.setAttribute('style', 'font-family:sans-serif')
-        for s in self.getDescendantsByTagName(node, 'sc'):
+        for s in node.getElementsByTagName('sc'):
             s.tagName = 'span'
             s.setAttribute('style', 'font-variant:small-caps')
-        for s in self.getDescendantsByTagName(node, 'strike'):
+        for s in node.getElementsByTagName('strike'):
             s.tagName = 'span'
             s.setAttribute('style', 'text-decoration:line-through')
-        for u in self.getDescendantsByTagName(node, 'underline'):
+        for u in node.getElementsByTagName('underline'):
             u.tagName = 'span'
             u.setAttribute('style', 'text-decoration:underline')
 
@@ -178,14 +178,14 @@ class OPSMeta(object):
         appropriate hypertext element for linking in OPS is the <a> element.
         """
         #Convert email to a mailto link addressed to the text it contains
-        for e in self.getDescendantsByTagName(node, 'email'):
+        for e in node.getElementsByTagName('email'):
             e.removeAllAttributes()
             e.tagName = 'a'
             mailto = 'mailto:{0}'.format(utils.nodeText(e))
             e.setAttribute('href', mailto)
         #Ext-links often declare their address as xlink:href attribute
         #if that fails, direct the link to the contained text
-        for e in self.getDescendantsByTagName(node, 'ext-link'):
+        for e in node.getElementsByTagName('ext-link'):
             eid = e.getAttribute('id')
             e.tagName = 'a'
             xh = e.getAttribute('xlink:href')
@@ -198,7 +198,7 @@ class OPSMeta(object):
                 e.setAttribute('id', eid)
         #Uris often declare their address as xlink:href attribute
         #if that fails, direct the link to the contained text
-        for u in self.getDescendantsByTagName(node, 'uri'):
+        for u in node.getElementsByTagName('uri'):
             u.tagName = 'a'
             xh = u.getAttribute('xlink:href')
             self.expungeAttributes(u)
@@ -206,18 +206,3 @@ class OPSMeta(object):
                 u.setAttribute('href', xh)
             else:
                 u.setAttribute('href', utils.nodeText(u))
-
-    def getDescendantsByTagName(self, inpt, tagname):
-        """
-        This function works for individual Nodes as well as NodeLists. It calls
-        getElementsByTagName on a Node to get a NodeList of the specified
-        tagname, or it will call getElementsByTagName on each Node in a
-        NodeList to build a composite NodeList of the specified tagname.
-        """
-        el_list = []
-        try:
-            el_list = inpt.getElementsByTagName(tagname)
-        except AttributeError:
-            for n in inpt:
-                el_list += n.getElementsByTagName(tagname)
-        return el_list

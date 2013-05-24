@@ -1001,7 +1001,7 @@ class OPSPLoS(OPSMeta):
                    'fn': self.main_frag,
                    'app': self.main_frag,
                    '': self.main_frag}
-        for x in self.getDescendantsByTagName(node, 'xref'):
+        for x in node.getElementsByTagName('xref'):
             x.tagName = 'a'
             x_attrs = x.getAllAttributes(remove=True)
             if 'ref-type' in x_attrs:
