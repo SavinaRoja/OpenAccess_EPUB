@@ -10,7 +10,7 @@ conversion.
 
 import openaccess_epub.dublincore as dc
 import openaccess_epub.utils as utils
-import openaccess_epub
+import uuid
 import time
 import os
 import xml.dom.minidom
@@ -147,11 +147,12 @@ class MetaOPF(object):
     def finalize_metadata(self):
         """Do any final metadata operations before writing."""
         if self.collection_mode:  #The primary use case for finalization
-            #Make the dc:identifier with program, version, and timestamp
-            unique = None
-            dc_identifier = dc.identifier(self.doi, self.doc, primary=True)
-            dc_identifier.setAttribute('opf:scheme', 'DOI')
+            #Make the dc:identifier as UUID
+            dc_identifier = dc.identifier(str(uuid.uuid4()), self.doc, primary=True)
+            dc_identifier.setAttribute('opf:scheme', 'UUID')
             self.metadata.appendChild(dc_identifier)
+            #Make the dc:language as english
+            self.metadata.appendChild(dc.language(self.doc))  # English default
         else:
             pass
 
@@ -396,12 +397,6 @@ class PLoSOPF(MetaOPF):
         log.info('Using PLoS collectionMetadata')
         #For brevity
         ameta = article_metadata
-
-        #Make the dc:identifier using the DOI of the article
-        collection_unique = 'OpenAccess_EPUB v.{0}-{1}'.format(__version__, time.asctime())
-        dc_identifier = dc.identifier(self.doi, self.doc, primary=True)
-        dc_identifier.setAttribute('opf:scheme', 'DOI')
-        self.metadata.appendChild(dc_identifier)
         
 
     def add_to_spine(self):
