@@ -290,7 +290,7 @@ def collection_input(args, config=None):
             myopf.parse_article(parsed_article)
     toc.write(output_name)
     myopf.write()
-    utils.epubZip(output_name)
+    utils.epub_zip(output_name)
     
 
     #Running epubcheck on the output verifies the validity of the ePub,
@@ -436,7 +436,7 @@ def make_epub(document, outdirect, explicit_images, batch, config=None):
         myopf = opf.FrontiersOPF(__version__, outdirect, False)
     myopf.parse_article(document)
     myopf.write()
-    utils.epubZip(outdirect)
+    utils.epub_zip(outdirect)
 
 
 def epubcheck(epubname, config=None):

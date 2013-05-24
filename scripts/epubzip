@@ -5,9 +5,9 @@ This script uses epubZip function of OpenAccess_EPUB to zip an ePub directory
 into a correctly packaged .epub file.
 """
 
-from OpenAccess_EPUB.utils import epubZip
+from openaccess_epub.utils import epub_zip
 import sys
-import os.path
+import os
 
 usage = 'usage: epubzip ' + os.path.join('zip', 'this', 'dir')
 
@@ -16,7 +16,7 @@ def main():
         print(usage)
         sys.exit(1)
     else:
-        epubZip(sys.argv[1])
+        epub_zip(sys.argv[1])
 
 if __name__ == '__main__':
     main()

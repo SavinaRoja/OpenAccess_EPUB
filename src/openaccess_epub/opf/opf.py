@@ -157,8 +157,24 @@ class MetaOPF(object):
             #Make the dc:title using the passed title argument
             #TODO: Make titling for collections... better
             self.metadata.appendChild(dc.title(self.title, self.doc))
+            #dc:rights is plausible for single-publisher collections
+            #This will probably need more work later to handle collections from
+            #multiple publishers. For now I direct this to a publisher specific
+            #method
+            dc_rights = self.make_dc_rights()
+            if dc_rights:
+                self.metadata.appendChild(self.make_dc_rights)
+            
+            
         else:
             pass
+
+    def make_dc_rights(self):
+        """
+        Meant to be overridden by a publisher specific method that returns an
+        appropriate dc:rights node.
+        """
+        return False
 
     def write(self):
         self.make_manifest()
@@ -401,7 +417,52 @@ class PLoSOPF(MetaOPF):
         log.info('Using PLoS collectionMetadata')
         #For brevity
         ameta = article_metadata
-        
+        #This is copypasta from single_metadata, it should work but it will
+        #overlook the inclusion of multiple instances of authors and editors
+        #It's looking like OPF will be seeing an overhaul soon.
+        #Make the dc:creator elements for each contributing author
+        #Note that the file-as name is: Surname, G(iven Initial)
+        for contrib in ameta.contrib:
+            if contrib.attrs['contrib-type'] == 'author':
+                if contrib.collab:
+                    auth = utils.serializeText(contrib.collab[0])
+                    file_as = auth
+                elif contrib.anonymous:
+                    auth = 'Anonymous'
+                    file_as = auth
+                else:
+                    name = contrib.getName()[0]  # Work with only first name listed
+                    surname = name.surname
+                    given = name.given
+                    try:
+                        gi = given[0]
+                    except (IndexError, TypeError):
+                        auth = surname
+                        file_as = surname
+                    else:
+                        auth = ' '.join([given, surname])
+                        file_as = ', '.join([surname, gi])
+                dc_creator = dc.creator(auth, file_as, self.doc)
+                self.metadata.appendChild(dc_creator)
+
+        #Make the dc:contributor elements for editors
+        for contrib in ameta.contrib:
+            if contrib.attrs['contrib-type'] == 'editor':
+                if contrib.collab:
+                    editor_name = utils.serializeText(contrib.collab[0])
+                    file_as = editor_name
+                else:
+                    name = contrib.getName()[0]
+                    try:
+                        given_initial = name.given[0]
+                    except TypeError:
+                        editor_name = name.surname
+                        file_name = name.surname
+                    else:
+                        editor_name = name.given + ' ' + name.surname
+                        file_name = name.surname + ', ' + given_initial
+                dc_contrib = dc.contributor(editor_name, self.doc, file_as=file_name, role='edt')
+                self.metadata.appendChild(dc_contrib)
 
     def add_to_spine(self):
         idref = '{0}-' + '{0}-xml'.format(self.a_doi_dashed)
@@ -428,3 +489,16 @@ class PLoSOPF(MetaOPF):
                 tables = True
         if tables:
             self.spine.appendChild(tab_ref)
+
+    def make_dc_rights(self):
+        """
+        A PLoS specific method to return the dc:rights node for metadata
+        finalization for collection mode.
+        """
+        #I think it's safe to assume that all articles are published under the
+        #same CCAL.
+        return dc.rights('''This is a collection of open-access articles\
+distributed under the terms of the Creative Commons Attribution License, which\
+permits unrestricted use, distribution, and reproduction in any medium,\
+provided the original work is properly cited.''', self.doc)
+        

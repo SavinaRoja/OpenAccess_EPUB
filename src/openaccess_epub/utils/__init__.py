@@ -309,7 +309,7 @@ def getFormattedNode(node):
     return clone
 
 
-def epubZip(outdirect):
+def epub_zip(outdirect):
     """Zips up the input file directory into an ePub file."""
     log.info('Zipping up the directory {0}'.format(outdirect))
     epub_filename = outdirect + '.epub'
