@@ -24,10 +24,11 @@ class MetaOPF(object):
     Core metadata is referenced by this class per publisher.
     """
 
-    def __init__(self, version, location, collection_mode=False):
+    def __init__(self, version, location, collection_mode=False, title=None):
         log.info('Instantiating OPF class')
         self.doi = ''
         self.dois = []
+        self.title = title
         self.collection_mode = collection_mode
         if self.collection_mode:
             log.debug('Collection Mode')
@@ -153,6 +154,9 @@ class MetaOPF(object):
             self.metadata.appendChild(dc_identifier)
             #Make the dc:language as english
             self.metadata.appendChild(dc.language(self.doc))  # English default
+            #Make the dc:title using the passed title argument
+            #TODO: Make titling for collections... better
+            self.metadata.appendChild(dc.title(self.title, self.doc))
         else:
             pass
 

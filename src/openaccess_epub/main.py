@@ -234,8 +234,9 @@ def collection_input(args, config=None):
         xml_files = [i.strip() for i in order.readlines() if i.strip()]
         order.close()
 
-    #The output .epub file will receive a standard name
-    output_name = os.path.split(os.getcwd())[1] + '_collection'
+    #The output name will be the same as the parent directory name
+    #This will also serve as the dc:title
+    output_name = os.path.split(os.getcwd())[1]
 
     #The standard make_epub() method will not work for Collection Mode
     #So the work done here is an adaptation of it
@@ -247,7 +248,7 @@ def collection_input(args, config=None):
     shutil.copytree(epub_base, output_name)
     
     toc = ncx.TocNCX(version=__version__, collection_mode=True)
-    myopf = opf.PLoSOPF(__version__, output_name, collection_mode=True)
+    myopf = opf.PLoSOPF(__version__, output_name, collection_mode=True, title=output_name)
     
     #Now it is time to operate on each of the xml files
     for xml_file in xml_files:
