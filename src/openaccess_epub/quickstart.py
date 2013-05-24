@@ -37,7 +37,7 @@ import logging
 quickstart_version = '0.0.5'
 
 # Python uses back slashes, "\\", as escape characters so if you are on Windows
-# make sure to use "\\" for every back slash in a path. You can also use unix-
+# make sure to use "\\\\" for every back slash in a path. You can also use unix-
 # style paths with forward slashes "/", this should work on all platforms.
 
 # oaepub needs to be able to reliably find this config file; it will always be
