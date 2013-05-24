@@ -82,7 +82,7 @@ those conforming to the relaxed constraints of OPS 2.0'''))
         """
         Process the contents of an article to build the NCX
         """
-        self.doi = article.getDOI()
+        self.doi = article.get_DOI()
         self.dois.append(self.doi)
         self.article = article
         self.a_doi = self.doi.split('/')[1]

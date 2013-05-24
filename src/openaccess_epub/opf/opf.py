@@ -66,7 +66,7 @@ class MetaOPF(object):
         """
         Process the contents of an article to build the content.opf
         """
-        self.doi = article.getDOI()
+        self.doi = article.get_DOI()
         self.dois.append(self.doi)
         self.article = article
         self.a_doi = self.doi.split('/')[1]

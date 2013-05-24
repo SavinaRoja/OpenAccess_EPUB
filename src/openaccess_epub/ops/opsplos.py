@@ -20,10 +20,11 @@ class OPSPLoS(OPSMeta):
     def __init__(self, article, output_dir):
         OPSMeta.__init__(self)
         log.info('Initiating OPSPLoS')
+        #Set some initial hooks into the input article content
         self.article = article.root_tag
         self.metadata = article.metadata
         self.backmatter = article.metadata.backmatter
-        self.doi = article.getDOI()
+        self.doi = article.get_DOI()
         #From "10.1371/journal.pone.0035956" get "journal.pone.0335956"
         self.doi_frag = self.doi.split('10.1371/')[1]
         self.make_fragment_identifiers()

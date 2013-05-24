@@ -81,7 +81,7 @@ Publishing DTD: \n{0}'.format(doc.doctype.publicId))
         for attr in self.attrs:
             #getAttribute() returns an empty string if the attribute DNE
             self.attrs[attr] = self.root_tag.getAttribute(attr)
-        self.validateAttrs()  # Log errors for invalid attribute values
+        self.validate_attributes()  # Log errors for invalid attribute values
         try:
             self.body = self.root_tag.getElementsByTagName('body')[0]
         except IndexError:
@@ -125,7 +125,7 @@ Publishing DTD: \n{0}'.format(doc.doctype.publicId))
                     print('Unable to identify publisher by DOI, aborting!')
                     sys.exit()
 
-    def validateAttrs(self):
+    def validate_attributes(self):
         """
         Most of the time, attributes are not required nor do they have fixed
         values. But in this case, there are some mandatory requirements.
@@ -137,14 +137,14 @@ Publishing DTD: \n{0}'.format(doc.doctype.publicId))
                     ('xmlns:xlink', 'http://www.w3.org/1999/xlink'),
                     ('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance')]
         attr_err = 'Article attribute {0} has improper value: {1}'
-        for _key, _val in mandates:
-            if self.attrs[_key] and not self.attrs[_key] == _val:
-                log.error(attr_err.format(_key, self.attrs[_key]))
-        if self.attrs['article-type'] not in utils.suggestedArticleTypes():
+        for key, val in mandates:
+            if self.attrs[key] and not self.attrs[key] == val:
+                log.error(attr_err.format(key, self.attrs[key]))
+        if self.attrs['article-type'] not in utils.suggested_article_types:
             art_type_err = 'article-type value is not a suggested value - {0}'
             log.warning(art_type_err.format(self.attrs['article-type']))
 
-    def getDOI(self):
+    def get_DOI(self):
         """
         A method for returning the DOI identifier of an article
         """

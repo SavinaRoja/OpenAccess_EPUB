@@ -415,7 +415,7 @@ def make_epub(document, outdirect, explicit_images, batch, config=None):
         return
 
     #Get the Digital Object Identifier
-    DOI = document.getDOI()
+    DOI = document.get_DOI()
 
     #Get the images
     get_images(DOI, outdirect, explicit_images, config, document)

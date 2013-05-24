@@ -335,20 +335,14 @@ def recursive_zip(zipf, directory, folder=''):
                           os.path.join(folder, item))
 
 
-def suggestedArticleTypes():
-    """
-    Returns a list of suggested values for article-type
-    """
-    #See http://dtd.nlm.nih.gov/publishing/tag-library/3.0/n-w2d0.html
-    s = ['abstract', 'addendum', 'announcement', 'article-commentary',
-         'book-review', 'books-received', 'brief-report', 'calendar',
-         'case-report', 'collection', 'correction', 'discussion',
-         'dissertation', 'editorial', 'in-brief', 'introduction', 'letter',
-         'meeting-report', 'news', 'obituary', 'oration',
-         'partial-retraction', 'product-review', 'rapid-communication',
-         'rapid-communication', 'reply', 'reprint', 'research-article',
-         'retraction', 'review-article', 'translation']
-    return(s)
+suggested_article_types = ['abstract', 'addendum', 'announcement',
+    'article-commentary','book-review', 'books-received', 'brief-report',
+    'calendar', 'case-report', 'collection', 'correction', 'discussion',
+    'dissertation', 'editorial', 'in-brief', 'introduction', 'letter',
+    'meeting-report', 'news', 'obituary', 'oration', 'partial-retraction',
+    'product-review', 'rapid-communication', 'rapid-communication', 'reply',
+    'reprint', 'research-article', 'retraction', 'review-article',
+    'translation']
 
 
 def initiateDocument(titlestring,
