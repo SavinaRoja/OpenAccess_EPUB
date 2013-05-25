@@ -193,6 +193,17 @@ class OPF(oject):
 
     def write(self):
         """
-        
+        Writing the OPF file is immediately preceded by jobs that finalize
+        the OPF document. This includes the creation of the final manifest,
+        the creation of the spine's itemrefs, and the creation of the Dublin
+        Core metadata.
+
+        Writing the OPF file should be one of the last jobs in the process of
+        creating an ePUb, as modifications to the ePub not registered in the
+        OPF file might invalidate/break the ePub.
         """
-        pass
+        self.make_file_manifest()
+        self.make_spine_itemrefs()
+        self.make_metadata_elements()
+        with open(filename, 'wb') as output:
+            output.write(self.document.toprettyxml(encoding='utf-8'))
