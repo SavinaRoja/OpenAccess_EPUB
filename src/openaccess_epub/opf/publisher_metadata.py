@@ -6,6 +6,7 @@ import openaccess_epub.utils
 identifer = namedtuple('Identifier', 'value, scheme')
 creator = namedtuple('Creator', 'name, role, file_as')
 contributor = namedtuple('Contributor', 'name, role, file_as')
+date = namedtuple('Date', 'year, month, day, event')
 
 #### Public Library of Science - PLoS ###
 def plos_dc_identifier(article):
@@ -78,7 +79,7 @@ def plos_dc_contributor(article):
     This returns a list of Contributor(name, role, file_as)
     """
     contributor_list = []
-    for contrib in ameta.contrib:
+    for contrib in article.metadata.contrib:
         if contrib.attrs['contrib-type'] == 'editor':
             if contrib.collab:
                 editor_name = utils.serializeText(contrib.collab[0])
@@ -115,4 +116,45 @@ def plos_dc_description(article):
     if article.metadata.abstract:
         abstract_text = utils.serialize_text(articlemetadata.abstract[0].node)
     return abstract_text
+
+def plos_dc_date(article):
+    """
+    Given an Article class instance, this provides the method for extracting
+    important dates in the history of the article. These are returned as a list
+    of Date(year, month, day, event). This method looks specifically to locate
+    the dates when PLoS accepted the article and when it was published online.
+    """
+    date_list = []
+    #Creation is a Dublin Core event value: I interpret it as the accepted date
+    creation_date = article.metadata.history['accepted']
+    if creation_date:
+        date_list.append(date(creation_date.year,
+                              creation_date.month,
+                              creation_date.day,
+                              'creation'))
+    #Publication is another Dublin Core event value: epub
+    try:
+        pub_date = article.metadata.pub_date['epub']
+    except KeyError:
+        pass
+    else:
+        date_list.append(pub_date.year,
+                         pub_date.month,
+                         pub_date.day,
+                         'publication')
+    return date_list
+
+def plos_dc_subject(article):
+    """
+    Given an Article class instance, this provides a way to extract keyword
+    values for use as Dublin Core Subject elements. These are returned as a
+    list of strings.
+    """
+    subject_list = []
+    for kwd in article.metadata.all_kwds:
+        kwd_text = utils.serialize_text(kwd.node)
+        subject_list.append(kwd_text)
+    return subject_list
+
+
 

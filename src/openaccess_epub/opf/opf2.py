@@ -145,9 +145,14 @@ class OPF(oject):
         adjusting for collection_mode.
         """
         self.set_publisher_metadata_methods()
-        if self.collection_mode:
-            pass
-        else:  # Single Input Mode
+        if self.collection_mode:  #Collection Mode
+            #identifier is defined in publisher_metadata as a namedtuple
+            self.identifier = identifier(uuid.uuid4(), 'UUID')
+            #language is OrderedSet([strings])
+            self.language.add(self.get_article_language(article))
+            #title is empty string or nonempty string
+            self.title = self.get_article_title(article)
+        else:  # Single Mode
             #identifier is None or Identifier(value, scheme)
             self.identifier = self.get_article_identifier(article)
             #language is OrderedSet([strings])
@@ -164,7 +169,12 @@ class OPF(oject):
             self.publisher = self.get_article_publisher(article)
             #description is OrderedSet([strings])
             self.description.add(self.get_article_description(article))
-            
+            #date is OrderedSet([Date(year, month, day, event)])
+            for date in self.get_article_date(article):
+                self.date.add(date)
+            #subject is OrderedSet([strings])
+            for subject in self.get_article_subject(article):
+                self.subject.add(subject)
 
 
     def set_publisher_metadata_methods(self):
@@ -179,6 +189,7 @@ class OPF(oject):
             self.get_article_contributor = plos_dc_contributor
             self.get_article_publisher = plos_dc_publisher
             self.get_article_description = plos_dc_description
+            self.get_article_date = plos_dc_date
             self.get_article_subject = plos_dc_subject
         else:
             raise ValueError('This publisher, {0}, is not supported'.format(self.journal_doi))
