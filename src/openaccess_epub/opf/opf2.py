@@ -144,37 +144,39 @@ class OPF(oject):
         directs the acquisition of article metadata using these methods, while
         adjusting for collection_mode.
         """
+        #Recall that metadata were reset in single mode during take_article
         self.set_publisher_metadata_methods()
-        if self.collection_mode:  #Collection Mode
+        if self.collection_mode:  #Collection Mode Specific
             #identifier is defined in publisher_metadata as a namedtuple
             self.identifier = identifier(uuid.uuid4(), 'UUID')
-            #language is OrderedSet([strings])
-            self.language.add(self.get_article_language(article))
             #title is empty string or nonempty string
             self.title = self.get_article_title(article)
-        else:  # Single Mode
+            #A collection article gets no dc:date elements
+        else:  # Single Mode Specific
             #identifier is None or Identifier(value, scheme)
             self.identifier = self.get_article_identifier(article)
-            #language is OrderedSet([strings])
-            self.language.add(self.get_article_language(article))
             #title is empty string or nonempty string
             self.title = self.get_article_title(article)
-            #creator is OrderedSet([Creator(name, role, file_as)])
-            for creator in self.get_article_creator(article):
-                self.creator.add(creator)
-            #contributor is OrderedSet([Contributor(name, role, file_as)])
-            for contributor in self.get_article_contributor(article):
-                self.contributor.add(contributor)
-            #publisher is OrderedSet([strings])
-            self.publisher = self.get_article_publisher(article)
-            #description is OrderedSet([strings])
-            self.description.add(self.get_article_description(article))
             #date is OrderedSet([Date(year, month, day, event)])
             for date in self.get_article_date(article):
                 self.date.add(date)
-            #subject is OrderedSet([strings])
-            for subject in self.get_article_subject(article):
-                self.subject.add(subject)
+
+        #These are no different between Single and Collection Modes
+        #language is OrderedSet([strings])
+        self.language.add(self.get_article_language(article))
+        #creator is OrderedSet([Creator(name, role, file_as)])
+        for creator in self.get_article_creator(article):
+            self.creator.add(creator)
+        #contributor is OrderedSet([Contributor(name, role, file_as)])
+        for contributor in self.get_article_contributor(article):
+            self.contributor.add(contributor)
+        #publisher is OrderedSet([strings])
+        self.publisher = self.get_article_publisher(article)
+        #description is OrderedSet([strings])
+        self.description.add(self.get_article_description(article))
+        #subject is OrderedSet([strings])
+        for subject in self.get_article_subject(article):
+            self.subject.add(subject)
 
 
     def set_publisher_metadata_methods(self):
@@ -287,14 +289,18 @@ class OPF(oject):
         os.chdir(current_dir)
 
 
-    def use_collection_mode(self):
-        """Enables Collection Mode, sets self.collection_mode to True"""
-        self.collection_mode = True
+    def make_spine_itemrefs(self):
+        """
+        
+        """
+        pass
 
 
-    def use_single_mode(self):
-        """Disables Collection Mode, sets self.collection_mode to False"""
-        self.collection_mode = False
+    def make_metadata_elements(self):
+        """
+        
+        """
+        pass
 
 
     def write(self):
@@ -314,3 +320,13 @@ class OPF(oject):
         filename = os.path.join(self.location, 'OPS', 'content.opf')
         with open(filename, 'wb') as output:
             output.write(self.document.toprettyxml(encoding='utf-8'))
+
+
+    def use_collection_mode(self):
+        """Enables Collection Mode, sets self.collection_mode to True"""
+        self.collection_mode = True
+
+
+    def use_single_mode(self):
+        """Disables Collection Mode, sets self.collection_mode to False"""
+        self.collection_mode = False
