@@ -147,14 +147,15 @@ class OPF(oject):
         #Recall that metadata were reset in single mode during take_article
         self.set_publisher_metadata_methods()
         if self.collection_mode:  #Collection Mode Specific
-            #identifier is defined in publisher_metadata as a namedtuple
-            self.identifier = identifier(uuid.uuid4(), 'UUID')
+            #identifier defaults to UUID
             #title is empty string or nonempty string
             self.title = self.get_article_title(article)
             #A collection article gets no dc:date elements
         else:  # Single Mode Specific
             #identifier is None or Identifier(value, scheme)
-            self.identifier = self.get_article_identifier(article)
+            id = self.get_article_identifier(article)
+            if id:  # Only override default UUID if successful
+                self.identifier = id
             #title is empty string or nonempty string
             self.title = self.get_article_title(article)
             #date is OrderedSet([Date(year, month, day, event)])
@@ -206,7 +207,8 @@ class OPF(oject):
         of inclusion while omitting duplication.
         """
         #These must have a value to be valid
-        self.identifier = None  # 1: Scheme determined method or collection_mode
+        #identifier uses default fallback behavior of UUID
+        self.identifier = self.identifier = identifier(uuid.uuid4(), 'UUID')
         self.language = OrderedSet()  # 1+: Defaults to "en"
         self.title = ''  # 1: A string for the Title
         #Rights is 1 only, I am at the moment assuming all OA is under CCAL
@@ -291,9 +293,33 @@ class OPF(oject):
 
     def make_spine_itemrefs(self):
         """
-        
+        This is responsible for creating the itemref elements in the OPF spine.
+        For every Article received, there should be a main document and
+        usually, but not always, a biblio document. Some articles will have an
+        html-tables document, that should receive an itemref, but it will not
+        be placed in the linear order.
         """
-        pass
+        for article in self.all_articles:
+            article_doi = article.get_doi().split('/')[1]
+            idref = '{0}.' + '{0}.xml'.format(article_doi)
+            idref = idref.replace('.', '-')
+            main_ref = self.spine_node.appendChild(self.doc.createElement('itemref'))
+            biblio_ref = self.doc.createElement('itemref')
+            tables_ref = self.doc.createElement('itemref')
+            for ref, name, linear in [(main_ref, 'main', 'yes'),
+                                      (biblio_ref, 'biblio', 'yes'),
+                                      (tables_ref, 'main', 'no')]:
+                ref.setAttribute('linear', linear)
+                ref.setAttribute('idref', idref)
+            try:
+                back = self.article.root_tag.getElementsByTagName('back')[0]
+            except IndexError:
+                pass
+            else:
+                if back.getElementsByTagName('ref'):
+                    self.spine_node.appendChild(bib_ref)
+            if self.article.root_tag.getElementsByTagName('table-wrap'):
+                self.spine_node.appendChild(tab_ref)
 
 
     def make_metadata_elements(self):
