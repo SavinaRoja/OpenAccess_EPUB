@@ -114,6 +114,7 @@ class OPF(oject):
         if not self.collection_mode:
             self.reset_metadata()
             self.reset_spine()
+            self.reset_state()
 
 
     def reset_metadata(self):
@@ -159,15 +160,6 @@ class OPF(oject):
         self.spine = []
 
 
-    def make_file_manifest(self):
-        """
-        This function recursively traverses the ePub structure around the OPF
-        file location to provide an index of all files. These files are then
-        listed under the manifest node.
-        """
-        pass
-
-
     def reset_state(self):
         """
         Resets the internal state variables to defaults, also used in __init__
@@ -179,6 +171,43 @@ class OPF(oject):
         self.all_dois = []
         self.article_doi = ''
         self.journal_doi = ''
+
+
+    def make_file_manifest(self):
+        """
+        This function recursively traverses the ePub structure around the OPF
+        file location to provide an index of all files. These files are then
+        listed under the manifest node.
+        """
+        mimetypes = {'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 'xml':
+                     'application/xhtml+xml', 'png': 'image/png', 'css':
+                     'text/css', 'ncx': 'application/x-dtbncx+xml', 'gif':
+                     'image/gif', 'tif': 'image/tif', 'pdf': 'application/pdf'}
+        #Acquiring the current directory allows us to return there when complete
+        #Thus avoiding problems relating call location, while allowing paths
+        #to be relative to the 
+        current_dir = os.getcwd()
+        os.chdir(self.location)
+        for path, _subname, filenames in os.walk('OPS'):
+            path = path[4:]  # Removes leading OPS or OPS/
+            if filenames:
+                for filename in filenames:
+                    _name, ext = os.path.splitext(filename)
+                    ext = ext[1:]
+                    new = self.manifest_node.appendChild(self.doc.createElement('item'))
+                    if path:
+                        new.setAttribute('href', '/'.join([path, filename]))
+                    else:
+                        new.setAttribute('href', filename)
+                    new.setAttribute('media-type', mimetypes[ext])
+                    if filename == 'toc.ncx':
+                        new.setAttribute('id', 'ncx')
+                    elif ext == 'png':
+                        trim = path[7:]
+                        new.setAttribute('id', '{0}-{1}'.format(trim, filename.replace('.', '-')))
+                    else:
+                        new.setAttribute('id', filename.replace('.', '-'))
+        os.chdir(current_dir)
 
 
     def use_collection_mode(self):
@@ -205,5 +234,6 @@ class OPF(oject):
         self.make_file_manifest()
         self.make_spine_itemrefs()
         self.make_metadata_elements()
+        filename = os.path.join(self.location, 'OPS', 'content.opf')
         with open(filename, 'wb') as output:
             output.write(self.document.toprettyxml(encoding='utf-8'))
