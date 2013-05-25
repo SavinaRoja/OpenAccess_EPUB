@@ -24,7 +24,7 @@ class MetaOPF(object):
     Core metadata is referenced by this class per publisher.
     """
 
-    def __init__(self, version, location, collection_mode=False, title=None):
+    def __init__(self, location, collection_mode=False, title=None):
         log.info('Instantiating OPF class')
         self.doi = ''
         self.dois = []

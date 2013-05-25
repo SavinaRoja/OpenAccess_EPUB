@@ -28,6 +28,16 @@ import xml.dom.minidom
 
 log = logging.getLogger('OPF')
 
+single_ccal_rights = '''This is an open-access article distributed under the\
+terms of the Creative Commons Attribution License, which permits unrestricted\
+use, distribution, and reproduction in any medium, provided the original\
+author and source are credited.'''
+
+collection_ccal_rights = '''This is a collection of open-access articles\
+distributed under the terms of the Creative Commons Attribution License, which\
+permits unrestricted use, distribution, and reproduction in any medium,\
+provided the original work is properly cited.'''
+
 
 class OPF(oject):
     """
@@ -46,8 +56,47 @@ class OPF(oject):
     importance in Single Input mode, but is critical to Collection Mode.
     
     """
-    def __init__(self, collection_mode):
+    def __init__(self, write_location=os.getcwd(), collection_mode=False):
+        """
+        Initialization arguments:
+            write_location - Where this instance will write to
+            collection_mode - To use Collection Mode, set to True
+
+        Collection Mode can be turned on or off after initialization using the
+        use_collection_mode() and use_single_mode methods() respectively.
+        """
+        #Set internal variables to defaults
+        self.reset_state()
+        #Set Collection Mode by argument
         self.collection_mode = collection_mode
+        #Set metadata and spine data structures to defaults
+        self.reset_metadata()
+        self.reset_spine()
+        #Create the basic document
+        self.init_opf_document()
+
+    def init_opf_document(self):
+        """
+        This method creates the initial DOM document for the content.opf file
+        """
+        impl = xml.dom.minidom.getDOMImplementation()
+        self.document = impl.createDocument(None, 'package', None)
+        #Grab the root <package> node
+        self.package = self.doc.lastChild
+        #Set attributes for this node, including namespace declarations
+        self.package.setAttribute('version', '2.0')
+        self.package.setAttribute('unique-identifier', 'PrimaryID')
+        self.package.setAttribute('xmlns:opf', 'http://www.idpf.org/2007/opf')
+        self.package.setAttribute('xmlns:dc', 'http://purl.org/dc/elements/1.1/')
+        self.package.setAttribute('xmlns', 'http://www.idpf.org/2007/opf')
+        self.package.setAttribute('xmlns:oebpackage', 'http://openebook.org/namespaces/oeb-package/1.0/')
+        #Create the sub elements for <package>
+        opf_sub_elements = ['metadata', 'manifest', 'spine', 'guide']
+        for el in opf_sub_elements:
+            self.package.appendChild(self.doc.createElement(el))
+        self.metadata_node, self.manifest_node, self.spine_node, self.guide_node = self.package.childNodes
+        self.spine.setAttribute('toc', 'ncx')
+
 
     def take_article(self, article):
         """
@@ -60,7 +109,59 @@ class OPF(oject):
         Mode, the addition of a new article will erase any information from the
         previous article.
         """
-        pass
+        if not self.collection_mode:
+            self.reset_metadata()
+            self.reset_spine()
+
+    def reset_metadata(self):
+        """
+        Resets the variables for the metadata to defaults, also used in
+        __init__ to set them at the beginning.
+
+        
+        """
+        self.identifier = None  # 1: Scheme determined by collection mode
+        self.language = []  # 1+: Defaults to "en"
+        self.title = ''  # 1: A string for the Title
+        #Rights is 1 only, I am at the moment assuming all OA is under CCAL
+        if self.collection_mode:
+            self.rights = collection_ccal_rights
+        else:
+            self.rights = single_ccal_rights
+        #Authors should be namedtuples with .name and .fileas
+        self.creator = []  # 0+: Authors
+        #Editors should be namedtuples with .name and .fileas
+        self.contributor = []  # 0+: Editors
+        self.coverage = []  # 0+?: Unused currently
+        self.format = 'application/epub+zip'  # 1: Invariant here
+        self.type = 'text' # 1: Invariant here
+        self.source = []  # 0+: Unused currently
+        self.relation = []  # 0+: Unused currently
+        self.publisher = []  # 0+: String for each publisher
+        self.description = []  # 0,1,+?: Long description, often abstract text
+        self.type = 'text'  # 1: Invariant here
+        self.subject = []  # 0+: 
+        
+
+    def reset_spine(self):
+        """
+        Removes all of the 
+        """
+        self.spine = []
+        while self.spine_node.childNodes:
+            self.spine.removeChild(self.spine.firstChild)
+
+    def reset_state(self):
+        """
+        Resets the internal state variables to defaults, also used in __init__
+        to set them at the beginning.
+        """
+        self.article = None
+        self.all_articles = []
+        self.doi = ''
+        self.all_dois = []
+        self.article_doi = ''
+        self.journal_doi = ''
 
     def use_collection_mode(self):
         """Enables Collection Mode, sets self.collection_mode to True"""
@@ -69,4 +170,9 @@ class OPF(oject):
     def use_single_mode(self):
         """Disables Collection Mode, sets self.collection_mode to False"""
         self.collection_mode = False
-        self.collection_mode = False
+
+    def write(self):
+        """
+        
+        """
+        pass
