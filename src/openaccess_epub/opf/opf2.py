@@ -25,6 +25,7 @@ import os
 import time
 import uuid
 import xml.dom.minidom
+from openaccess_epub.utils import OrderedSet
 
 log = logging.getLogger('OPF')
 
@@ -75,6 +76,7 @@ class OPF(oject):
         #Create the basic document
         self.init_opf_document()
 
+
     def init_opf_document(self):
         """
         This method creates the initial DOM document for the content.opf file
@@ -113,15 +115,19 @@ class OPF(oject):
             self.reset_metadata()
             self.reset_spine()
 
+
     def reset_metadata(self):
         """
         Resets the variables for the metadata to defaults, also used in
         __init__ to set them at the beginning.
 
-        
+        For those metadata elements that may contain more than one value, their
+        data structure is suited by an ordered set. This preserves the order
+        of inclusion while omitting duplication.
         """
+        #These must have a value to be valid
         self.identifier = None  # 1: Scheme determined by collection mode
-        self.language = []  # 1+: Defaults to "en"
+        self.language = OrderedSet()  # 1+: Defaults to "en"
         self.title = ''  # 1: A string for the Title
         #Rights is 1 only, I am at the moment assuming all OA is under CCAL
         if self.collection_mode:
@@ -129,27 +135,38 @@ class OPF(oject):
         else:
             self.rights = single_ccal_rights
         #Authors should be namedtuples with .name and .fileas
-        self.creator = []  # 0+: Authors
+        self.creator = OrderedSet()  # 0+: Authors
         #Editors should be namedtuples with .name and .fileas
-        self.contributor = []  # 0+: Editors
-        self.coverage = []  # 0+?: Unused currently
-        self.format = 'application/epub+zip'  # 1: Invariant here
-        self.type = 'text' # 1: Invariant here
-        self.source = []  # 0+: Unused currently
-        self.relation = []  # 0+: Unused currently
-        self.publisher = []  # 0+: String for each publisher
-        self.description = []  # 0,1,+?: Long description, often abstract text
-        self.type = 'text'  # 1: Invariant here
-        self.subject = []  # 0+: 
-        
+        self.contributor = OrderedSet()  # 0+: Editors
+        self.publisher = OrderedSet()  # 0+: String for each publisher
+        self.description = OrderedSet()  # 0,1,+?: Long description, often abstract text
+        self.subject = OrderedSet()  # 0+: 
+
+        #These values are invariant, and will always be singular
+        self.format = 'application/epub+zip'
+        self.type = 'text'
+
+        #These values are currently not employed
+        self.coverage = OrderedSet()  # 0+?
+        self.source = OrderedSet()  # 0+
+        self.relation = OrderedSet()  # 0+
+
 
     def reset_spine(self):
         """
-        Removes all of the 
+        Empties the list of all items added to the spine.
         """
         self.spine = []
-        while self.spine_node.childNodes:
-            self.spine.removeChild(self.spine.firstChild)
+
+
+    def make_file_manifest(self):
+        """
+        This function recursively traverses the ePub structure around the OPF
+        file location to provide an index of all files. These files are then
+        listed under the manifest node.
+        """
+        pass
+
 
     def reset_state(self):
         """
@@ -163,13 +180,16 @@ class OPF(oject):
         self.article_doi = ''
         self.journal_doi = ''
 
+
     def use_collection_mode(self):
         """Enables Collection Mode, sets self.collection_mode to True"""
         self.collection_mode = True
 
+
     def use_single_mode(self):
         """Disables Collection Mode, sets self.collection_mode to False"""
         self.collection_mode = False
+
 
     def write(self):
         """
