@@ -295,6 +295,21 @@ def serializeText(fromnode, stringlist=None, sep=''):
     return sep.join(stringlist)
 
 
+#I wish to eventually shift all serializeText references to serialize_text
+def serialize_text(fromnode, stringlist=None, sep=''):
+    """
+    Recursively extract the text data from a node and it's children
+    """
+    if stringlist is None:
+        stringlist = []
+    for item in fromnode.childNodes:
+        if item.nodeType == item.TEXT_NODE and not item.data == '\n':
+            stringlist.append(item.data)
+        else:
+            serializeText(item, stringlist, sep)
+    return sep.join(stringlist)
+
+
 def nodeText(node):
     """
     This is to be used when a node may only contain text, numbers or special

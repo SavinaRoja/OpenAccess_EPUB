@@ -26,6 +26,7 @@ import time
 import uuid
 import xml.dom.minidom
 from openaccess_epub.utils import OrderedSet
+from .publisher_metadata import *
 
 log = logging.getLogger('OPF')
 
@@ -111,11 +112,66 @@ class OPF(oject):
         Mode, the addition of a new article will erase any information from the
         previous article.
         """
+        #Reset some things if taking a new article, this prevents accumulation
+        #in Single Input Mode.
         if not self.collection_mode:
-            self.reset_metadata()
-            self.reset_spine()
             self.reset_state()
+            self.reset_spine()
+            self.reset_metadata()
+        #Set state
+        self.article = article
+        self.all_articles.append(self.article)
+        self.doi = article.get_doi()
+        self.all_dois.append(self.doi)
+        self.article_doi, self.journal_doi = self.doi.split('/')
+        #Add spine elements for article
+        self.add_article_to_spine()
+        #Pull metadata from article for OPF Dublin Core metadata
+        self.extract_article_metadata()
 
+
+    def add_article_to_spine(self):
+        """
+        
+        """
+        pass
+
+
+    def extract_article_metadata(self):
+        """
+        
+        """
+        self.set_publisher_metadata_methods()
+        if self.collection_mode:
+            pass
+        else:
+            #identifier is None or Identifier(value, scheme)
+            self.identifier = self.get_article_identifier(article)
+            #language is OrderedSet([strings])
+            self.language.add(self.get_article_language(article))
+            #title is empty string or nonempty string
+            self.title = self.get_article_title(article)
+            #creator is OrderedSet([Creator(name, role, file_as)])
+            for creator in self.get_article_creator(article):
+                self.creator.add(creator)
+            
+
+
+    def set_publisher_metadata_methods(self):
+        """
+        Sets internal methods to be publisher specific for the article at hand.
+        """
+        if self.journal_doi == '10.1371':
+            self.get_article_identifier = plos_dc_identifier
+            self.get_article_language = plos_dc_language
+            self.get_article_title = plos_dc_title
+            self.get_article_creator = plos_dc_creator
+            self.get_article_contributor = plos_dc_contributor
+            self.get_article_publisher = plos_dc_publisher
+            self.get_article_description = plos_dc_description
+            self.get_article_subject = plos_dc_subject
+        else:
+            raise ValueError('This publisher, {0}, is not supported'.format(self.journal_doi))
 
     def reset_metadata(self):
         """
@@ -127,7 +183,7 @@ class OPF(oject):
         of inclusion while omitting duplication.
         """
         #These must have a value to be valid
-        self.identifier = None  # 1: Scheme determined by collection mode
+        self.identifier = None  # 1: Scheme determined method or collection_mode
         self.language = OrderedSet()  # 1+: Defaults to "en"
         self.title = ''  # 1: A string for the Title
         #Rights is 1 only, I am at the moment assuming all OA is under CCAL
@@ -135,10 +191,10 @@ class OPF(oject):
             self.rights = collection_ccal_rights
         else:
             self.rights = single_ccal_rights
-        #Authors should be namedtuples with .name and .fileas
+        #Authors should be namedtuples with .name, .role, and .file_as
         self.creator = OrderedSet()  # 0+: Authors
-        #Editors should be namedtuples with .name and .fileas
-        self.contributor = OrderedSet()  # 0+: Editors
+        #Editors should be namedtuples with .name, .role, and .file_as
+        self.contributor = OrderedSet()  # 0+: Editors, reviewers
         self.publisher = OrderedSet()  # 0+: String for each publisher
         self.description = OrderedSet()  # 0,1,+?: Long description, often abstract text
         self.subject = OrderedSet()  # 0+: 
