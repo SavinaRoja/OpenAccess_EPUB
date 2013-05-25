@@ -139,12 +139,15 @@ class OPF(oject):
 
     def extract_article_metadata(self):
         """
-        
+        This method calls set_publisher_metadata_methods to ensure that
+        publisher-specific methods are being correctly employed. It then
+        directs the acquisition of article metadata using these methods, while
+        adjusting for collection_mode.
         """
         self.set_publisher_metadata_methods()
         if self.collection_mode:
             pass
-        else:
+        else:  # Single Input Mode
             #identifier is None or Identifier(value, scheme)
             self.identifier = self.get_article_identifier(article)
             #language is OrderedSet([strings])
@@ -154,6 +157,13 @@ class OPF(oject):
             #creator is OrderedSet([Creator(name, role, file_as)])
             for creator in self.get_article_creator(article):
                 self.creator.add(creator)
+            #contributor is OrderedSet([Contributor(name, role, file_as)])
+            for contributor in self.get_article_contributor(article):
+                self.contributor.add(contributor)
+            #publisher is OrderedSet([strings])
+            self.publisher = self.get_article_publisher(article)
+            #description is OrderedSet([strings])
+            self.description.add(self.get_article_description(article))
             
 
 
@@ -196,7 +206,7 @@ class OPF(oject):
         #Editors should be namedtuples with .name, .role, and .file_as
         self.contributor = OrderedSet()  # 0+: Editors, reviewers
         self.publisher = OrderedSet()  # 0+: String for each publisher
-        self.description = OrderedSet()  # 0,1,+?: Long description, often abstract text
+        self.description = OrderedSet()  # 0+: Long description, often abstract text
         self.subject = OrderedSet()  # 0+: 
 
         #These values are invariant, and will always be singular

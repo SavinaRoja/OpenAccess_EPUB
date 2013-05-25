@@ -32,7 +32,6 @@ class MetaOPF(object):
         self.collection_mode = collection_mode
         if self.collection_mode:
             log.debug('Collection Mode')
-        self.version = version
         self.location = location
         #Initiate the document
         self.init_opf_document()
