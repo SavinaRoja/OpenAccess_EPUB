@@ -13,6 +13,7 @@ Contents:
    
    introduction
    inputmodes
+   forthedevs
 
 Indices and tables
 ==================
