@@ -26,7 +26,7 @@ def identifier(input_string, dom, primary=False):
     return dc_ele
 
 
-def language(dom, input_string='en'):
+def language(input_string, dom):
     """
     This creates a dc:language element containing the passed string. It
     defaults to english.
@@ -57,7 +57,7 @@ def rights(input_string, dom):
     return dc_ele
 
 
-def creator(input_string, file_as, dom):
+def creator(input_string, file_as=False, dom):
     """
     This creates a dc:creator element containing the passed string. It is
     extended by the OPF specification to add opf:role and opf:file-as
@@ -65,8 +65,8 @@ def creator(input_string, file_as, dom):
     dc_ele = dom.createElement('dc:creator')
     dc_txt = dom.createTextNode(input_string)
     dc_ele.appendChild(dc_txt)
-    dc_ele.setAttribute('opf:role', 'aut')
-    dc_ele.setAttribute('opf:file-as', file_as)
+    if file_as:
+        dc_ele.setAttribute('opf:file-as', file_as)
     return dc_ele
 
 

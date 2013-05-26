@@ -318,15 +318,107 @@ class OPF(oject):
             else:
                 if back.getElementsByTagName('ref'):
                     self.spine_node.appendChild(bib_ref)
+            #Assuming that the tables file will exist if there are table-wraps
+            #This is not always the case, so that will probably need to be
+            #addressed in the future.
+            #TODO: Fallback behavior for tables file
             if self.article.root_tag.getElementsByTagName('table-wrap'):
                 self.spine_node.appendChild(tab_ref)
 
 
     def make_metadata_elements(self):
         """
-        
+        This generates Dublin Core metadata from the metadata structures that
+        have been extracted from the article(s).
+
+        Relevant specifications about Dublin Core are:
+        http://dublincore.org/documents/2004/12/20/dces/
+        http://idpf.org/epub/20/spec/OPF_2.0.1_draft.htm
+
+        Only unicode text may go exist under the <dc:element> nodes.
         """
-        pass
+        #Create and add the dc:identifier element
+        dc_id = self.spawn_element('dc:idefntifier',
+                                  (('opf:scheme', self.identifier.scheme),
+                                   ('id', 'PrimaryID')),
+                                  self.identifier.value)
+        self.metadata_node.appendChild(dc_id)
+        #Create and add the dc:language elements
+        for lang in self.language:
+            dc_lang = self.spawn_element('dc:language', text=lang)
+            self.metadata_node.appendChild(dc_lang)
+        #Create and add the dc:title element
+        dc_title = self.spawn_element('dc:title', text=self.title)
+        self.metadata_node.appendChild(dc_title)
+        #Create and add the dc:rights element
+        dc_rights = self.spawn_element('dc:rights', self.rights)
+        self.metadata_node.appendChild(dc_rights)
+        #Create and add the dc:creator elements
+        for creator in self.creator:
+            dc_creator = self.spawn_element('dc:creator',
+                                            (('opf:role', creator.role),
+                                             ('opf:file-as', creator.file_as)),
+                                            creator.name)
+            self.metadata_node.appendChild(dc_creator)
+        #Create and add the dc:creator elements
+        for contributor in self.contributor:
+            dc_contrib = self.spawn_element('dc:contributor',
+                                            (('opf:role', contributor.role),
+                                             ('opf:file-as', contributor.file_as)),
+                                            contributor.name)
+            self.metadata_node.appendChild(dc_contributor)
+        #Create and add the dc:date elements
+        for date in self.date:
+            month, day = int(date.month), int(date.day)
+            date_text = year
+            if month:
+                date_text += '-{0}'.format(month)
+                if day:
+                    date_text += '-{0}'.format(day)
+            dc_date = self.spawn_element('dc:date', ('opf:event', date.event), date_string)
+            self.metadata_node.appendChild(dc_date)
+        #Create and add the dc:publisher elements
+        for publisher in self.publisher:
+            dc_pub = self.spawn_element('dc:publisher', text=publisher)
+            self.metadata_node.appendChild(dc_pub)
+        #Create and add the dc:format element
+        dc_format = self.spawn_element('dc:format', text=self.format)
+        self.metadata_node.appendChild(dc_format)
+        #Create and add the dc:type element
+        dc_type = self.spawn_element('dc:type', text=self.type)
+        self.metadata_node.appendChild(dc_type)
+        #Create and add the dc:description elements
+        for description in self.description:
+            dc_desc = self.spawn_element('dc:description',text=description)
+            self.metadata_node.appendChild(dc_desc)
+        #These are not really implemented yet, but they could be...
+        #Create and add the dc:coverage, dc:source, and dc:relation elements
+        for coverage in self.coverage:
+            dc_coverage = self.spawn_element('dc:coverage', text=coverage)
+            self.metadata_node.appendChild(dc_coverage)
+        for source in self.source:
+            dc_source = self.spawn_element('dc:source', text=source)
+            self.metadata_node.appendChild(dc_source)
+        for relation in self.relation:
+            dc_relation = self.spawn_element('dc:relation', text=relation)
+            self.metadata_node.appendChild(dc_relation)
+
+    def spawn_element(self, tag_name, attr_pairs=None, text=None):
+        """
+        Accepts a tagName string, and attribute-value pairs. It creates an
+        an element using these parameters and returns it. It also accepts text
+        and will add that text as a textNode under the element.
+        """
+        if text is None:
+            text = ''
+        if attr_pairs is None:
+            attr_pairs = ()
+        element = self.document.createElement(tag_name)
+        for attribute, value in attr_pairs:
+            element.setAttribute(attribute, value)
+        text_node = self.document.createTextNode(text)
+        element.appendChild(text_node)
+        return element
 
 
     def write(self):
