@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
 from collections import namedtuple
-import openaccess_epub.utils
+import openaccess_epub.utils as utils
 
-identifer = namedtuple('Identifier', 'value, scheme')
+identifier = namedtuple('Identifier', 'value, scheme')
 creator = namedtuple('Creator', 'name, role, file_as')
 contributor = namedtuple('Contributor', 'name, role, file_as')
 date = namedtuple('Date', 'year, month, day, event')
@@ -14,7 +14,7 @@ def plos_dc_identifier(article):
     Given an Article class instance, this will return the DOI for the article.
     It returns a namedtuple which holds the value and scheme.
     """
-    doi = article.get_doi()
+    doi = article.get_DOI()
     if doi:
         return identifier(doi, 'DOI')
     else:
@@ -35,7 +35,7 @@ def plos_dc_title(article):
     in the Article's
     """
     title_node = article.metadata.title.article_title
-    title_string = openaccess_epub.utils.serialize_text(title_node)
+    title_string = utils.serialize_text(title_node)
     return title_string
 
 def plos_dc_creator(article):
@@ -69,6 +69,7 @@ def plos_dc_creator(article):
                     file_as = ', '.join([surname, gi])
             new_creator = creator(name, 'aut', file_as)
             creator_list.append(new_creator)
+    return creator_list
 
 def plos_dc_contributor(article):
     """
@@ -96,6 +97,7 @@ def plos_dc_contributor(article):
                     file_name = name.surname + ', ' + given_initial
             new_contributor = contributor(name, 'aut', file_as)
             contributor_list.append(new_contributor)
+    return contributor_list
 
 def plos_dc_publisher(article):
     """
@@ -114,7 +116,7 @@ def plos_dc_description(article):
     """
     abstract_text = ''
     if article.metadata.abstract:
-        abstract_text = utils.serialize_text(articlemetadata.abstract[0].node)
+        abstract_text = utils.serialize_text(article.metadata.abstract[0].node)
     return abstract_text
 
 def plos_dc_date(article):
@@ -138,10 +140,10 @@ def plos_dc_date(article):
     except KeyError:
         pass
     else:
-        date_list.append(pub_date.year,
-                         pub_date.month,
-                         pub_date.day,
-                         'publication')
+        date_list.append(date(pub_date.year,
+                              pub_date.month,
+                              pub_date.day,
+                              'publication'))
     return date_list
 
 def plos_dc_subject(article):

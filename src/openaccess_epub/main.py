@@ -420,23 +420,31 @@ def make_epub(document, outdirect, explicit_images, batch, config=None):
     #Get the images
     get_images(DOI, outdirect, explicit_images, config, document)
 
-    #Run content processing per publisher
-    if DOI.split('/')[0] == '10.1371':  # PLoS's publisher DOI
-        ops_doc = ops.OPSPLoS(document, outdirect)
-        #TODO: Workflow change, parse table of contents from OPS processed document
-        toc = ncx.TocNCX(__version__)
-        toc.parse_article(document)
-        toc.write(outdirect)
-        myopf = opf.PLoSOPF(outdirect, False)
-    elif DOI.split('/')[0] == '10.3389':  # Frontiers' publisher DOI
-        ops.OPSFrontiers(document, outdirect)
-        toc = ncx.TocNCX(__version__)
-        toc.parse_article(document)
-        toc.write(outdirect)
-        myopf = opf.FrontiersOPF(outdirect, False)
-    myopf.parse_article(document)
+    toc = ncx.TocNCX(__version__)
+    myopf = opf.OPF(outdirect, False)
+    toc.parse_article(document)
+    myopf.take_article(document)
+    ops_doc = ops.OPSPLoS(document, outdirect)
     myopf.write()
     utils.epub_zip(outdirect)
+
+    #Run content processing per publisher
+    #if DOI.split('/')[0] == '10.1371':  # PLoS's publisher DOI
+    #    ops_doc = ops.OPSPLoS(document, outdirect)
+    #    #TODO: Workflow change, parse table of contents from OPS processed document
+    #    toc = ncx.TocNCX(__version__)
+    #    toc.parse_article(document)
+    #    toc.write(outdirect)
+    #    myopf = opf.PLoSOPF(outdirect, False)
+    #elif DOI.split('/')[0] == '10.3389':  # Frontiers' publisher DOI
+    #    ops.OPSFrontiers(document, outdirect)
+    #    toc = ncx.TocNCX(__version__)
+    #    toc.parse_article(document)
+    #    toc.write(outdirect)
+    #    myopf = opf.FrontiersOPF(outdirect, False)
+    #myopf.parse_article(document)
+    #myopf.write()
+    
 
 
 def epubcheck(epubname, config=None):

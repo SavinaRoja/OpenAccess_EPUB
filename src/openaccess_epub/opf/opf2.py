@@ -18,8 +18,7 @@ Refer to the version of JPTS you are using and the jpts module, as well as the
 Dublin Core specification and the dublincore module.
 """
 
-import openaccess.utils as utils
-import openaccess.dublincore as dublincore
+import openaccess_epub.utils as utils
 import logging
 import os
 import time
@@ -41,7 +40,7 @@ permits unrestricted use, distribution, and reproduction in any medium,\
 provided the original work is properly cited.'''
 
 
-class OPF(oject):
+class OPF(object):
     """
     This class represents the OPF file, its generation with input and how it
     renders to output.
@@ -58,10 +57,10 @@ class OPF(oject):
     importance in Single Input mode, but is critical to Collection Mode.
     
     """
-    def __init__(self, write_location=os.getcwd(), collection_mode=False):
+    def __init__(self, location=os.getcwd(), collection_mode=False):
         """
         Initialization arguments:
-            write_location - Where this instance will write to
+            location - Where this ePub is based
             collection_mode - To use Collection Mode, set to True
 
         Collection Mode can be turned on or off after initialization using the
@@ -71,6 +70,8 @@ class OPF(oject):
         self.reset_state()
         #Set Collection Mode by argument
         self.collection_mode = collection_mode
+        #Set location by argument
+        self.location = location
         #Set metadata and spine data structures to defaults
         self.reset_metadata()
         self.reset_spine()
@@ -85,7 +86,7 @@ class OPF(oject):
         impl = xml.dom.minidom.getDOMImplementation()
         self.document = impl.createDocument(None, 'package', None)
         #Grab the root <package> node
-        self.package = self.doc.lastChild
+        self.package = self.document.lastChild
         #Set attributes for this node, including namespace declarations
         self.package.setAttribute('version', '2.0')
         self.package.setAttribute('unique-identifier', 'PrimaryID')
@@ -96,9 +97,9 @@ class OPF(oject):
         #Create the sub elements for <package>
         opf_sub_elements = ['metadata', 'manifest', 'spine', 'guide']
         for el in opf_sub_elements:
-            self.package.appendChild(self.doc.createElement(el))
+            self.package.appendChild(self.document.createElement(el))
         self.metadata_node, self.manifest_node, self.spine_node, self.guide_node = self.package.childNodes
-        self.spine.setAttribute('toc', 'ncx')
+        self.spine_node.setAttribute('toc', 'ncx')
 
 
     def take_article(self, article):
@@ -121,9 +122,9 @@ class OPF(oject):
         #Set state
         self.article = article
         self.all_articles.append(self.article)
-        self.doi = article.get_doi()
+        self.doi = article.get_DOI()
         self.all_dois.append(self.doi)
-        self.article_doi, self.journal_doi = self.doi.split('/')
+        self.journal_doi, self.article_doi = self.doi.split('/')
         #Add spine elements for article
         self.add_article_to_spine()
         #Pull metadata from article for OPF Dublin Core metadata
@@ -149,34 +150,34 @@ class OPF(oject):
         if self.collection_mode:  #Collection Mode Specific
             #identifier defaults to UUID
             #title is empty string or nonempty string
-            self.title = self.get_article_title(article)
+            self.title = self.get_article_title(self.article)
             #A collection article gets no dc:date elements
         else:  # Single Mode Specific
             #identifier is None or Identifier(value, scheme)
-            id = self.get_article_identifier(article)
+            id = self.get_article_identifier(self.article)
             if id:  # Only override default UUID if successful
                 self.identifier = id
             #title is empty string or nonempty string
-            self.title = self.get_article_title(article)
+            self.title = self.get_article_title(self.article)
             #date is OrderedSet([Date(year, month, day, event)])
-            for date in self.get_article_date(article):
+            for date in self.get_article_date(self.article):
                 self.date.add(date)
 
         #These are no different between Single and Collection Modes
         #language is OrderedSet([strings])
-        self.language.add(self.get_article_language(article))
+        self.language.add(self.get_article_language(self.article))
         #creator is OrderedSet([Creator(name, role, file_as)])
-        for creator in self.get_article_creator(article):
+        for creator in self.get_article_creator(self.article):
             self.creator.add(creator)
         #contributor is OrderedSet([Contributor(name, role, file_as)])
-        for contributor in self.get_article_contributor(article):
+        for contributor in self.get_article_contributor(self.article):
             self.contributor.add(contributor)
         #publisher is OrderedSet([strings])
-        self.publisher = self.get_article_publisher(article)
+        self.publisher = self.get_article_publisher(self.article)
         #description is OrderedSet([strings])
-        self.description.add(self.get_article_description(article))
+        self.description.add(self.get_article_description(self.article))
         #subject is OrderedSet([strings])
-        for subject in self.get_article_subject(article):
+        for subject in self.get_article_subject(self.article):
             self.subject.add(subject)
 
 
@@ -223,6 +224,7 @@ class OPF(oject):
         self.publisher = OrderedSet()  # 0+: String for each publisher
         self.description = OrderedSet()  # 0+: Long description, often abstract text
         self.subject = OrderedSet()  # 0+: 
+        self.date = OrderedSet()
 
         #These values are invariant, and will always be singular
         self.format = 'application/epub+zip'
@@ -275,7 +277,7 @@ class OPF(oject):
                 for filename in filenames:
                     _name, ext = os.path.splitext(filename)
                     ext = ext[1:]
-                    new = self.manifest_node.appendChild(self.doc.createElement('item'))
+                    new = self.manifest_node.appendChild(self.document.createElement('item'))
                     if path:
                         new.setAttribute('href', '/'.join([path, filename]))
                     else:
@@ -300,12 +302,12 @@ class OPF(oject):
         be placed in the linear order.
         """
         for article in self.all_articles:
-            article_doi = article.get_doi().split('/')[1]
+            article_doi = article.get_DOI().split('/')[1]
             idref = '{0}.' + '{0}.xml'.format(article_doi)
             idref = idref.replace('.', '-')
-            main_ref = self.spine_node.appendChild(self.doc.createElement('itemref'))
-            biblio_ref = self.doc.createElement('itemref')
-            tables_ref = self.doc.createElement('itemref')
+            main_ref = self.spine_node.appendChild(self.document.createElement('itemref'))
+            biblio_ref = self.document.createElement('itemref')
+            tables_ref = self.document.createElement('itemref')
             for ref, name, linear in [(main_ref, 'main', 'yes'),
                                       (biblio_ref, 'biblio', 'yes'),
                                       (tables_ref, 'main', 'no')]:
@@ -351,7 +353,7 @@ class OPF(oject):
         dc_title = self.spawn_element('dc:title', text=self.title)
         self.metadata_node.appendChild(dc_title)
         #Create and add the dc:rights element
-        dc_rights = self.spawn_element('dc:rights', self.rights)
+        dc_rights = self.spawn_element('dc:rights', text=self.rights)
         self.metadata_node.appendChild(dc_rights)
         #Create and add the dc:creator elements
         for creator in self.creator:
@@ -370,12 +372,12 @@ class OPF(oject):
         #Create and add the dc:date elements
         for date in self.date:
             month, day = int(date.month), int(date.day)
-            date_text = year
+            date_text = date.year
             if month:
                 date_text += '-{0}'.format(month)
                 if day:
                     date_text += '-{0}'.format(day)
-            dc_date = self.spawn_element('dc:date', ('opf:event', date.event), date_string)
+            dc_date = self.spawn_element('dc:date', (('opf:event', date.event)), date_text)
             self.metadata_node.appendChild(dc_date)
         #Create and add the dc:publisher elements
         for publisher in self.publisher:
@@ -415,6 +417,7 @@ class OPF(oject):
             attr_pairs = ()
         element = self.document.createElement(tag_name)
         for attribute, value in attr_pairs:
+            print(attribute, value)
             element.setAttribute(attribute, value)
         text_node = self.document.createTextNode(text)
         element.appendChild(text_node)
