@@ -17,10 +17,9 @@ setup(name='openaccess_epub',
       author_email='pablo.barton@gmail.com',
       url='https://github.com/SavinaRoja/openaccess_epub',
       package_dir={'': 'src'},
-      packages=['openaccess_epub', 'openaccess_epub.dublincore',
-                'openaccess_epub.jpts', 'openaccess_epub.ncx',
-                'openaccess_epub.opf', 'openaccess_epub.ops',
-                'openaccess_epub.utils'],
+      packages=['openaccess_epub', 'openaccess_epub.jpts',
+                'openaccess_epub.ncx', 'openaccess_epub.opf',
+                'openaccess_epub.ops', 'openaccess_epub.utils'],
       scripts=['scripts/oaepub', 'scripts/epubzip', 'scripts/oae-quickstart'],
       data_files=[]
       )

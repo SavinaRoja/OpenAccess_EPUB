@@ -131,13 +131,6 @@ class OPF(object):
         self.extract_article_metadata()
 
 
-    def add_article_to_spine(self):
-        """
-        
-        """
-        pass
-
-
     def extract_article_metadata(self):
         """
         This method calls set_publisher_metadata_methods to ensure that
@@ -319,7 +312,7 @@ class OPF(object):
                 pass
             else:
                 if back.getElementsByTagName('ref'):
-                    self.spine_node.appendChild(bib_ref)
+                    self.spine_node.appendChild(biblio_ref)
             #Assuming that the tables file will exist if there are table-wraps
             #This is not always the case, so that will probably need to be
             #addressed in the future.

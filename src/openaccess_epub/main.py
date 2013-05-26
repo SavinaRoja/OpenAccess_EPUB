@@ -425,7 +425,7 @@ def make_epub(document, outdirect, explicit_images, batch, config=None):
     toc.parse_article(document)
     myopf.take_article(document)
     ops_doc = ops.OPSPLoS(document, outdirect)
-    toc.write(location)
+    toc.write(outdirect)
     myopf.write()
     utils.epub_zip(outdirect)
 

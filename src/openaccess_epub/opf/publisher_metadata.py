@@ -91,11 +91,11 @@ def plos_dc_contributor(article):
                     given_initial = name.given[0]
                 except TypeError:
                     editor_name = name.surname
-                    file_name = name.surname
+                    file_as = name.surname
                 else:
                     editor_name = name.given + ' ' + name.surname
-                    file_name = name.surname + ', ' + given_initial
-            new_contributor = contributor(name, 'aut', file_as)
+                    file_as = name.surname + ', ' + given_initial
+            new_contributor = contributor(editor_name, 'edt', file_as)
             contributor_list.append(new_contributor)
     return contributor_list
 
