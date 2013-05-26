@@ -26,6 +26,9 @@ import uuid
 import xml.dom.minidom
 from openaccess_epub.utils import OrderedSet
 from .publisher_metadata import *
+from collections import namedtuple
+
+spine_itemref = namedtuple('SpineItemref', 'idref, linear')
 
 log = logging.getLogger('OPF')
 
@@ -286,6 +289,33 @@ class OPF(object):
         os.chdir(current_dir)
 
 
+    def add_article_to_spine(self):
+        """
+        Adds items to the self.spine list with the addition of a new article.
+        Later, make_spine_itemrefs will take these entries for the creation of
+        XML for the spine of the OPF file.
+        """
+        dashed_article_doi = self.article_doi.replace('.', '-')
+        #Add main, which should not be optional
+        main_idref = 'main-{0}-xml'.format(dashed_article_doi)
+        self.spine.append(spine_itemref(main_idref, 'yes'))
+        #Create biblio idref
+        biblio_idref = 'biblio-{0}-xml'.format(dashed_article_doi)
+        #Add biblio idref if there is a bibliography
+        try:
+            back = self.article.root_tag.getElementsByTagName('back')[0]
+        except IndexError:
+            pass
+        else:
+            if back.getElementsByTagName('ref'):
+                self.spine.append(spine_itemref(biblio_idref, 'yes'))
+        #Create tables idref
+        tables_idref = 'tables-{0}-xml'.format(dashed_article_doi)
+        #Add the tables if there should be a tables file
+        if self.article.root_tag.getElementsByTagName('table-wrap'):
+            self.spine.append(spine_itemref(tables_idref, 'no'))
+
+
     def make_spine_itemrefs(self):
         """
         This is responsible for creating the itemref elements in the OPF spine.
@@ -294,32 +324,11 @@ class OPF(object):
         html-tables document, that should receive an itemref, but it will not
         be placed in the linear order.
         """
-        for article in self.all_articles:
-            article_doi = article.get_DOI().split('/')[1]
-            idref = '{0}.' + '{0}.xml'.format(article_doi)
-            idref = idref.replace('.', '-')
-            main_ref = self.spine_node.appendChild(self.document.createElement('itemref'))
-            biblio_ref = self.document.createElement('itemref')
-            tables_ref = self.document.createElement('itemref')
-            for ref, name, linear in [(main_ref, 'main', 'yes'),
-                                      (biblio_ref, 'biblio', 'yes'),
-                                      (tables_ref, 'main', 'no')]:
-                ref.setAttribute('linear', linear)
-                ref.setAttribute('idref', idref.format(name))
-            try:
-                back = self.article.root_tag.getElementsByTagName('back')[0]
-            except IndexError:
-                pass
-            else:
-                if back.getElementsByTagName('ref'):
-                    self.spine_node.appendChild(biblio_ref)
-            #Assuming that the tables file will exist if there are table-wraps
-            #This is not always the case, so that will probably need to be
-            #addressed in the future.
-            #TODO: Fallback behavior for tables file
-            if self.article.root_tag.getElementsByTagName('table-wrap'):
-                self.spine_node.appendChild(tab_ref)
-
+        for itemref in self.spine:
+            itemref_element = self.document.createElement('itemref')
+            itemref_element.setAttribute('idref', itemref.idref)
+            itemref_element.setAttribute('linear', itemref.linear)
+            self.spine_node.appendChild(itemref_element)
 
     def make_metadata_elements(self):
         """
@@ -361,7 +370,7 @@ class OPF(object):
                                             [('opf:role', contributor.role),
                                              ('opf:file-as', contributor.file_as)],
                                             contributor.name)
-            self.metadata_node.appendChild(dc_contributor)
+            self.metadata_node.appendChild(dc_contrib)
         #Create and add the dc:date elements
         for date in self.date:
             month, day = int(date.month), int(date.day)
