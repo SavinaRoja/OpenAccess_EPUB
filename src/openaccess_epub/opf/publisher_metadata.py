@@ -67,7 +67,7 @@ def plos_dc_creator(article):
                 else:
                     auth = ' '.join([given, surname])
                     file_as = ', '.join([surname, gi])
-            new_creator = creator(name, 'aut', file_as)
+            new_creator = creator(auth, 'aut', file_as)
             creator_list.append(new_creator)
     return creator_list
 

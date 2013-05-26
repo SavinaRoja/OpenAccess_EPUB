@@ -173,7 +173,7 @@ class OPF(object):
         for contributor in self.get_article_contributor(self.article):
             self.contributor.add(contributor)
         #publisher is OrderedSet([strings])
-        self.publisher = self.get_article_publisher(self.article)
+        self.publisher.add(self.get_article_publisher(self.article))
         #description is OrderedSet([strings])
         self.description.add(self.get_article_description(self.article))
         #subject is OrderedSet([strings])
@@ -312,7 +312,7 @@ class OPF(object):
                                       (biblio_ref, 'biblio', 'yes'),
                                       (tables_ref, 'main', 'no')]:
                 ref.setAttribute('linear', linear)
-                ref.setAttribute('idref', idref)
+                ref.setAttribute('idref', idref.format(name))
             try:
                 back = self.article.root_tag.getElementsByTagName('back')[0]
             except IndexError:
@@ -340,7 +340,7 @@ class OPF(object):
         Only unicode text may go exist under the <dc:element> nodes.
         """
         #Create and add the dc:identifier element
-        dc_id = self.spawn_element('dc:idefntifier',
+        dc_id = self.spawn_element('dc:identifier',
                                   (('opf:scheme', self.identifier.scheme),
                                    ('id', 'PrimaryID')),
                                   self.identifier.value)
@@ -358,15 +358,15 @@ class OPF(object):
         #Create and add the dc:creator elements
         for creator in self.creator:
             dc_creator = self.spawn_element('dc:creator',
-                                            (('opf:role', creator.role),
-                                             ('opf:file-as', creator.file_as)),
+                                            [('opf:role', creator.role),
+                                             ('opf:file-as', creator.file_as)],
                                             creator.name)
             self.metadata_node.appendChild(dc_creator)
         #Create and add the dc:creator elements
         for contributor in self.contributor:
             dc_contrib = self.spawn_element('dc:contributor',
-                                            (('opf:role', contributor.role),
-                                             ('opf:file-as', contributor.file_as)),
+                                            [('opf:role', contributor.role),
+                                             ('opf:file-as', contributor.file_as)],
                                             contributor.name)
             self.metadata_node.appendChild(dc_contributor)
         #Create and add the dc:date elements
@@ -377,7 +377,7 @@ class OPF(object):
                 date_text += '-{0}'.format(month)
                 if day:
                     date_text += '-{0}'.format(day)
-            dc_date = self.spawn_element('dc:date', (('opf:event', date.event)), date_text)
+            dc_date = self.spawn_element('dc:date', attr_pairs=[('opf:event', date.event)], text=date_text)
             self.metadata_node.appendChild(dc_date)
         #Create and add the dc:publisher elements
         for publisher in self.publisher:
@@ -417,7 +417,6 @@ class OPF(object):
             attr_pairs = ()
         element = self.document.createElement(tag_name)
         for attribute, value in attr_pairs:
-            print(attribute, value)
             element.setAttribute(attribute, value)
         text_node = self.document.createTextNode(text)
         element.appendChild(text_node)
