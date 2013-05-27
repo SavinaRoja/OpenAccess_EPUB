@@ -185,7 +185,7 @@ def batch_input(args, config=None):
             make_epub(parsed_article,
                       outdirect=output_name,
                       explicit_images=None,   # No explicit image path
-                      batch=False,
+                      batch=True,
                       config=config)
         except:
             error_file.write(item_path + '\n')

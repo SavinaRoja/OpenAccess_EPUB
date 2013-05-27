@@ -60,14 +60,26 @@ class OPF(object):
     importance in Single Input mode, but is critical to Collection Mode.
     
     """
-    def __init__(self, location=os.getcwd(), collection_mode=False):
+    def __init__(self, location=os.getcwd(), collection_mode=False, title=''):
         """
         Initialization arguments:
             location - Where this ePub is based
             collection_mode - To use Collection Mode, set to True
+            title - What the ePub will be titled*
 
         Collection Mode can be turned on or off after initialization using the
         use_collection_mode() and use_single_mode methods() respectively.
+
+        *An ePub's title is determined by the value of the <dc:title> element in
+        the content.opf file. In Single Mode, this title is determined
+        automatically from the article it receives in take_article(). If one
+        wishes to create a workflow for Single Mode that uses a different title
+        then use the OPF class method set_title() after passing an article to
+        take_article(). In Collection Mode, the title must be manually supplied
+        in some form or the ePub will have an empty string for a title that
+        ought to be corrected manually afterwards. Initializing the OPF
+        instance with the title argument, or calling set_title() at any time
+        before writing will give it a title.
         """
         #Set internal variables to defaults
         self.reset_state()
@@ -452,3 +464,8 @@ class OPF(object):
     def use_single_mode(self):
         """Disables Collection Mode, sets self.collection_mode to False"""
         self.collection_mode = False
+
+    def set_title(self, title):
+        
+
+
