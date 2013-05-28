@@ -69,9 +69,12 @@ def OAEParser():
     modes.add_argument('-p', '--parallel-batch', action='store', default=False,
                        help='''Use to specify a batch directory for parallel
                                processing.''')
-    modes.add_argument('-C', '--collection', action='store_true', default=False,
+    modes.add_argument('-C', '--collection', action='store', default=None,
                        help='''Use to combine all xml files in the local
-                               directory into a single ePub collection.''')
+                               directory into a single ePub collection.
+                               Typing a string after this flag will provide a
+                               title for the collection. If no title is given,
+                               the main script may ask for one.''')
     modes.add_argument('-cI', '--clear-image-cache', action='store_true',
                        default=False, help='''Clears the image cache''')
     modes.add_argument('-cC', '--clear-cache', action='store_true',
@@ -501,7 +504,7 @@ def main(args):
         batch_input(args, config)
     elif args.parallel_batch:  # Convert large numbers of XML files to EPUB in parallel
         parallel_batch_input(args, config)
-    elif args.collection:  # Convert multiple XML articles into single EPUB
+    elif not args.collection is None:  # Convert multiple XML articles into single EPUB
         collection_input(args, config)
     elif args.zipped:  # Convert Frontiers zipfile into single EPUB
         zipped_input(args, config)

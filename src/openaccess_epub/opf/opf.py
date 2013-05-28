@@ -466,6 +466,4 @@ class OPF(object):
         self.collection_mode = False
 
     def set_title(self, title):
-        
-
-
+        self.title = title
