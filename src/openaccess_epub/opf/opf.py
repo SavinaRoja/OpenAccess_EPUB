@@ -45,16 +45,16 @@ provided the original work is properly cited.'''
 
 class OPF(object):
     """
-    This class represents the OPF file, its generation with input and how it
-    renders to output.
-    
+    This class represents the OPF file, its generation with input,and its
+    output rendering.
+
     The OPF file handles three distinct tasks: Dublin Core Metadata about the
     ePub file, a file manifest the ePub, and a read-order spine for the ePub.
-    
+
     When the OPF class initiates, it contains no content, creating only the
     basic file framework. To pass input articles to the OPF class, whether for
     Single Input Mode or for Collection Mode, use the OPF.take_article method.
-    
+
     The OPF Class relies on a concept of internal state. This state represents
     the class' focus on a single article at a time. This is of little
     importance in Single Input mode, but is critical to Collection Mode.
