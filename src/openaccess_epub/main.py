@@ -69,7 +69,8 @@ def OAEParser():
     modes.add_argument('-p', '--parallel-batch', action='store', default=False,
                        help='''Use to specify a batch directory for parallel
                                processing.''')
-    modes.add_argument('-C', '--collection', action='store', default=None,
+    modes.add_argument('-C', '--collection', action='store', default=False,
+                       nargs='?', const='True',
                        help='''Use to combine all xml files in the local
                                directory into a single ePub collection.
                                Typing a string after this flag will provide a
@@ -251,18 +252,20 @@ def collection_input(args, config=None):
     shutil.copytree(epub_base, output_name)
     
     toc = ncx.TocNCX(version=__version__, collection_mode=True)
-    myopf = opf.PLoSOPF(__version__, output_name, collection_mode=True, title=output_name)
+    myopf = opf.OPF(location=output_name, collection_mode=True, title=output_name)
     
     #Now it is time to operate on each of the xml files
     for xml_file in xml_files:
         raw_name = u_input.local_input(xml_file)  # is this used?
         parsed_article = Article(xml_file)
+        toc.parse_article(parsed_article)
+        myopf.take_article(parsed_article)
     
         if parsed_article.metadata.dtdVersion() == '2.0':  #Not supported
             print('Article published with JPTS DTDv2.0, not supported!')
             sys.exit(1)
         #Get the Digital Object Identifier
-        doi = parsed_article.getDOI()
+        doi = parsed_article.get_DOI()
         journal_doi, article_doi = doi.split('/')
         
         #Check for images
@@ -289,8 +292,7 @@ def collection_input(args, config=None):
         if journal_doi == '10.1371':  # PLoS's publisher DOI
             ops_doc = ops.OPSPLoS(parsed_article, output_name)
             #TODO: Workflow change, parse table of contents from OPS processed document
-            toc.parse_article(parsed_article)
-            myopf.parse_article(parsed_article)
+            
     toc.write(output_name)
     myopf.write()
     utils.epub_zip(output_name)
@@ -504,7 +506,7 @@ def main(args):
         batch_input(args, config)
     elif args.parallel_batch:  # Convert large numbers of XML files to EPUB in parallel
         parallel_batch_input(args, config)
-    elif not args.collection is None:  # Convert multiple XML articles into single EPUB
+    elif args.collection:  # Convert multiple XML articles into single EPUB
         collection_input(args, config)
     elif args.zipped:  # Convert Frontiers zipfile into single EPUB
         zipped_input(args, config)

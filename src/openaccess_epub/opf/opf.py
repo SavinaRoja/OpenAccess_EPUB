@@ -217,7 +217,7 @@ class OPF(object):
         """
         #These must have a value to be valid
         #identifier uses default fallback behavior of UUID
-        self.identifier = self.identifier = identifier(uuid.uuid4(), 'UUID')
+        self.identifier = self.identifier = identifier(str(uuid.uuid4()), 'UUID')
         self.language = OrderedSet()  # 1+: Defaults to "en"
         self.title = ''  # 1: A string for the Title
         #Rights is 1 only, I am at the moment assuming all OA is under CCAL
