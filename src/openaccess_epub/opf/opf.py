@@ -15,7 +15,7 @@ from the input to output, as the publisher convention may differ and some of
 the translation decisions are subjective.
 
 Refer to the version of JPTS you are using and the jpts module, as well as the
-Dublin Core specification and the dublincore module.
+Dublin Core specification.
 """
 
 import openaccess_epub.utils as utils
