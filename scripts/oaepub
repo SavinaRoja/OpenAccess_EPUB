@@ -37,6 +37,10 @@ def main():
         log_name = os.path.split(utils.get_absolute_path(args.batch))[0] + '.log'
         logname = os.path.splitext(os.path.basename(args.zip))[0] + '.log'
     elif args.collection:
+        if args.collection is True:
+            
+        else:
+            log_name = args.collection +  '.log'
         log_name = os.path.split(os.getcwd())[1] + '_collection.log'
     
     output_dir = utils.get_output_directory(args)
