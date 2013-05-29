@@ -354,7 +354,7 @@ class OPSPLoS(OPSMeta):
             cur_aff_span = self.appendNewElement('span', affs_div)
             cur_aff_span.setAttribute('id', aff_id)
             if label_node:
-                label_text = utils.nodeText(label_node[0])
+                label_text = utils.nodeText(label_node[0]) + ' '
                 label_b = self.appendNewElementWithText('b', label_text, cur_aff_span)
             
             self.appendNewText(addr_line_text + ', ', cur_aff_span)
