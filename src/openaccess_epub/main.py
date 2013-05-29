@@ -251,8 +251,13 @@ def collection_input(args, config=None):
     epub_base = os.path.join(CACHE_LOCATION, 'base_epub')
     shutil.copytree(epub_base, output_name)
     
+    if args.collection is True:
+        title = output_name
+    else:
+        title = args.collection
+    
     toc = ncx.TocNCX(version=__version__, collection_mode=True)
-    myopf = opf.OPF(location=output_name, collection_mode=True, title=output_name)
+    myopf = opf.OPF(location=output_name, collection_mode=True, title=title)
     
     #Now it is time to operate on each of the xml files
     for xml_file in xml_files:

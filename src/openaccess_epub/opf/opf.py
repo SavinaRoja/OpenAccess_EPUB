@@ -92,6 +92,8 @@ class OPF(object):
         self.reset_spine()
         #Create the basic document
         self.init_opf_document()
+        #Set the title if given
+        self.title = title
 
 
     def init_opf_document(self):
@@ -158,7 +160,8 @@ class OPF(object):
         if self.collection_mode:  #Collection Mode Specific
             #identifier defaults to UUID
             #title is empty string or nonempty string
-            self.title = self.get_article_title(self.article)
+            pass
+            #self.title = self.get_article_title(self.article)
             #A collection article gets no dc:date elements
         else:  # Single Mode Specific
             #identifier is None or Identifier(value, scheme)
