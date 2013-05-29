@@ -58,7 +58,6 @@ class OPF(object):
     The OPF Class relies on a concept of internal state. This state represents
     the class' focus on a single article at a time. This is of little
     importance in Single Input mode, but is critical to Collection Mode.
-    
     """
     def __init__(self, location=os.getcwd(), collection_mode=False, title=''):
         """
