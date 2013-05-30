@@ -86,9 +86,6 @@ class OPF(object):
         self.collection_mode = collection_mode
         #Set location by argument
         self.location = location
-        #Set metadata and spine data structures to defaults
-        self.reset_metadata()
-        self.reset_spine()
         #Create the basic document
         self.init_opf_document()
         #Set the title if given
@@ -133,8 +130,6 @@ class OPF(object):
         #in Single Input Mode.
         if not self.collection_mode:
             self.reset_state()
-            self.reset_spine()
-            self.reset_metadata()
         #Set state
         self.article = article
         self.all_articles.append(self.article)
@@ -264,6 +259,9 @@ class OPF(object):
         self.all_dois = []
         self.article_doi = ''
         self.journal_doi = ''
+        #Set metadata and spine data structures to defaults
+        self.reset_metadata()
+        self.reset_spine()
 
 
     def make_file_manifest(self):
