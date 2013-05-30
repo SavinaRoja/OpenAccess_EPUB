@@ -430,12 +430,12 @@ def make_epub(document, outdirect, explicit_images, batch, config=None):
     #Get the images
     get_images(DOI, outdirect, explicit_images, config, document)
 
-    toc = ncx.TocNCX(__version__)
+    toc = ncx.NCX(__version__, outdirect)
     myopf = opf.OPF(outdirect, False)
-    toc.parse_article(document)
+    toc.take_article(document)
     myopf.take_article(document)
     ops_doc = ops.OPSPLoS(document, outdirect)
-    toc.write(outdirect)
+    toc.write()
     myopf.write()
     utils.epub_zip(outdirect)
 
