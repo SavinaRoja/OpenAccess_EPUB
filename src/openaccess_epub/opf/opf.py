@@ -430,7 +430,7 @@ class OPF(object):
     def write(self):
         """
         Writing the OPF file is immediately preceded by jobs that finalize
-        the OPF document. This includes the creation of the final manifest,
+        the OPF document. This includes the creation of the file manifest,
         the creation of the spine's itemrefs, and the creation of the Dublin
         Core metadata.
 
