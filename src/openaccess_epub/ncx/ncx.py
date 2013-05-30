@@ -223,13 +223,14 @@ e
         if self.collection_mode:
             pass  # Nothing specific to Collection Mode only at this time
         else:  # Single Mode specific actions
-            self.article_title = self.get_article_title(self.article)
+            pass  # Nothing specific to Single Mode only at this time
 
         #Generally speaking, for the NCX, little differs between Collection and
         #Single modes except for the reset between each article for Single
         #creator is OrderedSet([Creator(name, role, file_as)])
         for creator in self.get_article_creator(self.article):
             self.doc_author.add(creator)
+        self.article_title = self.get_article_title(self.article)
 
     def set_publisher_metadata_methods(self):
         """
