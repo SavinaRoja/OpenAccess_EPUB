@@ -80,10 +80,10 @@ class OPF(object):
         instance with the title argument, or calling set_title() at any time
         before writing will give it a title.
         """
-        #Set internal variables to defaults
-        self.reset_state()
         #Set Collection Mode by argument
         self.collection_mode = collection_mode
+        #Set internal variables to defaults
+        self.reset_state()
         #Set location by argument
         self.location = location
         #Create the basic document
