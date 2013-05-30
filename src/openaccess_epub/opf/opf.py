@@ -91,7 +91,6 @@ class OPF(object):
         #Set the title if given
         self.title = title
 
-
     def init_opf_document(self):
         """
         This method creates the initial DOM document for the content.opf file
@@ -113,7 +112,6 @@ class OPF(object):
             self.package.appendChild(self.document.createElement(el))
         self.metadata_node, self.manifest_node, self.spine_node, self.guide_node = self.package.childNodes
         self.spine_node.setAttribute('toc', 'ncx')
-
 
     def take_article(self, article):
         """
@@ -140,7 +138,6 @@ class OPF(object):
         self.add_article_to_spine()
         #Pull metadata from article for OPF Dublin Core metadata
         self.extract_article_metadata()
-
 
     def extract_article_metadata(self):
         """
@@ -185,7 +182,6 @@ class OPF(object):
         for subject in self.get_article_subject(self.article):
             self.subject.add(subject)
 
-
     def set_publisher_metadata_methods(self):
         """
         Sets internal methods to be publisher specific for the article at hand.
@@ -202,6 +198,21 @@ class OPF(object):
             self.get_article_subject = plos_dc_subject
         else:
             raise ValueError('This publisher, {0}, is not supported'.format(self.journal_doi))
+
+    def reset_state(self):
+        """
+        Resets the internal state variables to defaults, also used in __init__
+        to set them at the beginning.
+        """
+        self.article = None
+        self.all_articles = []
+        self.doi = ''
+        self.all_dois = []
+        self.article_doi = ''
+        self.journal_doi = ''
+        #Set metadata and spine data structures to defaults
+        self.reset_metadata()
+        self.reset_spine()
 
     def reset_metadata(self):
         """
@@ -240,29 +251,11 @@ class OPF(object):
         self.source = OrderedSet()  # 0+
         self.relation = OrderedSet()  # 0+
 
-
     def reset_spine(self):
         """
         Empties the list of all items added to the spine.
         """
         self.spine = []
-
-
-    def reset_state(self):
-        """
-        Resets the internal state variables to defaults, also used in __init__
-        to set them at the beginning.
-        """
-        self.article = None
-        self.all_articles = []
-        self.doi = ''
-        self.all_dois = []
-        self.article_doi = ''
-        self.journal_doi = ''
-        #Set metadata and spine data structures to defaults
-        self.reset_metadata()
-        self.reset_spine()
-
 
     def make_file_manifest(self):
         """
@@ -300,7 +293,6 @@ class OPF(object):
                         new.setAttribute('id', filename.replace('.', '-'))
         os.chdir(current_dir)
 
-
     def add_article_to_spine(self):
         """
         Adds items to the self.spine list with the addition of a new article.
@@ -326,7 +318,6 @@ class OPF(object):
         #Add the tables if there should be a tables file
         if self.article.root_tag.getElementsByTagName('table-wrap'):
             self.spine.append(spine_itemref(tables_idref, 'no'))
-
 
     def make_spine_itemrefs(self):
         """
@@ -436,7 +427,6 @@ class OPF(object):
         element.appendChild(text_node)
         return element
 
-
     def write(self):
         """
         Writing the OPF file is immediately preceded by jobs that finalize
@@ -455,11 +445,9 @@ class OPF(object):
         with open(filename, 'wb') as output:
             output.write(self.document.toprettyxml(encoding='utf-8'))
 
-
     def use_collection_mode(self):
         """Enables Collection Mode, sets self.collection_mode to True"""
         self.collection_mode = True
-
 
     def use_single_mode(self):
         """Disables Collection Mode, sets self.collection_mode to False"""
