@@ -149,11 +149,7 @@ class OPF(object):
         #Recall that metadata were reset in single mode during take_article
         self.set_publisher_metadata_methods()
         if self.collection_mode:  #Collection Mode Specific
-            #identifier defaults to UUID
-            #title is empty string or nonempty string
-            pass
-            #self.title = self.get_article_title(self.article)
-            #A collection article gets no dc:date elements
+            pass  # Nothing specific to Collection Mode only at this time
         else:  # Single Mode Specific
             #identifier is None or Identifier(value, scheme)
             id = self.get_article_identifier(self.article)
