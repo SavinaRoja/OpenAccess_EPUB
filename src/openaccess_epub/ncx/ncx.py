@@ -41,4 +41,67 @@ class NCX(object):
     using the same NCX instance to generate .ncx files for different ePubs).
     """
     def __init__(self):
-        pass
+        """
+        Initialization arguments:
+            location - Where this ePub is based
+            collection_mode - To use Collection Mode, set to True
+            title - What the ePub will be titled*
+
+        Collection Mode can be turned on or off after initialization using the
+        use_collection_mode() and use_single_mode methods() respectively.
+
+        *An ePub's title is determined by the value of the <dc:title> element in
+        the content.opf file. In Single Mode, this title is determined
+        automatically from the article it receives in take_article(). If one
+        wishes to create a workflow for Single Mode that uses a different title
+        then use the OPF class method set_title() after passing an article to
+        take_article(). In Collection Mode, the title must be manually supplied
+        in some form or the ePub will have an empty string for a title that
+        ought to be corrected manually afterwards. Initializing the OPF
+        instance with the title argument, or calling set_title() at any time
+        before writing will give it a title.
+        #Set internal variables to defaults
+        self.reset_state()
+        """
+
+    def init_NCX_document(self):
+        """
+        This method creates the initial DOM document for the toc.ncx file
+        """
+        publicId = '-//NISO//DTD ncx 2005-1//EN'
+        systemId = 'http://www.daisy.org/z3986/2005/ncx-2005-1.dtd'
+        impl = xml.dom.minidom.getDOMImplementation()
+        doctype = impl.createDocumentType('ncx', publicId, systemId)
+        self.doc = impl.createDocument(None, 'ncx', doctype)
+        self.ncx = self.doc.lastChild
+        self.ncx.setAttribute('version', '2005-1')
+        self.ncx.setAttribute('xml:lang', 'en-US')
+        self.ncx.setAttribute('xmlns', 'http://www.daisy.org/z3986/2005/ncx/')
+        #Create the sub elements to <ncx>
+        ncx_subelements = ['head', 'docTitle', 'docAuthor', 'navMap']
+        for element in ncx_subelements:
+            self.ncx.appendChild(self.doc.createElement(element))
+        self.head, self.doctitle, self.docauthor, self.navmap = self.ncx.childNodes
+        #Add a label with text 'Table of Contents' to navMap
+        lbl = self.appendNewElement('navLabel', self.navmap)
+        lbl.appendChild(self.make_text('Table of Contents'))
+        #Create some optional subelements
+        #These are not added to the document yet, as they may not be needed
+        self.list_of_figures = self.doc.createElement('navList')
+        self.list_of_figures.setAttribute('class', 'lof')
+        self.list_of_figures.setAttribute('id', 'lof')
+        self.list_of_tables = self.doc.createElement('navList')
+        self.list_of_tables.setAttribute('class', 'lot')
+        self.list_of_tables.setAttribute('id', 'lot')
+        #The <head> element requires some basic content
+        self.head.appendChild(self.doc.createComment('''The following metadata
+items, except for dtb:generator, are required for all NCX documents, including
+those conforming to the relaxed constraints of OPS 2.0'''))
+        metas = ['dtb:uid', 'dtb:depth', 'dtb:totalPageCount',
+                 'dtb:maxPageNumber', 'dtb:generator']
+        for meta in metas:
+            meta_tag = self.doc.createElement('meta')
+            meta_tag.setAttribute('name', meta)
+            self.head.appendChild(meta_tag)
+
+
