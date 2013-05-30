@@ -23,6 +23,7 @@ import logging
 log = logging.getLogger('NCX')
 
 navpoint = namedtuple('navPoint', 'id, label, playOrder, source, children')
+navtarget = namedtuple('navTarget', 'id, label, source')
 
 class NCX(object):
     """
@@ -65,8 +66,10 @@ e
         self.version = oae_version
         self.location = location
         self.collection_mode = collection_mode
+        #Create the basic document
+        self.init_ncx_document()
 
-    def init_NCX_document(self):
+    def init_ncx_document(self):
         """
         This method creates the initial DOM document for the toc.ncx file
         """
@@ -74,7 +77,8 @@ e
         systemId = 'http://www.daisy.org/z3986/2005/ncx-2005-1.dtd'
         impl = xml.dom.minidom.getDOMImplementation()
         doctype = impl.createDocumentType('ncx', publicId, systemId)
-        self.doc = impl.createDocument(None, 'ncx', doctype)
+        self.document = impl.createDocument(None, 'ncx', doctype)
+        #Grab the root <ncx> node
         self.ncx = self.document.lastChild
         self.ncx.setAttribute('version', '2005-1')
         self.ncx.setAttribute('xml:lang', 'en-US')
@@ -95,16 +99,7 @@ e
         #self.list_of_tables = self.document.createElement('navList')
         #self.list_of_tables.setAttribute('class', 'lot')
         #self.list_of_tables.setAttribute('id', 'lot')
-        #The <head> element requires some basic content
-        self.head.appendChild(self.document.createComment('''The following metadata
-items, except for dtb:generator, are required for all NCX documents, including
-those conforming to the relaxed constraints of OPS 2.0'''))
-        metas = ['dtb:uid', 'dtb:depth', 'dtb:totalPageCount',
-                 'dtb:maxPageNumber', 'dtb:generator']
-        for meta in metas:
-            meta_tag = self.document.createElement('meta')
-            meta_tag.setAttribute('name', meta)
-            self.head.appendChild(meta_tag)
+        
 
     def take_article(self, article):
         """
@@ -131,7 +126,6 @@ those conforming to the relaxed constraints of OPS 2.0'''))
         self.extract_article_metadata()
         #Execute addition of elements to self.nav_map
         self.add_article_to_navmap()
-        print(self.nav_map)
 
     def add_article_to_navmap(self):
         """
@@ -163,7 +157,7 @@ those conforming to the relaxed constraints of OPS 2.0'''))
     def recursive_article_navmap(self, src_node, depth=0, first=True):
         """
         This function recursively traverses the content of an input article to
-        add the correct elements to the NCX file's navMap.
+        add the correct elements to the NCX file's navMap and Lists.
         """
         if depth > self.maxdepth:
             self.maxdepth = depth
@@ -195,9 +189,17 @@ those conforming to the relaxed constraints of OPS 2.0'''))
                 if not label:
                     label = 'Blank Title Found!'
             source = 'main.{0}.xml#{1}'.format(self.article_doi, child_id)
-            children = self.recursive_article_navmap(child, depth=depth+1)
-            new_nav = navpoint(child_id, label, self.pull_play_order(), source, children)
-            navpoints.append(new_nav)
+            if tagname == 'sec':
+                children = self.recursive_article_navmap(child, depth=depth+1)
+                new_nav = navpoint(child_id, label, self.pull_play_order(), source, children)
+                navpoints.append(new_nav)
+            #figs and table-wraps do not have children
+            elif tagname == 'fig':  # Add navpoints to list_of_figures
+                new_nav = navtarget(child_id, label, source)
+                self.list_of_figures.append(new_nav)
+            elif tagname == 'table-wrap':  # Add navpoints to list_of_tables
+                new_nav = navtarget(child_id, label, source)
+                self.list_of_tables.append(new_nav)
         return navpoints
 
     def extract_article_metadata(self):
@@ -212,14 +214,13 @@ those conforming to the relaxed constraints of OPS 2.0'''))
         if self.collection_mode:
             pass  # Nothing specific to Collection Mode only at this time
         else:  # Single Mode specific actions
-            pass  # Nothing specific to Single Mode only at this time
+            self.article_title = self.get_article_title(self.article)
 
         #Generally speaking, for the NCX, little differs between Collection and
         #Single modes except for the reset between each article for Single
         #creator is OrderedSet([Creator(name, role, file_as)])
         for creator in self.get_article_creator(self.article):
             self.doc_author.add(creator)
-        self.article_title = self.get_article_title(self.article)
 
     def set_publisher_metadata_methods(self):
         """
@@ -257,6 +258,7 @@ those conforming to the relaxed constraints of OPS 2.0'''))
         elements held over from the Daisy Talking Book specification. The 
         """
         self.doc_author = OrderedSet()
+        self.article_title = ''
         #The docTitle can be auto-generated from self.all_articles, so there is
         #no need to collect anything else
 
@@ -269,6 +271,125 @@ those conforming to the relaxed constraints of OPS 2.0'''))
         self.list_of_tables = []
         self.list_of_equations = []
 
+    def make_head(self):
+        """
+        Creates the meta elements for the <head> section of the NCX file.
+        """
+        #A simple convenience function for making the meta elements
+        def make_meta(content, name):
+            meta = self.document.createElement('meta')
+            meta.setAttribute('content', content)
+            meta.setAttribute('name', name)
+            return meta
+
+        head = self.document.createElement('head')
+        #Add comment about required elements
+        head.appendChild(self.document.createComment('''The following metadata\
+items, except for dtb:generator, are required for all NCX documents, including\
+those conforming to the relaxed constraints of OPS 2.0'''))
+        #Add the meta elements
+        #dtb:uid - string of joined dois
+        head.appendChild(make_meta(','.join(self.all_dois), 'dtb:uid'))
+        #dtb:depth - maxdepth of navMap
+        head.appendChild(make_meta(str(self.maxdepth), 'dtb:depth'))
+        #dtb:totalPageCount
+        head.appendChild(make_meta('0', 'dtb:totalPageCount'))
+        #dtb:maxPageNumber
+        head.appendChild(make_meta('0', 'dtb:maxPageNumber'))
+        #dtb:generator
+        head.appendChild(make_meta('OpenAccess_EPUB {0}'.format(self.version),
+                                   'dtb:generator'))
+        self.ncx.appendChild(head)
+
+    def make_docTitle(self):
+        """
+        Creates the <docTitle> element for the NCX file.
+        """
+        doc_title_node = self.document.createElement('docTitle')
+        text_node = self.document.createElement('text')
+        if not self.collection_mode:  # Single Mode
+            #Use title of article
+            text = 'NCX For: {0}'.format(self.article_title)
+        else:  # Collection Mode
+            #Use DOIs of all articles
+            text = 'NCX For Collection: {0}'.format(','.join(self.all_dois))
+        text_node.appendChild(self.document.createTextNode(text))
+        doc_title_node.appendChild(text_node)
+        self.ncx.appendChild(doc_title_node)
+
+    def make_docAuthor(self):
+        """
+        Creates the <docAuthor> elements for the NCX file.
+        """
+        for author in self.doc_author:
+            doc_author_node = self.document.createElement('docAuthor')
+            text_node = self.document.createElement('text')
+            text_node.appendChild(self.document.createTextNode(author.name))
+            doc_author_node.appendChild(text_node)
+            self.ncx.appendChild(doc_author_node)
+
+    def make_navMap(self, nav=None):
+        """
+        Creates the <navMap> element for the NCX file. This uses an internal
+        recursive core fuinction to translate the self.nav_map data structure
+        (which was generated by recursive parsing of input files) into XML.
+        """
+        #The recursive inner translation function
+        #def recursive_nav_parse(nav):
+        if nav is None:
+            nav_node = self.document.createElement('navMap')
+            for nav_point in self.nav_map:
+                nav_node.appendChild(self.make_navMap(nav=nav_point))
+        else:
+            nav_node = self.document.createElement('navPoint')
+            nav_node.setAttribute('id', nav.id)
+            nav_node.setAttribute('playOrder', nav.playOrder)
+            label_node = self.document.createElement('navLabel')
+            label_text = self.document.createElement('text')
+            label_text.appendChild(self.document.createTextNode(nav.label))
+            label_node.appendChild(label_text)
+            nav_node.appendChild(label_node)
+            content_node = self.document.createElement('content')
+            content_node.setAttribute('src', nav.source)
+            nav_node.appendChild(content_node)
+            for child in nav.children:
+                nav_node.appendChild(self.make_navMap(nav=child))
+        return nav_node
+
+    def make_list_of_figures(self):
+        """
+        Makes a navList for the NCX file representing the List of Figures.
+        """
+        if not self.list_of_figures:
+            return
+        else:
+            navlist_node = self.document.createElement('navList')
+            navlist_node.appendChild(self.make_navLabel('List of Figures'))
+        for nav in self.list_of_figures:
+            nav_target = self.document.createElement('navTarget')
+            nav_target.setAttribute('id', nav.id)
+            nav_target.appendChild(self.make_navLabel(nav.label))
+            content_node = self.document.createElement('content')
+            content_node.setAttribute('src', nav.source)
+            nav_target.appendChild(content_node)
+
+    def make_list_of_tables(self):
+        """
+        Makes a navList for the NCX file representing the List of Tables.
+        """
+        if not self.list_of_tables:
+            return
+        else:
+            navlist_node = self.document.createElement('navList')
+            navlist_node.appendChild(self.make_navLabel('List of Tables'))
+        for nav in self.list_of_tables:
+            nav_target = self.document.createElement('navTarget')
+            nav_target.setAttribute('id', nav.id)
+            nav_target.appendChild(self.make_navLabel(nav.label))
+            content_node = self.document.createElement('content')
+            content_node.setAttribute('src', nav.source)
+            nav_target.appendChild(content_node)
+
     def write(self):
         """
         Writing the NCX file is immediately preceded by jobs that finalize
@@ -280,16 +401,28 @@ those conforming to the relaxed constraints of OPS 2.0'''))
         have been passed in. This will be one of the final steps of the ePub
         creation process.
         """
-        filename = os.path.join(self.location, 'OPS', 'content.opf')
+        #Generate the content for the <head>
+        self.make_head()
+        #Generate the <docTitle>
+        self.make_docTitle()
+        #Generate the <docAuthor>(s)
+        self.make_docAuthor()
+        #Generate the <navMap>
+        self.ncx.appendChild(self.make_navMap())
+        #Generate the List of Figures
+        self.make_list_of_figures()
+        #Generate the List of Tables
+        self.make_list_of_tables()
+        filename = os.path.join(self.location, 'OPS', 'toc.ncx')
         with open(filename, 'wb') as output:
             output.write(self.document.toprettyxml(encoding='utf-8'))
 
     def pull_play_order(self):
         """
-        Returns the current playOrder value and increments it.
+        Returns the current playOrder value as string and increments it.
         """
         self.play_order += 1
-        return self.play_order - 1
+        return str(self.play_order - 1)
 
     def use_collection_mode(self):
         """Enables Collection Mode, sets self.collection_mode to True"""
@@ -299,3 +432,13 @@ those conforming to the relaxed constraints of OPS 2.0'''))
         """Disables Collection Mode, sets self.collection_mode to False"""
         self.collection_mode = False
 
+    def make_navLabel(self, text):
+        """
+        Creates and returns a navLabel element with the supplied text.
+        """
+        label_node = self.document.createElement('navLabel')
+        label_node = self.document.createElement('navLabel')
+        text_node = self.document.createElement('text')
+        text_node.appendChild(self.document.createTextNode(text))
+        label_node.appendChild(text_node)
+        return label_node
