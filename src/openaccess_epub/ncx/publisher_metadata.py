@@ -2,10 +2,11 @@
 """
 The methods in this file follow the prescription below for pulling metadata
 from the JPTS Metadata class for use by the NCX. The NCX requires only the
-authors of the article. Each method should expect an instance of the Article
-class, and return a list of Creator namedtuples.
+authors of the article and the title. Each method should expect an instance of
+the Article class, and return a list of Creator namedtuples.
 
 _creator : returns list of Creator - [Creator]
+_title :   returns string - ''
 """
 
 from collections import namedtuple
@@ -46,3 +47,13 @@ def plos_creator(article):
             new_creator = creator(auth, 'aut', file_as)
             creator_list.append(new_creator)
     return creator_list
+
+def plos_title(article):
+    """
+    Given an Article class instance, this will return a string representing
+    the title of the article. This is done for PloS by serializing the text
+    in the Article's
+    """
+    title_node = article.metadata.title.article_title
+    title_string = utils.serialize_text(title_node)
+    return title_string
