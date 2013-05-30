@@ -1,4 +1,20 @@
 # -*- coding: utf-8 -*-
+"""
+The methods in this file follow the prescription below for pulling metadata
+from the JPTS Metadata class. This class is instantiated for each article and
+is accessed by Article attribute article.metadata. Each method should expect to
+receive an instance of the Article class.
+
+_dc_identifer :   returns Identifier or None - Identifier|None
+_dc_language :    returns string (should be RFC 1766 value) - ''
+_dc_title :       returns string - ''
+_dc_creator :     returns list of Creator - [Creator]
+_dc_contributor : returns list of Contributor - [Contributor]
+_dc_publisher :   returns string - ''
+_dc_description : returns string - ''
+_dc_date :        returns list of Date - [Date]
+_dc_subject :     returns list of string - ['']
+"""
 
 from collections import namedtuple
 import openaccess_epub.utils as utils
@@ -40,7 +56,7 @@ def plos_dc_title(article):
 
 def plos_dc_creator(article):
     """
-    Given and Article class instance, this is responsible for returning the
+    Given an Article class instance, this is responsible for returning the
     names for creators of the article. For our purposes, it is sufficient to
     list only the authors, returning their name, role=aut, and file-as name.
 
@@ -73,7 +89,7 @@ def plos_dc_creator(article):
 
 def plos_dc_contributor(article):
     """
-    Given and Article class instance, this is responsible for returning the
+    Given an Article class instance, this is responsible for returning the
     names for contributors to the article. For our purposes, it is sufficient
     to list only the editors, returning their name, role=edt, and file-as name.
 
