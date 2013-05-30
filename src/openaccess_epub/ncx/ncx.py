@@ -137,8 +137,18 @@ e
         source = 'main.{0}.xml#title'.format(self.article_doi)
         title = navpoint(id, label, self.pull_play_order(), source, [])
         self.nav_map.append(title)
-        #Recursively parse the structure of the input article and add to navmap
+        #Check if the article has a body element
         body = self.article.body
+        if body:
+            self.id_int = 0
+            #This step is executed as pre-processing, <sec> elements will receive
+            #an id attribute if they lack one
+            #This has a, helpful, side-effect when the Article is given to OPS
+            for sec in body.getElementsByTagName('sec'):
+                if not sec.getAttribute('id'):
+                    sec.setAttribute('id', 'OA-EPUB-{0}'.format(self.id_int))
+                    self.id_int += 1
+        #Recursively parse the structure of the input article and add to navmap
         if body:  # If an article has no body
             for nav_point in self.recursive_article_navmap(body):
                 self.nav_map.append(nav_point)
@@ -152,7 +162,8 @@ e
                 id = 'references-{0}'.format(self.article_doi)
                 label = 'References'
                 source = 'biblio.{0}.xml#references'.format(self.article_doi)
-                title = navpoint(id, label, self.pull_play_order(), source, [])
+                references = navpoint(id, label, self.pull_play_order(), source, [])
+                self.nav_map.append(references)
 
     def recursive_article_navmap(self, src_node, depth=0, first=True):
         """
@@ -171,14 +182,11 @@ e
             else:
                 if tagname not in tagnames:
                     continue
-            child_id = child.getAttribute('id')
-            #Generate an id if it is not present
-            if not child_id:
-                child_id = 'OA-EPUB-{0}'.format(self.id_int)
-                self.id_int += 1
-            #If in collection_mode, prepend the article_doi to avoid collisions
-            if self.collection_mode:
-                child_id = '{0}-{1}'.format(self.article_doi, child_id)
+            source_id = child.getAttribute('id')
+            if not self.collection_mode:
+                child_id = source_id
+            else: #If in collection_mode, prepend the article_doi to avoid collisions
+                child_id = '{0}-{1}'.format(self.article_doi, child.getAttribute('id'))
             #Attempt to pull the title text as a label for the navpoint
             try:
                 child_title = child.getChildrenByTagName('title')[0]
@@ -188,10 +196,11 @@ e
                 label = utils.serialize_text(child_title)
                 if not label:
                     label = 'Blank Title Found!'
-            source = 'main.{0}.xml#{1}'.format(self.article_doi, child_id)
+            source = 'main.{0}.xml#{1}'.format(self.article_doi, source_id)
             if tagname == 'sec':
+                play_order = self.pull_play_order()
                 children = self.recursive_article_navmap(child, depth=depth+1)
-                new_nav = navpoint(child_id, label, self.pull_play_order(), source, children)
+                new_nav = navpoint(child_id, label, play_order, source, children)
                 navpoints.append(new_nav)
             #figs and table-wraps do not have children
             elif tagname == 'fig':  # Add navpoints to list_of_figures
