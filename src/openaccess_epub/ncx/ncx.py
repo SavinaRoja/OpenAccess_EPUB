@@ -22,7 +22,7 @@ import logging
 
 log = logging.getLogger('NCX')
 
-navpoint = namedtuple('navPoint', 'id, label, playOrder, source')
+navpoint = namedtuple('navPoint', 'id, label, playOrder, source, children')
 
 class NCX(object):
     """
@@ -81,12 +81,12 @@ e
         self.ncx.setAttribute('xmlns', 'http://www.daisy.org/z3986/2005/ncx/')
         #Create the sub elements to <ncx>
         ncx_subelements = ['head', 'docTitle', 'docAuthor', 'navMap']
-        for element in ncx_subelements:
-            self.ncx.appendChild(self.document.createElement(element))
-        self.head, self.doctitle, self.docauthor, self.navmap = self.ncx.childNodes
+        #for element in ncx_subelements:
+        #    self.ncx.appendChild(self.document.createElement(element))
+        #self.head, self.doctitle, self.docauthor, self.navmap = self.ncx.childNodes
         #Add a label with text 'Table of Contents' to navMap
-        lbl = self.appendNewElement('navLabel', self.navmap)
-        lbl.appendChild(self.make_text('Table of Contents'))
+        #lbl = self.appendNewElement('navLabel', self.navmap)
+        #lbl.appendChild(self.make_text('Table of Contents'))
         #Create some optional subelements
         #These are not added to the document yet, as they may not be needed
         #self.list_of_figures = self.document.createElement('navList')
@@ -127,38 +127,107 @@ those conforming to the relaxed constraints of OPS 2.0'''))
         self.doi = article.get_DOI()
         self.all_dois.append(self.doi)
         self.journal_doi, self.article_doi = self.doi.split('/')
-        #Recursively parse the structure of the input article and add to navmap
-        self.recursive_article_navmap()
+        #Execute addition of elements to self.nav_map
+        self.add_article_to_navmap()
         #Pull author metadata from the article metadata for docAuthor elements
         self.extract_article_authors()
+        print(self.nav_map)
+
+    def add_article_to_navmap():
+        """
+        
+        """
+        #Add a navpoint for the title page
+        id = 'titlepage-{0}'.format(self.article_doi)
+        label = self.article_title
+        source = 'main.{0}.xml#title'.format(self.article_doi)
+        title = navpoint(id, lable, self.pull_play_order(), source, [])
+        self.nav_map.append(title)
+        #Recursively parse the structure of the input article and add to navmap
+        body = self.article.body
+        if body:  # If an article has no body
+            for nav_point in self.recursive_article_navmap(body):
+                self.nav_map.append(nav_point)
+        #Add a navpoint for the references, if there are references
+        try:
+            back = self.article.root_tag.getElementsByTagName('back')[0]
+        except IndexError:
+            pass
+        else:
+            if back.getElementsByTagName('ref'):
+                id = 'references-{0}'.format(self.article_doi)
+                label = 'References'
+                source = 'biblio.{0}.xml#references'.format(self.article_doi)
+                title = navpoint(id, lable, self.pull_play_order(), source, [])
+
+    def recursive_article_navmap(self, src_node, depth=0, first=True):
+        """
+        This function recursively traverses the content of an input article to
+        add the correct elements to the NCX file's navMap.
+        """
+        if depth > self.maxdepth:
+            self.maxdepth = depth
+        navpoints = []
+        tagnames = ['sec', 'fig', 'table-wrap']
+        for child in src_node.childNodes:
+            try:
+                tagname = child.tagName
+            except AttributeError:  # Text nodes have no attribute tagName
+                pass
+            else:
+                if tagname not in tagnames:
+                    continue
+            child_id = child.getAttribute('id')
+            #Generate an id if it is not present
+            if not child_id:
+                child_id = 'OA-EPUB-{0}'.format(self.id_int)
+                self.id_int += 1
+            #If in collection_mode, prepend the article_doi to avoid collisions
+            if self.collection_mode:
+                child_id = '{0}-{1}'.format(self.article_doi, child_id)
+            #Attempt to pull the title text as a label for the navpoint
+            try:
+                child_title = child.getChildrenByTagName('title')[0]
+            except IndexError:
+                label = 'Title Not Found!'
+            else:
+                label = utils.serialize_text(child_title)
+                if not label:
+                    label = 'Blank Title Found!'
+            source = 'main.{0}.xml#{1}'.format(self.article_doi, child_id)
+            children = recursive_article_navmap(child, depth=depth+1)
+            new_nav = navpoint(child_id, label, self.pull_play_order(), source, children)
+            navpoints.append(new_nav)
+        return navpoints
 
     def extract_article_authors(self):
         """
-        This method calls set_publisher_author_methods to ensure that
+        This method calls set_publisher_metadata_methods to ensure that
         publisher-specific methods are being correctly employed. It then
         directs the acquisition of article metadata using these methods, while
         adjusting for collection_mode.
         """
         #Recall that metadata were reset in single mode during take_article
-        self.set_publisher_author_methods()
+        self.set_publisher_metadata_methods()
         if self.collection_mode(self):
             pass  # Nothing specific to Collection Mode only at this time
         else:  # Single Mode specific actions
             pass  # Nothing specific to Single Mode only at this time
 
-        #These are no different between Single and Collection Modes
         #Generally speaking, for the NCX, little differs between Collection and
         #Single modes except for the reset between each article for Single
         #creator is OrderedSet([Creator(name, role, file_as)])
         for creator in self.get_article_creator(self.article):
             self.doc_author.add(creator)
+        self.article_title = self.get_article_title()
 
-    def set_publisher_author_methods(self):
+    def set_publisher_metadata_methods(self):
         """
         Sets internal methods to be publisher specific for the article at hand.
         """
         if self.journal_doi == '10.1371':
             self.get_article_creator = plos_creator
+            self.get_article_title= plos_title
         else:
             raise ValueError('This publisher, {0}, is not supported'.format(self.journal_doi))
 
@@ -174,12 +243,14 @@ those conforming to the relaxed constraints of OPS 2.0'''))
         self.article_doi = ''
         self.journal_doi = ''
         self.play_order = 1
+        self.id_int = 0
+        self.nav_map = []
 
         #Reset the other metadata and other structures
         self.reset_metadata()
         self.reset_lists()
 
-    def reset_metadata():
+    def reset_metadata(self):
         """
         THe NCX file does not truly exist for metadata, but it has a few
         elements held over from the Daisy Talking Book specification. The 
@@ -211,6 +282,13 @@ those conforming to the relaxed constraints of OPS 2.0'''))
         filename = os.path.join(self.location, 'OPS', 'content.opf')
         with open(filename, 'wb') as output:
             output.write(self.document.toprettyxml(encoding='utf-8'))
+
+    def pull_play_order(self):
+        """
+        Returns the current playOrder value and increments it.
+        """
+        self.play_order += 1
+        return self.play_order - 1
 
     def use_collection_mode(self):
         """Enables Collection Mode, sets self.collection_mode to True"""
