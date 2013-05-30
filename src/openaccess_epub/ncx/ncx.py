@@ -13,11 +13,16 @@ the ePub beyond what is done in the OPF file.
 """
 
 import openaccess_epub.utils as utils
+from openaccess_epub.utils import OrderedSet
+from .publisher_metadata import *
+from collections import namedtuple
 import os
 import xml.dom.minidom
 import logging
 
 log = logging.getLogger('NCX')
+
+navpoint = namedtuple('navPoint', 'id, label, playOrder, source')
 
 class NCX(object):
     """
@@ -40,8 +45,8 @@ class NCX(object):
     difference to Single Input unless one is using an unusual workflow (such as
     using the same NCX instance to generate .ncx files for different ePubs).
     """
-    def __init__(self, oae_version, location, location=os.getcwd(),
-                 collection_mode=False):
+    def __init__(self, oae_version, location=os.getcwd(),
+                  collection_mode=False):
         """
         Initialization arguments:
             oae_version - Version of OpenAccess_Epub; needed to specify in the
@@ -101,6 +106,62 @@ those conforming to the relaxed constraints of OPS 2.0'''))
             meta_tag.setAttribute('name', meta)
             self.head.appendChild(meta_tag)
 
+    def take_article(self, article):
+        """
+        Receives an instance of the Article class. This modifies the internal
+        state of the NCX class to focus on the new article for the purposes of
+        extracting structural information, and the article authors as metadata.
+        
+        In Collection Mode, the addition of new articles to the NCX class
+        results in cumulative (in order of receipt) content. In Single Input
+        Mode, the addition of a new article will erase any information from the
+        previous article.
+        """
+        #Reset some things if taking a new article, this prevents accumulation
+        #in Single Input Mode.
+        if not self.collection_mode:
+            self.reset_state()
+        #Set state
+        self.article = article
+        self.all_articles.append(self.article)
+        self.doi = article.get_DOI()
+        self.all_dois.append(self.doi)
+        self.journal_doi, self.article_doi = self.doi.split('/')
+        #Recursively parse the structure of the input article and add to navmap
+        self.recursive_article_navmap()
+        #Pull author metadata from the article metadata for docAuthor elements
+        self.extract_article_authors()
+
+    def extract_article_authors(self):
+        """
+        This method calls set_publisher_author_methods to ensure that
+        publisher-specific methods are being correctly employed. It then
+        directs the acquisition of article metadata using these methods, while
+        adjusting for collection_mode.
+        """
+        #Recall that metadata were reset in single mode during take_article
+        self.set_publisher_author_methods()
+        if self.collection_mode(self):
+            pass  # Nothing specific to Collection Mode only at this time
+        else:  # Single Mode specific actions
+            pass  # Nothing specific to Single Mode only at this time
+
+        #These are no different between Single and Collection Modes
+        #Generally speaking, for the NCX, little differs between Collection and
+        #Single modes except for the reset between each article for Single
+        #creator is OrderedSet([Creator(name, role, file_as)])
+        for creator in self.get_article_creator(self.article):
+            self.doc_author.add(creator)
+
+    def set_publisher_author_methods(self):
+        """
+        Sets internal methods to be publisher specific for the article at hand.
+        """
+        if self.journal_doi == '10.1371':
+            self.get_article_creator = plos_creator
+        else:
+            raise ValueError('This publisher, {0}, is not supported'.format(self.journal_doi))
+
     def reset_state(self):
         """
         Resets the internal state variables to defaults, also used in __init__
@@ -113,7 +174,7 @@ those conforming to the relaxed constraints of OPS 2.0'''))
         self.article_doi = ''
         self.journal_doi = ''
         self.play_order = 1
-        
+
         #Reset the other metadata and other structures
         self.reset_metadata()
         self.reset_lists()
@@ -123,6 +184,9 @@ those conforming to the relaxed constraints of OPS 2.0'''))
         THe NCX file does not truly exist for metadata, but it has a few
         elements held over from the Daisy Talking Book specification. The 
         """
+        self.doc_author = OrderedSet()
+        #The docTitle can be auto-generated from self.all_articles, so there is
+        #no need to collect anything else
 
     def reset_lists(self):
         """
@@ -133,10 +197,24 @@ those conforming to the relaxed constraints of OPS 2.0'''))
         self.list_of_tables = []
         self.list_of_equations = []
 
+    def write(self):
+        """
+        Writing the NCX file is immediately preceded by jobs that finalize
+        the NCX document. This includes the creation of the navMap, the
+        generation and creation of meta elements in the head, and the navList
+        elements.
+
+        Writing the NCX file should be done after all intended input articles
+        have been passed in. This will be one of the final steps of the ePub
+        creation process.
+        """
+        filename = os.path.join(self.location, 'OPS', 'content.opf')
+        with open(filename, 'wb') as output:
+            output.write(self.document.toprettyxml(encoding='utf-8'))
+
     def use_collection_mode(self):
         """Enables Collection Mode, sets self.collection_mode to True"""
         self.collection_mode = True
-
 
     def use_single_mode(self):
         """Disables Collection Mode, sets self.collection_mode to False"""
