@@ -127,13 +127,13 @@ those conforming to the relaxed constraints of OPS 2.0'''))
         self.doi = article.get_DOI()
         self.all_dois.append(self.doi)
         self.journal_doi, self.article_doi = self.doi.split('/')
+        #Pull author metadata from the article metadata for docAuthor elements
+        self.extract_article_metadata()
         #Execute addition of elements to self.nav_map
         self.add_article_to_navmap()
-        #Pull author metadata from the article metadata for docAuthor elements
-        self.extract_article_authors()
         print(self.nav_map)
 
-    def add_article_to_navmap():
+    def add_article_to_navmap(self):
         """
         
         """
@@ -141,7 +141,7 @@ those conforming to the relaxed constraints of OPS 2.0'''))
         id = 'titlepage-{0}'.format(self.article_doi)
         label = self.article_title
         source = 'main.{0}.xml#title'.format(self.article_doi)
-        title = navpoint(id, lable, self.pull_play_order(), source, [])
+        title = navpoint(id, label, self.pull_play_order(), source, [])
         self.nav_map.append(title)
         #Recursively parse the structure of the input article and add to navmap
         body = self.article.body
@@ -158,7 +158,7 @@ those conforming to the relaxed constraints of OPS 2.0'''))
                 id = 'references-{0}'.format(self.article_doi)
                 label = 'References'
                 source = 'biblio.{0}.xml#references'.format(self.article_doi)
-                title = navpoint(id, lable, self.pull_play_order(), source, [])
+                title = navpoint(id, label, self.pull_play_order(), source, [])
 
     def recursive_article_navmap(self, src_node, depth=0, first=True):
         """
@@ -173,7 +173,7 @@ those conforming to the relaxed constraints of OPS 2.0'''))
             try:
                 tagname = child.tagName
             except AttributeError:  # Text nodes have no attribute tagName
-                pass
+                continue
             else:
                 if tagname not in tagnames:
                     continue
@@ -195,12 +195,12 @@ those conforming to the relaxed constraints of OPS 2.0'''))
                 if not label:
                     label = 'Blank Title Found!'
             source = 'main.{0}.xml#{1}'.format(self.article_doi, child_id)
-            children = recursive_article_navmap(child, depth=depth+1)
+            children = self.recursive_article_navmap(child, depth=depth+1)
             new_nav = navpoint(child_id, label, self.pull_play_order(), source, children)
             navpoints.append(new_nav)
         return navpoints
 
-    def extract_article_authors(self):
+    def extract_article_metadata(self):
         """
         This method calls set_publisher_metadata_methods to ensure that
         publisher-specific methods are being correctly employed. It then
@@ -209,7 +209,7 @@ those conforming to the relaxed constraints of OPS 2.0'''))
         """
         #Recall that metadata were reset in single mode during take_article
         self.set_publisher_metadata_methods()
-        if self.collection_mode(self):
+        if self.collection_mode:
             pass  # Nothing specific to Collection Mode only at this time
         else:  # Single Mode specific actions
             pass  # Nothing specific to Single Mode only at this time
@@ -219,7 +219,7 @@ those conforming to the relaxed constraints of OPS 2.0'''))
         #creator is OrderedSet([Creator(name, role, file_as)])
         for creator in self.get_article_creator(self.article):
             self.doc_author.add(creator)
-        self.article_title = self.get_article_title()
+        self.article_title = self.get_article_title(self.article)
 
     def set_publisher_metadata_methods(self):
         """
@@ -244,6 +244,7 @@ those conforming to the relaxed constraints of OPS 2.0'''))
         self.journal_doi = ''
         self.play_order = 1
         self.id_int = 0
+        self.maxdepth = 0
         self.nav_map = []
 
         #Reset the other metadata and other structures
