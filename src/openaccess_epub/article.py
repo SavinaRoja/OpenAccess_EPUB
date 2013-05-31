@@ -2,7 +2,7 @@
 import openaccess_epub.utils.element_methods as element_methods
 import openaccess_epub.utils as utils
 from openaccess_epub.jpts.jptsmetadata import JPTSMetaData20, JPTSMetaData23, JPTSMetaData30
-import os.path
+import os
 import sys
 import shutil
 import xml.dom.minidom as minidom
