@@ -129,7 +129,13 @@ e
 
     def add_article_to_navmap(self):
         """
-        
+        This function is responsible for adding the appropriate elements to
+        the NCX file's navMap corresponding to the structure of the input
+        Article. The behavior of this function differs slightly between Single
+        and Collection Modes. In Single, the Title element will be at the same
+        level as the top level body sections as well as the References; in
+        Collection, all elements pertaining to the article will be placed as
+        children of the Title element.
         """
         #Add a navpoint for the title page
         id = 'titlepage-{0}'.format(self.article_doi)
@@ -137,6 +143,12 @@ e
         source = 'main.{0}.xml#title'.format(self.article_doi)
         title = navpoint(id, label, self.pull_play_order(), source, [])
         self.nav_map.append(title)
+        #In Single Mode, the title will be at the same level as subsequent
+        #navPoints, but in Collections, we want them to go under the title
+        if self.collection_mode:
+            insertion_point = title.children
+        else:
+            insertion_point = self.nav_map
         #Check if the article has a body element
         body = self.article.body
         if body:
@@ -148,10 +160,9 @@ e
                 if not sec.getAttribute('id'):
                     sec.setAttribute('id', 'OA-EPUB-{0}'.format(self.id_int))
                     self.id_int += 1
-        #Recursively parse the structure of the input article and add to navmap
-        if body:  # If an article has no body
+            #Recursively parse the structure of the input article and add to navmap
             for nav_point in self.recursive_article_navmap(body):
-                self.nav_map.append(nav_point)
+                insertion_point.append(nav_point)
         #Add a navpoint for the references, if there are references
         try:
             back = self.article.root_tag.getElementsByTagName('back')[0]
@@ -163,7 +174,7 @@ e
                 label = 'References'
                 source = 'biblio.{0}.xml#references'.format(self.article_doi)
                 references = navpoint(id, label, self.pull_play_order(), source, [])
-                self.nav_map.append(references)
+                insertion_point.append(references)
 
     def recursive_article_navmap(self, src_node, depth=0, first=True):
         """
@@ -191,11 +202,13 @@ e
             try:
                 child_title = child.getChildrenByTagName('title')[0]
             except IndexError:
-                label = 'Title Not Found!'
+                #label = 'Title Not Found!'
+                continue
             else:
                 label = utils.serialize_text(child_title)
                 if not label:
-                    label = 'Blank Title Found!'
+                    #label = 'Blank Title Found!'
+                    continue
             source = 'main.{0}.xml#{1}'.format(self.article_doi, source_id)
             if tagname == 'sec':
                 play_order = self.pull_play_order()

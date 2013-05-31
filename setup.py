@@ -21,5 +21,15 @@ setup(name='openaccess_epub',
                 'openaccess_epub.ncx', 'openaccess_epub.opf',
                 'openaccess_epub.ops', 'openaccess_epub.utils'],
       scripts=['scripts/oaepub', 'scripts/epubzip', 'scripts/oae-quickstart'],
-      data_files=[]
+      data_files=[],
+      classifiers=['Development Status :: 3 - Alpha',
+                   'Environment :: Console',
+                   'Intended Audience :: Science/Research',
+                   'Intended Audience :: Developers',
+                   'Intended Audience :: Other Audience',
+                   'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
+                   'Programming Language :: Python :: 3.2',
+                   'Operating System :: OS Independent',
+                   'Topic :: Text Processing :: Markup :: XML',
+                   'Topic :: Other/Nonlisted Topic']
       )
