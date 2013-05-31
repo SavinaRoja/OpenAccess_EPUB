@@ -191,11 +191,13 @@ e
             try:
                 child_title = child.getChildrenByTagName('title')[0]
             except IndexError:
-                label = 'Title Not Found!'
+                #label = 'Title Not Found!'
+                continue
             else:
                 label = utils.serialize_text(child_title)
                 if not label:
-                    label = 'Blank Title Found!'
+                    #label = 'Blank Title Found!'
+                    continue
             source = 'main.{0}.xml#{1}'.format(self.article_doi, source_id)
             if tagname == 'sec':
                 play_order = self.pull_play_order()
