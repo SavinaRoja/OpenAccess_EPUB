@@ -37,7 +37,7 @@ class Article(object):
         The __init__() method has to do the following specific jobs. It must
         parse the article using xml.dom.minidom. It must check the parsed
         article to detect its DTD and version; it must also detect the
-        publisher using self.identifyPublisher(). It is responsible for
+        publisher using self.identify_publisher(). It is responsible for
         using this information to create an instance of a metadata class
         such as found in jptsmeta.py to serve as the article's metadata
         attribute.
@@ -63,7 +63,7 @@ Publishing DTD: \n{0}'.format(doc.doctype.publicId))
         #Access the root tag of the document name
         self.root_tag = doc.documentElement
         #Determine the publisher
-        self.publisher = self.identifyPublisher()
+        self.publisher = self.identify_publisher()
         log.info('Publisher - {0}'.format(self.publisher))
         #Create instance of article metadata
         if self.dtd == '2.0':
@@ -86,7 +86,7 @@ Publishing DTD: \n{0}'.format(doc.doctype.publicId))
         except IndexError:
             self.body = None
 
-    def identifyPublisher(self):
+    def identify_publisher(self):
         """
         This method determines the publisher of the document based on an
         an internal declaration. For both JP-DTDv2.0 and JP-DTDv2.3, there are
