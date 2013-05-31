@@ -70,7 +70,7 @@ def OAEParser():
                        help='''Use to specify a batch directory for parallel
                                processing.''')
     modes.add_argument('-C', '--collection', action='store', default=False,
-                       nargs='?', const='True',
+                       nargs='?', const=True,
                        help='''Use to combine all xml files in the local
                                directory into a single ePub collection.
                                Typing a string after this flag will provide a
@@ -250,9 +250,19 @@ def collection_input(args, config=None):
         dir_exists(output_name)
     epub_base = os.path.join(CACHE_LOCATION, 'base_epub')
     shutil.copytree(epub_base, output_name)
-    
+
     if args.collection is True:
-        title = output_name
+        try:
+            title_txt = open('title.txt', 'r')
+        except IOError:  # No title.txt
+            title = output_name
+        else:
+            title = title_txt.readline().strip()
+            title_txt.close()
+            if not title:
+                title = output_name
+                print('title.txt was empty or title was not on first line!')
+                print('Defaulting to name of parent directory. {0}'.format(title))
     else:
         title = args.collection
     

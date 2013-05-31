@@ -7,7 +7,6 @@ import sys
 import shutil
 import xml.dom.minidom as minidom
 import logging
-from time import sleep
 
 log = logging.getLogger('Article')
 
@@ -149,3 +148,5 @@ Publishing DTD: \n{0}'.format(doc.doctype.publicId))
         A method for returning the DOI identifier of an article
         """
         return self.metadata.article_id['doi']
+
+    def uncomment_
