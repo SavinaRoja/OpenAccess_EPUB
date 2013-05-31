@@ -148,5 +148,3 @@ Publishing DTD: \n{0}'.format(doc.doctype.publicId))
         A method for returning the DOI identifier of an article
         """
         return self.metadata.article_id['doi']
-
-    def uncomment_
