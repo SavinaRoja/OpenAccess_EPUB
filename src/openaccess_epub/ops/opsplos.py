@@ -1140,6 +1140,8 @@ class OPSPLoS(OPSMeta):
         appears to employ either <p>s or <list>s.
         """
         for disp_quote in body.getElementsByTagName('disp-quote'):
+            if disp_quote.parentNode.tagName =='p':
+                element_methods.elevate_node(disp_quote)
             disp_quote.tagName = 'div'
             disp_quote.setAttribute('class', 'disp-quote')
 
