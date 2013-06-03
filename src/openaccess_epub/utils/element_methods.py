@@ -9,7 +9,7 @@ for the method that may be utilized in different sections.
 
 #TODO: Going to re-work this to avoid monkey patching; it was a good experiment
 
-def get_childen_by_tag_name(tagname, node):
+def get_children_by_tag_name(tagname, node):
     """
     Search for all direct children with a particular element type name.
 

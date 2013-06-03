@@ -13,6 +13,7 @@ metadata, this class will handle everything except <body>.
 
 from collections import namedtuple
 import openaccess_epub.utils as utils
+import openaccess_epub.utils.element_methods as element_methods
 import openaccess_epub.jpts.jptscontrib as jptscontrib
 import logging
 
@@ -222,7 +223,7 @@ class JPTSMetaData(object):
         diverse, but they include the address elements which may feature
         heavily.
         """
-        affs = self.article_meta.getChildrenByTagName('aff')
+        affs = element_methods.get_children_by_tag_name('aff', self.article_meta)
         affsbyid = {}
         for aff in affs:
             aid = aff.getAttribute('id')
@@ -287,7 +288,7 @@ class JPTSMetaData(object):
         the nodes in a dictionary keyed to pub-id-type values.
         """
         vol_ids = {}
-        for vi in self.article_meta.getChildrenByTagName('volume-id'):
+        for vi in element_methods.get_children_by_tag_name('volume-id', self.article_meta):
             text = utils.nodeText(vi)
             vol_ids[vi.getAttribute('pub-id-type')] = text
         return vol_ids
@@ -326,7 +327,7 @@ class JPTSMetaData(object):
         and depends on DTD version. At this stage, we merely collect the node.
         """
         try:
-            s = self.article_meta.getChildrenByTagName('supplement')[0]
+            s = element_methods.get_children_by_tag_name('supplement', self.article_meta)[0]
         except IndexError:
             return None
         else:
@@ -340,7 +341,7 @@ class JPTSMetaData(object):
         is text, numbers, and special characters.
         """
         fp = namedtuple('fpage', 'text, seq')
-        fpage = self.article_meta.getChildrenByTagName('fpage')[0]
+        fpage = element_methods.get_children_by_tag_name('fpage', self.article_meta)[0]
         text = utils.nodeText(fpage)
         seq = fpage.getAttribute('seq')
         return fp(text, seq)
@@ -353,7 +354,7 @@ class JPTSMetaData(object):
         special characters.
         """
         try:
-            lpage = self.article_meta.getChildrenByTagName('lpage')[0]
+            lpage = element_methods.get_children_by_tag_name('lpage', self.article_meta)[0]
         except IndexError:
             return None
         else:
@@ -368,7 +369,7 @@ class JPTSMetaData(object):
         <fpage> and <lpage>, it does not replace them.
         """
         try:
-            pr = self.article_meta.getChildrenByTagName('page-range')[0]
+            pr = element_methods.get_children_by_tag_name('page-range', self.article_meta)[0]
         except IndexError:
             return None
         else:
@@ -382,7 +383,7 @@ class JPTSMetaData(object):
         numbers, and special characters.
         """
         try:
-            e = self.article_meta.getChildrenByTagName('elocation-id')[0]
+            e = element_methods.get_children_by_tag_name('elocation-id', self.article_meta)[0]
         except IndexError:
             return None
         else:
@@ -396,7 +397,7 @@ class JPTSMetaData(object):
         v2.3 and v3.0. For now, this method will simply collect a list of
         <email> nodes directly under <article-meta>.
         """
-        return self.article_meta.getChildrenByTagName('email')
+        return element_methods.get_children_by_tag_name('email', self.article_meta)
 
     def getExtLink(self):
         """
@@ -408,7 +409,7 @@ class JPTSMetaData(object):
         method will simply collect a list of <ext-link> nodes directly under
         <article-meta>.
         """
-        return self.article_meta.getChildrenByTagName('ext-link', )
+        return element_methods.get_children_by_tag_name('ext-link', self.article_meta)
 
     def getURI(self):
         """
@@ -419,7 +420,7 @@ class JPTSMetaData(object):
         now, this method will simply collect a list of <uri> nodes directly
         under <article-meta>.
         """
-        return self.article_meta.getChildrenByTagName('uri', )
+        return element_methods.get_children_by_tag_name('uri', self.article_meta)
 
     def getProduct(self):
         """
@@ -430,7 +431,7 @@ class JPTSMetaData(object):
         xlink:href, xlink:role, xlink:show, xlink:title, xlink:type,
         and xmlns:xlink.
         """
-        return self.article_meta.getChildrenByTagName('product')
+        return element_methods.get_children_by_tag_name('product', self.article_meta)
 
     def getSupplementaryMaterial(self):
         """
@@ -441,7 +442,7 @@ class JPTSMetaData(object):
         take some effort to fully support. For now, the nodes will merely be
         collected.
         """
-        return self.article_meta.getChildrenByTagName('supplementary-material', )
+        return element_methods.get_children_by_tag_name('supplementary-material', self.article_meta)
 
     def getHistory(self):
         """
@@ -454,11 +455,11 @@ class JPTSMetaData(object):
         dates = {'received': None, 'accepted': None}
         datetuple = namedtuple('Date', 'year, month, day, season')
         try:
-            h = self.article_meta.getChildrenByTagName('history')[0]
+            h = element_methods.get_children_by_tag_name('history', self.article_meta)[0]
         except IndexError:
             return dates
         else:
-            for k in h.getChildrenByTagName('date'):
+            for k in element_methods.get_children_by_tag_name('date', h):
                 try:
                     s = k.getElementsByTagName('season')[0]
                 except IndexError:
@@ -494,7 +495,7 @@ class JPTSMetaData(object):
         information within the <permissions> tag.
         """
         try:
-            cs = self.article_meta.getChildrenByTagName('copyright-statement')[0]
+            cs = element_methods.get_children_by_tag_name('copyright-statement', self.article_meta)[0]
         except IndexError:
             return None
         else:
@@ -509,7 +510,7 @@ class JPTSMetaData(object):
         element and its information within the <permissions> tag.
         """
         try:
-            cy = self.article_meta.getChildrenByTagName('copyright-year')[0]
+            cy = element_methods.get_children_by_tag_name('copyright-year', self.article_meta)[0]
         except IndexError:
             return None
         else:
@@ -529,7 +530,7 @@ class JPTSMetaData(object):
         """
         lic = namedtuple('license', 'node, license_type')
         try:
-            l = self.article_meta.getChildrenByTagName('license')[0]
+            l = element_methods.get_children_by_tag_name('license', self.article_meta)[0]
         except IndexError:
             return None
         else:
@@ -545,7 +546,7 @@ class JPTSMetaData(object):
         """
         perm = namedtuple('Permissions', 'statement, year, holder, license, license_type')
         try:
-            p = self.article_meta.getChildrenByTagName('permissions')[0]
+            p = element_methods.get_children_by_tag_name('permissions', self.article_meta)[0]
         except IndexError:
             return None
         else:
@@ -553,7 +554,7 @@ class JPTSMetaData(object):
             for node_name in ['copyright-statement', 'copyright-year',
                               'copyright-holder', 'license']:
                 try:
-                    nodes.append(p.getChildrenByTagName(node_name)[0])
+                    nodes.append(element_methods.get_children_by_tag_name(node_name, p)[0])
                 except IndexError:
                     nodes.append(None)
             if nodes[3]:
@@ -568,7 +569,7 @@ class JPTSMetaData(object):
         that time should be determined by that publisher's usage. This method
         will only collect the nodes.
         """
-        return self.article_meta.getChildrenByTagName('self-uri', )
+        return element_methods.get_children_by_tag_name('self-uri', self.article_meta)
 
     def getRelatedArticle(self):
         """
@@ -583,7 +584,7 @@ class JPTSMetaData(object):
         content itself, the parsing of this element will not be executed at
         this stage for now.
         """
-        return self.article_meta.getChildrenByTagName('related-article')
+        return element_methods.get_children_by_tag_name('related-article', self.article_meta)
 
     def getAbstract(self):
         """
@@ -595,7 +596,7 @@ class JPTSMetaData(object):
         """
         abstracts = []
         abst = namedtuple('Abstract', 'node, type, xml_lang, id, specific_use')
-        for a in self.article_meta.getChildrenByTagName('abstract'):
+        for a in element_methods.get_children_by_tag_name('abstract', self.article_meta):
             atyp = a.getAttribute('abstract-type')
             lang = a.getAttribute('xml:lang')
             abid = a.getAttribute('id')
@@ -611,7 +612,7 @@ class JPTSMetaData(object):
         """
         trans_abstracts = []
         tab = namedtuple('Trans_Abstract', 'node, type, xml_lang, id, specific_use')
-        for ta in self.article_meta.getChildrenByTagName('trans-abstract'):
+        for ta in element_methods.get_children_by_tag_name('trans-abstract', self.article_meta):
             atyp = ta.getAttribute('abstract-type')
             lang = ta.getAttribute('xml:lang')
             abid = ta.getAttribute('id')
@@ -652,7 +653,7 @@ class JPTSMetaData(object):
         """
         con_nums = []
         cn = namedtuple('Contract_Num', 'node, text, id, rid')
-        for c in self.article_meta.getChildrenByTagName('contract-num'):
+        for c in element_methods.get_children_by_tag_name('contract-num', self.article_meta):
             text = utils.nodeText(c)
             cid = c.getAttribute('id')
             crid = c.getAttribute('rid')
@@ -665,7 +666,7 @@ class JPTSMetaData(object):
         which may have complex publisher-dependent content. This method will
         return a list of the nodes.
         """
-        return self.article_meta.getChildrenByTagName('contract-sponsor')
+        return element_methods.get_children_by_tag_name('contract-sponsor', self.article_meta)
 
     def getConference(self):
         """
@@ -676,7 +677,7 @@ class JPTSMetaData(object):
         """
         conferences = []
         conf = namedtuple('Conference', 'date, name, acronym, num, loc, sponsor, theme')
-        for c in self.article_meta.getChildrenByTagName('conference'):
+        for c in element_methods.get_children_by_tag_name('conference', self.article_meta):
             date = utils.nodeText(c.getElementsByTagName('conf-date')[0])
             try:
                 n = c.getElementsByTagName('conf-name')[0]
@@ -749,7 +750,7 @@ class JPTSMetaData(object):
         publishers. At this point, this method only endeavors to return a list
         of the <custom-meta-wrap> nodes.
         """
-        return self.article_meta.getChildrenByTagName('custom-meta-wrap')
+        return element_methods.get_children_by_tag_name('custom-meta-wrap', self.article_meta)
 
     def parse_back_data(self):
         """
@@ -837,7 +838,7 @@ class JPTSMetaData20(JPTSMetaData):
         self.pub_date = self.getPubDate()
         #This segment gets None or a text value for self.volume
         try:
-            vol = am.getChildrenByTagName('volume')[0]
+            vol = element_methods.get_children_by_tag_name('volume', am)[0]
         except IndexError:
             self.volume = None
         else:
@@ -845,7 +846,7 @@ class JPTSMetaData20(JPTSMetaData):
         self.volume_id = self.getVolumeID()
         #This segment gets None or a text value for self.issue
         try:
-            iss = am.getChildrenByTagName('issue')[0]
+            iss = element_methods.get_children_by_tag_name('issue', am)[0]
         except IndexError:
             self.issue = None
         else:
@@ -1050,7 +1051,7 @@ class JPTSMetaData23(JPTSMetaData):
         """
         volume = namedtuple('Volume', 'value, seq, content_type')
         try:
-            vol = self.article_meta.getChildrenByTagName('volume')[0]
+            vol = element_methods.get_children_by_tag_name('volume', self.article_meta)[0]
         except IndexError:
             return None
         else:
@@ -1066,7 +1067,7 @@ class JPTSMetaData23(JPTSMetaData):
         """
         issue = namedtuple('Issue', 'value, seq, content_type')
         try:
-            iss = self.article_meta.getChildrenByTagName('issue')[0]
+            iss = element_methods.get_children_by_tag_name('issue', self.article_meta)[0]
         except IndexError:
             return None
         else:
@@ -1085,7 +1086,7 @@ class JPTSMetaData23(JPTSMetaData):
         """
         grant_nums = []
         gn = namedtuple('Grant_Num', 'node, id, rid, content_type')
-        for gnum in self.article_meta.getChildrenByTagName('grant-num'):
+        for gnum in element_methods.get_children_by_tag_name('grant-num', self.article_meta):
             gid = gnum.getAttribute('id')
             grd = gnum.getAttribute('rid')
             gct = gnum.getAttribute('content-type')
@@ -1100,7 +1101,7 @@ class JPTSMetaData23(JPTSMetaData):
         """
         grant_sponsors = []
         gs = namedtuple('Grant_Sponsor', 'node, id, rid, content_type')
-        for gspo in self.article_meta.getChildrenByTagName('grant-sponsor'):
+        for gspo in element_methods.get_children_by_tag_name('grant-sponsor', self.article_meta):
             gid = gspo.getAttribute('id')
             grd = gspo.getAttribute('rid')
             gct = gspo.getAttribute('content-type')
@@ -1255,7 +1256,7 @@ class JPTSMetaData30(JPTSMetaData):
         """
         volume = namedtuple('Volume', 'value, seq, content_type')
         try:
-            vol = self.article_meta.getChildrenByTagName('volume', )[0]
+            vol = element_methods.get_children_by_tag_name('volume', self.article_meta)[0]
         except IndexError:
             return None
         else:
@@ -1297,7 +1298,7 @@ class JPTSMetaData30(JPTSMetaData):
         """
         issue = namedtuple('Issue', 'value, seq, content_type')
         try:
-            iss = self.article_meta.getChildrenByTagName('issue')[0]
+            iss = element_methods.get_children_by_tag_name('issue', self.article_meta)[0]
         except IndexError:
             return None
         else:
@@ -1323,10 +1324,10 @@ class JPTSMetaData30(JPTSMetaData):
         """
         funding_tuple = namedtuple('Funding_Group', 'award_group, funding_statement, open_access')
         funding_groups = []
-        for funding_group in self.article_meta.getChildrenByTagName('funding-group'):
-            award_groups = funding_group.getChildrenByTagName('award-group')
-            funding_statements = funding_group.getChildrenByTagName('funding-statement')
-            open_access = funding_group.getChildrenByTagName('open-access')
+        for funding_group in element_methods.get_children_by_tag_name('funding-group', self.article_meta):
+            award_groups = element_methods.get_children_by_tag_name('award-group', funding_group)
+            funding_statements = element_methods.get_children_by_tag_name('funding-statement', funding_group)
+            open_access = element_methods.get_children_by_tag_name('open-access', funding_group)
             if open_access:
                 open_access = open_access[0]
             new = funding_tuple(award_groups, funding_statements, open_access)
@@ -1362,7 +1363,7 @@ class JPTSMetaData30(JPTSMetaData):
         nodes = []
         for node_name in ['ack', 'app-group', 'bio', 'fn-group', 'glossary',
                           'ref-list', 'notes', 'sec']:
-            nodes.append(self.back.getChildrenByTagName(node_name))
+            nodes.append(element_methods.get_children_by_tag_name(node_name, self.back))
         self.backmatter = back_tuple(*nodes)
 
     def dtdVersion(self):

@@ -6,6 +6,7 @@ article contributions as defined in the Journal Publishing Tag Set.
 
 import collections
 import openaccess_epub.utils as utils
+import openaccess_epub.utils.element_methods as element_methods
 import logging
 
 log = logging.getLogger('jptscontrib')

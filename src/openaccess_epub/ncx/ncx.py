@@ -13,6 +13,7 @@ the ePub beyond what is done in the OPF file.
 """
 
 import openaccess_epub.utils as utils
+import openaccess_epub.utils.element_methods as element_methods
 from openaccess_epub.utils import OrderedSet
 from .publisher_metadata import *
 from collections import namedtuple
@@ -200,7 +201,7 @@ e
                 child_id = '{0}-{1}'.format(self.article_doi, child.getAttribute('id'))
             #Attempt to pull the title text as a label for the navpoint
             try:
-                child_title = child.getChildrenByTagName('title')[0]
+                child_title = element_methods.get_children_by_tag_name('title', child)[0]
             except IndexError:
                 #label = 'Title Not Found!'
                 continue
