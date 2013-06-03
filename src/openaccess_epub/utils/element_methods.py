@@ -9,78 +9,66 @@ for the method that may be utilized in different sections.
 
 #TODO: Going to re-work this to avoid monkey patching; it was a good experiment
 
-
-def getChildrenByTagName(self, tagName):
+def get_childen_by_tagname(tagname, node):
     """
     Search for all direct children with a particular element type name.
 
     This method is similar to getElementsByTagName except it does not search
     any deeper than the immediate children. It returns a list with 0 or more
     nodes.
-
-    The only objects that should receive this method are Element and Document
-    objects.
     """
     child_list = []
-    for child in self.childNodes:
+    for child in node.childNodes:
         try:
             tag = child.tagName
         #Some nodes (text and comments) have no tagName
         except AttributeError:
             pass
         else:
-            if tag == tagName:
+            if tag == tagname:
                 child_list.append(child)
     return child_list
 
-
-def getOptionalChild(self, tagName, not_found=None):
+def get_optional_child(tagname, node, not_found=None):
     """
     This method is used to return the first child with the supplied tagName
     when the child may or may not exist.
 
-    This saves repetitive coding of blocks to check for child existence.
-
-    The optional not_found argument (default None) can be used to define what
-    should be returned by the method if the child does not exist.
+    This saves some repetitive code during checks for child existence.
     """
     try:
-        child = self.getChildrenByTagName(tagName)[0]
+        child = get_children_by_tagname(tagname, node)[0]
     except IndexError:
         child = not_found
     return child
 
 
-def removeAllAttributes(self):
+def remove_all_attributes(node):
     """
     This method will remove all attributes of any provided element.
-
-    The only object that should receive this method is Element.
     """
-    while self.attributes.length:
-        self.removeAttribute(self.attributes.item(0).name)
+    while node.attributes.length:
+        node.removeAttribute(node.attributes.item(0).name)
 
 
-def getAllAttributes(self, remove=False):
+def get_all_attributes(node, remove=False):
     """
     Returns a dictionary of all the attributes for an Element; takes the form
     of dict[attribute_name]=attribute_value.
 
     If the optional argument "remove" is set to True, this method will also
     remove all of the attributes from the element.
-
-    The only object that should receive this method is Element.
     """
     attributes = {}
-    keys = self.attributes.keys()
+    keys = node.attributes.keys()
     for key in keys:
-        attributes[key] = self.getAttribute(key)
+        attributes[key] = node.getAttribute(key)
     if remove:
-        self.removeAllAttributes()
+        remove_all_attributes(node)
     return attributes
 
 
-def elevateNode(self, adoptName=''):
+def elevate_node(node, adopt_name=''):
         """
         This method serves a specialized function. It will effectively elevate
         the level of a node by inserting it at the same level as its parent,
@@ -88,46 +76,40 @@ def elevateNode(self, adoptName=''):
         came after the node in its original position will then be given to a
         new parent node placed immediately after the elevated node. By default,
         this new parent node will be the same as the original parent, but it
-        may be altered using the adoptName optional argument, string input will
+        may be altered using the adopt_name optional argument, string input will
         supply the new tagName.
-
-        The Node object should receive this method.
         """
         #These must be collected before modifying the xml
-        parent = self.parentNode
+        parent = node.parentNode
         parent_sibling = parent.nextSibling
         grandparent = parent.parentNode
-        node_index = parent.childNodes.index(self)
+        node_index = parent.childNodes.index(node)
         #Now we make modifications
-        grandparent.insertBefore(self, parent_sibling)
-        if not adoptName:
-            adoptName = parent.tagName
+        grandparent.insertBefore(node, parent_sibling)
+        if not adopt_name:
+            adopt_name = parent.tagName
         #ownerDocument is an undocumented attribute of Nodes, it gets the
         #Document object of which it is a part.
-        adopt_element = self.ownerDocument.createElement(adoptName)
+        adopt_element = node.ownerDocument.createElement(adopt_name)
         grandparent.insertBefore(adopt_element, parent_sibling)
         for child in parent.childNodes[node_index + 1:]:
             adopt_element.appendChild(child)
 
 
-def removeSelf(self):
+def remove_self(node):
     """
     Removes the node from its parent. This is a convenience method which
     accesses the node's parentNode, then calls parent.removeChild() on itself.
-
-    The Node object should receive this method.
     """
-    parent = self.parentNode
-    parent.removeChild(self)
+    parent = node.parentNode
+    parent.removeChild(node)
 
 
-def replaceSelfWith(self, newChild):
+def replace_self_with(node, new_child):
     """
     Replace an existing node with a new node. This is a convenience method
     which accesses the node's parentNode, then calls parent.replaceChild()
     on the node with the newChild.
-
-    The Node object should receive this method.
     """
-    parent = self.parentNode
-    parent.replaceChild(newChild, self)
+    parent = node.parentNode
+    parent.replaceChild(new_child, self)
