@@ -1420,7 +1420,7 @@ class OPSPLoS(OPSMeta):
             ref_list.tagName = 'div'
             ref_list.setAttribute('class', 'ref-list')
             try:
-                label = elemet_methods.get_children_by_tag_name('label', ref_list)[0]
+                label = element_methods.get_children_by_tag_name('label', ref_list)[0]
             except IndexError:
                 pass
             else:

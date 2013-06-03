@@ -7,6 +7,8 @@ Incorporating these methods into the module provides a single definition point
 for the method that may be utilized in different sections.
 """
 
+import xml.dom.minidom as minidom
+
 #TODO: Going to re-work this to avoid monkey patching; it was a good experiment
 
 def get_children_by_tag_name(tagname, node):
@@ -37,7 +39,7 @@ def get_optional_child(tagname, node, not_found=None):
     This saves some repetitive code during checks for child existence.
     """
     try:
-        child = get_children_by_tagname(tagname, node)[0]
+        child = get_children_by_tag_name(tagname, node)[0]
     except IndexError:
         child = not_found
     return child
@@ -112,4 +114,26 @@ def replace_with(node, new_child):
     on the node with the newChild.
     """
     parent = node.parentNode
-    parent.replaceChild(new_child, self)
+    parent.replaceChild(new_child, node)
+
+
+def comment(node):
+    """
+    Converts the node received to a comment, in place, and will also return the
+    comment element.
+    """
+    parent = node.parentNode
+    comment = node.ownerDocument.createComment(node.toxml())
+    parent.replaceChild(comment, node)
+    return comment
+
+def uncomment(comment):
+    """
+    Converts the comment node received to a non-commented element, in place,
+    and will return the new node.
+    """
+    parent = comment.parentNode
+    node = minidom.parseString(comment.data).firstChild
+    parent.replaceChild(node, comment)
+    return node
+

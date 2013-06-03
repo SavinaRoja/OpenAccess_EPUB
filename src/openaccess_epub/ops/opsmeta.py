@@ -8,6 +8,7 @@ tag set and/or publisher must provide these functions.
 """
 
 import openaccess_epub.utils as utils
+import openaccess_epub.utils.element_methods as element_methods
 import xml.dom.minidom
 import logging
 
@@ -179,7 +180,7 @@ class OPSMeta(object):
         """
         #Convert email to a mailto link addressed to the text it contains
         for e in node.getElementsByTagName('email'):
-            e.removeAllAttributes()
+            element_methods.remove_all_attributes(e)
             e.tagName = 'a'
             mailto = 'mailto:{0}'.format(utils.nodeText(e))
             e.setAttribute('href', mailto)
@@ -189,7 +190,7 @@ class OPSMeta(object):
             eid = e.getAttribute('id')
             e.tagName = 'a'
             xh = e.getAttribute('xlink:href')
-            e.removeAllAttributes()
+            element_methods.remove_all_attributes(e)
             if xh:
                 e.setAttribute('href', xh)
             else:
