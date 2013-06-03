@@ -10,15 +10,6 @@ import logging
 
 log = logging.getLogger('Article')
 
-#Monkey patching in some extended methods for xml.dom.minidom classes
-minidom.Node.removeSelf = element_methods.removeSelf
-minidom.Node.replaceSelfWith = element_methods.replaceSelfWith
-minidom.Node.elevateNode = element_methods.elevateNode
-minidom.Element.getChildrenByTagName = element_methods.getChildrenByTagName
-minidom.Element.removeAllAttributes = element_methods.removeAllAttributes
-minidom.Element.getAllAttributes = element_methods.getAllAttributes
-minidom.Element.getOptionalChild = element_methods.getOptionalChild
-
 
 class Article(object):
     """

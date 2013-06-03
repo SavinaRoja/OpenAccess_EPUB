@@ -1,18 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-This module defines methods intended to be used as an extended method set for
-xml.dom.minidom classes.
+This module defines a set of methods for XML document parsing and manipulation
+patterns beyond those which are provided by xml.dom.minidom.
 
-These methods do not overwrite existing methods, so using them as monkey patch
-extensions should not present a risk of unexpected behavior, these are merely
-methods that I felt should be added to improve the readability and consistency
-of the code base for OpenAccess_EPUB.
-
-This methods in this module should be well documented to avoid confusion for
-those referring back to the xml.dom documentation. The methods utilize
-camelCase naming to emphasize their consistency with xml.dom, I am aware of the
-conflict with PEP8.
+Incorporating these methods into the module provides a single definition point
+for the method that may be utilized in different sections.
 """
+
+#TODO: Going to re-work this to avoid monkey patching; it was a good experiment
 
 
 def getChildrenByTagName(self, tagName):
