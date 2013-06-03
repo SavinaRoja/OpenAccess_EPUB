@@ -19,6 +19,7 @@ Dublin Core specification.
 """
 
 import openaccess_epub.utils as utils
+import openaccess_epub.utils.element_methods as element_methods
 import logging
 import os
 import time
@@ -312,7 +313,16 @@ class OPF(object):
         #Create tables idref
         tables_idref = 'tables-{0}-xml'.format(dashed_article_doi)
         #Add the tables if there should be a tables file
-        if self.article.root_tag.getElementsByTagName('table-wrap'):
+        #Start by uncommenting possible tables, this should work on some.
+        table_wraps = self.article.root_tag.getElementsByTagName('table-wrap')
+        if table_wraps:
+            for table_wrap in table_wraps:
+                for child in table_wrap.childNodes:
+                    if child.nodeType == 8:
+                        element_methods.uncomment(child)
+        #Now see if any tables are in the document
+        tables = self.article.root_tag.getElementsByTagName('table')
+        if tables:
             self.spine.append(spine_itemref(tables_idref, 'no'))
 
     def make_spine_itemrefs(self):

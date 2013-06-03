@@ -8,9 +8,11 @@ for the method that may be utilized in different sections.
 """
 
 import xml.dom.minidom as minidom
+import xml.parsers.expat
 import html.parser
+import logging
 
-#TODO: Going to re-work this to avoid monkey patching; it was a good experiment
+log = logging.getLogger('openaccess_epub.utils.element_methods')
 
 def get_children_by_tag_name(tagname, node):
     """
@@ -139,7 +141,7 @@ def uncomment(comment):
     """
     parent = comment.parentNode
     h = html.parser.HTMLParser()
-    data = h.unescae(comment.data)
+    data = h.unescape(comment.data)
     try:
         node = minidom.parseString(data).firstChild
     except xml.parsers.expat.ExpatError:  # Could not parse!
