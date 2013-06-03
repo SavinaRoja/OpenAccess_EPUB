@@ -8,6 +8,7 @@ for the method that may be utilized in different sections.
 """
 
 import xml.dom.minidom as minidom
+import html.parser
 
 #TODO: Going to re-work this to avoid monkey patching; it was a good experiment
 
@@ -133,7 +134,8 @@ def uncomment(comment):
     and will return the new node.
     """
     parent = comment.parentNode
-    node = minidom.parseString(comment.data).firstChild
+    h = html.parser.HTMLParser()
+    node = minidom.parseString(h.unescape(comment.data)).firstChild
     parent.replaceChild(node, comment)
     return node
 

@@ -820,6 +820,9 @@ class OPSPLoS(OPSMeta):
         """
         table_wraps = body.getElementsByTagName('table-wrap')
         for tab in table_wraps:
+            for child in tab.childNodes:
+                if child.nodeType == 8:
+                    element_methods.uncomment(child)
             #Parse all attributes to a dict
             tab_attributes = element_methods.get_all_attributes(tab, remove=False)
             #Determine if there is a <label>, 0 or 1, grab the node
