@@ -5,6 +5,7 @@ from the OPSGenerator base class in opsgenerator.py
 """
 
 import openaccess_epub.utils as utils
+import openaccess_epub.utils.element_methods as element_methods
 from openaccess_epub.ops.opsmeta import OPSMeta
 import os.path
 import logging
@@ -313,7 +314,7 @@ class OPSPLoS(OPSMeta):
             for xref in author.xref:
                 if xref.ref_type in ['corresp', 'aff']:
                     try:
-                        sup_element = xref.node.getChildrenByTagName('sup')[0]
+                        sup_element = element_methods.get_children_by_tag_name('sup', xref.node)[0]
                     except IndexError:
                         log.info('Author xref did not contain <sup> element')
                         #sup_text = utils.nodeText(xref.node)
@@ -344,9 +345,9 @@ class OPSPLoS(OPSMeta):
                 continue
             #Get the label node and the addr-line node
             #<label> might be missing, especially for one author works
-            label_node = aff.getChildrenByTagName('label')
+            label_node = element_methods.get_children_by_tag_name('label', aff)
             #I expect there to always be the <addr-line>
-            addr_line_node = aff.getOptionalChild('addr-line')
+            addr_line_node = element_methods.get_optional_child('addr-line', aff)
             if addr_line_node:
                 addr_line_text = utils.nodeText(addr_line_node)
             else:
@@ -369,22 +370,22 @@ class OPSPLoS(OPSMeta):
         """
         for abstract in self.metadata.abstract:
             #Remove <title> elements in the abstracts
-            for title in abstract.node.getChildrenByTagName('title'):
+            for title in element_methods.get_children_by_tag_name('title', abstract.node):
                 abstract.node.removeChild(title)
             if abstract.type == '':  # If no type is listed -> main abstract
-                abstract.node.removeAllAttributes()
+                element_methods.remove_all_attributes(abstract.node)
                 self.appendNewElementWithText('h2', 'Abstract', receiving_node)
                 receiving_node.appendChild(abstract.node)
                 abstract.node.tagName = 'div'
                 abstract.node.setAttribute('id', 'abstract')
             if abstract.type == 'summary':
-                abstract.node.removeAllAttributes()
+                element_methods.remove_all_attributes(abstract.node)
                 self.appendNewElementWithText('h2', 'Author Summary', receiving_node)
                 receiving_node.appendChild(abstract.node)
                 abstract.node.tagName = 'div'
                 abstract.node.setAttribute('id', 'author-summary')
             if abstract.type == 'editors-summary':
-                abstract.node.removeAllAttributes()
+                element_methods.remove_all_attributes(abstract.node)
                 self.appendNewElementWithText('h2', 'Editors\' Summary', receiving_node)
                 receiving_node.appendChild(abstract.node)
                 abstract.node.tagName = 'div'
@@ -492,7 +493,7 @@ class OPSPLoS(OPSMeta):
                 pass
         #I don't know if the license will always be included
         if permissions.license:  # I hope this is a general solution
-            license_p = permissions.license.getChildrenByTagName('license-p')[0]
+            license_p = element_methods.get_children_by_tag_name('license-p', permissions.license)[0]
             copyright_string += ' ' + utils.nodeText(license_p)
         self.appendNewText(copyright_string, copyright_div)
 
@@ -519,7 +520,7 @@ class OPSPLoS(OPSMeta):
         if not author_notes:  # skip if not found
             return
         #Check for conflict of interest statement
-        fn_nodes = author_notes.getChildrenByTagName('fn')
+        fn_nodes = element_methods.get_children_by_tag_name('fn', author_notes)
         conflict = None
         for fn in fn_nodes:
             if fn.getAttribute('fn-type') == 'conflict':
@@ -530,7 +531,7 @@ class OPSPLoS(OPSMeta):
         conflict_div = self.appendNewElement('div', body)
         conflict_div.setAttribute('id', 'conflict')
         self.appendNewElementWithText('b', 'Competing Interests: ', conflict_div)
-        conflict_p = conflict.getChildrenByTagName('p')[0]
+        conflict_p = element_methods.get_children_by_tag_name('p', conflict)[0]
         conflict_div.childNodes += conflict_p.childNodes
 
     def make_article_info_correspondences(self, body):
@@ -543,7 +544,7 @@ class OPSPLoS(OPSMeta):
         if not author_notes:  # skip if not found
             return
         #Check for correspondences
-        correspondence = author_notes.getChildrenByTagName('corresp')
+        correspondence = element_methods.get_children_by_tag_name('corresp', author_notes)
         if not correspondence:  # skip if none found
             return
         #Go about creating the content
@@ -569,7 +570,7 @@ class OPSPLoS(OPSMeta):
         #Look for fn nodes of fn-type 'other'
         other_fns = []
         for fn_group in fn_groups:
-            for fn in fn_group.getChildrenByTagName('fn'):
+            for fn in element_methods.get_children_by_tag_name('fn', fn_group):
                 if fn.getAttribute('fn-type') == 'other':
                     other_fns.append(fn)
         if other_fns:
@@ -628,7 +629,7 @@ class OPSPLoS(OPSMeta):
             return
         #Look for the ack node
         try:
-            ack = self.back.getChildrenByTagName('ack')[0]
+            ack = element_methods.get_children_by_tag_name('ack', self.back)[0]
         except IndexError:
             return
         #Just change the tagName to 'div' and provide the id
@@ -656,7 +657,7 @@ class OPSPLoS(OPSMeta):
         if not author_notes:  # skip if not found
             return
         #Check for conflict of interest statement
-        fn_nodes = author_notes.getChildrenByTagName('fn')
+        fn_nodes = element_methods.get_children_by_tag_name('fn', author_notes)
         contributions = None
         for fn in fn_nodes:
             if fn.getAttribute('fn-type') == 'con':
@@ -686,7 +687,7 @@ class OPSPLoS(OPSMeta):
         #Check if self.back exists
         if not self.back:
             return
-        for glossary in self.back.getChildrenByTagName('glossary'):
+        for glossary in element_methods.get_children_by_tag_name('glossary', self.back):
             glossary.tagName = 'div'
             glossary.setAttribute('class', 'back-glossary')
             receiving_node.appendChild(glossary)
@@ -701,8 +702,8 @@ class OPSPLoS(OPSMeta):
         #Check if self.back exists
         if not self.back:
             return
-        for notes in self.back.getChildrenByTagName('notes'):
-            notes_sec = notes.getChildrenByTagName('sec')[0]
+        for notes in element_methods.get_children_by_tag_name('notes', self.back):
+            notes_sec = element_methods.get_children_by_tag_name('sec', notes)[0]
             notes_sec.tagName = 'div'
             notes_sec.setAttribute('class', 'back-notes')
             receiving_node.appendChild(notes_sec)
@@ -744,26 +745,26 @@ class OPSPLoS(OPSMeta):
         """
         for fig in body.getElementsByTagName('fig'):
             if fig.parentNode.tagName == 'p':
-                fig.elevateNode()
+                element_methods.elevate_node(fig)
         figs = body.getElementsByTagName('fig')
         for fig in figs:
             #self.convert_fn_elements(fig)
             #self.convert_disp_formula_elements(fig)
             #Parse all fig attributes to a dict
-            fig_attributes = fig.getAllAttributes(remove=False)
+            fig_attributes = element_methods.get_all_attributes(fig, remove=False)
             #Determine if there is a <label>, 0 or 1, grab the node
             try:
-                label_node = fig.getChildrenByTagName('label')[0]
+                label_node = element_methods.get_children_by_tag_name('label', fig)[0]
             except IndexError:  # No label tag
                 label_node = None
             #Determine if there is a <caption>, grab the node
             try:
-                caption_node = fig.getChildrenByTagName('caption')[0]
+                caption_node = element_methods.get_children_by_tag_name('caption', fig)[0]
             except IndexError:
                 caption_node = None
 
             #Get the graphic node in the fig, treat as mandatory
-            graphic_node = fig.getChildrenByTagName('graphic')[0]
+            graphic_node = element_methods.get_children_by_tag_name('graphic', fig)[0]
             #Create a file reference for the image
             graphic_xlink_href = graphic_node.getAttribute('xlink:href')
             file_name = graphic_xlink_href.split('.')[-1] + '.png'
@@ -795,12 +796,12 @@ class OPSPLoS(OPSMeta):
                 #The caption element may have <title> 0 or 1, and <p> 0 or more
                 if caption_node:
                     #Detect caption title
-                    caption_title = caption_node.getChildrenByTagName('title')
+                    caption_title = element_methods.get_children_by_tag_name('title', caption_node)
                     if caption_title:
                         img_caption_div_b.childNodes += caption_title[0].childNodes
                         self.appendNewText(' ', img_caption_div_b)
                     #Detect <p>s
-                    caption_ps = caption_node.getChildrenByTagName('p')
+                    caption_ps = element_methods.get_children_by_tag_name('p', caption_node)
                     for each_p in caption_ps:
                         img_caption_div.childNodes += each_p.childNodes
                 #Now that we have created the img caption div content, insert
@@ -810,7 +811,7 @@ class OPSPLoS(OPSMeta):
             fig_parent.insertBefore(self.document.createElement('hr'), fig)
 
             #Remove the original <fig>
-            fig.removeSelf()
+            element_methods.remove(fig)
 
     def convert_table_wrap_elements(self, body):
         """
@@ -820,11 +821,11 @@ class OPSPLoS(OPSMeta):
         table_wraps = body.getElementsByTagName('table-wrap')
         for tab in table_wraps:
             #Parse all attributes to a dict
-            tab_attributes = tab.getAllAttributes(remove=False)
+            tab_attributes = element_methods.get_all_attributes(tab, remove=False)
             #Determine if there is a <label>, 0 or 1, grab the node
             #label_text is for serialized text for the tabled version
             try:
-                label_node = tab.getChildrenByTagName('label')[0]
+                label_node = element_methods.get_children_by_tag_name('label', tab)[0]
             except IndexError:  # No label tag
                 label_node = None
                 label_text = ''
@@ -832,29 +833,29 @@ class OPSPLoS(OPSMeta):
                 label_text = utils.serializeText(label_node, stringlist=[])
             #Determine if there is a <caption>, grab the node
             try:
-                caption_node = tab.getChildrenByTagName('caption')[0]
+                caption_node = element_methods.get_children_by_tag_name('caption', tab)[0]
             except IndexError:
                 caption_node = None
 
             #Get the alternatives node, for almost all articles, it will hold
             #the <graphic> and the <table>
             #I am assuming only one graphic and only one table per table-wrap
-            alternatives = tab.getOptionalChild('alternatives')
+            alternatives = element_methods.get_optional_child('alternatives', tab)
             if alternatives:
-                graphic_node = alternatives.getOptionalChild('graphic')
-                table_node = alternatives.getOptionalChild('table')
+                graphic_node = element_methods.get_optional_child('graphic', alternatives)
+                table_node = element_methods.get_optional_child('table', alternatives)
             #If the article doesn't have the <alternatives> node, or either of
             #these are not under alternatives, check directly under table-wrap
             else:
                 graphic_node = None
                 table_node = None
             if not graphic_node:
-                graphic_node = tab.getOptionalChild('graphic')
+                graphic_node = element_methods.get_optional_child('graphic', tab)
             if not table_node:
-                table_node = tab.getOptionalChild('table')
+                table_node = element_methods.get_optional_child('table', tab)
 
             if not graphic_node and table_node:
-                tab.replaceSelfWith(table_node)
+                element_methods.replace_with(tab, table_node)
                 continue  # Just replace table-wrap with this node and move on
             #Past this point, there must be a graphic... fails if neither
 
@@ -865,7 +866,7 @@ class OPSPLoS(OPSMeta):
                 table_node.setAttribute('label', label_text)
                 self.html_tables.append(table_node)
                 try:
-                    foot = tab.getChildrenByTagName('table-wrap-foot')[0]
+                    foot = element_methods.get_children_by_tag_name('table-wrap-foot', tab)[0]
                 except IndexError:
                     pass
                 else:
@@ -900,12 +901,12 @@ class OPSPLoS(OPSMeta):
                 #The caption element may have <title> 0 or 1, and <p> 0 or more
                 if caption_node:
                     #Detect caption title
-                    caption_title = caption_node.getChildrenByTagName('title')
+                    caption_title = element_methods.get_children_by_tag_name('title', caption_node)
                     if caption_title:
                         img_caption_div.childNodes += caption_title[0].childNodes
                         self.appendNewText(' ', img_caption_div)
                     #Detect <p>s
-                    caption_ps = caption_node.getChildrenByTagName('p')
+                    caption_ps = element_methods.get_children_by_tag_name('p', caption_node)
                     for each_p in caption_ps:
                         img_caption_div.childNodes += each_p.childNodes
                 #Now that we have created the img caption div content, insert
@@ -949,10 +950,10 @@ class OPSPLoS(OPSMeta):
         """
         depth_tags = ['h2', 'h3', 'h4', 'h5', 'h6']
         #Look for divs
-        for div in node.getChildrenByTagName('div'):
+        for div in element_methods.get_children_by_tag_name('div', node):
             #Look for a label
             try:
-                div_label = div.getChildrenByTagName('label')[0]
+                div_label = element_methods.get_children_by_tag_name('label', div)[0]
             except IndexError:
                 div_label_text = ''
             else:
@@ -963,7 +964,7 @@ class OPSPLoS(OPSMeta):
                     div.removeChild(div_label)
             #Look for a title
             try:
-                div_title = div.getChildrenByTagName('title')[0]
+                div_title = element_methods.get_children_by_tag_name('title', div)[0]
             except IndexError:
                 div_title = None
             else:
@@ -1004,7 +1005,7 @@ class OPSPLoS(OPSMeta):
                    '': self.main_frag}
         for x in node.getElementsByTagName('xref'):
             x.tagName = 'a'
-            x_attrs = x.getAllAttributes(remove=True)
+            x_attrs = element_methods.get_all_attributes(x, remove=True)
             if 'ref-type' in x_attrs:
                 ref_type = x_attrs['ref-type']
             else:
@@ -1020,15 +1021,15 @@ class OPSPLoS(OPSMeta):
         disp_formulas = body.getElementsByTagName('disp-formula')
         for disp in disp_formulas:
             #Parse all fig attributes to a dict
-            disp_attributes = disp.getAllAttributes(remove=False)
+            disp_attributes = element_methods.get_all_attributes(disp, remove=False)
             #Determine if there is a <label>, 0 or 1, grab_node
             try:
-                label_node = disp.getChildrenByTagName('label')[0]
+                label_node = element_methods.get_children_by_tag_name('label', disp)[0]
             except IndexError:  # No label tag
                 label_node = None
 
             #Get the graphic node in the disp, not always present
-            graphic_node = disp.getOptionalChild('graphic')
+            graphic_node = element_methods.get_optional_child('graphic', disp)
             #If graphic not present
             if not graphic_node:  #Assume there is math text instead
                 text_span = self.document.createElement('span')
@@ -1045,11 +1046,11 @@ class OPSPLoS(OPSMeta):
                     disp_parent.insertBefore(label_node, text_span)
                     label_node.tagName = 'b'
                 #Remove the old disp-formula element
-                disp.removeSelf()
+                element_methods.remove(disp)
                 continue
             
             #If graphic present
-            graphic_node = disp.getChildrenByTagName('graphic')[0]
+            graphic_node = element_methods.get_children_by_tag_name('graphic', disp)[0]
             #Create a file reference for the image
             graphic_xlink_href = graphic_node.getAttribute('xlink:href')
             file_name = graphic_xlink_href.split('.')[-1] + '.png'
@@ -1075,7 +1076,7 @@ class OPSPLoS(OPSMeta):
                 label_node.tagName = 'b'
 
             #Remove the old disp-formula element
-            disp.removeSelf()
+            element_methods.remove(disp)
 
     def convert_inline_formula_elements(self, body):
         """
@@ -1086,20 +1087,20 @@ class OPSPLoS(OPSMeta):
         """
         for inline in body.getElementsByTagName('inline-formula'):
             #Grab all the attributes of the formula element
-            inline_attributes = inline.getAllAttributes(remove=True)
+            inline_attributes = element_methods.get_all_attributes(inline, remove=True)
             #Convert the inline-formula element to a div and give it a class
             inline.tagName = 'span'
             inline.setAttribute('class', 'inline-formula')
             #Determine if there is an <inline-graphic>
             try:
-                inline_graphic = inline.getChildrenByTagName('inline-graphic')[0]
+                inline_graphic = element_methods.get_children_by_tag_name('inline-graphic', inline)[0]
             except IndexError:
                 inline_graphic = None
             else:
                 #Convert the inline-graphic element to an img element
                 inline_graphic.tagName = 'img'
                 #Get all of the attributes, with removal on
-                inline_graphic_attributes = inline_graphic.getAllAttributes(remove=True)
+                inline_graphic_attributes = element_methods.get_all_attributes(inline_graphic, remove=True)
                 #Create a file reference for the image using the xlink:href attribute value
                 graphic_xlink_href = inline_graphic_attributes['xlink:href']
                 file_name = graphic_xlink_href.split('.')[-1] + '.png'
@@ -1122,7 +1123,7 @@ class OPSPLoS(OPSMeta):
         """
         for named_content in body.getElementsByTagName('named-content'):
             named_content.tagName = 'span'
-            attrs = named_content.getAllAttributes(remove=True)
+            attrs = element_methods.get_all_attributes(named_content, remove=True)
             if 'content-type' in attrs:
                 named_content.setAttribute('class', attrs['content-type'])
 
@@ -1150,12 +1151,12 @@ class OPSPLoS(OPSMeta):
         well as processing the title.
         """
         for boxed_text in body.getElementsByTagName('boxed-text'):
-            boxed_text_attrs = boxed_text.getAllAttributes(remove=False)
+            boxed_text_attrs = element_methods.get_all_attributes(boxed_text, remove=False)
             boxed_text_parent = boxed_text.parentNode
-            sec = boxed_text.getOptionalChild('sec')
+            sec = element_methods.get_optional_child('sec', boxed_text)
             if sec:
                 sec.tagName = 'div'
-                title = sec.getOptionalChild('title')
+                title = element_methods.get_optional_child('title', sec)
                 if title:
                     title.tagName = 'b'
             else:
@@ -1184,9 +1185,9 @@ class OPSPLoS(OPSMeta):
         """
         for supplementary in body.getElementsByTagName('supplementary-material'):
             transfer_id = False
-            attributes = supplementary.getAllAttributes(remove=False)
+            attributes = element_methods.get_all_attributes(supplementary, remove=False)
             supplementary_parent = supplementary.parentNode
-            labels = supplementary.getChildrenByTagName('label')
+            labels = element_methods.get_children_by_tag_name('label', supplementary)
             resource_url = utils.plos_fetch_single_representation(self.doi_frag, attributes['xlink:href'])
             if labels:
                 label = labels[0]
@@ -1197,10 +1198,10 @@ class OPSPLoS(OPSMeta):
                 self.appendNewText('. ', label)
                 transfer_id = True
                 supplementary_parent.insertBefore(label, supplementary)
-            caption = supplementary.getChildrenByTagName('caption')
+            caption = element_methods.get_children_by_tag_name('caption', supplementary)
             if caption:
-                titles = caption[0].getChildrenByTagName('title')
-                paragraphs = caption[0].getChildrenByTagName('p')
+                titles = element_methods.get_children_by_tag_name('title', caption[0])
+                paragraphs = element_methods.get_children_by_tag_name('p', caption[0])
                 if titles:
                     title = titles[0]
                     title.tagName = 'b'
@@ -1231,9 +1232,9 @@ class OPSPLoS(OPSMeta):
         to italicized lines.
         """
         for verse_group in body.getElementsByTagName('verse-group'):
-            label = verse_group.getChildrenByTagName('label')
-            title = verse_group.getChildrenByTagName('title')
-            subtitle = verse_group.getChildrenByTagName('subtitle')
+            label = element_methods.get_children_by_tag_name('label', verse_group)
+            title = element_methods.get_children_by_tag_name('title', verse_group)
+            subtitle = element_methods.get_children_by_tag_name('subtitle', verse_group)
             verse_group.tagName = 'div'
             verse_group.setAttribute('id', 'verse-group')
             if any([label, title, subtitle]):
@@ -1245,7 +1246,7 @@ class OPSPLoS(OPSMeta):
                     new_verse_title.childNodes += title[0].childNodes
                 if subtitle:
                     new_verse_title.childNodes += subtitle[0].childNodes
-            for verse_line in verse_group.getChildrenByTagName('verse-line'):
+            for verse_line in element_methods.get_children_by_tag_name('verse-line', verse_group):
                 verse_line.tagName = 'p'
                 verse_line.setAttribute('class', 'verse-line')
 
@@ -1264,10 +1265,10 @@ class OPSPLoS(OPSMeta):
         footnotes = body.getElementsByTagName('fn')
         for footnote in footnotes:
             #Get the attributes
-            attributes = footnote.getAllAttributes(remove=False)
+            attributes = element_methods.get_all_attributes(footnote, remove=False)
             footnote_parent = footnote.parentNode
             #Find the footnote paragraph
-            footnote_paragraphs = footnote.getChildrenByTagName('p')
+            footnote_paragraphs = element_methods.get_children_by_tag_name('p', footnote)
             if footnote_paragraphs:  # A footnote paragraph exists
                 #Grab the first, and only, paragraph
                 paragraph = footnote_paragraphs[0]
@@ -1279,7 +1280,7 @@ class OPSPLoS(OPSMeta):
                     corrected_erratum = True
                 #Now remove the footnote if it is a corrected erratum
                 if corrected_erratum:
-                    footnote.removeSelf()
+                    element_methods.remove(footnote)
                     continue  # Move on to the next footnote
 
                 #Process the footnote paragraph if it is not a corrected erratum
@@ -1290,10 +1291,10 @@ class OPSPLoS(OPSMeta):
                     paragraph.setAttribute('class', paragraph_class)
                 else:
                     paragraph.setAttribute('class', 'fn')
-                footnote.replaceSelfWith(paragraph)
+                element_methods.replace_with(footnote, paragraph)
 
             else:  # A footnote paragraph does not exist
-                footnote.removeSelf()
+                element_methods.remove(footnote)
 
     def convert_list_elements(self, body):
         """
@@ -1336,11 +1337,11 @@ class OPSPLoS(OPSMeta):
 
         for list_el in body.getElementsByTagName('list'):
             if list_el.parentNode.tagName == 'p':
-                list_el.elevateNode()
+                element_methods.elevate_node(list_el)
 
         #list_el is used instead of list (list is reserved)
         for list_el in body.getElementsByTagName('list'):
-            list_el_attributes = list_el.getAllAttributes(remove=True)
+            list_el_attributes = element_methods.get_all_attributes(list_el, remove=True)
             list_el_parent = list_el.parentNode
             try:
                 list_el_type = list_el_attributes['list-type']
@@ -1361,7 +1362,7 @@ class OPSPLoS(OPSMeta):
             if 'id' in list_el_attributes:
                 list_el.setAttribute('id', list_el_attributes['id'])
             #Convert the <list-item> element tags to 'li'
-            for list_item in list_el.getChildrenByTagName('list-item'):
+            for list_item in element_methods.get_children_by_tag_name('list-item', list_el):
                 list_item.tagName = 'li'
 
     def convert_def_list_elements(self, body):
@@ -1376,23 +1377,23 @@ class OPSPLoS(OPSMeta):
         for the terms and definitions.
         """
         for def_list in body.getElementsByTagName('def-list'):
-            def_list_attributes = def_list.getAllAttributes(remove=True)
+            def_list_attributes = element_methods.get_all_attributes(def_list, remove=True)
             def_list.tagName = 'div'
             def_list.setAttribute('class', 'def-list')
             if 'id' in def_list_attributes:
                 def_list.setAttribute('id', def_list_attributes['id'])
-            def_item_list = def_list.getChildrenByTagName('def-item')
+            def_item_list = element_methods.get_children_by_tag_name('def-item', def_list)
             for def_item in def_item_list:
-                term = def_item.getChildrenByTagName('term')[0]
+                term = element_methods.get_children_by_tag_name('term', def_item)[0]
                 term.tagName = 'p'
                 term.setAttribute('class', 'def-item-term')
                 def_list.insertBefore(term, def_item)
                 try:
-                    definition = def_item.getChildrenByTagName('def')[0]
+                    definition = element_methods.get_children_by_tag_name('def', def_item)[0]
                 except IndexError:
                     print('WARNING! Missing definition in def-item!')
                 else:
-                    def_para = definition.getChildrenByTagName('p')[0]
+                    def_para = element_methods.get_children_by_tag_name('p', definition)[0]
                     definition.childNodes += def_para.childNodes
                     definition.removeChild(def_para)
                     definition.tagName = 'p'
@@ -1415,16 +1416,16 @@ class OPSPLoS(OPSMeta):
         """
         #TODO: DOES NOT FUNCTION AS INTENDED; make a proper one someday
         for ref_list in body.getElementsByTagName('ref-list'):
-            ref_list_attributes = ref_list.getAllAttributes(remove=True)
+            ref_list_attributes = element_methods.get_all_attributes(ref_list, remove=True)
             ref_list.tagName = 'div'
             ref_list.setAttribute('class', 'ref-list')
             try:
-                label = ref_list.getChildrenByTagName('label')[0]
+                label = elemet_methods.get_children_by_tag_name('label', ref_list)[0]
             except IndexError:
                 pass
             else:
                 label.tagName = 'h3'
-            for ref in ref_list.getChildrenByTagName('ref'):
+            for ref in element_methods.get_children_by_tag_name('ref', ref_list):
                 ref_text = utils.serializeText(ref, stringlist=[])
                 ref_list_p = self.appendNewElementWithText('p', ref_text, ref_list)
                 ref_list.removeChild(ref)
@@ -1438,7 +1439,7 @@ class OPSPLoS(OPSMeta):
         """
         graphics = body.getElementsByTagName('graphic')
         for graphic in graphics:
-            graphic_attributes = graphic.getAllAttributes(remove=True)
+            graphic_attributes = element_methods.get_all_attributes(graphic, remove=True)
             graphic.tagName = 'img'
             graphic.setAttribute('alt', 'unowned-graphic')
             if 'xlink:href' in graphic_attributes:

@@ -9,7 +9,7 @@ for the method that may be utilized in different sections.
 
 #TODO: Going to re-work this to avoid monkey patching; it was a good experiment
 
-def get_childen_by_tagname(tagname, node):
+def get_childen_by_tag_name(tagname, node):
     """
     Search for all direct children with a particular element type name.
 
@@ -96,7 +96,7 @@ def elevate_node(node, adopt_name=''):
             adopt_element.appendChild(child)
 
 
-def remove_self(node):
+def remove(node):
     """
     Removes the node from its parent. This is a convenience method which
     accesses the node's parentNode, then calls parent.removeChild() on itself.
@@ -105,7 +105,7 @@ def remove_self(node):
     parent.removeChild(node)
 
 
-def replace_self_with(node, new_child):
+def replace_with(node, new_child):
     """
     Replace an existing node with a new node. This is a convenience method
     which accesses the node's parentNode, then calls parent.replaceChild()
