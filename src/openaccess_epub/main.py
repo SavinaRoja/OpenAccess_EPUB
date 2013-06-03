@@ -8,11 +8,12 @@ mode of execution and interaction.
 #Standard Library Modules
 import argparse
 import sys
-import os.path
+import os
 import shutil
 import logging
 import traceback
 import multiprocessing
+import subprocess
 
 #OpenAccess_EPUB Modules
 from ._version import __version__
@@ -200,8 +201,8 @@ def batch_input(args, config=None):
 
         #Running epubcheck on the output verifies the validity of the ePub,
         #requires a local installation of java and epubcheck.
-        #if args.no_epubcheck:
-            #epubcheck('{0}.epub'.format(output_name), config)
+        if args.no_epubcheck:
+            epubcheck('{0}.epub'.format(output_name), config)
     error_file.close()
 
 
@@ -466,7 +467,7 @@ def epubcheck(epubname, config=None):
     elif not e == '.epub':
         print('Warning: Filename extension is not \'.epub\', appending it...')
         epubname += '.epub'
-    os.execlp('java', 'OpenAccess_EPUB', '-jar', config.epubcheck, epubname)
+    subprocess.call(['java', '-jar', config.epubcheck, epubname])
 
 def get_config_module():
     """
