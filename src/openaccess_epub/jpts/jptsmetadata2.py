@@ -131,3 +131,49 @@ class JPTSMetadata(object):
 
     def dtd_version(self):
         return ''
+
+
+class JPTSMetadata20(JPTSMetadata):
+    """
+    This class provides metadata support for articles published according to
+    the Journal Publishing Tag Set version 2.0
+    """
+
+    def dtd_version(self):
+        return '2.0'
+
+class JPTSMetadata21(JPTSMetadata):
+    """
+    This class provides metadata support for articles published according to
+    the Journal Publishing Tag Set version 2.1
+    """
+
+    def dtd_version(self):
+        return '2.1'
+
+class JPTSMetadata22(JPTSMetadata):
+    """
+    This class provides metadata support for articles published according to
+    the Journal Publishing Tag Set version 2.2
+    """
+
+    def dtd_version(self):
+        return '2.2'
+
+class JPTSMetadata23(JPTSMetadata):
+    """
+    This class provides metadata support for articles published according to
+    the Journal Publishing Tag Set version 2.3
+    """
+
+    def dtd_version(self):
+        return '2.3'
+
+class JPTSMetadata30(JPTSMetadata):
+    """
+    This class provides metadata support for articles published according to
+    the Journal Publishing Tag Set version 3.0
+    """
+
+    def dtd_version(self):
+        return '3.0'
