@@ -1179,7 +1179,7 @@ class OPSPLoS(OPSMeta):
         Supplementary material are not, nor are they generally expected to be,
         packaged into the epub file. Though this is a technical possibility,
         and certain epub reading systems (such as those run on a PC) might be
-        reasonably able to handle the external handling of diverse file formats
+        reasonably capable of the external handling of diverse file formats
         I presume that supplementary material will remain separate from the
         document. So special cases aside, external links to supplementary
         material will be employed; this will require internet connection for
