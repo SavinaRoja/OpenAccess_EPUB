@@ -38,11 +38,46 @@ class JPTSMetadata(object):
         self.dtd_version = self.dtd_version()  # A string for DTD version
         self.document = document  # The minidom document element for article
         self.get_top_level_elements()
+        self.get_front_child_elements()
 
     def get_top_level_elements(self):
         """
-        The 
+        The various DTD versions define top level elements that occur under the
+        document element, <article>.
         """
+        #If any of the elements are not found, their value will be None
+        #The <front> element is required, and singular
+        self.front = self.document.getElementsByTagName('front')[0]
+        #The <body> element is 0 or 1; it does not contain metadata
+        self.body = element_methods.getOptionalChild('body', self.document)
+        #The <back> element is 0 or 1
+        self.back = element_methods.getOptionalChild('back', self.document)
+        #The <floats-wrap> element is 0 or 1; relevant only to version 2.3
+        self.floats_wrap = element_methods.getOptionalChild('floats-wrap', self.document)
+        #The <floats-group> element is 0 or 1; relevant only to version 3.0
+        self.floats_group = element_methods.getOptionaChild('floats-group', self.document)
+        #The <sub-article> and <response> elements are defined in all supported
+        #versions in the following manner: 0 or more, mutually exclusive
+        self.sub_article = self.document.getElementsByTagName('sub-article')
+        if self.sub_article:
+            self.response = None
+        else:
+            self.sub_article = None
+            self.response = self.document.getElementsByTagName('response')
+            if not self.response:
+                self.response = None
+
+    def get_front_child_elements(self):
+        """
+        The various DTD versions all maintain the same definition of the
+        elements that may be found directly beneath the <front> element.
+        """
+        #The <journal-meta> element is required
+        self.journal_metadata = self.front.getElementsByTagName('journal-meta')[0]
+        #The <article-meta> element is required
+        self.article_metadata = self.front.getElementsByTagName('article-meta')[0]
+        #The <notes> element is 0 or 1; if not found, self.notes will be None
+        self.notes = element_methods.getOptionalChild('notes', self.front)
 
     
     def dtd_version(self):
