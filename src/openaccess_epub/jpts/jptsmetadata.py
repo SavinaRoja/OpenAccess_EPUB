@@ -28,13 +28,13 @@ class JPTSMetaData(object):
         log.info('Instantiating JPTSMetaData{0} class'.format(self.dtdVersion()))
         self.doc = document
         self.publisher_name = publisher
-        self.getTopElements()
-        self.getFrontElements()
-        self.parseJournalMetadata()
-        self.parseArticleMetadata()
+        self.get_top_elements()
+        self.get_front_elements()
+        self.parse_journal_metadata()
+        self.parse_article_metadata()
         self.parse_back_data()
 
-    def getTopElements(self):
+    def get_top_elements(self):
         self.front = self.doc.getElementsByTagName('front')[0]  # Required
         try:
             self.back = self.doc.getElementsByTagName('back')[0]  # Optional
@@ -49,16 +49,16 @@ class JPTSMetaData(object):
             self.response = self.doc.getElementsByTagName('response')
             if not self.response:
                 self.response = None
-        self.floats_wrap = self.getTopFloats_Wrap()  # relevant to v2.3
-        self.floats_group = self.getTopFloats_Group()  # relevant to v3.0
+        self.floats_wrap = self.get_top_floats_wrap()  # relevant to v2.3
+        self.floats_group = self.get_top_floats_group()  # relevant to v3.0
 
-    def getTopFloats_Wrap(self):
+    def get_top_floats_wrap(self):
         return None
 
-    def getTopFloats_Group(self):
+    def get_top_floats_group(self):
         return None
 
-    def getFrontElements(self):
+    def get_front_elements(self):
         """
         The structure of elements under <front> is the same for all versions
         (2.0, 2.3, 3.0). <journal-meta> and <article-meta> are required,
@@ -71,7 +71,7 @@ class JPTSMetaData(object):
         except IndexError:
             self.notes = None
 
-    def parseJournalMetadata(self):
+    def parse_journal_metadata(self):
         """
         As the specifications for metadata under the <journal-meta> element
         vary between version, this class will be overridden by the derived
@@ -80,7 +80,7 @@ class JPTSMetaData(object):
         """
         return None
 
-    def getJournalID(self):
+    def get_journal_id(self):
         """
         <journal-id> is a required, one or more, sub-element of <journal-meta>.
         It can only contain text, numbers, or special characters. It has a
@@ -93,7 +93,7 @@ class JPTSMetaData(object):
             ids[j.getAttribute('journal-id-type')] = text
         return ids
 
-    def getISSN(self):
+    def get_ISSN(self):
         """
         <issn> is a required, one or more, sub-element of <journal-meta>. It
         can only contain text, numbers, or special characters. It has a single
@@ -106,7 +106,7 @@ class JPTSMetaData(object):
             issns[i.getAttribute('pub-type')] = text
         return issns
 
-    def getPublisher(self):
+    def get_publisher(self):
         """
         <publisher> under <journal-meta> is an optional tag, zero or one, which
         under some DTD versions has the attribute 'content-type'. If it exists,
@@ -135,7 +135,7 @@ class JPTSMetaData(object):
         else:
             return pd(None, None, None)
 
-    def getJournalMetaNotes(self):
+    def get_journal_meta_notes(self):
         """
         The <notes> tag under the <journal-meta> is option, zero or one, and
         has attributes 'id' and 'notes-type'. This tag has complex content and
@@ -149,7 +149,7 @@ class JPTSMetaData(object):
         else:
             return tag
 
-    def parseArticleMetadata(self):
+    def parse_article_metadata(self):
         """
         As the specifications for metadata under the <article-meta> element
         vary between version, this class will be overridden by the derived
@@ -158,7 +158,7 @@ class JPTSMetaData(object):
         """
         return None
 
-    def getArticleID(self):
+    def get_article_id(self):
         """
         <article-id> is an optional, 0 or more, sub-element of <article-meta>.
         It can only contain text, numbers, or special characters. It has a
@@ -171,7 +171,7 @@ class JPTSMetaData(object):
             ids[j.getAttribute('pub-id-type')] = text
         return ids
 
-    def getArticleCategories(self):
+    def get_article_categories(self):
         """
         The <article-categories> tag is optional, zero or one, underneath the
         <article-meta> tag. It's specification is the same in each DTD. It can
@@ -188,7 +188,7 @@ class JPTSMetaData(object):
         else:
             return a
 
-    def getTitleGroup(self):
+    def get_title_group(self):
         """
         <title-group> is a required element underneath the <article-meta> tag.
         Below this level, each specification has its own way of constructing
@@ -196,7 +196,7 @@ class JPTSMetaData(object):
         """
         return self.article_meta.getElementsByTagName('title-group')[0]
 
-    def getContribGroup(self):
+    def get_contrib_group(self):
         """
         <contrib-group> is an optional, zero or more, element used to group
         elements used to represent individuals who contributed independently
@@ -213,7 +213,7 @@ class JPTSMetaData(object):
             contrib_group_list.append(jptscontrib.ContribGroup(each))
         return contrib_group_list
 
-    def getAff(self):
+    def get_aff(self):
         """
         <aff> is an optional tag that can be contained in <article-meta>,
         <collab>, <contrib>, <contrib-group>, <person-group>, and (in the case
@@ -230,7 +230,7 @@ class JPTSMetaData(object):
             affsbyid[aid] = aff
         return affs, affsbyid
 
-    def getAuthorNotes(self):
+    def get_author_notes(self):
         """
         <author-notes> is an optional tag, 0 or 1, for each DTD and has the
         same potential attributes, id and rid. It may include an optional
@@ -242,7 +242,7 @@ class JPTSMetaData(object):
         except IndexError:
             return None
 
-    def getPubDate(self):
+    def get_pub_date(self):
         """
         <pub-date> is a mandatory element, 1 or more, within the <article-meta>
         element. It has a single attribute, pub-type, and its content model is:
@@ -279,7 +279,7 @@ class JPTSMetaData(object):
             pub_dates[pub_type] = pd(k, year, month, day, season, pub_type)
         return pub_dates
 
-    def getVolumeID(self):
+    def get_volume_id(self):
         """
         <volume-id> is an optional element, 0 or more, with the optional
         attributes pub-id-type and content-type (only in v2.3 and v3.0). It is
@@ -293,7 +293,7 @@ class JPTSMetaData(object):
             vol_ids[vi.getAttribute('pub-id-type')] = text
         return vol_ids
 
-    def getIssueID(self):
+    def get_issue_id(self):
         """
         <issue-id> is an optional element, 0 or more, with the optional
         attributes pub-id-type and content-type (only in v2.3 and v3.0). It is
@@ -307,7 +307,7 @@ class JPTSMetaData(object):
             iss_ids[ii.getAttribute('pub-id-type')] = text
         return iss_ids
 
-    def getIssueTitle(self):
+    def get_issueTitle(self):
         """
         <issue-title> is an optional element, 0 or more, which contains only
         text, numbers, special characters. In versions 2.3 and 3.0, it has an
@@ -319,7 +319,7 @@ class JPTSMetaData(object):
             issue_titles.append(utils.nodeText(it))
         return issue_titles
 
-    def getSupplement(self):
+    def get_supplement(self):
         """
         <supplement> element exists as an optional element, 0 or 1, within
         <article-meta>. It can also be found in other descendants of
@@ -333,7 +333,7 @@ class JPTSMetaData(object):
         else:
             return s
 
-    def getFPage(self):
+    def get_fpage(self):
         """
         <fpage> is a mandatory element if <elocation-id> is not included within
         <article-meta>. There will be only one. Its only attribute in v2.0 is
@@ -346,7 +346,7 @@ class JPTSMetaData(object):
         seq = fpage.getAttribute('seq')
         return fp(text, seq)
 
-    def getLPage(self):
+    def get_lpage(self):
         """
         <lpage> is an optional, 0 or 1, element if <elocation-id> is not
         present within <article-meta>. Its only attribute is content-type
@@ -360,7 +360,7 @@ class JPTSMetaData(object):
         else:
             return utils.nodeText(lpage)
 
-    def getPageRange(self):
+    def get_page_range(self):
         """
         <page-range> is an optional, 0 or 1, element if <elocation-id> is not
         present within <article-meta>. Its only attribute is content-type with
@@ -375,7 +375,7 @@ class JPTSMetaData(object):
         else:
             return utils.nodeText(pr)
 
-    def getElocationID(self):
+    def get_elocation_id(self):
         """
         <elocation-id> is an optional, 0 or 1, which is mutually exclusive with
         <fpage>, <lpage>, and <page-range>. Its only attribute in v2.0 is seq,
@@ -389,7 +389,7 @@ class JPTSMetaData(object):
         else:
             return utils.nodeText(e)
 
-    def getEmail(self):
+    def get_email(self):
         """
         <email> is an optional element, 0 or more, in <article-meta>. Its only
         content is text, numbers, and special characters. It has attributes
@@ -399,7 +399,7 @@ class JPTSMetaData(object):
         """
         return element_methods.get_children_by_tag_name('email', self.article_meta)
 
-    def getExtLink(self):
+    def get_ext_link(self):
         """
         <ext-link> is an optional element, 0 or more, in <article-meta>. It may
         contain text and various formatting and emphasis elements. It has
@@ -411,7 +411,7 @@ class JPTSMetaData(object):
         """
         return element_methods.get_children_by_tag_name('ext-link', self.article_meta)
 
-    def getURI(self):
+    def get_URI(self):
         """
         <uri> is an optional element, 0 or more, in <article-meta>. It may only
         contain text, numbers, and special characters. It has the following
@@ -422,7 +422,7 @@ class JPTSMetaData(object):
         """
         return element_methods.get_children_by_tag_name('uri', self.article_meta)
 
-    def getProduct(self):
+    def get_product(self):
         """
         <product> is an optional element, 0 or more, in <article-meta> that has
         a huge range for potential content. Use cases are likely to depend
@@ -433,7 +433,7 @@ class JPTSMetaData(object):
         """
         return element_methods.get_children_by_tag_name('product', self.article_meta)
 
-    def getSupplementaryMaterial(self):
+    def get_supplementary_material(self):
         """
         <supplementary-material> is an optional element, 0 or more, in
         <article-meta> to be used to 'alert to the existence of
@@ -444,7 +444,7 @@ class JPTSMetaData(object):
         """
         return element_methods.get_children_by_tag_name('supplementary-material', self.article_meta)
 
-    def getHistory(self):
+    def get_history(self):
         """
         The <history> element is optional, 0 or 1, within <article-meta> and
         will contain 1 or more <date> elements. This content describes dates
@@ -486,7 +486,7 @@ class JPTSMetaData(object):
                 dates[dt] = datetuple(year, month, day, season)
         return dates
 
-    def getCopyrightStatement(self):
+    def get_copyright_statement(self):
         """
         <copyright-statement> is an optional, 0 or 1, element in <article-meta>
         which can contain text, address linking elements, and formatting
@@ -501,7 +501,7 @@ class JPTSMetaData(object):
         else:
             return cs
 
-    def getCopyrightYear(self):
+    def get_copyright_year(self):
         """
         <copyright-year> is an optional, 0 or 1, element in <article-meta>
         which may contain only text, numbers, and special characters. If the
@@ -516,7 +516,7 @@ class JPTSMetaData(object):
         else:
             return utils.nodeText(cy)
 
-    def getLicense(self):
+    def get_license(self):
         """
         <license> is an optional, 0 or 1, element in <article-meta> which may
         have one or more <p> elements inside. In version 2.3 and, it is
@@ -536,7 +536,7 @@ class JPTSMetaData(object):
         else:
             return lic(l, l.getAttribute('license-type'))
 
-    def getPermissions(self):
+    def get_permissions(self):
         """
         The <permissions> element is not used in version 2.0. It is an optional
         element, 0 or 1, in versions 2.3 and 3.0, where it may hold 0 or 1 of
@@ -561,7 +561,7 @@ class JPTSMetaData(object):
                 nodes.append(nodes[3].getAttribute('license-type'))
             return perm(*nodes)
 
-    def getSelfURI(self):
+    def get_self_URI(self):
         """
         The <self-uri> element is optional, 0 or more, within the
         <article-meta> and may only contain text, numbers, or special
@@ -571,7 +571,7 @@ class JPTSMetaData(object):
         """
         return element_methods.get_children_by_tag_name('self-uri', self.article_meta)
 
-    def getRelatedArticle(self):
+    def get_related_article(self):
         """
         <related-article> is an optional element, 0 or more, within
         <article-meta>. This element is not likely to be critical to displaying
@@ -586,7 +586,7 @@ class JPTSMetaData(object):
         """
         return element_methods.get_children_by_tag_name('related-article', self.article_meta)
 
-    def getAbstract(self):
+    def get_abstract(self):
         """
         <abstract> is an optional element, 0 or more, within <article-meta>.
         Its potential attributes varies between DTD versions; abstract-type
@@ -604,7 +604,7 @@ class JPTSMetaData(object):
             abstracts.append(abst(a, atyp, lang, abid, spec))
         return abstracts
 
-    def getTransAbstract(self):
+    def get_trans_abstract(self):
         """
         <trans-abstract> is similar in all respects to <abstract> and is used
         to store the abstract in a language other than the original publication
@@ -620,7 +620,7 @@ class JPTSMetaData(object):
             trans_abstracts.append(abs(ta, atyp, lang, abid, spec))
         return trans_abstracts
 
-    def getKwdGroup(self):
+    def get_kwd_group(self):
         """
         <kwd-group> is an optional element, 0 or more, in <article-meta> which
         may contain 0 or 1 <title> elements and 1 or more <kwd> elements. Note
@@ -643,7 +643,7 @@ class JPTSMetaData(object):
                 all_kwds.append(kwd(key, ktype, kid))
         return kwd_groups, all_kwds
 
-    def getContractNum(self):
+    def get_contract_num(self):
         """
         <contract-num> is an optional element, 0 or more, in <article-meta>
         which may only contain text, numbers, or special characters, though it
@@ -660,7 +660,7 @@ class JPTSMetaData(object):
             con_nums.append(cn(c, text, cid, crid))
         return con_nums
 
-    def getContractSponsor(self):
+    def get_contract_sponsor(self):
         """
         <contract-sponsor> is an optional element, 0 or more, in <article-meta>
         which may have complex publisher-dependent content. This method will
@@ -668,7 +668,7 @@ class JPTSMetaData(object):
         """
         return element_methods.get_children_by_tag_name('contract-sponsor', self.article_meta)
 
-    def getConference(self):
+    def get_conference(self):
         """
         <conference> is an optional element, 0 or more, in <article-meta> which
         is used to describe a conference at which the article was originally
@@ -718,7 +718,7 @@ class JPTSMetaData(object):
             conferences.append(date, name, acr, num, loc, spo, theme)
         return conferences
 
-    def getCounts(self):
+    def get_counts(self):
         """
         <counts> is an optional element, 0 or 1, in <article-meta>, which
         provides a container for several <count>-type elements. Each of these
@@ -740,7 +740,7 @@ class JPTSMetaData(object):
                 counts[ckey] = _node.getAttribute('count')
         return counts
 
-    def getCustomMetaWrap(self):
+    def get_custom_meta_wrap(self):
         """
         <custom-meta-wrap> is an optional element, 0 or more, in <article-meta>
         which is designed as a built-in structure for metadata not supported by
@@ -773,7 +773,7 @@ class JPTSMetaData20(JPTSMetaData):
     metadata.
     """
 
-    def parseJournalMetadata(self):
+    def parse_journal_metadata(self):
         """
         <journal-meta> stores information about the journal in which
         the article is found.
@@ -781,7 +781,7 @@ class JPTSMetaData20(JPTSMetaData):
         jm = self.journal_meta  # More compact
         #There will be one or more <journal-id> elements, which will be indexed
         #in a dictionary by their 'journal-id-type' attributes
-        self.journal_id = self.getJournalID()
+        self.journal_id = self.get_journal_id()
         #<journal-title> is zero or more and has no attributes
         self.journal_title = []
         for jt in jm.getElementsByTagName('journal-title'):
@@ -792,11 +792,11 @@ class JPTSMetaData20(JPTSMetaData):
             text = utils.nodeText(a)
             self.abbrev_journal_title[a.getAttribute('abbrev-type')] = text
         #<issn> is one or more and has 'pub-type' attribute
-        self.issn = self.getISSN()
-        self.publisher = self.getPublisher()  # publisher.loc is text
-        self.jm_notes = self.getJournalMetaNotes()
+        self.issn = self.get_ISSN()
+        self.publisher = self.get_publisher()  # publisher.loc is text
+        self.jm_notes = self.get_journal_meta_notes()
 
-    def parseArticleMetadata(self):
+    def parse_article_metadata(self):
         """
         <article-meta> stores information about the article and the
         issue of the journal in which it is found.
@@ -804,9 +804,9 @@ class JPTSMetaData20(JPTSMetaData):
         am = self.article_meta  # More compact
         #There will be zero or more <article-id> elements whose text data will
         #by indexed by their pub-id-type attribute values
-        self.article_id = self.getArticleID()
-        self.article_categories = self.getArticleCategories()
-        self.title_group = self.getTitleGroup()
+        self.article_id = self.get_article_id()
+        self.article_categories = self.get_article_categories()
+        self.title_group = self.get_title_group()
         #self.title will be a namedtuple comprised of the elements under
         #<title-group>. names will be set by their elements, and values will
         #be set by the following types
@@ -829,13 +829,13 @@ class JPTSMetaData20(JPTSMetaData):
         except IndexError:
             fn = None
         self.title = atg(article, subtitle, trans, alt, fn)
-        self.contrib_group = self.getContribGroup()
+        self.contrib_group = self.get_contrib_group()
         self.contrib = []
         for each in self.contrib_group:
             self.contrib += each.contributors()
-        self.affs, self.affs_by_id = self.getAff()
-        self.author_notes = self.getAuthorNotes()
-        self.pub_date = self.getPubDate()
+        self.affs, self.affs_by_id = self.get_aff()
+        self.author_notes = self.get_author_notes()
+        self.pub_date = self.get_pub_date()
         #This segment gets None or a text value for self.volume
         try:
             vol = element_methods.get_children_by_tag_name('volume', am)[0]
@@ -843,7 +843,7 @@ class JPTSMetaData20(JPTSMetaData):
             self.volume = None
         else:
             self.volume = utils.nodeText(vol)
-        self.volume_id = self.getVolumeID()
+        self.volume_id = self.get_volume_id()
         #This segment gets None or a text value for self.issue
         try:
             iss = element_methods.get_children_by_tag_name('issue', am)[0]
@@ -851,37 +851,37 @@ class JPTSMetaData20(JPTSMetaData):
             self.issue = None
         else:
             self.issue = utils.nodeText(iss)
-        self.issue_id = self.getIssueID()
-        self.supplement = self.getSupplement()
+        self.issue_id = self.get_issue_id()
+        self.supplement = self.get_supplement()
         #Get values for elocation_id, fpage, lpage, and page_range
-        self.elocation_id = self.getElocationID()
+        self.elocation_id = self.get_elocation_id()
         if self.elocation_id:
             self.fpage = None
             self.lpage = None
             self.page_range = None
         else:
-            self.fpage = self.getFPage()
-            self.lpage = self.getLPage()
-            self.page_range = self.getPageRange()
-        self.email = self.getEmail()
-        self.ext_link = self.getExtLink()
-        self.uri = self.getURI()
-        self.product = self.getProduct()
-        self.supplementary_material = self.getSupplementaryMaterial()
-        self.history = self.getHistory()
-        self.copyright_statement = self.getCopyrightStatement()
-        self.copyright_year = self.getCopyrightYear()
-        self.license = self.getLicense()
-        self.self_uri = self.getSelfURI()
-        self.related_article = self.getRelatedArticle()
-        self.abstract = self.getAbstract()
-        self.trans_abstract = self.getTransAbstract()
-        self.kwd_group, self.all_kwds = self.getKwdGroup()
-        self.contract_num = self.getContractNum()
-        self.contract_sponsor = self.getContractSponsor()
-        self.conference = self.getConference()
-        self.counts = self.getCounts()
-        self.custom_meta_wrap = self.getCustomMetaWrap()
+            self.fpage = self.get_fpage()
+            self.lpage = self.get_lpage()
+            self.page_range = self.get_page_range()
+        self.email = self.get_email()
+        self.ext_link = self.get_ext_link()
+        self.uri = self.get_URI()
+        self.product = self.get_product()
+        self.supplementary_material = self.get_supplementary_material()
+        self.history = self.get_history()
+        self.copyright_statement = self.get_copyright_statement()
+        self.copyright_year = self.get_copyright_year()
+        self.license = self.get_license()
+        self.self_uri = self.get_self_URI()
+        self.related_article = self.get_related_article()
+        self.abstract = self.get_abstract()
+        self.trans_abstract = self.get_trans_abstract()
+        self.kwd_group, self.all_kwds = self.get_kwd_group()
+        self.contract_num = self.get_contract_num()
+        self.contract_sponsor = self.get_contract_sponsor()
+        self.conference = self.get_conference()
+        self.counts = self.get_counts()
+        self.custom_meta_wrap = self.get_custom_meta_wrap()
 
     def dtdVersion(self):
         return '2.0'
@@ -893,7 +893,7 @@ class JPTSMetaData23(JPTSMetaData):
     metadata.
     """
 
-    def getTopFloats_Wrap(self):
+    def get_top_floats_wrap(self):
         """
         <floats-wrap> may exist as a top level element for DTD v2.3. This
         tag may only exist under <article>, <sub-article>, or <response>.
@@ -906,7 +906,7 @@ class JPTSMetaData23(JPTSMetaData):
                 return fw
         return None
 
-    def parseJournalMetadata(self):
+    def parse_journal_metadata(self):
         """
         <journal-meta> stores information about the journal in which
         the article is found.
@@ -914,7 +914,7 @@ class JPTSMetaData23(JPTSMetaData):
         jm = self.journal_meta  # More compact
         #There will be one or more <journal-id> elements, which will be indexed
         #in a dictionary by their 'journal-id-type' attributes
-        self.journal_id = self.getJournalID()
+        self.journal_id = self.get_journal_id()
         #<journal-title> is zero or more and has 'content-type' attribute
         self.journal_title = {}
         for jt in jm.getElementsByTagName('journal-title'):
@@ -939,11 +939,11 @@ class JPTSMetaData23(JPTSMetaData):
             text = utils.nodeText(a)
             self.abbrev_journal_title[a.getAttribute('abbrev-type')] = text
         #<issn> is one or more and has 'pub-type' attribute
-        self.issn = self.getISSN()
-        self.publisher = self.getPublisher()  # publisher.loc is a node
-        self.jm_notes = self.getJournalMetaNotes()
+        self.issn = self.get_ISSN()
+        self.publisher = self.get_publisher()  # publisher.loc is a node
+        self.jm_notes = self.get_journal_meta_notes()
 
-    def parseArticleMetadata(self):
+    def parse_article_metadata(self):
         """
         <article-meta> stores information about the article and the
         issue of the journal in which it is found.
@@ -951,9 +951,9 @@ class JPTSMetaData23(JPTSMetaData):
         am = self.article_meta  # More compact
         #There will be zero or more <article-id> elements whose text data will
         #by indexed by their pub-id-type attribute values
-        self.article_id = self.getArticleID()
-        self.article_categories = self.getArticleCategories()
-        self.title_group = self.getTitleGroup()
+        self.article_id = self.get_article_id()
+        self.article_categories = self.get_article_categories()
+        self.title_group = self.get_title_group()
         #v2.3 has rather more potential attributes, which adds complexity to
         #The matter of indexing them, as is done in v2.0. I'm opting for making
         #composite elements of Nodes with their attribute values for easier
@@ -999,52 +999,52 @@ class JPTSMetaData23(JPTSMetaData):
             fn = None
         #Set self.title now
         self.title = atg(article, subtitle, trans_title, trans_sub, alt, fn)
-        self.contrib_group = self.getContribGroup()
+        self.contrib_group = self.get_contrib_group()
         self.contrib = []
         for each in self.contrib_group:
             self.contrib += each.contributors()
-        self.affs, self.affs_by_id = self.getAff()
-        self.author_notes = self.getAuthorNotes()
-        self.pub_date = self.getPubDate()
-        self.volume = self.getVolume()
-        self.volume_id = self.getVolumeID()
-        self.issue = self.getIssue()
-        self.issue_id = self.getIssueID()
-        self.supplement = self.getSupplement()
+        self.affs, self.affs_by_id = self.get_aff()
+        self.author_notes = self.get_author_notes()
+        self.pub_date = self.get_pub_date()
+        self.volume = self.get_volume()
+        self.volume_id = self.get_volume_id()
+        self.issue = self.get_issue()
+        self.issue_id = self.get_issue_id()
+        self.supplement = self.get_supplement()
         #Get values for elocation_id, fpage, lpage, and page_range
-        self.elocation_id = self.getElocationID()
+        self.elocation_id = self.get_elocation_id()
         if self.elocation_id:
             self.fpage = None
             self.lpage = None
             self.page_range = None
         else:
-            self.fpage = self.getFPage()
-            self.lpage = self.getLPage()
-            self.page_range = self.getPageRange()
-        self.email = self.getEmail()
-        self.ext_link = self.getExtLink()
-        self.uri = self.getURI()
-        self.product = self.getProduct()
-        self.supplementary_material = self.getSupplementaryMaterial()
-        self.history = self.getHistory()
-        self.copyright_statement = self.getCopyrightStatement()
-        self.copyright_year = self.getCopyrightYear()
-        self.license = self.getLicense()
-        self.permissions = self.getPermissions()
-        self.self_uri = self.getSelfURI()
-        self.related_article = self.getRelatedArticle()
-        self.abstract = self.getAbstract()
-        self.trans_abstract = self.getTransAbstract()
-        self.kwd_group, self.all_kwds = self.getKwdGroup()
-        self.contract_num = self.getContractNum()
-        self.contract_sponsor = self.getContractSponsor()
-        self.grant_num = self.getGrantNum()
-        self.grant_sponsor = self.getGrantSponsor()
-        self.conference = self.getConference()
-        self.counts = self.getCounts()
-        self.custom_meta_wrap = self.getCustomMetaWrap()
+            self.fpage = self.get_fpage()
+            self.lpage = self.get_lpage()
+            self.page_range = self.get_page_range()
+        self.email = self.get_email()
+        self.ext_link = self.get_ext_link()
+        self.uri = self.get_URI()
+        self.product = self.get_product()
+        self.supplementary_material = self.get_supplementary_material()
+        self.history = self.get_history()
+        self.copyright_statement = self.get_copyright_statement()
+        self.copyright_year = self.get_copyright_year()
+        self.license = self.get_license()
+        self.permissions = self.get_permissions()
+        self.self_uri = self.get_self_URI()
+        self.related_article = self.get_related_article()
+        self.abstract = self.get_abstract()
+        self.trans_abstract = self.get_trans_abstract()
+        self.kwd_group, self.all_kwds = self.get_kwd_group()
+        self.contract_num = self.get_contract_num()
+        self.contract_sponsor = self.get_contract_sponsor()
+        self.grant_num = self.get_grant_num()
+        self.grant_sponsor = self.get_grant_sponsor()
+        self.conference = self.get_conference()
+        self.counts = self.get_counts()
+        self.custom_meta_wrap = self.get_custom_meta_wrap()
 
-    def getVolume(self):
+    def get_volume(self):
         """
         This method operates on the optional, 0 or 1, element <volume>. Its
         potential attributes, seq and content-type will be extracted.
@@ -1060,7 +1060,7 @@ class JPTSMetaData23(JPTSMetaData):
             ct = vol.getAttribute('content-type')
             return volume(text, seq, ct)
 
-    def getIssue(self):
+    def get_issue(self):
         """
         This method operates on the optional, 0 or 1, element <issue>. Its
         potential attributes, seq and content-type will be extracted.
@@ -1076,7 +1076,7 @@ class JPTSMetaData23(JPTSMetaData):
             ct = iss.getAttribute('content-type')
             return issue(text, seq, ct)
 
-    def getGrantNum(self):
+    def get_grant_num(self):
         """
         <grant-num> is an optional element, 0 or more, in <article-meta> which
         contains the number of a grant which supported the work presented in
@@ -1093,7 +1093,7 @@ class JPTSMetaData23(JPTSMetaData):
             grant_nums.append(gn(gnum, gid, grd, gct))
         return grant_nums
 
-    def getGrantSponsor(self):
+    def get_grant_sponsor(self):
         """
         <grant-sponsor> is an optional element, 0 or more, in <article-meta>
         which contains the name of a grant supplier for the work presented in
@@ -1118,7 +1118,7 @@ class JPTSMetaData30(JPTSMetaData):
     metadata.
     """
 
-    def getTopFloats_Group(self):
+    def get_top_floats_group(self):
         """
         <floats-group> may exist as a top level element for DTD v3.0. This
         tag may only exist under <article>, <sub-article>, or <response>.
@@ -1131,7 +1131,7 @@ class JPTSMetaData30(JPTSMetaData):
                 return fw
         return None
 
-    def parseJournalMetadata(self):
+    def parse_journal_metadata(self):
         """
         <journal-meta> stores information about the journal in which
         the article is found.
@@ -1139,7 +1139,7 @@ class JPTSMetaData30(JPTSMetaData):
         jm = self.journal_meta  # More compact
         #There will be one or more <journal-id> elements, which will be indexed
         #in a dictionary by their 'journal-id-type' attributes
-        self.journal_id = self.getJournalID()
+        self.journal_id = self.get_journal_id()
         #<journal-title-group> is zero or more and has 'content-type' attribute
         #It contains zero or more of the following:
         #  <journal-title> with 'xml:lang' and 'content-type' attributes
@@ -1159,15 +1159,15 @@ class JPTSMetaData30(JPTSMetaData):
             g = tg(g[0], g[1], g[2], g[3])
             self.journal_title_group[group.getAttribute('content-type')] = g
         #<issn> is one or more and has 'pub-type' attribute
-        self.issn = self.getISSN()
+        self.issn = self.get_ISSN()
         #<isbn> is zero or more and has 'content-type' attribute
         self.isbn = {}
         for i in jm.getElementsByTagName('isbn'):
             self.isbn[i.getAttribute('content-type')] = utils.nodeText(i)
-        self.publisher = self.getPublisher()  # publisher.loc is a node
-        self.jm_notes = self.getJournalMetaNotes()
+        self.publisher = self.get_publisher()  # publisher.loc is a node
+        self.jm_notes = self.get_journal_meta_notes()
 
-    def parseArticleMetadata(self):
+    def parse_article_metadata(self):
         """
         <article-meta> stores information about the article and the
         issue of the journal in which it is found.
@@ -1175,9 +1175,9 @@ class JPTSMetaData30(JPTSMetaData):
         am = self.article_meta  # More compact
         #There will be zero or more <article-id> elements whose text data will
         #by indexed by their pub-id-type attribute values
-        self.article_id = self.getArticleID()
-        self.article_categories = self.getArticleCategories()
-        self.title_group = self.getTitleGroup()
+        self.article_id = self.get_article_id()
+        self.article_categories = self.get_article_categories()
+        self.title_group = self.get_title_group()
         atg = namedtuple('Article_Title_Group', 'article_title, subtitle, trans_title, trans_subtitle, alt_title, fn_group')
         article = self.title_group.getElementsByTagName('article-title')[0]
         subtitle = self.title_group.getElementsByTagName('subtitle')
@@ -1210,46 +1210,46 @@ class JPTSMetaData30(JPTSMetaData):
             fn = None
         #Set self.title now
         self.title = atg(article, subtitle, trans_title, trans_sub, alt, fn)
-        self.contrib_group = self.getContribGroup()
+        self.contrib_group = self.get_contrib_group()
         self.contrib = []
         for each in self.contrib_group:
             self.contrib += each.contributors()
-        self.affs, self.affs_by_id = self.getAff()
-        self.author_notes = self.getAuthorNotes()
-        self.pub_date = self.getPubDate()
-        self.volume = self.getVolume()
-        self.volume_id = self.getVolumeID()
-        self.issue = self.getIssue()
-        self.issue_id = self.getIssueID()
-        self.supplement = self.getSupplement()
+        self.affs, self.affs_by_id = self.get_aff()
+        self.author_notes = self.get_author_notes()
+        self.pub_date = self.get_pub_date()
+        self.volume = self.get_volume()
+        self.volume_id = self.get_volume_id()
+        self.issue = self.get_issue()
+        self.issue_id = self.get_issue_id()
+        self.supplement = self.get_supplement()
         #Get values for elocation_id, fpage, lpage, and page_range
-        self.elocation_id = self.getElocationID()
+        self.elocation_id = self.get_elocation_id()
         if self.elocation_id:
             self.fpage = None
             self.lpage = None
             self.page_range = None
         else:
-            self.fpage = self.getFPage()
-            self.lpage = self.getLPage()
-            self.page_range = self.getPageRange()
-        self.email = self.getEmail()
-        self.ext_link = self.getExtLink()
-        self.uri = self.getURI()
-        self.product = self.getProduct()
-        self.supplementary_material = self.getSupplementaryMaterial()
-        self.history = self.getHistory()
-        self.permissions = self.getPermissions()
-        self.self_uri = self.getSelfURI()
-        self.related_article = self.getRelatedArticle()
-        self.abstract = self.getAbstract()
-        self.trans_abstract = self.getTransAbstract()
-        self.kwd_group, self.all_kwds, self.all_cmpd_kwds = self.getKwdGroup()
-        self.funding_group = self.getFundingGroup()
-        self.conference = self.getConference()
-        self.counts = self.getCounts()
-        self.custom_meta_wrap = self.getCustomMetaWrap()
+            self.fpage = self.get_fpage()
+            self.lpage = self.get_lpage()
+            self.page_range = self.get_page_range()
+        self.email = self.get_email()
+        self.ext_link = self.get_ext_link()
+        self.uri = self.get_URI()
+        self.product = self.get_product()
+        self.supplementary_material = self.get_supplementary_material()
+        self.history = self.get_history()
+        self.permissions = self.get_permissions()
+        self.self_uri = self.get_self_URI()
+        self.related_article = self.get_related_article()
+        self.abstract = self.get_abstract()
+        self.trans_abstract = self.get_trans_abstract()
+        self.kwd_group, self.all_kwds, self.all_cmpd_kwds = self.get_kwd_group()
+        self.funding_group = self.get_funding_group()
+        self.conference = self.get_conference()
+        self.counts = self.get_counts()
+        self.custom_meta_wrap = self.get_custom_meta_wrap()
 
-    def getVolume(self):
+    def get_volume(self):
         """
         This method operates on the optional, 0 or 1, element <volume>. Its
         potential attributes, seq and content-type will be extracted.
@@ -1265,7 +1265,7 @@ class JPTSMetaData30(JPTSMetaData):
             ct = vol.getAttribute('content-type')
             return volume(text, seq, ct)
 
-    def getKwdGroup(self):
+    def get_kwd_group(self):
         """
         <kwd-group> is an optional element, 0 or more, in <article-meta> which
         may contain 0 or 1 <label> elements, 0 or 1 <title> elements, 1 or more
@@ -1291,7 +1291,7 @@ class JPTSMetaData30(JPTSMetaData):
                 all_cmpd_kwds.append(cmpd_kwd(cmpd, ktype, ct, key_id))
         return kwd_groups, all_kwds, all_cmpd_kwds
 
-    def getIssue(self):
+    def get_issue(self):
         """
         This method operates on the optional, 0 or 1, element <issue>. Its
         potential attributes, seq and content-type will be extracted.
@@ -1307,7 +1307,7 @@ class JPTSMetaData30(JPTSMetaData):
             ct = iss.getAttribute('content-type')
             return issue(text, seq, ct)
 
-    def getFundingGroup(self):
+    def get_funding_group(self):
         """
         <funding-group> is an optional element, 0 or more, in <article-meta>.
         This element takes the functional place of several elements in the
