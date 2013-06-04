@@ -32,13 +32,15 @@ class JPTSMetadata(object):
     This class is the base class for the Journal Publishing Tag Set
     metadata. It defines the basic behavior of the version-specific JPTS
     metadata classes which inherit from it, and should not be used directly.
-    A union of metadata elements will be represented by it.
+    An intersection of metadata elements will be represented by it.
     """
     def __init__(self, document):
         self.dtd_version = self.dtd_version()  # A string for DTD version
         self.document = document  # The minidom document element for article
         self.get_top_level_elements()
         self.get_front_child_elements()
+        self.init_metadata()
+        self.parse_metadata()
 
     def get_top_level_elements(self):
         """
@@ -79,6 +81,53 @@ class JPTSMetadata(object):
         #The <notes> element is 0 or 1; if not found, self.notes will be None
         self.notes = element_methods.getOptionalChild('notes', self.front)
 
-    
+    def init_metadata(self):
+        """
+        The master function for initializing metadata; do not override.
+        """
+        self.init_intersecting_metadata()
+        self.init_unique_metadata()
+
+    def init_intersecting_metadata(self):
+        """
+        The intersection of metadata features (present in all DTD versions); do
+        not override.
+        """
+        pass
+
+
+    def init_unique_metadata(self):
+        """
+        The metadata features unique to the DTD version at hand; override this
+        method.
+        """
+        pass
+
+    def parse_metadata(self):
+        """
+        The master function for parsing metadata; do not override.
+        """
+        self.parse_journal_metadata()
+        self.parse_article_metadata()
+        self.parse_back_data()
+
+    def parse_journal_metadata(self):
+        """
+        
+        """
+        pass
+
+    def parse_article_metadata(self):
+        """
+        
+        """
+        pass
+
+    def parse_back_metadata(self):
+        """
+        
+        """
+        pass
+
     def dtd_version(self):
         return ''
