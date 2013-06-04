@@ -151,3 +151,20 @@ def uncomment(comment):
         parent.replaceChild(node, comment)
         return node
 
+
+def node_text(node):
+    """
+    This is to be used when a node may only contain text, numbers or special
+    characters. This function will return the text contained in the node.
+    Sometimes this text data contains spurious newlines and spaces due to
+    parsing and original xml formatting. This function should strip such
+    artifacts.
+    """
+    #Get data from first child of the node
+    try:
+        first_child_data = node.firstChild.data
+    except AttributeError:  # Usually caused by an empty node
+        return ''
+    else:
+        return '{0}'.format(first_child_data.strip())
+

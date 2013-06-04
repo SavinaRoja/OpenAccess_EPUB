@@ -24,7 +24,12 @@ import openaccess_epub.jpts.jptscontrib as jptscontrib
 import logging
 
 
+
 log = logging.getLogger('openaccess_epub.jpts.jptsmetadata')
+
+
+class JPTSInputError(Exception):
+    pass
 
 
 class JPTSMetadata(object):
@@ -39,7 +44,6 @@ class JPTSMetadata(object):
         self.document = document  # The minidom document element for article
         self.get_top_level_elements()
         self.get_front_child_elements()
-        self.init_metadata()
         self.parse_metadata()
 
     def get_top_level_elements(self):
@@ -75,59 +79,62 @@ class JPTSMetadata(object):
         elements that may be found directly beneath the <front> element.
         """
         #The <journal-meta> element is required
-        self.journal_metadata = self.front.getElementsByTagName('journal-meta')[0]
+        self.journal_meta = self.front.getElementsByTagName('journal-meta')[0]
         #The <article-meta> element is required
-        self.article_metadata = self.front.getElementsByTagName('article-meta')[0]
+        self.article_meta = self.front.getElementsByTagName('article-meta')[0]
         #The <notes> element is 0 or 1; if not found, self.notes will be None
         self.notes = element_methods.getOptionalChild('notes', self.front)
-
-    def init_metadata(self):
-        """
-        The master function for initializing metadata; do not override.
-        """
-        self.init_intersecting_metadata()
-        self.init_unique_metadata()
-
-    def init_intersecting_metadata(self):
-        """
-        The intersection of metadata features (present in all DTD versions); do
-        not override.
-        """
-        pass
-
-
-    def init_unique_metadata(self):
-        """
-        The metadata features unique to the DTD version at hand; override this
-        method.
-        """
-        pass
 
     def parse_metadata(self):
         """
         The master function for parsing metadata; do not override.
         """
-        self.parse_journal_metadata()
-        self.parse_article_metadata()
-        self.parse_back_data()
+        self.parse_intersecting_metadata()
+        self.parse_unique_metadata()
 
-    def parse_journal_metadata(self):
+    def parse_intersecting_metadata(self):
         """
-        
+        Parses the metadata features present (in identical form) in all DTD
+        versions; do not override this method.
+
+        Acts on the elements contained in the <front> and <back> elements of
+        the article.
+        """
+        ### front ###
+        ###   journal-meta ###
+        #journal_id is a dictionary, keyed by journal-id-type
+        self.journal_id = self.extract_journal_id()
+        #journal_
+        ###   article-meta ###
+
+    def parse_unique_metadata(self):
+        """
+        Parses the metadata features unique to the DTD version. This is a dummy
+        function in this base class; override this method in the inheritors.
+
+        Acts on the unique elements contained in <front> and <back> elements,
+        as well as <floats-wrap> or <floats-group>, depending on version.
         """
         pass
 
-    def parse_article_metadata(self):
+    def extract_journal_id(self):
         """
-        
-        """
-        pass
+        <journal-id> is a required, one or more, sub-element of <journal-meta>.
+        It can only contain text, numbers, or special characters. It has a
+        single potential attribute, 'journal-id-type', whose value is used as a
+        key to access the text data of its tag.
 
-    def parse_back_metadata(self):
+        This should return a dictionary with at least one element with the
+        following form : {journal-id-type: unicode-text}
         """
-        
-        """
-        pass
+        journal_ids = {}
+        for journal_id in self.journal_meta.getElementsByTagName('journal-id'):
+            text = element_methods.node_text(journal_id)
+            type = journal_id.getAttribute('journal-id-type')
+            journal_ids[type] = text
+        if not journal_ids:
+            raise JPTSInputError('Missing mandatory journal-id')
+        return journal_id
 
     def dtd_version(self):
         return ''

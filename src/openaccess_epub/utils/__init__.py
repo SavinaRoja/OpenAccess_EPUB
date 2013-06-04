@@ -326,6 +326,7 @@ def nodeText(node):
     else:
         return '{0}'.format(first_child_data.strip())
 
+
 def getTagData(node_list):
     '''Grab the (string) data from text elements
     node_list -- NodeList returned by getElementsByTagName
