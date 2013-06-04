@@ -763,7 +763,7 @@ class JPTSMetaData(object):
         """
         return None
 
-    def dtdVersion(self):
+    def dtd_version(self):
         return ''
 
 
@@ -883,7 +883,7 @@ class JPTSMetaData20(JPTSMetaData):
         self.counts = self.get_counts()
         self.custom_meta_wrap = self.get_custom_meta_wrap()
 
-    def dtdVersion(self):
+    def dtd_version(self):
         return '2.0'
 
 
@@ -1108,7 +1108,7 @@ class JPTSMetaData23(JPTSMetaData):
             grant_sponsors.append(gs(gspo, gid, grd, gct))
         return grant_sponsors
 
-    def dtdVersion(self):
+    def dtd_version(self):
         return '2.3'
 
 
@@ -1366,5 +1366,5 @@ class JPTSMetaData30(JPTSMetaData):
             nodes.append(element_methods.get_children_by_tag_name(node_name, self.back))
         self.backmatter = back_tuple(*nodes)
 
-    def dtdVersion(self):
+    def dtd_version(self):
         return '3.0'
