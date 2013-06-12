@@ -12,8 +12,6 @@ import os
 import shutil
 import logging
 import traceback
-import multiprocessing
-import subprocess
 
 #OpenAccess_EPUB Modules
 from ._version import __version__
@@ -320,90 +318,6 @@ def collection_input(args, config=None):
         epubcheck('{0}.epub'.format(output_name), config)
 
 
-class ParallelBatchProcess(multiprocessing.Process):
-    """
-    
-    """
-    def __init__(self, task_queue, error_file, args):
-        multiprocessing.Process.__init__(self)
-        self.task_queue = task_queue
-        self.error_file = error_file
-        self.args = args
-        #self.result_queue = result_queue
-
-    def run(self):
-        proc_name = self.name
-        while True:
-            next_task = self.task_queue.get()
-            if next_task is None:  # Poison Pill shutdown method
-                print('{0} Exiting'.format(proc_name))
-                self.task_queue.task_done()
-                break
-            #Normal Batch Stuff
-            #Parse the article
-            try:
-                parsed_article, raw_name = u_input.local_input(next_task)
-            except:
-                traceback.print_exc(file=self.error_file)
-            #Create the output name
-            output_name = os.path.join(utils.get_output_directory(self.args), raw_name)
-            try:
-                make_epub(parsed_article,
-                          outdirect=output_name,
-                          explicit_images=None,   # No explicit image path
-                          batch=False,
-                          config=config)
-            except:
-                traceback.print_exc(file=self.error_file)
-            #Cleanup output directory, keeps EPUB and log
-            shutil.rmtree(output_name)
-            #Running epubcheck on the output verifies the validity of the ePub,
-            #requires a local installation of java and epubcheck.
-            #if self.args.no_epubcheck:
-                #epubcheck('{0}.epub'.format(output_name), config)
-            #Report completed task to the JoinableQueue
-            self.task_queue.task_done()
-        return
-
-
-def parallel_batch_input(args, config):
-    """
-    This is a version of the Batch Input Mode that is designed to operate with
-    parallel processes to take advantage of CPUs with multiple cores. It
-    defaults to spawning as many processes as there are cores.
-    """
-    error_file = open('batch_tracebacks.txt', 'w')
-    # Establish communication queue
-    tasks = multiprocessing.JoinableQueue()
-
-    #Start the processes
-    num_processes = multiprocessing.cpu_count() * 2
-    print('Starting {0} processes'.format(num_processes))
-    processes = [ParallelBatchProcess(tasks, error_file, args)
-                 for i in range(num_processes)]
-    for process in processes:
-        process.start()
-
-    #Enqueue the tasks
-    for item in os.listdir(args.parallel_batch):
-        item_path = os.path.join(args.parallel_batch, item)
-        #Skip directories and files without .xml extension
-        _root, extension = os.path.splitext(item)
-        if not os.path.isfile(item_path):
-            continue
-        if not extension == '.xml':
-            continue
-        tasks.put(item)
-
-    # Add a poison pill for each process
-    for i in range(num_processes):
-        tasks.put(None)
-
-    # Wait for all of the tasks to finish
-    tasks.join()
-    error_file.close()
-
-
 def zipped_input(args, config=None):
     """
     Zipped Input Mode is primarily intended as a workflow for Frontiers
@@ -431,9 +345,6 @@ def make_epub(document, outdirect, explicit_images, batch, config=None):
             dir_exists(outdirect)
     epub_base = os.path.join(CACHE_LOCATION, 'base_epub')
     shutil.copytree(epub_base, outdirect)
-
-    if document.metadata.dtdVersion() == '2.0':
-        return
 
     #Get the Digital Object Identifier
     DOI = document.get_DOI()
