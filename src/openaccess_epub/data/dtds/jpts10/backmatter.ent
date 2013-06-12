@@ -1,0 +1,216 @@
+<!-- ============================================================= -->
+<!--  MODULE:    Back Matter Elements                              -->
+<!--  VERSION:   1.0                                               -->
+<!--  DATE:      December 2002                                     -->
+<!--                                                               -->
+<!-- ============================================================= -->
+
+<!-- ============================================================= -->
+<!--                    PUBLIC DOCUMENT TYPE DEFINITION            -->
+<!--                        TYPICAL INVOCATION                     -->
+<!--
+"-//NLM//DTD Archiving and Interchange DTD Suite Back Matter Elements v1.0 20021201//EN"
+     Delivered as file "backmatter.ent"                            -->
+<!-- ============================================================= -->
+
+<!-- ============================================================= -->
+<!-- SYSTEM:     Archiving and Interchange DTD Suite               -->
+<!--                                                               -->
+<!-- PURPOSE:    Names elements that are not part of the main      -->
+<!--             textual flow of a work, but are considered to be  -->
+<!--             ancillary material.                               -->
+<!--                                                               -->
+<!-- CONTAINS:   1) Parameter Entities for attribute lists         -->
+<!--             2) List of the back matter elements in            -->
+<!--                alphabetical order                             -->
+<!--                 - Acknowledgments <ack> (defined in           -->
+<!--                     %common.ent;)                             -->
+<!--                 - Appendix Matter <app-group>                 -->
+<!--                 - Footnote Group <fn-group>                   -->
+<!--                 - Glossary <glossary>                         -->
+<!--                 - Biography <bio> (defined in %common.ent;)   -->
+<!--                                                               -->
+<!-- CREATED FOR:                                                  -->
+<!--             Digital archives and publishers who wish to       -->
+<!--             create a custom XML DTD for original markup of    -->
+<!--             journal literature, books, and related material,  -->
+<!--             or for archiving and transferring such material   -->
+<!--             between archives.                                 -->
+<!--                                                               -->
+<!--             This DTD is in the public domain. An organization -->
+<!--             that wishes to create its own DTD from the suite  -->
+<!--             may do so without permission from NLM.            -->
+<!--                                                               -->
+<!--             The suite has been set up to be extended using a  -->
+<!--             new DTD file and a new DTD-specific customization -->
+<!--             module to redefine the many Parameter Entities.   -->
+<!--             Do not modify the suite directly or redistribute  -->
+<!--             modified versions of the suite.                   -->
+<!--                                                               -->
+<!--             In the interest of maintaining consistency and    -->
+<!--             clarity for potential users, NLM requests:        -->
+<!--                                                               -->
+<!--             1. If you create a DTD from the Archiving and     -->
+<!--                Interchange DTD Suite and intend to stay       -->
+<!--                compatible with the suite, then please include -->
+<!--                the following statement as a comment in all of -->
+<!--                your DTD modules:                              -->
+<!--                   "Created from, and fully compatible with,   -->
+<!--                    the Archiving and Interchange DTD Suite."  -->
+<!--                                                               -->
+<!--             2. If you alter one or more modules of the suite, -->
+<!--                then please rename your version and all its    -->
+<!--                modules to avoid any confusion with the        -->
+<!--                original suite. Also, please include the       -->
+<!--                following statement as a comment in all your   -->
+<!--                DTD modules:                                   -->
+<!--                   "Based in part on, but not fully compatible -->
+<!--                    with, the Archiving and Interchange DTD    --> 
+<!--                    Suite."                                    -->
+<!--                                                               -->
+<!--             Suggestions for refinements and enhancements to   -->
+<!--             the DTD suite should be sent in email to:         -->
+<!--                 archive-dtd@ncbi.nlm.nih.gov                  -->
+<!--                                                               -->
+<!-- ORIGINAL CREATION DATE:                                       -->
+<!--             December 2002                                     -->
+<!--                                                               -->
+<!-- CREATED BY: Jeff Beck       (NCBI)                            -->
+<!--             Deborah Lapeyre (Mulberry Technologies, Inc.)     -->
+<!--             Bruce Rosenblum (Inera Inc.)                      -->
+<!--                                                               -->
+<!--             NLM thanks the Harvard University Libraries, both -->
+<!--             for proposing that a draft archiving NLM DTD for  --> 
+<!--             life sciences journals be extended to accommodate -->
+<!--             journals in all disciplines and for sponsoring    -->
+<!--             Bruce Rosenblum's collaboration with other DTD    -->
+<!--             authors in completing Version 1.0. The Andrew W.  --> 
+<!--             Mellon Foundation provided support for these      --> 
+<!--             important contributions.                          -->
+<!--                                                               -->
+<!-- ============================================================= -->
+
+
+<!-- ============================================================= -->
+<!--                    DTD VERSION\CHANGE HISTORY                 -->
+<!-- ============================================================= -->
+<!--
+     =============================================================
+
+Version  Reason/Occasion                   (who) vx.x (yyyy-mm-dd)
+
+                                                                   -->
+
+
+<!-- ============================================================= -->
+<!--                    PARAMETER ENTITY DEPENDENCIES             
+                        Requires the following parameter entities
+                        be defined before calling this module, 
+                        usually accomplished in the Customization
+                        Module for the specific DTD:
+                        %para-level;
+                        %sec.model;                                -->
+<!-- ============================================================= -->
+
+
+<!-- ============================================================= -->
+<!--                    PARAMETER ENTITIES FOR ATTRIBUTES LISTS    -->
+<!-- ============================================================= -->
+
+                                                                
+<!--                    APPENDIX ATTRIBUTES                        -->
+<!--                    Attributes for the Appendix <app> element  -->
+<!ENTITY % app-atts
+             "id        ID                                #IMPLIED"  >
+                                                                   
+
+<!-- ============================================================= -->
+<!--                    BACKMATTER ELEMENTS                        -->
+<!-- ============================================================= -->
+
+
+<!--ELEM   bio          Defined in %common.ent;                    -->
+<!--ELEM   ref-list     Defined in %references.ent;                -->
+<!--ELEM   sec          Defined in %section.ent;                   -->
+<!--ELEM   ack          Defined in %common.ent;                    -->
+
+
+<!-- ============================================================= -->
+<!--                    APPENDIX ELEMENTS                          -->
+<!-- ============================================================= -->
+
+
+<!--                    APPENDIX MATTER MODEL                      -->
+<!--                    Content model for the <app-group> element  -->
+<!ENTITY % app-group-model   
+                        "title?, (%para-level;)*, (app | ref-list)*" > 
+
+
+<!--                    APPENDIX MATTER                            -->
+<!ELEMENT  app-group    (%app-group-model;)                          >
+
+
+<!--                    APPENDIX MODEL                             -->
+<!--                    Content model for the <app> element        -->
+<!ENTITY % app-model    "%sec-model;"                                > 
+
+
+<!--                    APPENDIX                                   -->
+<!ELEMENT  app          (%app-model;)                                >
+<!--         id         Unique identifier so the element may be
+                        referenced                                 -->
+<!ATTLIST  app
+             %app-atts;                                              >
+
+
+<!-- ============================================================= -->
+<!--                    FOOTNOTE GROUPING ELEMENTS                 -->
+<!-- ============================================================= -->
+
+
+<!--                    FOOTNOTE GROUP                             -->
+<!--                    Footnotes in a journal article may be
+                        scattered throughout the text, at the places
+                        they occur, or collected in groups at the
+                        end of structural units.  This element is a
+                        wrapper tag for such groups of footnotes.  -->
+<!ELEMENT  fn-group     (title?, fn+)                                >
+
+
+<!-- ============================================================= -->
+<!--                    GLOSSARY                                   -->
+<!-- ============================================================= -->
+
+
+<!--                    GLOSSARY MODEL                             -->
+<!--                    Content model for the <glossary> element   -->
+<!ENTITY % glossary-model
+                        "title?, (%para-level;)*, gloss-group*"      >
+                        
+                        
+<!--                    GLOSSARY ELEMENTS                          -->
+<!--                    Glossary or list of definitions.  Typically
+                        the content will be one or more Definition
+                        Lists.                                     -->
+<!ELEMENT  glossary     (title?, (%para-level;)*, gloss-group*)      >
+<!--         id         Unique identifier so the element may be
+                        referenced                                 -->
+<!ATTLIST  glossary
+             id         ID                                 #IMPLIED  >
+
+
+<!--                    GLOSSARY GROUP MODEL                       -->
+<!--                    Content model for the <gloss-group> element-->
+<!ENTITY % gloss-group-model
+                        "title?, (%para-level;)*"                    > 
+
+
+<!--                    GLOSSARY GROUP                             -->
+<!--                    A (usually headed) group of glossary
+                        definitions.  The most likely content for this
+                        element is a paragraph of explanation,
+                        followed by a definition list.             -->
+<!ELEMENT  gloss-group  (title?, (%para-level;)*)                    >
+
+
+<!-- ================== End Back Matter Module =================== -->

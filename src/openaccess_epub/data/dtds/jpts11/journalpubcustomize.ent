@@ -1,0 +1,1086 @@
+<!-- ============================================================= -->
+<!--  MODULE:    Journal Publishing DTD Customize Classes Module   -->
+<!--  VERSION:   1.1                                               -->
+<!--  DATE:      November 1, 2003                                  -->
+<!--                                                               -->
+<!-- ============================================================= -->
+
+<!-- ============================================================= -->
+<!--                    PUBLIC DOCUMENT TYPE DEFINITION            -->
+<!--                        TYPICAL INVOCATION                     -->
+<!--
+"-//NLM//DTD Journal Publishing DTD Customization Module v1.1 20031101//EN"
+Delivered as file "journalpubcustomize.ent"                        -->
+<!-- ============================================================= -->
+
+
+<!-- ============================================================= -->
+<!-- SYSTEM:     Journal Publishing DTD of the                     -->
+<!--             Archiving and Interchange DTD Suite               -->
+<!--                                                               -->
+<!-- PURPOSE:    To declare the values for all the element class   -->
+<!--             Parameter Entities (PEs), variable content model  -->
+<!--             PEs, attribute value PEs, etc. for the Journal    -->
+<!--             Publishing (authoring or initial tagging) DTD     -->
+<!--             developed from the Archiving and Interchange DTD  -->
+<!--             Suite.                                            -->
+<!--                                                               -->
+<!--             This DTD (in contrast to the Journal Archiving    -->
+<!--             and Interchange DTD) is designed to support the   -->
+<!--             creation of new journal content. There are fewer  -->
+<!--             choices in the models within this DTD, and some   -->
+<!--             XML structures that were provided simply to       -->
+<!--             facilitate conversion of existing materials from  -->
+<!--             other DTDs into this format have not been included-->
+<!--             in this, the authoring, version of the DTD.       -->
+<!--                                                               -->
+<!--             Similarly, this is also a tighter DTD. Some of the-->
+<!--             attributes that have type CDATA values in the     -->
+<!--             interchange DTD, and can thus accept any value,   -->
+<!--             have been given explicit value lists in this DTD. -->
+<!--                                                               -->
+<!--             Note: Since PEs must be declared before they      -->
+<!--             are used, this module must be called first in     -->
+<!--             the DTD, following only the Module of Modules.    -->
+<!--                                                               -->
+<!-- CONTAINS:   1) PEs that define the element classes (such as   -->
+<!--                all lists, all links, all bibliographic        -->
+<!--                reference elements, etc.)                      -->
+<!--             2) PEs that define the element mixes. Mixes are   -->
+<!--                combinations of classes that are used to build -->
+<!--                content models.  The typical "mix" defines a   -->
+<!--                set of circumstances, such as all the elements -->
+<!--                at the same structural level as a paragraph    -->
+<!--                (paragraph-level elements) or phrase-level     -->
+<!--                elements.                                      -->
+<!--             3) PEs for complete content models                -->
+<!--             4) PEs for attribute values and lists             -->
+<!--                                                               -->
+<!-- CREATED FOR:                                                  -->
+<!--             Digital Archive of Journal Articles               -->
+<!--             National Center for Biotechnology Information     -->
+<!--                (NCBI)                                         -->
+<!--             National Library of Medicine (NLM)                -->
+<!--                                                               -->
+<!-- ORIGINAL CREATION DATE:                                       -->
+<!--             February 2003                                     -->
+<!--                                                               -->
+<!-- CREATED BY: Jeff Beck       (NCBI)                            -->
+<!--             B. Tommie Usdin (Mulberry Technologies, Inc.)     -->
+<!--                                                               -->
+<!--             The Journal Publishing DTD is built from the      -->
+<!--             Archiving and Interchange DTD Suite.              -->
+<!--                                                               -->
+<!--             Suggestions for refinements and enhancements to   -->
+<!--             this DTD should be sent in email to:              -->
+<!--                 publishing-dtd@ncbi.nlm.nih.gov               -->
+<!-- ============================================================= -->
+
+
+<!-- ============================================================= -->
+<!--                    DTD VERSION\CHANGE HISTORY                 -->
+<!-- ============================================================= -->
+<!--
+
+Version  Reason/Occasion                   (who) vx.x (yyyy-mm-dd)
+
+     =============================================================
+     Version 1.1                           (TRG) v1.1 (2003-11-01)                                                                
+
+ 10. Added parameter entity %array-model;
+     Reason: Overrides parameter entity in module display.ent 
+     (to remove <label>)
+     
+  9. Added %phrase.class; to %inside-cell;
+     Reason: So that phrases such as <named-content> could
+     appear inside table cells.
+
+  8. Added parameter entity %corresp-elements;
+     Reason: Overrides parameter entity in module articlemeta.ent 
+     (to remove %label.class;)
+
+  7. Added parameter entity %author-notes-elements;
+     Reason: Overrides parameter entity in module articlemeta.ent 
+     (to remove <label>)
+     
+  6. Added parameter entity %aff-elements;
+     Reason: Overrides parameter entity in module common.ent (to
+     remove %label.class;)
+
+  5. Added element <media> to the following parameter entities:
+       - %block-display.class; 
+       - %simple-display.class;
+       - %fig-group-model;
+       - %inside-table-wrapper;
+     Reason: Media object <media> to occur everywhere element 
+     <graphic> is allowed to occur.
+ 
+  4. Added parameter entities %graphic-atts; and 
+     %inline-graphic-atts;
+     Reason: Overrides parameter entities in module display.ent 
+     (to modify list of potential values for attribute 
+     "mime-subtype")
+
+  3. Modified parameter entity %journal-meta-model; to include 
+     <journal-title>
+     Reason: To include full name of journal as part of 
+     journal metadata.
+
+  2. Added parameter entity %list-item-elements;
+     Reason: Overrides parameter entity in module list.ent (to
+     remove <label>)
+
+  1. Added parameter entity %def-item-elements;
+     Reason: Overrides parameter entity in module list.ent (to
+     remove <label>)
+                                                                   -->
+
+
+<!-- ============================================================= -->
+<!--                    DUPLICATE PARAMETER ENTITIES               -->
+<!-- ============================================================= -->
+<!--                    Parameter entities that are replicated
+                        in this file, not because the are 
+                        overrides to the versions in the module
+                        set but because they are needed here so 
+                        that they will have been declared before
+                        they are used in this file.                -->
+
+<!ENTITY % access.class "alt-text | ext-link | long-desc"            >
+
+
+<!--                    ADDRESS CLASS ELEMENTS                     -->
+<!--                    Potential element components of an address;
+                        not a proper class                         -->
+<!ENTITY % address-elements
+                        "addr-line | country | email | fax | 
+                         institution | phone | uri"                  >
+
+
+<!--                    DISPLAY CLASS ELEMENTS                     -->
+<!--                    Graphical or other image-related elements.
+                        The display elements may occur within 
+                        the text of a table cell or paragraph
+                        although they are typically at the same 
+                        hierarchical level as a paragraph.         -->
+<!ENTITY % block-display.class
+                        "array | boxed-text | chem-struct |
+                         chem-struct-wrapper | fig | fig-group | 
+                         graphic | media | preformat | 
+                         supplementary-material | table-wrap | 
+                         table-wrap-group"                           >
+
+
+
+<!--                    FORCED BREAK FORMATTING CLASS ELEMENTS     -->
+<!ENTITY % break.class  "break"                                      >
+
+
+<!--                    CITATION CLASS ELEMENTS                    -->
+<!--                    Reference to an external document, as used 
+                        within, for example, the text of a 
+                        paragraph                                  -->
+<!ENTITY % citation.class   
+                        "citation"                                   >
+
+
+<!--                    DISPLAY ATTRIBUTES OPTIONAL ID             -->
+<!--         position   Must this display object (figure, boxed text,
+                        etc.) be anchored in its exact location
+                        within the text or may it float, for example
+                        to the top of the next page, next column, or
+                        within a separate window?  Values are:
+                          anchor      Object must remain in place
+                          float       Object is not anchored and
+                                      may be moved to a new column,
+                                      a new window, etc.
+                          margin      In print, item should be placed
+                                      in the margin or gutter. 
+                                      Online the item should 
+                                      remain closely associated 
+                                      with the text.               -->
+<!ENTITY % display-atts
+             "position  (anchor | float | margin)        'float'"    >
+
+
+<!--                    ADDRESS ELEMENTS INSIDE A PARAGRAPH        -->
+<!--                    Address elements that are allowed loose inside
+                        a paragraph                                -->
+<!ENTITY % inpara-address 
+                        "email"                                      >
+
+
+<!--                    XLINK LINK ATTRIBUTES                      -->
+<!ENTITY % link-atts
+            "xmlns:xlink CDATA                            #FIXED
+                                     'http://www.w3.org/1999/xlink'
+             xlink:type  (simple)                   #FIXED 'simple'
+             xlink:href  CDATA                            #REQUIRED 
+             xlink:role  CDATA                            #IMPLIED
+             xlink:title CDATA                            #IMPLIED
+             xlink:show  (embed | new | none | other | replace)
+                                                          #IMPLIED
+             xlink:actuate   
+                         (none | onLoad | onRequest | other)          
+                                                          #IMPLIED"  >
+
+
+<!--                    MIGHT LINK XLINK ATTRIBUTES                -->
+<!ENTITY % might-link-atts
+            "xmlns:xlink CDATA                            #FIXED
+                                     'http://www.w3.org/1999/xlink'
+             xlink:type  (simple)                   #FIXED 'simple'
+             xlink:href  CDATA                            #IMPLIED 
+             xlink:role  CDATA                            #IMPLIED
+             xlink:title CDATA                            #IMPLIED
+             xlink:show  (embed | new | none | other | replace)
+                                                          #IMPLIED
+             xlink:actuate   
+                         (none | onLoad | onRequest | other)          
+                                                          #IMPLIED"  >
+
+
+<!--                    SECTION CLASS ELEMENTS                     -->
+<!--                    Information for the reader that is at the
+                        same structural level as a Section, which is
+                        a headed structure full of smaller elements
+                        such as paragraphs.                        
+                        Note: Overrides the definition in the
+                        Section Class Module %section.ent;         -->
+<!ENTITY % sec.class    "sec"                                        >
+                            
+
+<!-- ============================================================= -->
+<!--                    FORMATTING CLASS ELEMENTS (format.ent)     -->
+<!-- ============================================================= -->
+
+
+<!--                    EMPHASIS RENDITION ELEMENTS                -->
+<!ENTITY % emphasis.class   
+                        "bold | italic | monospace | overline | 
+                         sc | strike | underline "                   >
+
+
+<!--                    UP/DOWN RENDITION ELEMENTS                 -->
+<!ENTITY % subsup.class "sub | sup"                                  >
+
+
+<!-- ============================================================= -->
+<!--                    ELEMENT CLASSES AND ELEMENT GROUPS WHOSE   -->
+<!--                    ELEMENTS ARE DEFINED IN %common.ent        -->
+<!-- ============================================================= -->
+
+                         
+<!--                    CONFERENCE LOCATION ELEMENTS               -->
+<!--                    Elements for use in the <conf-loc> element -->
+<!ENTITY % conf-loc-elements 
+                        " "                                          > 
+
+<!--                    CONFERENCE NAME ELEMENTS                   -->
+<!--                    Elements for use in the <conf-name> element -->
+<!ENTITY % conf-name-elements     
+                        " "                                         > 
+
+
+<!--                    INSTITUTION NAME ELEMENTS                  -->
+<!--                    Elements for use in the <instn> element    -->
+<!ENTITY % institution-elements
+                        "| %subsup.class;"                          > 
+
+
+<!--                    PERSONAL NAMES CLASS                       -->
+<!--                    The element components of a person's name,
+                        for the name of a contributor              -->
+<!ENTITY % person-name.class
+                        "given-names | prefix | surname | suffix"                    >
+
+
+<!--                    PUBLISHER'S LOCATION ELEMENTS              -->
+<!--                    Elements for use in the <conf-name> element-->
+<!ENTITY % publisher-loc-elements 
+                        " "                                          > 
+
+
+<!-- ============================================================= -->
+<!--                    DISPLAY ELEMENT CLASSES                    -->
+<!-- ============================================================= -->
+
+
+<!--                    DISPLAY ELEMENT BACK MATTER                -->
+<!--                    Miscellaneous stuff at the end of a display
+                        element such as a figure or a boxed text
+                        element such as a sidebar                  -->
+<!ENTITY % display-back-matter
+                        "copyright-statement"                        >
+
+
+<!--                    INLINE DISPLAY CLASS ELEMENTS              -->
+<!--                    Non-block display elements that set or
+                        display inline with the text               -->
+<!ENTITY % inline-display.class
+                        "inline-graphic | private-char"              >
+
+
+<!--                    PREFORMATTED TEXT ELEMENTS                 -->
+<!--                    Elements that may be used, along with data
+                        characters, inside the content model for the
+                        <preformat> element, in which white space,
+                        such as tabs, line feeds, and spaces will
+                        be preserved                               -->
+<!ENTITY % preformat-elements
+                        "%emphasis.class; |  %subsup.class;"         >
+
+
+<!--                    SIMPLE DISPLAY ELEMENTS                    -->
+<!--                    The simplest and most basic of the Display
+                        Class elements, which may be allowed in many
+                        places, for example, inside other Display
+                        Class elements or inside the cell of a
+                        Table                                      -->
+<!ENTITY % simple-display.class
+                        "array | chem-struct | graphic | media |
+                         preformat"                                  >
+
+
+<!--                    TABLE CLASS ELEMENTS                       -->
+<!--                    Elements that will be used to contain the
+                        rows and columns inside the Table Wrapper 
+                        element <table-wrap>.  The following elements 
+                        can be set up for inclusion:
+                          XHTML Table Model    table               -->
+<!ENTITY % table.class  "table"                                      >
+
+
+<!-- ============================================================= -->
+<!--                    LINK CLASS ELEMENTS  (%link.ent;)          -->
+<!-- ============================================================= -->
+
+
+<!--                    EXTERNAL LINKS CLASS                       -->
+<!--                    Just the external link element, for the
+                        first round                                -->
+<!ENTITY % ext-links.class   
+                        "ext-link"                                   >
+
+
+<!--                    LINKS/CROSS-REFERENCES CLASS ELEMENTS      -->
+<!--                    Elements that act as one end of a link or
+                        cross-reference, either internal or external
+                                                                   -->
+<!ENTITY % link.class   "ext-link | fn | 
+                         inline-supplementary-material | 
+                         related-article | target | xref"            >
+
+
+<!--                    SIMPLE LINKS/CROSS-REFERENCES CLASS        -->
+<!--                    The smaller and simpler linking elements
+                        that might be inside, for example, a
+                        Keyword <kwd>                              -->
+<!ENTITY % simple-link.class   
+                        "fn | target | xref"                         >
+
+
+<!-- ============================================================= -->
+<!--                    LIST CLASS ELEMENTS                        -->
+<!-- ============================================================= -->
+
+
+<!--                    LIST CLASS ELEMENTS                        -->
+<!--                    All the types of lists that may occur 
+                        as part of the text, therefore excluding
+                        Bibliographic Reference Lists <ref-list>    -->
+<!ENTITY % list.class   "def-list | list"                             >
+
+
+<!-- ============================================================= -->
+<!--                    MATHEMATICS CLASSES                        -->
+<!-- ============================================================= -->
+
+
+<!--                    MATHEMATICAL EXPRESSIONS AND FORMULAE MIX  -->
+<!ENTITY % block-math   "disp-formula"                               >
+
+
+<!--                    INLINE MATHEMATICAL EXPRESSIONS MIX        -->
+<!ENTITY % inline-math  "inline-formula"                             >
+
+
+<!--                    MATHEMATICAL EXPRESSIONS                   -->
+<!ENTITY % math.class   "tex-math | mml:math"                        >
+
+
+
+<!-- ============================================================= -->
+<!--                    PARAGRAPH-LIKE ELEMENTS                    -->
+<!-- ============================================================= -->
+
+
+<!--                    IN TABLE PARAGRAPH CLASS                   -->
+<!--                    The simpler of the paragraph-level elements
+                        that might be found inside a table cell    -->
+<!ENTITY % intable-para.class                                   
+                        "speech | verse-group | disp-quote | 
+                         statement"                                  >
+
+
+<!--                    REST OF PARAGRAPH CLASS (MINUS PARAGRAPH)  -->
+<!--                    Full paragraph class, minus the paragraph
+                        element itself, so this PE can be used inside
+                        the content model of a paragraph           
+                        Unlike in base, <ack> not allowed. 
+                        Acknowledgements only allowed in Back Matter
+                        <back>                                     -->
+<!ENTITY % rest-of-para.class   
+                        "disp-quote | speech | statement | 
+                         verse-group"                                >
+
+
+<!--                    PARAGRAPH CLASS                            -->
+<!--                    Information for the reader that is at the
+                        same structural level as a Paragraph       -->
+<!ENTITY % para.class   "p | %rest-of-para.class;"                   >
+
+
+<!-- ============================================================= -->
+<!--                    PHRASE-LEVEL CONTENT ELEMENTS              -->
+<!-- ============================================================= -->
+
+
+<!--                    PHRASE CLASS ELEMENTS                      -->
+<!--                    Small inline elements, that surround a word
+                        or phrase in the text because the subject
+                        (content) should be identified. For example,
+                        a <named-content> element could be used to
+                        identify a drug name, genus/species, product,
+                        etc.                                       -->
+<!ENTITY % phrase.class "named-content"                              >
+
+
+<!-- ============================================================= -->
+<!--                    REFERENCE ELEMENTS (BIBLIOGRAPHIC CITATION)-->
+<!-- ============================================================= -->
+
+
+<!--                    REFERENCE ELEMENTS (BIBLIOGRAPHIC CITATION -->
+<!--                    The elements that may be included inside a
+                        Citation (bibliographic reference)       
+                        Note: Overrides the definition in the
+                        References Class Module %references.ent;   -->
+<!ENTITY % references.class
+                        "access-date | annotation | article-title | 
+                         collab | comment | 
+                         conf-date | conf-loc | conf-name | 
+                         day | edition | email | elocation-id | 
+                         etal | fpage |  gov | issn | isbn | 
+                         issue | lpage | month | name | 
+                         patent | person-group | pub-id | 
+                         publisher-loc | publisher-name | season |
+                         series | source | std | supplement |
+                         time-stamp | trans-source | trans-title | 
+                         volume | year"                              >
+
+
+<!-- ============================================================= -->
+<!--                    SECTION ELEMENTS                           -->
+<!-- ============================================================= -->
+
+
+<!--                    SECTION-LEVEL ELEMENTS                     -->
+<!--                    Elements that may be used at the same
+                        structural level as a Section for example
+                        inside the Body <body>                     -->
+<!ENTITY % sec-level    "%sec.class;"                                >
+                         
+
+<!-- ============================================================= -->
+<!--                    BACK MATTER ELEMENTS (%backmatter.ent;)    -->
+<!-- ============================================================= -->
+
+
+<!--                    DOCUMENT BACK MATTER ELEMENTS              -->
+<!--                    Back Matter Elements used by a full document
+                        such as a journal article                  -->
+<!ENTITY % doc-back-matter-elements
+                        "ack | app-group | bio | fn-group | glossary | 
+                         notes | ref-list | %sec-level;"             >
+
+
+<!--                    SECTION BACK MATTER ELEMENTS               -->
+<!--                    Back matter elements used inside smaller
+                        structures, such as sections and sidebars  -->
+<!ENTITY % sec-back-matter-elements
+                        "ref-list"                                   >
+
+                                                                
+<!-- ============================================================= -->
+<!--                    ARTICLE METADATA ELEMENTS (articlemeta.ent)-->
+<!-- ============================================================= -->
+
+
+<!--                    CONFERENCE ACRONYM ELEMENTS                -->
+<!--                    The elements that can be included along with
+                        data characters inside the content model of
+                        the conference acronym.                    -->
+<!ENTITY % conf-acronym-elements 
+                        " "                                          >
+
+
+<!--                    CONFERENCE NUMBER ELEMENTS                 -->
+<!--                    The elements that can be included along with
+                        data characters inside the content model of
+                        the conference number.                     -->
+<!ENTITY % conf-num-elements 
+                        " "                                         >
+ 
+
+<!--                    CONFERENCE SPONSOR  ELEMENTS               -->
+<!--                    The elements that can be included along with
+                        data characters inside the content model of
+                        the conference sponsor.                    -->
+<!ENTITY % conf-sponsor-elements 
+                        " "                                          >
+
+
+<!--                    CONTRACT/GRANT NUMBER ELEMENTS             -->
+<!--                    The elements that can be included along with
+                        data characters inside the content model of
+                        the contract number.                       -->
+<!ENTITY % contract-elements " "                                     >
+
+
+<!--                    KEYWORD CONTENT ELEMENTS                   -->
+<!--                    The elements that can be included along with
+                        data characters inside the content model of
+                        a keyword.                                 -->
+<!ENTITY % kwd-elements
+                        "| %emphasis.class; |  %subsup.class;"         >
+
+
+
+<!-- ============================================================= -->
+<!--                    ELEMENT CLASS MIXES FOR CONTENT MODELS     -->
+<!-- ============================================================= -->
+
+                         
+<!--                    FORMULA, DISPLAY ELEMENTS                  -->
+<!--                    Elements for use in the <disp-formula> 
+                        element                                    -->
+<!ENTITY % disp-formula-elements
+                         "%access.class; | %break.class; | 
+                         %emphasis.class; | %inline-display.class; | 
+                         %math.class; |  %simple-display.class; | 
+                         %subsup.class;"                             > 
+
+
+<!--                    EMPHASIS MIX ELEMENTS                      -->
+<!--                    Elements that may be used inside most of the
+                        emphasis class elements                    -->
+<!ENTITY % emphasized-text  
+                        "%emphasis.class;  | 
+                         %inline-math; | %link.class; | 
+                         %math.class; | %phrase.class; | 
+                         %subsup.class;"                             >
+
+
+<!--                    INSIDE A PARAGRAPH ELEMENTS                -->
+<!--                    Elements that may be used within a paragraph
+                        in a mixed content model with #PCDATA.
+                        Note: There is a major overlap between this
+                        parameter entity and that for the elements
+                        that are at the same level as a paragraph.
+                        Inline elements appear only inside a 
+                        paragraph, but block elements such as quotes 
+                        and lists may appear either within a 
+                        paragraph or at the same level as a 
+                        paragraph. This serves a requirement in a 
+                        repository DTD, since some incoming material 
+                        will have restricted such elements to only 
+                        inside a paragraph, some incoming material 
+                        will have restricted them to only outside a 
+                        paragraph and some may allow them in both
+                        places. Thus the DTD must allow for them to
+                        be in either or both.                      -->
+<!ENTITY % inside-para  "%block-display.class; | %block-math; | 
+                         %citation.class; | %emphasis.class; |
+                         %inline-display.class; | 
+                         %inline-math; |  %inpara-address; |
+                         %link.class; | %list.class; |  
+                         %math.class; | %rest-of-para.class; | 
+                         %phrase.class; | %subsup.class;"            >
+                          
+
+<!--                    JUST RENDITION                             -->
+<!--                    Only the simplest of the typographic 
+                        emphasis elements, as well as subscript and
+                        superscript.  Usually used in a model that
+                        allows #PCDATA and this restricted mixture.
+                        This mix may be stripped down to only
+                        subscript and superscript by some, more
+                        restrictive DTDs.                         
+                        DTD Maintenance Note: This Parameter Entity
+                        and the related PE "rendition-plus" have
+                        been put in place to restrict the amount of
+                        variability that a person modifying the DTD
+                        through PE redefinition can achieve. Some
+                        elements have been set #PCDATA plus one PE
+                        and some have been set to #PCDATA plus the
+                        other in an effort to allow designers to
+                        modify entire groups of elements, but not
+                        to change similar models individually .    -->
+<!ENTITY % just-rendition
+                        " "                                         >
+
+<!--                    PARAGRAPH-LEVEL ELEMENTS                   -->
+<!--                    Elements that may be used at the same
+                        structural level as a paragraph, for 
+                        example inside a Section
+                        Note: There a major overlap between this
+                        parameter entity and that for the elements
+                        that are at the same level as a paragraph.
+                        Inline elements appear only inside a 
+                        paragraph, but block elements such as quotes 
+                        and lists may appear either within a 
+                        paragraph or at the same level as a 
+                        paragraph. This serves a requirement in a 
+                        repository DTD, since some incoming material 
+                        will have restricted such elements to only 
+                        inside a paragraph,  some incoming material 
+                        will have restricted them to only outside a 
+                        paragraph and some may allow them in both
+                        places. Thus the DTD must allow for them to
+                        be in either or both.                      -->
+<!ENTITY % para-level   "%block-display.class; | %block-math; | 
+                         %list.class; | %math.class; | 
+                         %para.class;"                               >
+                         
+
+<!--                    RENDITION MARKUP PLUS                      -->
+<!--                    Only the simplest of the typographic 
+                        emphasis elements, as well as subscript and
+                        superscript.  Usually used in a model that
+                        allows #PCDATA and this restricted mixture.
+                        This mix may be enhanced slightly in some
+                        more permissive DTDs, and should always
+                        contain at least typographic emphasis, 
+                        subscript, and superscript.  
+                        DTD Maintenance Note: This Parameter Entity
+                        and the related PE "Just-rendition" have
+                        been put in place to restrict the amount of
+                        variability that a person modifying the DTD
+                        through PE redefinition can achieve. Some
+                        elements have been set #PCDATA plus one PE
+                        and some have been set to #PCDATA plus the
+                        other in an effort to allow designers to
+                        modify entire groups of elements, but not
+                        to individually change similar models. 
+                        modify entire groups of elements, but not
+                        to change similar models individually .    -->
+<!ENTITY % rendition-plus                             
+                        "| %emphasis.class;  | %subsup.class;"         >
+
+
+<!--                    SIMPLE PHRASE-LEVEL TEXTUAL ELEMENTS       -->
+<!--                    Elements that may be used almost anywhere
+                        text is used, for example, inside a title.
+                        Simple text plus inline display and math 
+                        elements.                                  -->
+<!ENTITY % simple-phrase
+                        "%emphasis.class; | %inline-display.class; | 
+                         %inline-math; | %link.class; |
+                         %math.class; | %phrase.class; | 
+                         %subsup.class;"                             >
+
+
+<!--                    SIMPLE TEXTUAL CONTENT                     -->
+<!--                    Elements that may be used inside elements
+                        that are really expected to be #PCDATA and
+                        not to contain any of these things.
+                        Note that there is no math and no links.
+                        Simpler even than %simple-phrase;          -->
+<!ENTITY % simple-text  "%emphasis.class;  | %inline-display.class; |
+                         %phrase.class; | %subsup.class; "           >
+
+                         
+<!-- ============================================================= -->
+<!--                    TABLE ELEMENT MIXES                        -->
+<!-- ============================================================= -->
+                          
+
+<!--                    INSIDE TABLE CELL ELEMENTS                 -->
+<!--                    Mixed with #PCDATA inside a table cell, such
+                        as a <td> or <th> element in the XHTML table
+                        model, the <entry> element in the OASIS CALS
+                        table model, etc.  This PE will be used as the
+                        value of %FlowMix;, %paracon;, etc.        
+                        Unlike base, <hr> and <font> have been removed
+                        from allowable contents of a cell. These effects,
+                        if needed, can be encoded in ways with fewer
+                        side-effects.                              -->
+<!ENTITY % inside-cell  "%block-math; | %break.class; | 
+                         %citation.class; | %emphasis.class; |
+                         hr | %inline-math; | %link.class; | 
+                         %list.class; | %math.class; | 
+                         %phrase.class; | %simple-display.class; | 
+                         %subsup.class;"                             >
+
+
+<!--                    INSIDE TABLE WRAPPER ELEMENTS              -->
+<!--                    Usually a Table Wrapper contains a table,
+                        properly tagged with rows and columns, but
+                        sometimes, a structure that is labeled as
+                        a "table" is actually a list, or two
+                        paragraphs.  This Parameter Entity names
+                        all the alternatives to table that may 
+                        occur inside a table wrapper.              -->
+<!ENTITY % inside-table-wrapper
+                        "%list.class; | graphic | media | 
+                        %table.class;"                               >
+                          
+
+<!--                    TABLE WRAPPER ATTRIBUTES                   -->
+<!--                    Attributes to be added to the regular NLM
+                        table attributes, for example, when the
+                        Elsevier or OASIS Exchange table models are
+                        used.                                      -->
+<!ENTITY % other-table-wrap-atts
+             ""                                                      > 
+
+
+<!-- ============================================================= -->
+<!--                    OVER RIDES OF CONTENT MODELS               -->
+<!-- ============================================================= -->
+
+
+<!--                    ABSTRACT MODEL                             -->
+<!--                    Abstracts may contain one or more paragraphs
+                        but nothing else.
+                        Unlike in nlmcommon, <abs> may not be a 
+                        section; it is only one or more paragraphs.-->
+<!ENTITY % abstract-model    
+                        "title?, p*, sec*"                           >
+
+
+<!--                    ACKNOWLEDGMENTS MODEL                      -->
+<!--                    Content model for the <ack> element        -->
+<!ENTITY % ack-model    "title?, p*, sec*, ref-list*"                > 
+
+
+<!--                    ARRAY CONTENT MODEL                        -->
+<!--                    The element used to contain material in
+                        rows and columns that is just a block insert
+                        into the text flow, not numbered or called a
+                        table, and not titled or captioned         -->
+<!ENTITY % array-model  "(%access.class;)*, ((graphic | 
+                         media)* | tbody), (%display-back-matter;)*" >
+
+
+<!--                    AFFILIATION ELEMENTS                       -->
+<!--                    Elements for use in the <aff> element      -->
+<!ENTITY % aff-elements "| %address-elements; | %break.class; | 
+                         %emphasis.class; | %link.class; | 
+                         %subsup.class;"                             > 
+
+
+<!--                    ARTICLE METADATA MODEL                     -->
+<!--                    Full content model for the metadata that is
+                        specific to the article.                  
+                        Unlike in Archive DTD, some of the metadata  
+                        is required here.                          -->
+<!ENTITY % article-meta-model
+                        "article-id+, article-categories?, 
+                         title-group, (contrib-group | aff)*, 
+                         author-notes?, pub-date+, 
+                         volume?, issue?, ((fpage, lpage?) | 
+                         elocation-id), (ext-link | product | 
+                         supplementary-material)*, history?, 
+                         copyright-statement?, copyright-year, 
+                         self-uri*, related-article*, abstract*, 
+                         trans-abstract*, kwd-group*, contract-num*, 
+                         contract-sponsor*, conference*"             >
+
+
+<!--                    AUTHOR NOTE GROUP ELEMENTS                 -->
+<!--                    The elements that can be included inside 
+                        the content model of a <author-notes>.     -->
+<!ENTITY % author-notes-elements 
+                        "title?, (corresp | fn)+"                               >
+
+
+<!--                    CONFERENCE MODEL                           -->
+<!--                    The element components of the description
+                        of a conference; not a proper class        -->
+<!ENTITY % conference-model
+                        "(conf-date, (conf-name | conf-acronym )+, 
+                         conf-num?, conf-loc?, conf-sponsor*, 
+                         conf-theme)"                                >
+
+
+<!--                    CORRESPONDENCE INFORMATION ELEMENTS        -->
+<!--                    The elements that can be included along with
+                        data characters inside the content model of
+                        the correspondence information.            -->
+<!ENTITY % corresp-elements 
+                        "| %address-elements; | %emphasis.class; | 
+                         %subsup.class;"                             >
+                         
+                         
+<!--                    DATE ELEMENTS MODEL                        -->
+<!--                    The content models for elements that describe
+                        dates, such as Publication Date <pub-date> and
+                        History Dates <date>.  The <string-date>
+                        element holds dates for which months and 
+                        years are not given, for example "first 
+                        quarter", "spring", etc.   
+                        Unlike in nlmcommon, <date> requires a <year> 
+                        and may not be a string.                   -->
+<!ENTITY % date-model   "(((day?, month?) | season)?, year)"         >
+
+
+<!--                    DEFINITION LIST: DEFINITION ITEM ELEMENTS  -->
+<!--                    The elements that can be included inside 
+                        the content model of a <def-item>.         -->
+<!ENTITY % def-item-elements 
+                        "term, def*"                                 >
+                         
+                          
+<!--                    ET AL                                      -->
+<!--                    Unlike in NLMART, <etal> is empty. When 
+                        present, it is used to generate the text
+                        "et al."                                   -->
+<!ENTITY % etal-model   "EMPTY"                                      > 
+
+
+<!--                    FIGURE GROUP MODEL                         -->
+<!ENTITY % fig-group-model
+                        "caption?, (%access.class;)*,  
+                         (fig | graphic | media)*"                   >
+
+                         
+<!--                    GLOSSARY GROUP MODEL                       -->
+<!--                    Content model for the <gloss-group> element-->
+<!ENTITY % gloss-group-model
+                        "title?, p*, deflist+"                       > 
+
+
+<!--                    JOURNAL METADATA MODEL                     -->
+<!ENTITY % journal-meta-model
+                        "journal-id+, journal-title*, 
+                         abbrev-journal-title*, issn+, 
+                         publisher, notes?"                          >
+
+
+<!--                    LIST ITEM ELEMENTS                         -->
+<!--                    The elements that can be included inside 
+                        the content model of a <list-item>.        -->
+<!ENTITY % list-item-elements 
+                        "(p | %list.class;)+"                        >
+                         
+ 
+<!--                    LIST MODEL                                 -->
+<!--                    Content model for the <list> element       -->
+<!ENTITY % list-model   "title?, list-item+"                         >
+
+
+<!--                    REFERENCE ITEM MODEL                       -->
+<!ENTITY % ref-model    "label?, 
+                         (citation | nlm-citation | note)+"          > 
+
+                     
+<!--                    CONTENT MODEL FOR A STRUCTURAL SECTION     -->
+<!--                    The model for a section that requires that a
+                        section title be present, used for elements
+                        such as Section and Appendix. 
+                        Unlike in nlmcommon, <level> is not allowed
+                        on sections.                               -->
+<!ENTITY % sec-model    "title, (%para-level;)*, 
+                         (%sec-level;)*, 
+                         (%sec-back-matter-elements;)*"              >
+
+
+<!--                    CONTENT MODEL FOR AN UNTITLED SECTION      -->
+<!--                    The model for a section-like structure that
+                        copyright-statement may or may not have 
+                        an initial title                           -->
+<!ENTITY % sec-opt-title-model
+                        "title?, (%para-level;)*,  
+                         (%sec-level;)*, 
+                         (%sec-back-matter-elements;)*"              >
+
+
+<!--                    TRANSLATED ABSTRACT MODEL                  -->
+<!--                    Content model for an <trans-abstract> 
+                        element                                    -->
+<!ENTITY % trans-abstract-model
+                        "title?, p*, sec*"                           >
+
+
+
+<!-- ============================================================= -->
+<!--                    OVER RIDES OF ATTRIBUTE DECLARATIONS       -->
+<!-- ============================================================= -->
+
+
+<!--                    CITATION ATTRIBUTES                        -->
+<!--                    Attributes for <citation>                  -->
+<!ENTITY % citation-atts
+             "citation-type   
+                        (book | commun | confproc | discussion |
+                         gov | journal | list | patent | thesis  |
+                         web  | other )                    #IMPLIED  
+              id         ID                                #IMPLIED
+              %might-link-atts;"                                     >
+
+
+<!--                    FOOTNOTE ATTRIBUTES                        -->
+<!--                    Attribute list for Footnote element        
+                        Unlike base, symbol removed, and fn-type
+                        values made explicit.                      -->
+<!ENTITY % fn-atts
+             "id        ID                                 #IMPLIED  
+              fn-type   (abbr | com | con | conflict | 
+                         corresp | current-aff | deceased | 
+                         edited-by | equal | 
+                         financial-disclosure | on-leave | 
+                         participating-researchers | 
+                         presented-at | presented-by | 
+                         present-address | previously-at |
+                         study-group-members | 
+                         supplementary-material | 
+                         supported-by | other)             #IMPLIED  
+              xml:lang  NMTOKEN                            #IMPLIED" > 
+
+
+<!--                    GRAPHIC ATTRIBUTES                         -->
+<!--                    Attributes for Graphic <graphic>           -->
+<!ENTITY % graphic-atts
+             "alternate-form-of
+                        IDREF                            #IMPLIED
+              alt-version
+                        (yes|no)                             'no'
+              id        ID                               #IMPLIED
+              mime-subtype  
+                        (cgm | gif | jpeg | png | tiff)  #IMPLIED 
+              mimetype  CDATA                      #FIXED 'image'
+              %display-atts;                                       
+              %link-atts;"                                           >
+
+
+<!--                    INLINE GRAPHIC ATTRIBUTES                  -->
+<!--                    Attributes for Inline Graphic 
+                        <inline-graphic>                           -->
+<!ENTITY % inline-graphic-atts
+             "alternate-form-of
+                        IDREF                              #IMPLIED
+              id        ID                                 #IMPLIED
+              mimetype  CDATA                        #FIXED 'image'
+              mime-subtype  
+                        (cgm | gif | jpeg | png | tiff)  #IMPLIED 
+              %link-atts;"                                           >
+
+
+<!ENTITY % might-link-atts
+            "xmlns:xlink CDATA                             #FIXED
+                                     'http://www.w3.org/1999/xlink'
+             xlink:type  (simple)                   #FIXED 'simple'
+             xlink:href  CDATA                             #IMPLIED 
+             xlink:role  CDATA                             #IMPLIED
+             xlink:title CDATA                             #IMPLIED
+             xlink:show  (embed | new | none | other | replace)
+                                                           #IMPLIED
+             xlink:actuate   
+                         (none | onLoad | onRequest | other)          
+                                                           #IMPLIED" >
+                                                               
+<!--                    PERSON GROUP ATTRIBUTES                    -->
+<!--                    Attributes for the <person-group> element 
+                        Valid Types include:
+                          author - Content creators
+                          editor - Content editors
+                          guest-editor
+                                 - a content editor that has been invited 
+                                   to edit all or part of a work.
+                          inventor
+                                 - Idea, software, or machine creator
+                          assignee
+                                 - the person to whom a patent is awarded
+                          translator
+                                 - Translated the cited work from
+                                   one language into another
+                          transed
+                                 - Editor of a translated version of
+                                   a work
+                          allauthors
+                                 - used to identify a complete list of 
+                                 authors when a subset of the author 
+                                 group has been used elsewhere
+                                 in the citation. See "Standard reference 
+                                 to a chapter in a book" (II.C.1) in the 
+                                 tagging examples.
+                          complier
+                                 - Put together a composite work
+                                   from multiple sources            -->
+<!ENTITY % person-group-atts  
+             "person-group-type 
+                        (allauthors | assignee | author | compiler |
+                         editor | guest-editor | inventor | 
+                         translator | transed)             #IMPLIED" >
+
+
+<!--                    SECTION ATTRIBUTES                         -->
+<!--                    Attribute list for Section element         -->
+<!ENTITY % sec-atts   
+            "id         ID                                 #IMPLIED
+             xml:lang   NMTOKEN                            #IMPLIED
+             sec-type   CDATA                              #IMPLIED" >
+             
+             
+<!-- ============================================================= -->
+<!--                    NEW ELEMENT DECLARATIONS                   -->
+<!--                    Declarations of elements that are new to   -->
+<!--                    this DTD.                                  -->
+<!--                    NOTE: All new structures must be mappable  -->
+<!--                    to the archiving/interchange DTD and the   -->
+<!--                    mapping should be described when the new   -->
+<!--                    element is declared.                       -->
+<!-- ============================================================= -->
+
+             
+                                      
+<!--                    NLM CITATION MODEL                         -->
+<!--                    This structured citation model is provided
+                        to assist users how are creating new content.
+                        It loosely reflects the NLM's style, in that
+                        it allows the tagging of all "legal" NLM 
+                        citations and enforces the sequence in which
+                        content must appear if it is present. However,
+                        this model does not provide guidance on what
+                        information is required for each type of 
+                        cited content. 
+                        
+                        This model assumes that punctuation between
+                        the parts of a citation will be generated 
+                        on display or on export from the XML tagged
+                        according to this DTD to XML for another use.
+                        
+                        In converting documents tagged to this
+                        publishing DTD to the archiving/interchange
+                        DTD the <nlm-citation> tag must be changed to
+                        <citation> and all of the punctuation between
+                        elements inside the citation must be inserted. 
+                                                                   -->
+<!ELEMENT  nlm-citation   
+                        ((person-group | collab)*, 
+                         (article-title | trans-title)*, 
+                         source?, patent?, trans-source?, year?, 
+                         ((month?, day?, time-stamp?) | season?), 
+                         access-date?, volume?, edition?, 
+                         conf-name?, conf-date?, conf-loc?, 
+                         (issue | supplement)*, publisher-loc?, 
+                         publisher-name?, (fpage?, lpage?)*, series?, 
+                         comment*, pub-id*, annotation?)             > 
+
+<!ATTLIST  nlm-citation
+             %citation-atts;                                         >
+
+
+<!-- =============== End Journal Publishing Customize Module ===== -->

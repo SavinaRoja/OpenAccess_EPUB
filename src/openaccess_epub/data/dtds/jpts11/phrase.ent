@@ -1,0 +1,244 @@
+<!-- ============================================================= -->
+<!--  MODULE:    Subject Phrase Class Elements                     -->
+<!--  VERSION:   1.1                                               -->
+<!--  DATE:      November 1, 2003                                  -->
+<!--                                                               -->
+<!-- ============================================================= -->
+
+<!-- ============================================================= -->
+<!--                    PUBLIC DOCUMENT TYPE DEFINITION            -->
+<!--                        TYPICAL INVOCATION                     -->
+<!--
+"-//NLM//DTD Archiving and Interchange DTD Suite Subject Phrase Class Elements v1.1 20031101//EN"
+     Delivered as file "phrase.ent"                                -->
+<!-- ============================================================= -->
+
+<!-- ============================================================= -->
+<!-- SYSTEM:     Archiving and Interchange DTD Suite               -->
+<!--                                                               -->
+<!-- PURPOSE:    Defines the phrase.class, that is, names the      -->
+<!--             inline, subject-specific elements                 -->
+<!--                                                               -->
+<!--             If more specific subject words (such as "gene")   -->
+<!--             are added to later version of this DTD, they      -->
+<!--             should be added to the %phrase.class; entity and  -->
+<!--             defined in this module or in %common.ent;         -->
+<!--                                                               -->
+<!-- CONTAINS:   1) Definition of the phrase class                 -->
+<!--             2) Subject Emphasis                               -->
+<!--                                                               -->
+<!-- CREATED FOR:                                                  -->
+<!--             Digital archives and publishers who wish to       -->
+<!--             create a custom XML DTD for original markup of    -->
+<!--             journal literature, books, and related material,  -->
+<!--             or for archiving and transferring such material   -->
+<!--             between archives.                                 -->
+<!--                                                               -->
+<!--             This DTD is in the public domain. An organization -->
+<!--             that wishes to create its own DTD from the suite  -->
+<!--             may do so without permission from NLM.            -->
+<!--                                                               -->
+<!--             The suite has been set up to be extended using a  -->
+<!--             new DTD file and a new DTD-specific customization -->
+<!--             module to redefine the many Parameter Entities.   -->
+<!--             Do not modify the suite directly or redistribute  -->
+<!--             modified versions of the suite.                   -->
+<!--                                                               -->
+<!--             In the interest of maintaining consistency and    -->
+<!--             clarity for potential users, NLM requests:        -->
+<!--                                                               -->
+<!--             1. If you create a DTD from the Archiving and     -->
+<!--                Interchange DTD Suite and intend to stay       -->
+<!--                compatible with the suite, then please include -->
+<!--                the following statement as a comment in all of -->
+<!--                your DTD modules:                              -->
+<!--                   "Created from, and fully compatible with,   -->
+<!--                    the Archiving and Interchange DTD Suite."  -->
+<!--                                                               -->
+<!--             2. If you alter one or more modules of the suite, -->
+<!--                then please rename your version and all its    -->
+<!--                modules to avoid any confusion with the        -->
+<!--                original suite. Also, please include the       -->
+<!--                following statement as a comment in all your   -->
+<!--                DTD modules:                                   -->
+<!--                   "Based in part on, but not fully compatible -->
+<!--                    with, the Archiving and Interchange DTD    --> 
+<!--                    Suite."                                    -->
+<!--                                                               -->
+<!--             Suggestions for refinements and enhancements to   -->
+<!--             the DTD suite should be sent in email to:         -->
+<!--                 archive-dtd@ncbi.nlm.nih.gov                  -->
+<!--                                                               -->
+<!-- ORIGINAL CREATION DATE:                                       -->
+<!--             December 2002                                     -->
+<!--                                                               -->
+<!-- CREATED BY: Jeff Beck       (NCBI)                            -->
+<!--             Deborah Lapeyre (Mulberry Technologies, Inc.)     -->
+<!--             Bruce Rosenblum (Inera Inc.)                      -->
+<!--                                                               -->
+<!--             NLM thanks the Harvard University Libraries, both -->
+<!--             for proposing that a draft archiving NLM DTD for  --> 
+<!--             life sciences journals be extended to accommodate -->
+<!--             journals in all disciplines and for sponsoring    -->
+<!--             Bruce Rosenblum's collaboration with other DTD    -->
+<!--             authors in completing Version 1.0. The Andrew W.  --> 
+<!--             Mellon Foundation provided support for these      --> 
+<!--             important contributions.                          -->
+<!--                                                               -->
+<!-- ============================================================= -->
+
+
+<!-- ============================================================= -->
+<!--                    DTD VERSION\CHANGE HISTORY                 -->
+<!-- ============================================================= -->
+<!--
+     =============================================================
+
+Version  Reason/Occasion                   (who) vx.x (yyyy-mm-dd)
+
+     =============================================================
+     Version 1.1                           (TRG) v1.1 (2003-11-01)
+  
+  3. Added following parameter entities to the content model for
+     <named-content>:
+        %block.display.class;
+        %block.math;
+        %emphasized-text;
+        %inline-display.class;
+        %list.class;
+        %rest-of-para.class;
+     Rationale: To expand content model of <named-content> to 
+     encompass most of the other phrase-level structures, which
+     will allow preservation ofphrase-level semantic information
+     in content converted to this format.
+     
+  2. Added ID attribute to parameter entity %named-content-atts;  
+     Rationale: Provide unique identifier so <named-content>
+     element can be linked to. 
+         
+  1. Added ID attribute to element <abbrev>. 
+     Rationale: Provide unique identifier so <abbrev> element 
+     can be linked to. 
+                                                                   -->
+
+
+<!-- ============================================================= -->
+<!--                    PARAMETER ENTITY DEPENDENCIES             
+                        Requires that the following parameter 
+                        entities be defined before calling this
+                        module, usually accomplished in the 
+                        Customization Module for the specific DTD:
+                          %emphasized-text;   
+                          %might-link-atts;  
+                                                                   -->
+<!-- ============================================================= -->
+
+
+<!-- ============================================================= -->
+<!--                    DEFAULT DEFINITION OF THE PHRASE CLASS     -->
+<!-- ============================================================= -->
+
+
+<!--                    PHRASE CLASS ELEMENTS                      -->
+<!--                    Small inline elements, that surround a word
+                        or phrase in the text because the subject
+                        (content) should be identified as something
+                        special or different                       -->
+<!ENTITY % phrase.class "abbrev | named-content"                     >
+
+
+<!-- ============================================================= -->
+<!--                    PARAMETER ENTITIES FOR ATTRIBUTE LISTS     -->
+<!-- ============================================================= -->
+                                                                
+                                                                 
+<!--                    NAMED CONTENT ATTRIBUTES                   -->
+<!--                    Attributes for the <named-content> element -->
+<!ENTITY % named-content-atts
+            "content-type   
+                        CDATA                            #REQUIRED 
+             id         ID                                #IMPLIED
+             %might-link-atts;"                                      >
+
+
+<!-- ============================================================= -->
+<!--                    PHRASE-LEVEL ELEMENTS                      -->
+<!-- ============================================================= -->
+
+
+<!--                    ABBREVIATION ELEMENTS                      -->
+<!--                    Elements for use in the <abbrev> element   -->
+<!ENTITY % abbrev-elements
+                        "| def"                                      >
+
+
+<!--                    ABBREVIATION OR ACRONYM                    -->
+<!--                    Used to identify an abbreviation or acronym
+                        DTD Design Note: We have not seen this much 
+                        in the world of STM journal publishing.
+                        This element was added explicitly to
+                        meet "Checkpoint 4.3[3.5] Annotate complex, 
+                        abbreviated, or unfamiliar information with 
+                        summaries and definitions" from the W3C Web
+                        Content Accessibility Guidelines 2.0.
+                        Remarks: The linking attributes can be used
+                        to provide a live link to an expansion,
+                        definition, or additional explanation.     -->
+<!ELEMENT  abbrev       (#PCDATA %abbrev-elements;)*                 >
+<!--         id         Unique identifier so the element may be
+                        referenced                                 
+             xlink:href Provides an address or identifier of the
+                        object to which the link points, for
+                        example a URI or a filename                -->            
+<!ATTLIST  abbrev
+             id         ID                                 #IMPLIED  
+             %might-link-atts;                                       >
+
+
+<!--                    NAMED CONTENT ELEMENTS                     -->
+<!--                    Elements for use in the <named-content> 
+                        content model                              -->
+<!ENTITY % named-content-elements
+                        "| %block-display.class; | %block-math; |
+                         %emphasized-text; | %inline-display.class; |
+                         %list.class; | %rest-of-para.class;"        >
+<!--!ENTITY % named-content-elements
+                        "| %emphasized-text; "                     -->
+
+<!--                    NAMED SPECIAL (SUBJECT) CONTENT            -->
+<!--                    A word or phrase within the text that should
+                        be treated differently, often given a
+                        special typographic style or look, because
+                        the content/subject matter is distinct. For
+                        example, the word is a drug name or a 
+                        gene or the phrase identifies an organism 
+                        genus/species.                             -->
+<!ELEMENT  named-content
+                        (#PCDATA %named-content-elements;)*          >
+<!--         content-type   
+                        Identification of the subject or type of
+                        content that makes this word or phrase
+                        semantically special, usually to be treated 
+                        differently, for example, given a different 
+                        look in print or display.
+                           As an example, this attribute could be 
+                        used to identify a drug name, company name, 
+                        or product name.  It could be used to define 
+                        systematics terms such as genus, family, 
+                        order,  or suborder. It could be used to 
+                        identify biological components such as 
+                        gene, protein, or peptide. Therefore 
+                        values may include information classes, 
+                        semantic categories, or types of nouns, 
+                        such as "generic-drug-name", "genus-species",
+                        "gene", "peptide", "product", etc.  
+             id         Unique identifier so the element may be
+                        referenced                                 
+             xlink:href Provides an address or identifier of the
+                        object to which the link points, for
+                        example a URI or a filename                --> 
+ <!ATTLIST  named-content
+             %named-content-atts;                                    >
+
+
+<!-- ================== End Phrase Class Module ================== -->
