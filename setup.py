@@ -27,6 +27,15 @@ setup(name='openaccess_epub',
                                         'data/dtds/jpts20/mathml/*.ent',
                                         'data/dtds/jpts20/mathml/*.mod',
                                         'data/dtds/jpts20/xmlchars/*.ent',
+                                        'data/dtds/jpts21/*.ent',
+                                        'data/dtds/jpts21/*.dtd',
+                                        'data/dtds/jpts21/*.txt',
+                                        'data/dtds/jpts21/*.mod',
+                                        'data/dtds/jpts21/*.xml',
+                                        'data/dtds/jpts21/iso8897/*.ent',
+                                        'data/dtds/jpts21/iso9573-13/*.ent',
+                                        'data/dtds/jpts21/mathml/*.ent',
+                                        'data/dtds/jpts21/xmlchars/*.ent'
                                         'data/dtds/jpts30/*.ent',
                                         'data/dtds/jpts30/*.dtd',
                                         'data/dtds/jpts30/*.mod',
@@ -48,5 +57,3 @@ setup(name='openaccess_epub',
                    'Topic :: Text Processing :: Markup :: XML',
                    'Topic :: Other/Nonlisted Topic']
       )
-
-
