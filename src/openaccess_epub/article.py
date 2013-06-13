@@ -1,15 +1,66 @@
 # -*- coding: utf-8 -*-
 import openaccess_epub.utils.element_methods as element_methods
 import openaccess_epub.utils as utils
-from openaccess_epub.jpts.jptsmetadata import JPTSMetaData20, JPTSMetaData23, JPTSMetaData30
+from openaccess_epub.jpts.jptsmetadata import JPTSMetaData20,\
+    JPTSMetaData23, JPTSMetaData30
+from openaccess_epub import JPTS10_PATH, JPTS11_PATH, JPTS20_PATH,\
+    JPTS21_PATH, JPTS22_PATH, JPTS23_PATH, JPTS30_PATH
 import os
 import sys
 import shutil
 import xml.dom.minidom as minidom
+#lxml shall fully replace minidom eventually
+from lxml import etree
 import logging
 
 log = logging.getLogger('Article')
 
+
+dtds = {'-//NLM//DTD Journal Archiving and Interchange DTD v1.0 20021201//EN':
+        JPTS10_PATH,
+        '-//NLM//DTD Journal Archiving and Interchange DTD v1.1 20031101//EN':
+        JPTS11_PATH,
+        '-//NLM//DTD Journal Publishing DTD v2.0 20040830//EN':
+        JPTS20_PATH,
+        '-//NLM//DTD Journal Publishing DTD v2.1 20050630//EN':
+        JPTS21_PATH,
+        '-//NLM//DTD Journal Publishing DTD v2.2 20060430//EN':
+        JPTS22_PATH,
+        '-//NLM//DTD Journal Publishing DTD v2.3 20070202//EN':
+        JPTS23_PATH,
+        '-//NLM//DTD Journal Publishing DTD v3.0 20080202//EN':
+        JPTS30_PATH}
+
+
+class Article2(object):
+    """
+    At this stage, the journal article is parsed by lxml, validated against its
+    DTD version, and then will have its metadata elements parsed into a
+    hierarchical namedtuple structure. Additional metadata abstractions may
+    also be implemented. This class will be later passed to OPF and NCX for
+    structural/metadata translation and to OPS for content translation.
+    """
+    def __ini__(self, xml_file):
+        log.info('Parsing file: {0}'.format(xml_file))
+        #Parse the document
+        self.document = etree.parse(xml_file)
+        #Find its public id so we can identify the appropriate DTD
+        public_id = self.document.docinfo.public_id
+        #Instantiate an lxml.etree.DTD class from the dtd files in our data
+        try:
+            self.dtd = etree.DTD(dtds[public_id])
+        except KeyError as err:
+            print('Document published according to unsupported specification. \
+Please contact the maintainers of OpenAccess_EPUB.')
+            raise err  # We can proceed no further without the DTD
+        #If using a supported DTD type, execute validation
+        validated = self.dtd.validate(self.document)
+        if not validated:
+            print('The document {0} did not pass validation according to its \
+DTD.'.format(xml_file))
+            print(self.dtd.error_log.filter_from_errors())
+            sys.exit(1)
+        
 
 class Article(object):
     """
@@ -37,12 +88,20 @@ class Article(object):
         doc = minidom.parse(xml_file)
         #Here we check the doctype for the DTD under which the article was
         #published. This affects how we will parse metadata and content.
-        dtds = {'-//NLM//DTD Journal Publishing DTD v2.0 20040830//EN':
-                '2.0',
-                '-//NLM//DTD Journal Publishing DTD v2.3 20070202//EN':
-                '2.3',
-                '-//NLM//DTD Journal Publishing DTD v3.0 20080202//EN':
-                '3.0'}
+        dtds={'-//NLM//DTD Journal Archiving and Interchange DTD v1.0 20021201//EN':
+              '1.0',
+              '-//NLM//DTD Journal Archiving and Interchange DTD v1.1 20031101//EN':
+              '1.1',
+              '-//NLM//DTD Journal Publishing DTD v2.0 20040830//EN':
+              '2.0',
+              '-//NLM//DTD Journal Publishing DTD v2.1 20050630//EN':
+              '2.1',
+              '-//NLM//DTD Journal Publishing DTD v2.2 20060430//EN':
+              '2.2',
+              '-//NLM//DTD Journal Publishing DTD v2.3 20070202//EN':
+              '2.3',
+              '-//NLM//DTD Journal Publishing DTD v3.0 20080202//EN':
+              '3.0'}
         try:
             self.dtd = dtds[doc.doctype.publicId]
             dtdStatus = 'Article published with Journal Publishing DTD v{0}'
