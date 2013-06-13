@@ -12,24 +12,28 @@ import xml.dom.minidom as minidom
 #lxml shall fully replace minidom eventually
 from lxml import etree
 import logging
+from collections import namedtuple
+
 
 log = logging.getLogger('Article')
 
 
+dtd_tuple = namedtuple('DTD_Tuple', 'path, name, version ')
+
 dtds = {'-//NLM//DTD Journal Archiving and Interchange DTD v1.0 20021201//EN':
-        JPTS10_PATH,
+        dtd_tuple(JPTS10_PATH, 'JPTS', 1.0),
         '-//NLM//DTD Journal Archiving and Interchange DTD v1.1 20031101//EN':
-        JPTS11_PATH,
+        dtd_tuple(JPTS11_PATH, 'JPTS', 1.1),
         '-//NLM//DTD Journal Publishing DTD v2.0 20040830//EN':
-        JPTS20_PATH,
+        dtd_tuple(JPTS20_PATH, 'JPTS', 2.0),
         '-//NLM//DTD Journal Publishing DTD v2.1 20050630//EN':
-        JPTS21_PATH,
+        dtd_tuple(JPTS21_PATH, 'JPTS', 2.1),
         '-//NLM//DTD Journal Publishing DTD v2.2 20060430//EN':
-        JPTS22_PATH,
+        dtd_tuple(JPTS22_PATH, 'JPTS', 2.2),
         '-//NLM//DTD Journal Publishing DTD v2.3 20070202//EN':
-        JPTS23_PATH,
+        dtd_tuple(JPTS23_PATH, 'JPTS', 2.3),
         '-//NLM//DTD Journal Publishing DTD v3.0 20080202//EN':
-        JPTS30_PATH}
+        dtd_tuple(JPTS30_PATH, 'JPTS', 3.0)}
 
 
 class Article2(object):
@@ -40,7 +44,7 @@ class Article2(object):
     also be implemented. This class will be later passed to OPF and NCX for
     structural/metadata translation and to OPS for content translation.
     """
-    def __ini__(self, xml_file):
+    def __init__(self, xml_file):
         log.info('Parsing file: {0}'.format(xml_file))
         #Parse the document
         self.document = etree.parse(xml_file)
@@ -48,11 +52,14 @@ class Article2(object):
         public_id = self.document.docinfo.public_id
         #Instantiate an lxml.etree.DTD class from the dtd files in our data
         try:
-            self.dtd = etree.DTD(dtds[public_id])
+            dtd = dtds[public_id]
         except KeyError as err:
             print('Document published according to unsupported specification. \
 Please contact the maintainers of OpenAccess_EPUB.')
             raise err  # We can proceed no further without the DTD
+        else:
+            self.dtd = etree.DTD(dtd.path)
+            self.dtd_name, self.dtd_version = dtd.name, dtd.version
         #If using a supported DTD type, execute validation
         validated = self.dtd.validate(self.document)
         if not validated:
@@ -60,7 +67,31 @@ Please contact the maintainers of OpenAccess_EPUB.')
 DTD.'.format(xml_file))
             print(self.dtd.error_log.filter_from_errors())
             sys.exit(1)
+        #Get basic elements, per DTD (and version if necessary)
+        if self.dtd_name == 'JPTS':
+            self.front = self.document.find('front')  # Element: mandatory
+            self.body = self.document.find('body')  # Element or None
+            self.back = self.document.find('back')  # Element or None
+            self.sub_article = self.document.findall('sub-article')  # 0 or more
+            self.response = self.document.findall('response')  # 0 or more
         
+        #At this point we have parsed the article, validated it, defined key
+        #top-level elements in it, and now we must translate its metadata into
+        #a data structure.
+        self.metadata = None
+
+
+    def get_body(self):
+        return None
+
+    def get_metadata(self):
+        return None
+
+    def get_publisher(self):
+        return None
+
+    def get_DOI(self):
+        return None
 
 class Article(object):
     """

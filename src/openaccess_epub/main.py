@@ -21,7 +21,7 @@ from openaccess_epub.utils.images import get_images
 import openaccess_epub.opf as opf
 import openaccess_epub.ncx as ncx
 import openaccess_epub.ops as ops
-from openaccess_epub.article import Article as Article
+from openaccess_epub.article import Article2 as Article
 
 CACHE_LOCATION = utils.cache_location()
 LOCAL_DIR = os.getcwd()
@@ -120,6 +120,8 @@ def single_input(args, config=None):
         abs_input_path = utils.get_absolute_path(args.input)
         raw_name = u_input.local_input(abs_input_path)
         parsed_article = Article(abs_input_path)
+
+    sys.exit(0)  # For testing
 
     #Generate the output path name, this will be the directory name for the
     #output. This output directory will later be zipped into an EPUB
