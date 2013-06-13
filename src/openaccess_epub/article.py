@@ -78,14 +78,22 @@ DTD.'.format(xml_file))
         #At this point we have parsed the article, validated it, defined key
         #top-level elements in it, and now we must translate its metadata into
         #a data structure.
-        self.metadata = None
+        self.metadata = self.get_metadata()
 
 
     def get_body(self):
         return None
 
     def get_metadata(self):
-        return None
+        def recursive_element_packing(element):
+            if element is None:
+                return None
+            
+        if self.dtd_name == 'JPTS':
+            metadata_tuple = namedtuple('Metadata', 'front, back')
+            front = recursive_element_packing(self.front)
+            back = recursive_element_packing(self.back)
+            return metadata_tuple(front, back)
 
     def get_publisher(self):
         return None
