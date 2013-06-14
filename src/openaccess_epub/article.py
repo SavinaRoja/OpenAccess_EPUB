@@ -151,7 +151,10 @@ DTD.'.format(xml_file))
                 if attribute.prefix:
                     if attribute.prefix == 'xmlns':  # Pseudo-attribute
                         continue
-                    field_name = '{0}:{1}'.format(attribute.prefix, attribute_name)
+                    #TODO: Modify the namespace to permit xml as prefix, xml:lang is common/critical
+                    if attribute.prefix == 'xml':
+                        continue 
+                    field_name = '{0}:{1}'.format(attribute.prefix, attribute.name)
                     attr_lookup = '\{{0}\}{1}'.format(element.nsmap[attribute.prefix], attribute.name)
                 else:
                     field_name = attribute.name
@@ -160,7 +163,7 @@ DTD.'.format(xml_file))
                 field_names.append(coerce_string(field_name))
                 #Add the value of the attribute to list of field values
                 try:
-                    field_vals.append(element.contrib[attr_lookup])
+                    field_vals.append(element.attrib[attr_lookup])
                 except KeyError:
                     field_vals.append(None)  # Not worrying about implied defaults right now
             #Get the sub_elements for the element
@@ -171,6 +174,7 @@ DTD.'.format(xml_file))
             metadata_tuple = namedtuple('Metadata', 'front, back')
             front = recursive_element_packing(self.front)
             back = recursive_element_packing(self.back)
+            #test_root = recursive_element_packing(self.document.getroot())
             return metadata_tuple(front, back)
 
     def get_publisher(self):
