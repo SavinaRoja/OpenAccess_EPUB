@@ -18,10 +18,6 @@ from collections import namedtuple
 log = logging.getLogger('Article')
 
 
-XLINK_NAMESPACE = 'http://www.w3.org/1999/xlink'
-MML_NAMESPACE = 'http://www.w3.org/1998/Math/MathML'
-
-
 dtd_tuple = namedtuple('DTD_Tuple', 'path, name, version ')
 
 dtds = {'-//NLM//DTD Journal Archiving and Interchange DTD v1.0 20021201//EN':
@@ -151,10 +147,11 @@ DTD.'.format(xml_file))
                 if attribute.prefix:
                     if attribute.prefix == 'xmlns':  # Pseudo-attribute
                         continue
-                    #TODO: Modify the namespace to permit xml as prefix, xml:lang is common/critical
                     if attribute.prefix == 'xml':
                         continue 
                     field_name = '{0}:{1}'.format(attribute.prefix, attribute.name)
+                    if attribute == 'xml':
+                        attr_lookup = '\{http://www.w3.org/XML/1998/namespace\}{0}'.format(attribute.name)
                     attr_lookup = '\{{0}\}{1}'.format(element.nsmap[attribute.prefix], attribute.name)
                 else:
                     field_name = attribute.name
@@ -174,7 +171,7 @@ DTD.'.format(xml_file))
             metadata_tuple = namedtuple('Metadata', 'front, back')
             front = recursive_element_packing(self.front)
             back = recursive_element_packing(self.back)
-            #test_root = recursive_element_packing(self.document.getroot())
+            test_root = recursive_element_packing(self.document.getroot())
             return metadata_tuple(front, back)
 
     def get_publisher(self):
