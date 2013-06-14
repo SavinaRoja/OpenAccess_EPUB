@@ -21,7 +21,7 @@ from openaccess_epub.utils.images import get_images
 import openaccess_epub.opf as opf
 import openaccess_epub.ncx as ncx
 import openaccess_epub.ops as ops
-from openaccess_epub.article import Article2 as Article
+from openaccess_epub.article import Article
 
 CACHE_LOCATION = utils.cache_location()
 LOCAL_DIR = os.getcwd()
