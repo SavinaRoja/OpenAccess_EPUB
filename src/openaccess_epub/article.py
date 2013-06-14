@@ -18,6 +18,10 @@ from collections import namedtuple
 log = logging.getLogger('Article')
 
 
+XLINK_NAMESPACE = 'http://www.w3.org/1999/xlink'
+MML_NAMESPACE = 'http://www.w3.org/1998/Math/MathML'
+
+
 dtd_tuple = namedtuple('DTD_Tuple', 'path, name, version ')
 
 dtds = {'-//NLM//DTD Journal Archiving and Interchange DTD v1.0 20021201//EN':
@@ -80,14 +84,88 @@ DTD.'.format(xml_file))
         #a data structure.
         self.metadata = self.get_metadata()
 
-
-    def get_body(self):
-        return None
-
     def get_metadata(self):
+        
+        #Dictionary comprehension - element name : element definition
+        dtd_dict = {i.name: i for i in self.dtd.elements()}
+        
+        def coerce_string(input):
+            for char in input:
+                if char.lower() not in 'abcdefghijklmnopqrstuvwxyz1234567890_':
+                    input = input.replace(char, '_')
+            return input
+        
+        eltuple = namedtuple('ElTuple', 'element, occurrence')
+        
+        def get_sub_elements(content, multiple=False):
+            if content is None:
+                return []
+            sub_elements = []
+            left, right = content.left, content.right
+            for branch in [left, right]:
+                if branch:
+                    #PCDATA is a special case, it is always multiple, and it
+                    #has no possible sub-elements
+                    if branch.type == 'pcdata':
+                        sub_elements.append(eltuple(pcdata, 'multiple'))
+                    #For our purposes, both "seq" and "or" types are sequences
+                    #If a sequence component occurrence is mult or plus, then
+                    #every internal component should inherit plurality that may
+                    #not be overridden
+                    #If a sequence component occurence is once or opt, then
+                    #every internal component should inherit singularity, but
+                    #this singularity may be overridden to plural.
+                    #Plurality is passed on through the multiple argument
+                    elif branch.type in ['seq', 'or']:
+                        if branch.occur in ['mult', 'plus']:
+                            sub_elements += get_sub_elements(branch, multiple=True)
+                        else:
+                            sub_elements += get_sub_elements(branch, multiple=False)
+                    else:  # element
+                        #If an element inherits plurality, it will stay plural
+                        if multiple is True:
+                            sub_elements.append(eltuple(branch.name, 'multiple'))
+                        #If an element inherits singularity, it should check to
+                        #see if it overrides to plural
+                        else:
+                            occurrence = branch.occur
+                            if occurrence in ['mult', 'plus']:
+                                sub_elements.append(eltuple(branch.name, 'multiple'))
+                            else:
+                                sub_elements.append(eltuple(branch.name, 'singular'))
+            return sub_elements
+        
         def recursive_element_packing(element):
             if element is None:
                 return None
+            tagname = element.tag
+            element_def = dtd_dict[tagname]
+            #Create lists for field names and field values
+            field_names = []
+            field_vals = []
+            #Create a self reference, named node, value is the element itself
+            field_names.append('node')
+            field_vals.append(element)
+            #Handle attributes
+            for attribute in element_def.iterattributes():
+                if attribute.prefix:
+                    if attribute.prefix == 'xmlns':  # Pseudo-attribute
+                        continue
+                    field_name = '{0}:{1}'.format(attribute.prefix, attribute_name)
+                    attr_lookup = '\{{0}\}{1}'.format(element.nsmap[attribute.prefix], attribute.name)
+                else:
+                    field_name = attribute.name
+                    attr_lookup = field_name
+                #Add the field name to the list of field names
+                field_names.append(coerce_string(field_name))
+                #Add the value of the attribute to list of field values
+                try:
+                    field_vals.append(element.contrib[attr_lookup])
+                except KeyError:
+                    field_vals.append(None)  # Not worrying about implied defaults right now
+            #Get the sub_elements for the element
+            sub_elements = get_sub_elements(element_def.content)
+            print(sub_elements)
             
         if self.dtd_name == 'JPTS':
             metadata_tuple = namedtuple('Metadata', 'front, back')
