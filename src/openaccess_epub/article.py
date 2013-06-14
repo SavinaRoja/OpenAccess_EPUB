@@ -13,6 +13,7 @@ import xml.dom.minidom as minidom
 from lxml import etree
 import logging
 from collections import namedtuple
+from keyword import iskeyword
 
 
 log = logging.getLogger('Article')
@@ -91,7 +92,7 @@ DTD.'.format(xml_file))
                     input = input.replace(char, '_')
             return input
         
-        eltuple = namedtuple('ElTuple', 'element, occurrence')
+        eltuple = namedtuple('ElTuple', 'tag, occurrence')
         
         def get_sub_elements(content, multiple=False):
             if content is None:
@@ -103,7 +104,7 @@ DTD.'.format(xml_file))
                     #PCDATA is a special case, it is always multiple, and it
                     #has no possible sub-elements
                     if branch.type == 'pcdata':
-                        sub_elements.append(eltuple(pcdata, 'multiple'))
+                        sub_elements.append(eltuple('pcdata', 'multiple'))
                     #For our purposes, both "seq" and "or" types are sequences
                     #If a sequence component occurrence is mult or plus, then
                     #every internal component should inherit plurality that may
@@ -143,35 +144,76 @@ DTD.'.format(xml_file))
             field_names.append('node')
             field_vals.append(element)
             #Handle attributes
+            attrs = {}  # Dict to hold attributes
+            field_names.append('attrs')  # namedtuple attribute to receive dict
+            #Compose the attrs dict with appropriate keys and values
             for attribute in element_def.iterattributes():
                 if attribute.prefix:
                     if attribute.prefix == 'xmlns':  # Pseudo-attribute
                         continue
-                    if attribute.prefix == 'xml':
-                        continue 
-                    field_name = '{0}:{1}'.format(attribute.prefix, attribute.name)
-                    if attribute == 'xml':
-                        attr_lookup = '\{http://www.w3.org/XML/1998/namespace\}{0}'.format(attribute.name)
-                    attr_lookup = '\{{0}\}{1}'.format(element.nsmap[attribute.prefix], attribute.name)
+                    elif attribute.prefix == 'xml':
+                        attr_lookup = '{{http://www.w3.org/XML/1998/namespace}}{0}'.format(attribute.name)
+                    else:
+                        attr_lookup = '{'+element.nsmap[attribute.prefix]+'}'+attribute.name
+                    key = '{0}:{1}'.format(attribute.prefix, attribute.name)
                 else:
-                    field_name = attribute.name
-                    attr_lookup = field_name
-                #Add the field name to the list of field names
-                field_names.append(coerce_string(field_name))
+                    key = attribute.name
+                    attr_lookup = key
                 #Add the value of the attribute to list of field values
                 try:
-                    field_vals.append(element.attrib[attr_lookup])
+                    value = element.attrib[attr_lookup]
                 except KeyError:
-                    field_vals.append(None)  # Not worrying about implied defaults right now
+                    attrs[key] = None  # Not worrying about implied defaults right now
+                    #field_vals.append(None
+                else:
+                    attrs[key] = value
+            #Add the attrs dict to field values
+            field_vals.append(attrs)
             #Get the sub_elements for the element
             sub_elements = get_sub_elements(element_def.content)
-            print(sub_elements)
-            
+            get_text = False  # A control variable, used later if PCDATA in content model
+            for sub_element in sub_elements:
+                #We have the sub elements according to tag and occurence
+                if sub_element.tag == 'pcdata':
+                    get_text = True
+                    continue
+                if sub_element.occurrence == 'multiple':
+                    child_tag = sub_element.tag
+                    child_list = []
+                    for each in element.findall(child_tag):
+                        child_list.append(recursive_element_packing(each))
+                    field_names.append(child_tag)
+                    field_vals.append(child_list)
+                else:
+                    child_tag = sub_element.tag
+                    child_element = element.find(child_tag)
+                    if child_element is not None:
+                        child = recursive_element_packing(child_element)
+                    else:
+                        child = None
+                    field_names.append(child_tag)
+                    field_vals.append(child)
+            if get_text:
+                field_names.append('text')
+                field_vals.append(etree.tostring(element, method='text', encoding='utf-8').strip())
+
+            #Make items in field_names safe for namedtuple
+            #Coerce characters in string
+            field_names = [coerce_string(i) for i in field_names]
+            #Prepend 'l' to reserved keywords for element tagname
+            if iskeyword(tagname):
+                tagname = 'l' + tagname
+            #Prepend 'l' to reserved keywords for sub_elements
+            field_names = ['l'+i if iskeyword(i) else i for i in field_names]
+
+            data_tuple = namedtuple(coerce_string(tagname), ', '.join(field_names))
+            return data_tuple(*field_vals)
+
         if self.dtd_name == 'JPTS':
             metadata_tuple = namedtuple('Metadata', 'front, back')
             front = recursive_element_packing(self.front)
             back = recursive_element_packing(self.back)
-            test_root = recursive_element_packing(self.document.getroot())
+            #test_root = recursive_element_packing(self.document.getroot())
             return metadata_tuple(front, back)
 
     def get_publisher(self):
