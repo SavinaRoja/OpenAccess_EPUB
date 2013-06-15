@@ -19,12 +19,14 @@ from .publisher_metadata import *
 from collections import namedtuple
 import os
 import xml.dom.minidom
+from lxml import etree
 import logging
 
 log = logging.getLogger('NCX')
 
 navpoint = namedtuple('navPoint', 'id, label, playOrder, source, children')
 navtarget = namedtuple('navTarget', 'id, label, source')
+
 
 class NCX(object):
     """
@@ -72,35 +74,18 @@ e
 
     def init_ncx_document(self):
         """
-        This method creates the initial DOM document for the toc.ncx file
+        This method creates the initial ElementTree for the toc.ncx file
         """
-        publicId = '-//NISO//DTD ncx 2005-1//EN'
-        systemId = 'http://www.daisy.org/z3986/2005/ncx-2005-1.dtd'
-        impl = xml.dom.minidom.getDOMImplementation()
-        doctype = impl.createDocumentType('ncx', publicId, systemId)
-        self.document = impl.createDocument(None, 'ncx', doctype)
-        #Grab the root <ncx> node
-        self.ncx = self.document.lastChild
-        self.ncx.setAttribute('version', '2005-1')
-        self.ncx.setAttribute('xml:lang', 'en-US')
-        self.ncx.setAttribute('xmlns', 'http://www.daisy.org/z3986/2005/ncx/')
-        #Create the sub elements to <ncx>
-        ncx_subelements = ['head', 'docTitle', 'docAuthor', 'navMap']
-        #for element in ncx_subelements:
-        #    self.ncx.appendChild(self.document.createElement(element))
-        #self.head, self.doctitle, self.docauthor, self.navmap = self.ncx.childNodes
-        #Add a label with text 'Table of Contents' to navMap
-        #lbl = self.appendNewElement('navLabel', self.navmap)
-        #lbl.appendChild(self.make_text('Table of Contents'))
-        #Create some optional subelements
-        #These are not added to the document yet, as they may not be needed
-        #self.list_of_figures = self.document.createElement('navList')
-        #self.list_of_figures.setAttribute('class', 'lof')
-        #self.list_of_figures.setAttribute('id', 'lof')
-        #self.list_of_tables = self.document.createElement('navList')
-        #self.list_of_tables.setAttribute('class', 'lot')
-        #self.list_of_tables.setAttribute('id', 'lot')
-        
+        root = etree.XML('''<?xml version="1.0"?>
+<!DOCTYPE ncx
+  PUBLIC '-//NISO//DTD ncx 2005-1//EN'
+  'http://www.daisy.org/z3986/2005/ncx-2005-1.dtd'>
+<ncx version="2005-1" xml:lang="en-US" xmlns="http://www.daisy.org/z3986/2005/ncx/">
+</ncx>''')
+        self.document = etree.ElementTree(root)
+        self.ncx = self.document.getroot()
+        #The other sub elements of ncx will be created by later methods
+        #These are head, docTitle, docAuthor, navMap
 
     def take_article(self, article):
         """
@@ -301,84 +286,71 @@ e
         """
         #A simple convenience function for making the meta elements
         def make_meta(content, name):
-            meta = self.document.createElement('meta')
-            meta.setAttribute('content', content)
-            meta.setAttribute('name', name)
+            meta = etree.Element('meta')
+            meta.attrib['content'] = content
+            meta.attrib['content'] = name
             return meta
 
-        head = self.document.createElement('head')
+        head = etree.SubElement(self.ncx, 'head')
         #Add comment about required elements
-        head.appendChild(self.document.createComment('''The following metadata\
-items, except for dtb:generator, are required for all NCX documents, including\
-those conforming to the relaxed constraints of OPS 2.0'''))
+        head.append(etree.Comment('''The following metadata items, except for \
+dtb:generator, are required for all NCX documents, including those conforming \
+to the relaxed constraints of OPS 2.0'''))
         #Add the meta elements
         #dtb:uid - string of joined dois
-        head.appendChild(make_meta(','.join(self.all_dois), 'dtb:uid'))
+        head.append(make_meta(','.join(self.all_dois), 'dtb:uid'))
         #dtb:depth - maxdepth of navMap
-        head.appendChild(make_meta(str(self.maxdepth), 'dtb:depth'))
+        head.append(make_meta(str(self.maxdepth), 'dtb:depth'))
         #dtb:totalPageCount
-        head.appendChild(make_meta('0', 'dtb:totalPageCount'))
+        head.append(make_meta('0', 'dtb:totalPageCount'))
         #dtb:maxPageNumber
-        head.appendChild(make_meta('0', 'dtb:maxPageNumber'))
+        head.append(make_meta('0', 'dtb:maxPageNumber'))
         #dtb:generator
-        head.appendChild(make_meta('OpenAccess_EPUB {0}'.format(self.version),
+        head.append(make_meta('OpenAccess_EPUB {0}'.format(self.version),
                                    'dtb:generator'))
-        self.ncx.appendChild(head)
 
     def make_docTitle(self):
         """
         Creates the <docTitle> element for the NCX file.
         """
-        doc_title_node = self.document.createElement('docTitle')
-        text_node = self.document.createElement('text')
+        doctitle_element = etree.SubElement(self.ncx, 'docTitle')
+        text_element = etree.SubElement(doctitle_element, 'text')
         if not self.collection_mode:  # Single Mode
             #Use title of article
             text = 'NCX For: {0}'.format(self.article_title)
         else:  # Collection Mode
             #Use DOIs of all articles
             text = 'NCX For Collection: {0}'.format(','.join(self.all_dois))
-        text_node.appendChild(self.document.createTextNode(text))
-        doc_title_node.appendChild(text_node)
-        self.ncx.appendChild(doc_title_node)
+        text_element.text = text
 
     def make_docAuthor(self):
         """
         Creates the <docAuthor> elements for the NCX file.
         """
         for author in self.doc_author:
-            doc_author_node = self.document.createElement('docAuthor')
-            text_node = self.document.createElement('text')
-            text_node.appendChild(self.document.createTextNode(author.name))
-            doc_author_node.appendChild(text_node)
-            self.ncx.appendChild(doc_author_node)
+            docauthor_element = etree.SubElement(self.ncx, 'docAuthor')
+            text_element = etree.SubElement(docauthor_element, 'text')
+            text_element.text = author.name
 
     def make_navMap(self, nav=None):
         """
-        Creates the <navMap> element for the NCX file. This uses an internal
-        recursive core fuinction to translate the self.nav_map data structure
-        (which was generated by recursive parsing of input files) into XML.
         """
-        #The recursive inner translation function
-        #def recursive_nav_parse(nav):
+        #TODO: Review this method, create docstring
         if nav is None:
-            nav_node = self.document.createElement('navMap')
+            nav_element = etree.Element('navMap')
             for nav_point in self.nav_map:
-                nav_node.appendChild(self.make_navMap(nav=nav_point))
+                nav_element.append(self.make_navMap(nav=nav_point))
         else:
-            nav_node = self.document.createElement('navPoint')
-            nav_node.setAttribute('id', nav.id)
-            nav_node.setAttribute('playOrder', nav.playOrder)
-            label_node = self.document.createElement('navLabel')
-            label_text = self.document.createElement('text')
-            label_text.appendChild(self.document.createTextNode(nav.label))
-            label_node.appendChild(label_text)
-            nav_node.appendChild(label_node)
-            content_node = self.document.createElement('content')
-            content_node.setAttribute('src', nav.source)
-            nav_node.appendChild(content_node)
+            nav_element = etree.Element('navPoint')
+            nav_element.attrib['id'] = nav.id
+            nav_element.attrib['playOrder'] = nav.playOrder
+            label_element = etree.SubElement(nav_element, 'navLabel')
+            label_element.text = nav.label
+            content_element = etree.SubElement(nav_element, 'content')
+            content_element.attrib['src'] = nav.source
             for child in nav.children:
-                nav_node.appendChild(self.make_navMap(nav=child))
-        return nav_node
+                nav_element.append(self.make_navMap(nav=child))
+        return nav_element
 
     def make_list_of_figures(self):
         """
@@ -387,15 +359,14 @@ those conforming to the relaxed constraints of OPS 2.0'''))
         if not self.list_of_figures:
             return
         else:
-            navlist_node = self.document.createElement('navList')
-            navlist_node.appendChild(self.make_navLabel('List of Figures'))
+            navlist_element = etree.SubElement(self.ncx,'navList')
+            navlist_element.append(self.make_navLabel('List of Figures'))
         for nav in self.list_of_figures:
-            nav_target = self.document.createElement('navTarget')
-            nav_target.setAttribute('id', nav.id)
-            nav_target.appendChild(self.make_navLabel(nav.label))
-            content_node = self.document.createElement('content')
-            content_node.setAttribute('src', nav.source)
-            nav_target.appendChild(content_node)
+            nav_target = etree.SubElement(navlist_element, 'navTarget')
+            nav_target.attrib['id'] = nav.id
+            nav_target.append(self.make_navLabel(nav.label))
+            content_element = etree.SubElement(nav_target, 'content')
+            content_element.attrib['src'] = nav.source
 
     def make_list_of_tables(self):
         """
@@ -404,15 +375,14 @@ those conforming to the relaxed constraints of OPS 2.0'''))
         if not self.list_of_tables:
             return
         else:
-            navlist_node = self.document.createElement('navList')
-            navlist_node.appendChild(self.make_navLabel('List of Tables'))
+            navlist_element = etree.SubElement(self.ncx,'navList')
+            navlist_element.append(self.make_navLabel('List of Figures'))
         for nav in self.list_of_tables:
-            nav_target = self.document.createElement('navTarget')
-            nav_target.setAttribute('id', nav.id)
-            nav_target.appendChild(self.make_navLabel(nav.label))
-            content_node = self.document.createElement('content')
-            content_node.setAttribute('src', nav.source)
-            nav_target.appendChild(content_node)
+            nav_target = etree.SubElement(navlist_element, 'navTarget')
+            nav_target.attrib['id'] = nav.id
+            nav_target.append(self.make_navLabel(nav.label))
+            content_element = etree.SubElement(nav_target, 'content')
+            content_element.attrib['src'] = nav.source
 
     def write(self):
         """
@@ -439,7 +409,8 @@ those conforming to the relaxed constraints of OPS 2.0'''))
         self.make_list_of_tables()
         filename = os.path.join(self.location, 'OPS', 'toc.ncx')
         with open(filename, 'wb') as output:
-            output.write(self.document.toprettyxml(encoding='utf-8'))
+            output.write(etree.tostring(self.document, pretty_print=True, encoding='utf-8'))
+            #output.write(self.document.toprettyxml(encoding='utf-8'))
 
     def pull_play_order(self):
         """
@@ -460,9 +431,7 @@ those conforming to the relaxed constraints of OPS 2.0'''))
         """
         Creates and returns a navLabel element with the supplied text.
         """
-        label_node = self.document.createElement('navLabel')
-        label_node = self.document.createElement('navLabel')
-        text_node = self.document.createElement('text')
-        text_node.appendChild(self.document.createTextNode(text))
-        label_node.appendChild(text_node)
-        return label_node
+        label_element = etree.Element('navLabel')
+        text_element = etree.SubElement(label_element, 'text')
+        text_element = text
+        return label_element
