@@ -282,13 +282,14 @@ def fetch_plos_images(article_doi, output_dir, document):
     base_url = journal_urls[subjournal_name]
 
     #Acquire <graphic> and <inline-graphic> xml elements
-    graphics = document.root_tag.getElementsByTagName('graphic')
-    graphics += document.root_tag.getElementsByTagName('inline-graphic')
+    graphics = document.document.getroot().findall('.//graphic')
+    graphics += document.document.getroot().findall('.//inline-graphic')
 
     #Begin to download
     print('Downloading images, this may take some time...')
     for graphic in graphics:
-        xlink_href = graphic.getAttribute('xlink:href')
+        nsmap = document.document.getroot().nsmap
+        xlink_href = graphic.attrib['{'+nsmap['xlink']+'}'+'href']
         if xlink_href[-4] == 'e':  # Equations are handled differently
             resource = 'fetchObject.action?uri=' + xlink_href + '&representation=PNG'
         else:

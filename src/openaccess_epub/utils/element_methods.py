@@ -7,12 +7,29 @@ Incorporating these methods into the module provides a single definition point
 for the method that may be utilized in different sections.
 """
 
+from lxml import etree
 import xml.dom.minidom as minidom
 import xml.parsers.expat
 import html.parser
 import logging
 
 log = logging.getLogger('openaccess_epub.utils.element_methods')
+
+def text_content(element):
+    """
+    A method for extending lxml's functionality, this will find and concatenate
+    all text data that exists one level immediately underneath the given
+    element. Unlike etree.tostring(element, method='text'), this will not 
+    recursively walk the entire underlying tree. It merely combines the element
+    text attribute with the tail attribute of each child.
+    """
+    if element.text is None:
+        text = []
+    else:
+        text = [element.text]
+    tails = [child.tail.strip() for child in element if child.tail.strip()]
+    return ' '.join(text + tails)
+    
 
 def get_children_by_tag_name(tagname, node):
     """

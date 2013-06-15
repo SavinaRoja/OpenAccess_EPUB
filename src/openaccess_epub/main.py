@@ -121,7 +121,7 @@ def single_input(args, config=None):
         raw_name = u_input.local_input(abs_input_path)
         parsed_article = Article(abs_input_path)
 
-    sys.exit(0)  # For testing
+    #sys.exit(0)  # For testing
 
     #Generate the output path name, this will be the directory name for the
     #output. This output directory will later be zipped into an EPUB

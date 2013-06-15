@@ -2,6 +2,7 @@
 #oaepub modules
 from openaccess_epub import JPTS10_PATH, JPTS11_PATH, JPTS20_PATH,\
     JPTS21_PATH, JPTS22_PATH, JPTS23_PATH, JPTS30_PATH
+from openaccess_epub.utils import element_methods
 #Standard lib modules
 import os
 import sys
@@ -197,7 +198,8 @@ its DTD.'.format(xml_file))
                     field_vals.append(child)
             if get_text:
                 field_names.append('text')
-                field_vals.append(etree.tostring(element, method='text', encoding='utf-8').strip())
+                field_vals.append(element_methods.text_content(element))
+                #field_vals.append(str(etree.tostring(element, method='text', encoding='utf-8').strip(), encoding='utf-8'))
 
             #Make items in field_names safe for namedtuple
             #Coerce characters in string
@@ -235,7 +237,8 @@ its DTD.'.format(xml_file))
         if self.dtd_name == 'JPTS':
             publisher_meta = self.metadata.front.journal_meta.publisher
             if publisher_meta:  #Optional element
-                if 'PLoS' in publisher_meta.publisher_name.text:
+                print(publisher_meta.publisher_name.text, type(publisher_meta.publisher_name.text))
+                if publisher_meta.publisher_name.text == 'Public Library of Science':
                     return 'PLoS'
         print('Warning! Unable to identify publisher for this article!')
         return None
@@ -249,7 +252,7 @@ its DTD.'.format(xml_file))
             art_ids = self.metadata.front.article_meta.article_id
             for art_id in art_ids:
                 if art_id.attrs['pub-id-type'] == 'doi':
-                    return art_id.attrs['pub-id-type']
+                    return art_id.text
             print('Warning! Unable to locate DOI string for this article!')
             return None
         else:

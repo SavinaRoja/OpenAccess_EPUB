@@ -142,59 +142,54 @@ e
             #This step is executed as pre-processing, <sec> elements will receive
             #an id attribute if they lack one
             #This has a, helpful, side-effect when the Article is given to OPS
-            for sec in body.getElementsByTagName('sec'):
-                if not sec.getAttribute('id'):
-                    sec.setAttribute('id', 'OA-EPUB-{0}'.format(self.id_int))
+            for sec in body.findall('.//sec'):
+                if 'id' not in sec.attrib:
+                    sec.attrib['id'] = 'OA-EPUB-{0}'.format(self.id_int)
                     self.id_int += 1
             #Recursively parse the structure of the input article and add to navmap
             for nav_point in self.recursive_article_navmap(body):
                 insertion_point.append(nav_point)
         #Add a navpoint for the references, if there are references
-        try:
-            back = self.article.root_tag.getElementsByTagName('back')[0]
-        except IndexError:
-            pass
-        else:
-            if back.getElementsByTagName('ref'):
+        if self.article.back:
+            if back.findall('ref'):
                 id = 'references-{0}'.format(self.article_doi)
                 label = 'References'
                 source = 'biblio.{0}.xml#references'.format(self.article_doi)
                 references = navpoint(id, label, self.pull_play_order(), source, [])
                 insertion_point.append(references)
 
-    def recursive_article_navmap(self, src_node, depth=0, first=True):
+    def recursive_article_navmap(self, src_element, depth=0, first=True):
         """
         This function recursively traverses the content of an input article to
         add the correct elements to the NCX file's navMap and Lists.
         """
+        #TODO: This may need modification for non JPTS
         if depth > self.maxdepth:
             self.maxdepth = depth
         navpoints = []
         tagnames = ['sec', 'fig', 'table-wrap']
-        for child in src_node.childNodes:
+        for child in src_element.children():
             try:
-                tagname = child.tagName
+                tagname = child.tag
             except AttributeError:  # Text nodes have no attribute tagName
                 continue
             else:
                 if tagname not in tagnames:
                     continue
-            source_id = child.getAttribute('id')
+            source_id = child.attrib['id']
+            #In single mode, use the id as it is
             if not self.collection_mode:
                 child_id = source_id
-            else: #If in collection_mode, prepend the article_doi to avoid collisions
-                child_id = '{0}-{1}'.format(self.article_doi, child.getAttribute('id'))
-            #Attempt to pull the title text as a label for the navpoint
-            try:
-                child_title = element_methods.get_children_by_tag_name('title', child)[0]
-            except IndexError:
-                #label = 'Title Not Found!'
-                continue
+            #If in collection_mode, prepend the article_doi to avoid collisions
             else:
-                label = utils.serialize_text(child_title)
-                if not label:
-                    #label = 'Blank Title Found!'
-                    continue
+                child_id = '{0}-{1}'.format(self.article_doi, source_id)
+            #Attempt to pull the title text as a label for the navpoint
+            child_title = child.find('title')
+            if not child_title:
+                continue
+            label = element_methods.text_content(title)
+            if not label:
+                continue
             source = 'main.{0}.xml#{1}'.format(self.article_doi, source_id)
             if tagname == 'sec':
                 play_order = self.pull_play_order()
