@@ -18,13 +18,11 @@ Refer to the version of JPTS you are using and the jpts module, as well as the
 Dublin Core specification.
 """
 
-import openaccess_epub.utils as utils
-import openaccess_epub.utils.element_methods as element_methods
 import logging
 import os
 import time
 import uuid
-import xml.dom.minidom
+from lxml import etree
 from openaccess_epub.utils import OrderedSet
 from .publisher_metadata import *
 from collections import namedtuple
@@ -33,14 +31,14 @@ spine_itemref = namedtuple('SpineItemref', 'idref, linear')
 
 log = logging.getLogger('OPF')
 
-single_ccal_rights = '''This is an open-access article distributed under the\
-terms of the Creative Commons Attribution License, which permits unrestricted\
-use, distribution, and reproduction in any medium, provided the original\
+single_ccal_rights = '''This is an open-access article distributed under the \
+terms of the Creative Commons Attribution License, which permits unrestricted \
+use, distribution, and reproduction in any medium, provided the original \
 author and source are credited.'''
 
-collection_ccal_rights = '''This is a collection of open-access articles\
-distributed under the terms of the Creative Commons Attribution License, which\
-permits unrestricted use, distribution, and reproduction in any medium,\
+collection_ccal_rights = '''This is a collection of open-access articles \
+distributed under the terms of the Creative Commons Attribution License, which \
+permits unrestricted use, distribution, and reproduction in any medium, \
 provided the original work is properly cited.'''
 
 
@@ -96,23 +94,25 @@ class OPF(object):
         """
         This method creates the initial DOM document for the content.opf file
         """
-        impl = xml.dom.minidom.getDOMImplementation()
-        self.document = impl.createDocument(None, 'package', None)
-        #Grab the root <package> node
-        self.package = self.document.lastChild
-        #Set attributes for this node, including namespace declarations
-        self.package.setAttribute('version', '2.0')
-        self.package.setAttribute('unique-identifier', 'PrimaryID')
-        self.package.setAttribute('xmlns:opf', 'http://www.idpf.org/2007/opf')
-        self.package.setAttribute('xmlns:dc', 'http://purl.org/dc/elements/1.1/')
-        self.package.setAttribute('xmlns', 'http://www.idpf.org/2007/opf')
-        self.package.setAttribute('xmlns:oebpackage', 'http://openebook.org/namespaces/oeb-package/1.0/')
+        root = etree.XML('''<?xml version="1.0"?>
+<!DOCTYPE ncx
+  PUBLIC '-//NISO//DTD ncx 2005-1//EN'
+  'http://www.daisy.org/z3986/2005/ncx-2005-1.dtd'>
+<package version="2.0" unique-identifier="PrimaryID" \
+xmlns:opf="http://www.idpf.org/2007/opf" \
+xmlns:dc="http://purl.org/dc/elements/1.1/" \
+xmlns="http://www.idpf.org/2007/opf" \
+xmlns:oebpackage="http://openebook.org/namespaces/oeb-package/1.0/">
+</package>''')
+        self.document = etree.ElementTree(root)
+        self.package = self.document.getroot()
         #Create the sub elements for <package>
-        opf_sub_elements = ['metadata', 'manifest', 'spine', 'guide']
-        for el in opf_sub_elements:
-            self.package.appendChild(self.document.createElement(el))
-        self.metadata_node, self.manifest_node, self.spine_node, self.guide_node = self.package.childNodes
-        self.spine_node.setAttribute('toc', 'ncx')
+        self.metadata_element = etree.SubElement(self.package, 'metadata')
+        self.manifest_element = etree.SubElement(self.package, 'manifest')
+        self.spine_element = etree.SubElement(self.package, 'spine')
+        self.guide_element = etree.SubElement(self.package, 'guide')
+        #Add attribute to spine element
+        self.spine_element.attrib['toc'] = 'ncx'
 
     def take_article(self, article):
         """
@@ -275,19 +275,19 @@ class OPF(object):
                 for filename in filenames:
                     _name, ext = os.path.splitext(filename)
                     ext = ext[1:]
-                    new = self.manifest_node.appendChild(self.document.createElement('item'))
+                    new = etree.SubElement(self.manifest_element, 'item')
                     if path:
-                        new.setAttribute('href', '/'.join([path, filename]))
+                        new.attrib['href'] = '/'.join([path, filename])
                     else:
-                        new.setAttribute('href', filename)
-                    new.setAttribute('media-type', mimetypes[ext])
+                        new.attrib['href'] = filename
+                    new.attrib['media-type'] = mimetypes[ext]
                     if filename == 'toc.ncx':
-                        new.setAttribute('id', 'ncx')
+                        new.attrib['id'] = 'ncx'
                     elif ext == 'png':
                         trim = path[7:]
-                        new.setAttribute('id', '{0}-{1}'.format(trim, filename.replace('.', '-')))
+                        new.attrib['id'] = '{0}-{1}'.format(trim, filename.replace('.', '-'))
                     else:
-                        new.setAttribute('id', filename.replace('.', '-'))
+                        new.attrib['id'] = filename.replace('.', '-')
         os.chdir(current_dir)
 
     def add_article_to_spine(self):
@@ -303,17 +303,13 @@ class OPF(object):
         #Create biblio idref
         biblio_idref = 'biblio-{0}-xml'.format(dashed_article_doi)
         #Add biblio idref if there is a bibliography
-        try:
-            back = self.article.root_tag.getElementsByTagName('back')[0]
-        except IndexError:
-            pass
-        else:
-            if back.getElementsByTagName('ref'):
+        if self.article.back is not None:
+            if self.article.back.findall('ref'):
                 self.spine.append(spine_itemref(biblio_idref, 'yes'))
         #Create tables idref
         tables_idref = 'tables-{0}-xml'.format(dashed_article_doi)
         #Add the tables if there should be a tables file
-        tables = self.article.root_tag.getElementsByTagName('table')
+        tables = self.article.document.findall('.//table')
         if tables:
             self.spine.append(spine_itemref(tables_idref, 'no'))
 
@@ -326,10 +322,9 @@ class OPF(object):
         be placed in the linear order.
         """
         for itemref in self.spine:
-            itemref_element = self.document.createElement('itemref')
-            itemref_element.setAttribute('idref', itemref.idref)
-            itemref_element.setAttribute('linear', itemref.linear)
-            self.spine_node.appendChild(itemref_element)
+            itemref_element = etree.SubElement(self.spine_element, 'itemref')
+            itemref_element.attrib['idref'] = itemref.idref
+            itemref_element.attrib['linear'] = itemref.linear
 
     def make_metadata_elements(self):
         """
@@ -343,35 +338,30 @@ class OPF(object):
         Only unicode text may go exist under the <dc:element> nodes.
         """
         #Create and add the dc:identifier element
-        dc_id = self.spawn_element('dc:identifier',
-                                  (('opf:scheme', self.identifier.scheme),
-                                   ('id', 'PrimaryID')),
-                                  self.identifier.value)
-        self.metadata_node.appendChild(dc_id)
+        self.spawn_element(self.metadata_element, 'dc:identifier',
+                           attr_pairs=(('opf:scheme', self.identifier.scheme),
+                                       ('id', 'PrimaryID')),
+                           text=self.identifier.value)
         #Create and add the dc:language elements
         for lang in self.language:
-            dc_lang = self.spawn_element('dc:language', text=lang)
-            self.metadata_node.appendChild(dc_lang)
+            self.spawn_element(self.metadata_element, 'dc:language', text=lang)
         #Create and add the dc:title element
-        dc_title = self.spawn_element('dc:title', text=self.title)
-        self.metadata_node.appendChild(dc_title)
+        self.spawn_element(self.metadata_element, 'dc:title', text=self.title)
         #Create and add the dc:rights element
-        dc_rights = self.spawn_element('dc:rights', text=self.rights)
-        self.metadata_node.appendChild(dc_rights)
+        self.spawn_element(self.metadata_element, 'dc:rights',
+                           text=self.rights)
         #Create and add the dc:creator elements
         for creator in self.creator:
-            dc_creator = self.spawn_element('dc:creator',
-                                            [('opf:role', creator.role),
-                                             ('opf:file-as', creator.file_as)],
-                                            creator.name)
-            self.metadata_node.appendChild(dc_creator)
+            self.spawn_element(self.metadata_element, 'dc:creator',
+                               attr_pairs=(('opf:role', creator.role),
+                                           ('opf:file-as', creator.file_as)),
+                               text=creator.name)
         #Create and add the dc:creator elements
         for contributor in self.contributor:
-            dc_contrib = self.spawn_element('dc:contributor',
-                                            [('opf:role', contributor.role),
-                                             ('opf:file-as', contributor.file_as)],
-                                            contributor.name)
-            self.metadata_node.appendChild(dc_contrib)
+            self.spawn_element(self.metadata_element, 'dc:contributor',
+                               attr_pairs=(('opf:role', contributor.role),
+                                           ('opf:file-as', contributor.file_as)),
+                               text=contributor.name)
         #Create and add the dc:date elements
         for date in self.date:
             month, day = int(date.month), int(date.day)
@@ -380,50 +370,55 @@ class OPF(object):
                 date_text += '-{0}'.format(month)
                 if day:
                     date_text += '-{0}'.format(day)
-            dc_date = self.spawn_element('dc:date', attr_pairs=[('opf:event', date.event)], text=date_text)
-            self.metadata_node.appendChild(dc_date)
+            self.spawn_element(self.metadata_element, 'dc:date',
+                               attr_pairs=[('opf:event', date.event)],
+                               text=date_text)
         #Create and add the dc:publisher elements
         for publisher in self.publisher:
-            dc_pub = self.spawn_element('dc:publisher', text=publisher)
-            self.metadata_node.appendChild(dc_pub)
+            self.spawn_element(self.metadata_element, 'dc:publisher',
+                               text=publisher)
         #Create and add the dc:format element
-        dc_format = self.spawn_element('dc:format', text=self.format)
-        self.metadata_node.appendChild(dc_format)
+        self.spawn_element(self.metadata_element, 'dc:format',
+                           text=self.format)
         #Create and add the dc:type element
-        dc_type = self.spawn_element('dc:type', text=self.type)
-        self.metadata_node.appendChild(dc_type)
+        self.spawn_element(self.metadata_element, 'dc:type', text=self.type)
         #Create and add the dc:description elements
         for description in self.description:
-            dc_desc = self.spawn_element('dc:description',text=description)
-            self.metadata_node.appendChild(dc_desc)
+            self.spawn_element(self.metadata_element, 'dc:description',
+                               text=description)
         #These are not really implemented yet, but they could be...
         #Create and add the dc:coverage, dc:source, and dc:relation elements
         for coverage in self.coverage:
-            dc_coverage = self.spawn_element('dc:coverage', text=coverage)
-            self.metadata_node.appendChild(dc_coverage)
+            self.spawn_element(self.metadata_element, 'dc:coverage',
+                               text=coverage)
         for source in self.source:
-            dc_source = self.spawn_element('dc:source', text=source)
-            self.metadata_node.appendChild(dc_source)
+            self.spawn_element(self.metadata_element, 'dc:source', text=source)
         for relation in self.relation:
-            dc_relation = self.spawn_element('dc:relation', text=relation)
-            self.metadata_node.appendChild(dc_relation)
+            self.spawn_element(self.metadata_element, 'dc:relation',
+                               text=relation)
 
-    def spawn_element(self, tag_name, attr_pairs=None, text=None):
+    def spawn_element(self, parent, tag_name, attr_pairs=None, text=None):
         """
-        Accepts a tagName string, and attribute-value pairs. It creates an
-        an element using these parameters and returns it. It also accepts text
-        and will add that text as a textNode under the element.
+        A convenience function that works like etree.SubElement, except it will
+        also add attributes by key-value pairs (attr_pairs) and will set the
+        new element's text to that passed by text argument.
+
+        It will also do namespace correction for lxml
         """
-        if text is None:
-            text = ''
+        def ns_check(instring):
+            if ':' not in instring:
+                return instring
+            else:
+                prefix, suffix = instring.split(':')
+                return '{'+self.package.nsmap[prefix]+'}'+suffix
+        
         if attr_pairs is None:
             attr_pairs = ()
-        element = self.document.createElement(tag_name)
-        for attribute, value in attr_pairs:
-            element.setAttribute(attribute, value)
-        text_node = self.document.createTextNode(text)
-        element.appendChild(text_node)
-        return element
+        new_element = etree.SubElement(parent, ns_check(tag_name))
+        for attr_key, value in attr_pairs:
+            new_element.attrib[ns_check(attr_key)] = value
+        if text is not None:
+            new_element.text = text
 
     def write(self):
         """
@@ -441,7 +436,7 @@ class OPF(object):
         self.make_metadata_elements()
         filename = os.path.join(self.location, 'OPS', 'content.opf')
         with open(filename, 'wb') as output:
-            output.write(self.document.toprettyxml(encoding='utf-8'))
+            output.write(etree.tostring(self.document, encoding='utf-8'))
 
     def use_collection_mode(self):
         """Enables Collection Mode, sets self.collection_mode to True"""

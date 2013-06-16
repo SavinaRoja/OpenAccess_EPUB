@@ -16,13 +16,14 @@ _dc_date :        returns list of Date - [Date]
 _dc_subject :     returns list of string - ['']
 """
 
+import openaccess_epub.utils.element_methods as element_methods
 from collections import namedtuple
-import openaccess_epub.utils as utils
+from lxml import etree
 
 identifier = namedtuple('Identifier', 'value, scheme')
 creator = namedtuple('Creator', 'name, role, file_as')
 contributor = namedtuple('Contributor', 'name, role, file_as')
-date = namedtuple('Date', 'year, month, day, event')
+date_tup = namedtuple('Date', 'year, month, day, event')
 
 #### Public Library of Science - PLoS ###
 def plos_dc_identifier(article):
@@ -50,9 +51,8 @@ def plos_dc_title(article):
     the title of the article. This is done for PloS by serializing the text
     in the Article's
     """
-    title_node = article.metadata.title.article_title
-    title_string = utils.serialize_text(title_node)
-    return title_string
+    article_title = article.metadata.front.article_meta.title_group.article_title.node
+    return str(etree.tostring(article_title, method='text', encoding='utf-8'), encoding='utf-8')
 
 def plos_dc_creator(article):
     """
@@ -63,29 +63,36 @@ def plos_dc_creator(article):
     This returns a list of Creator(name, role, file_as)
     """
     creator_list = []
-    for contrib in article.metadata.contrib:
-        if contrib.attrs['contrib-type'] == 'author':
+    for contrib_group in article.metadata.front.article_meta.contrib_group:
+        for contrib in contrib_group.contrib:
+            if not contrib.attrs['contrib-type'] == 'author':
+                continue
             if contrib.collab:
-                auth = utils.serializeText(contrib.collab[0])
+                auth = etree.tostring(contrib.collab[0], method='text', encoding='utf-8')
                 file_as = auth
             elif contrib.anonymous:
                 auth = 'Anonymous'
                 file_as = auth
             else:
-                name = contrib.getName()[0]  # Work with only first name listed
-                surname = name.surname
-                given = name.given
-                try:
-                    gi = given[0]
-                except (IndexError, TypeError):
-                    auth = surname
-                    file_as = surname
+                name = contrib.name[0]  # Work with only first name listed
+                surname = name.surname.text
+                given = name.given_names
+                if given:  # Given is optional
+                    if given.text:  # Odd instances of empty tags
+                        auth = ' '.join([surname, given.text])
+                        given_initial = given.text[0]
+                        file_as = ', '.join([surname, given_initial])
+                    else:
+                        auth = surname
+                        file_as = auth
                 else:
-                    auth = ' '.join([given, surname])
-                    file_as = ', '.join([surname, gi])
+                    auth = surname
+                    file_as = auth
             new_creator = creator(auth, 'aut', file_as)
             creator_list.append(new_creator)
     return creator_list
+
+
 
 def plos_dc_contributor(article):
     """
@@ -96,22 +103,29 @@ def plos_dc_contributor(article):
     This returns a list of Contributor(name, role, file_as)
     """
     contributor_list = []
-    for contrib in article.metadata.contrib:
-        if contrib.attrs['contrib-type'] == 'editor':
+    for contrib_group in article.metadata.front.article_meta.contrib_group:
+        for contrib in contrib_group.contrib:
+            if not contrib.attrs['contrib-type'] == 'editor':
+                continue
             if contrib.collab:
-                editor_name = utils.serializeText(contrib.collab[0])
-                file_as = editor_name
+                auth = etree.tostring(contrib.collab[0], method='text', encoding='utf-8')
+                file_as = auth
             else:
-                name = contrib.getName()[0]
-                try:
-                    given_initial = name.given[0]
-                except TypeError:
-                    editor_name = name.surname
-                    file_as = name.surname
+                name = contrib.name[0]  # Work with only first name listed
+                surname = name.surname.text
+                given = name.given_names
+                if given:  # Given is optional
+                    if given.text:  # Odd instances of empty tags
+                        auth = ' '.join([surname, given.text])
+                        given_initial = given.text[0]
+                        file_as = ', '.join([surname, given_initial])
+                    else:
+                        auth = surname
+                        file_as = auth
                 else:
-                    editor_name = name.given + ' ' + name.surname
-                    file_as = name.surname + ', ' + given_initial
-            new_contributor = contributor(editor_name, 'edt', file_as)
+                    auth = surname
+                    file_as = auth
+            new_contributor = contributor(auth, 'edt', file_as)
             contributor_list.append(new_contributor)
     return contributor_list
 
@@ -131,9 +145,10 @@ def plos_dc_description(article):
     in 0 or 1 descriptions per article.
     """
     abstract_text = ''
-    if article.metadata.abstract:
-        abstract_text = utils.serialize_text(article.metadata.abstract[0].node)
-    return abstract_text
+    abstract = article.metadata.front.article_meta.abstract
+    if abstract:
+        abstract_text = etree.tostring(abstract[0].node, method='text', encoding='utf-8').strip()
+    return str(abstract_text, encoding='utf-8')
 
 def plos_dc_date(article):
     """
@@ -143,23 +158,38 @@ def plos_dc_date(article):
     the dates when PLoS accepted the article and when it was published online.
     """
     date_list = []
-    #Creation is a Dublin Core event value: I interpret it as the accepted date
-    creation_date = article.metadata.history['accepted']
-    if creation_date:
-        date_list.append(date(creation_date.year,
-                              creation_date.month,
-                              creation_date.day,
-                              'creation'))
-    #Publication is another Dublin Core event value: epub
-    try:
-        pub_date = article.metadata.pub_date['epub']
-    except KeyError:
-        pass
-    else:
-        date_list.append(date(pub_date.year,
-                              pub_date.month,
-                              pub_date.day,
-                              'publication'))
+    history = article.metadata.front.article_meta.history
+    if history is None:
+        return date_list
+    #Creation is a Dublin Core event value: I interpret it as the date of acceptance
+    #For some reason, the lxml dtd parser fails to recognize the content model
+    #history (something to do with expanded content model? I am not sure yet)
+    #So for now, this will illustrate a work-around using lxml search
+    for date in history.node.findall('date'):
+        if not 'date-type' in date.attrib:
+            continue
+        if date.attrib['date-type'] == 'accepted':
+            year_el = date.find('year')
+            month_el = date.find('month')
+            day_el = date.find('day')
+            if year_el is not None:
+                year = element_methods.text_content(year_el)
+            else:
+                year = ''
+            if month_el is not None:
+                month = element_methods.text_content(month_el)
+            else:
+                month = ''
+            if day_el is not None:
+                day = element_methods.text_content(day_el)
+            date_list.append(date_tup(year, month, day, 'creation'))
+
+    #Publication is another Dublin Core event value: I use date of epub
+    pub_dates = article.metadata.front.article_meta.pub_date
+    for pub_date in pub_dates:
+        if pub_date.attrs['pub-type'] == 'epub':
+            date_list.append(date_tup(pub_date.year.text, pub_date.month.text,
+                                      pub_date.day.text, 'publication'))
     return date_list
 
 def plos_dc_subject(article):
@@ -168,10 +198,13 @@ def plos_dc_subject(article):
     values for use as Dublin Core Subject elements. These are returned as a
     list of strings.
     """
+    #Concerned only with kwd elements, not compound-kwd elements
+    #Basically just compiling a list of their serialized text
     subject_list = []
-    for kwd in article.metadata.all_kwds:
-        kwd_text = utils.serialize_text(kwd.node)
-        subject_list.append(kwd_text)
+    kwd_groups = article.metadata.front.article_meta.kwd_group
+    for kwd_group in kwd_groups:
+        for kwd in kew_group:
+            subject_list.append(etree.tostring(kwd.node, method='text', encoding='utf-8'))
     return subject_list
 
 

@@ -29,7 +29,7 @@ def plos_creator(article):
             if not contrib.attrs['contrib-type'] == 'author':
                 continue
             if contrib.collab:
-                auth = etree.tostring(contrib.collab[0], method='text')
+                auth = etree.tostring(contrib.collab[0], method='text', encoding='utf-8')
                 file_as = auth
             elif contrib.anonymous:
                 auth = 'Anonymous'
@@ -60,4 +60,4 @@ def plos_title(article):
     in the Article's
     """
     article_title = article.metadata.front.article_meta.title_group.article_title.node
-    return etree.tostring(article_title, method='text')
+    return str(etree.tostring(article_title, method='text', encoding='utf-8'), encoding='utf-8')

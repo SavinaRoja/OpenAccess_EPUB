@@ -283,7 +283,7 @@ e
         def make_meta(content, name):
             meta = etree.Element('meta')
             meta.attrib['content'] = content
-            meta.attrib['content'] = name
+            meta.attrib['name'] = name
             return meta
 
         head = etree.SubElement(self.ncx, 'head')
@@ -340,7 +340,8 @@ to the relaxed constraints of OPS 2.0'''))
             nav_element.attrib['id'] = nav.id
             nav_element.attrib['playOrder'] = nav.playOrder
             label_element = etree.SubElement(nav_element, 'navLabel')
-            label_element.text = nav.label
+            text_element = etree.SubElement(label_element, 'text')
+            text_element.text = nav.label
             content_element = etree.SubElement(nav_element, 'content')
             content_element.attrib['src'] = nav.source
             for child in nav.children:
@@ -404,7 +405,7 @@ to the relaxed constraints of OPS 2.0'''))
         self.make_list_of_tables()
         filename = os.path.join(self.location, 'OPS', 'toc.ncx')
         with open(filename, 'wb') as output:
-            output.write(etree.tostring(self.document, pretty_print=True, encoding='utf-8'))
+            output.write(etree.tostring(self.document, encoding='utf-8'))
 
     def pull_play_order(self):
         """
@@ -427,5 +428,5 @@ to the relaxed constraints of OPS 2.0'''))
         """
         label_element = etree.Element('navLabel')
         text_element = etree.SubElement(label_element, 'text')
-        text_element = text
+        text_element.text = text
         return label_element

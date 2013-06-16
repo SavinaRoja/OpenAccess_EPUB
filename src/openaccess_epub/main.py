@@ -328,11 +328,11 @@ def zipped_input(args, config=None):
         config = get_config_module()
 
 
-def make_epub(document, outdirect, explicit_images, batch, config=None):
+def make_epub(article, outdirect, explicit_images, batch, config=None):
     """
     Encapsulates the primary processing work-flow. Before this method is
     called, pre-processing has occurred to define important directory and file
-    locations. The document has been processed for metadata and now it is time
+    locations. The article has been processed for metadata and now it is time
     to generate the ePub content.
     """
     print('Processing output to {0}.epub'.format(outdirect))
@@ -348,16 +348,16 @@ def make_epub(document, outdirect, explicit_images, batch, config=None):
     shutil.copytree(epub_base, outdirect)
 
     #Get the Digital Object Identifier
-    DOI = document.get_DOI()
+    DOI = article.get_DOI()
 
     #Get the images
-    get_images(DOI, outdirect, explicit_images, config, document)
+    get_images(DOI, outdirect, explicit_images, config, article)
 
     toc = ncx.NCX(__version__, outdirect)
     myopf = opf.OPF(outdirect, False)
-    toc.take_article(document)
-    myopf.take_article(document)
-    ops_doc = ops.OPSPLoS(document, outdirect)
+    toc.take_article(article)
+    myopf.take_article(article)
+    #ops_doc = ops.OPSPLoS(article, outdirect)
     toc.write()
     myopf.write()
     utils.epub_zip(outdirect)
