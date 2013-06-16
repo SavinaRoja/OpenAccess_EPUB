@@ -137,7 +137,7 @@ e
             insertion_point = self.nav_map
         #Check if the article has a body element
         body = self.article.body
-        if body:
+        if body is not None:
             self.id_int = 0
             #This step is executed as pre-processing, <sec> elements will receive
             #an id attribute if they lack one
@@ -150,8 +150,8 @@ e
             for nav_point in self.recursive_article_navmap(body):
                 insertion_point.append(nav_point)
         #Add a navpoint for the references, if there are references
-        if self.article.back:
-            if back.findall('ref'):
+        if self.article.back is not None:
+            if self.article.back.findall('ref'):
                 id = 'references-{0}'.format(self.article_doi)
                 label = 'References'
                 source = 'biblio.{0}.xml#references'.format(self.article_doi)
@@ -168,7 +168,7 @@ e
             self.maxdepth = depth
         navpoints = []
         tagnames = ['sec', 'fig', 'table-wrap']
-        for child in src_element.children():
+        for child in src_element:
             try:
                 tagname = child.tag
             except AttributeError:  # Text nodes have no attribute tagName
@@ -185,9 +185,9 @@ e
                 child_id = '{0}-{1}'.format(self.article_doi, source_id)
             #Attempt to pull the title text as a label for the navpoint
             child_title = child.find('title')
-            if not child_title:
+            if child_title is None:
                 continue
-            label = element_methods.text_content(title)
+            label = element_methods.text_content(child_title)
             if not label:
                 continue
             source = 'main.{0}.xml#{1}'.format(self.article_doi, source_id)
@@ -397,7 +397,7 @@ to the relaxed constraints of OPS 2.0'''))
         #Generate the <docAuthor>(s)
         self.make_docAuthor()
         #Generate the <navMap>
-        self.ncx.appendChild(self.make_navMap())
+        self.ncx.append(self.make_navMap())
         #Generate the List of Figures
         self.make_list_of_figures()
         #Generate the List of Tables
@@ -405,7 +405,6 @@ to the relaxed constraints of OPS 2.0'''))
         filename = os.path.join(self.location, 'OPS', 'toc.ncx')
         with open(filename, 'wb') as output:
             output.write(etree.tostring(self.document, pretty_print=True, encoding='utf-8'))
-            #output.write(self.document.toprettyxml(encoding='utf-8'))
 
     def pull_play_order(self):
         """

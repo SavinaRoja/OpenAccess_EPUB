@@ -10,7 +10,7 @@ _title :   returns string - ''
 """
 
 from collections import namedtuple
-import openaccess_epub.utils as utils
+from lxml import etree
 
 creator = namedtuple('Creator', 'name, role, file_as')
 
@@ -26,27 +26,31 @@ def plos_creator(article):
     creator_list = []
     for contrib_group in article.metadata.front.article_meta.contrib_group:
         for contrib in contrib_group.contrib:
-            if contrib.attrib['contrib-type'] == 'author':
-                if contrib.collab:
-                    auth = utils.serializeText(contrib.collab[0])
-                    file_as = auth
-                elif contrib.anonymous:
-                    auth = 'Anonymous'
-                    file_as = auth
-                else:
-                    name = contrib.getName()[0]  # Work with only first name listed
-                    surname = name.surname
-                    given = name.given
-                    try:
-                        gi = given[0]
-                    except (IndexError, TypeError):
-                        auth = surname
-                        file_as = surname
+            if not contrib.attrs['contrib-type'] == 'author':
+                continue
+            if contrib.collab:
+                auth = etree.tostring(contrib.collab[0], method='text')
+                file_as = auth
+            elif contrib.anonymous:
+                auth = 'Anonymous'
+                file_as = auth
+            else:
+                name = contrib.name[0]  # Work with only first name listed
+                surname = name.surname.text
+                given = name.given_names
+                if given:  # Given is optional
+                    if given.text:  # Odd instances of empty tags
+                        auth = ' '.join([surname, given.text])
+                        given_initial = given.text[0]
+                        file_as = ', '.join([surname, given_initial])
                     else:
-                        auth = ' '.join([given, surname])
-                        file_as = ', '.join([surname, gi])
-                new_creator = creator(auth, 'aut', file_as)
-                creator_list.append(new_creator)
+                        auth = surname
+                        file_as = auth
+                else:
+                    auth = surname
+                    file_as = auth
+            new_creator = creator(auth, 'aut', file_as)
+            creator_list.append(new_creator)
     return creator_list
 
 def plos_title(article):
@@ -55,6 +59,5 @@ def plos_title(article):
     the title of the article. This is done for PloS by serializing the text
     in the Article's
     """
-    title_node = article.metadata.title.article_title
-    title_string = utils.serialize_text(title_node)
-    return title_string
+    article_title = article.metadata.front.article_meta.title_group.article_title.node
+    return etree.tostring(article_title, method='text')

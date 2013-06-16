@@ -117,7 +117,9 @@ its DTD.'.format(xml_file))
                     #this singularity may be overridden to plural.
                     #Plurality is passed on through the multiple argument
                     elif branch.type in ['seq', 'or']:
-                        if branch.occur in ['mult', 'plus']:
+                        if multiple:
+                            sub_elements += get_sub_elements(branch, multiple=True)
+                        elif branch.occur in ['mult', 'plus']:
                             sub_elements += get_sub_elements(branch, multiple=True)
                         else:
                             sub_elements += get_sub_elements(branch, multiple=False)
