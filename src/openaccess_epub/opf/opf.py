@@ -339,8 +339,8 @@ xmlns:oebpackage="http://openebook.org/namespaces/oeb-package/1.0/">
         """
         #Create and add the dc:identifier element
         self.spawn_element(self.metadata_element, 'dc:identifier',
-                           attr_pairs=(('opf:scheme', self.identifier.scheme),
-                                       ('id', 'PrimaryID')),
+                           attrs={'opf:scheme': self.identifier.scheme,
+                                  'id': 'PrimaryID'},
                            text=self.identifier.value)
         #Create and add the dc:language elements
         for lang in self.language:
@@ -353,14 +353,14 @@ xmlns:oebpackage="http://openebook.org/namespaces/oeb-package/1.0/">
         #Create and add the dc:creator elements
         for creator in self.creator:
             self.spawn_element(self.metadata_element, 'dc:creator',
-                               attr_pairs=(('opf:role', creator.role),
-                                           ('opf:file-as', creator.file_as)),
+                               attrs={'opf:role': creator.role,
+                                      'opf:file-as': creator.file_as},
                                text=creator.name)
         #Create and add the dc:creator elements
         for contributor in self.contributor:
             self.spawn_element(self.metadata_element, 'dc:contributor',
-                               attr_pairs=(('opf:role', contributor.role),
-                                           ('opf:file-as', contributor.file_as)),
+                               attrs={'opf:role': contributor.role,
+                                      'opf:file-as': contributor.file_as},
                                text=contributor.name)
         #Create and add the dc:date elements
         for date in self.date:
@@ -371,7 +371,7 @@ xmlns:oebpackage="http://openebook.org/namespaces/oeb-package/1.0/">
                 if day:
                     date_text += '-{0}'.format(day)
             self.spawn_element(self.metadata_element, 'dc:date',
-                               attr_pairs=[('opf:event', date.event)],
+                               attrs={'opf:event': date.event},
                                text=date_text)
         #Create and add the dc:publisher elements
         for publisher in self.publisher:
@@ -397,10 +397,10 @@ xmlns:oebpackage="http://openebook.org/namespaces/oeb-package/1.0/">
             self.spawn_element(self.metadata_element, 'dc:relation',
                                text=relation)
 
-    def spawn_element(self, parent, tag_name, attr_pairs=None, text=None):
+    def spawn_element(self, parent, tag_name, attrs=None, text=None):
         """
         A convenience function that works like etree.SubElement, except it will
-        also add attributes by key-value pairs (attr_pairs) and will set the
+        also add attributes by key-value pairs (attrs) and will set the
         new element's text to that passed by text argument.
 
         It will also do namespace correction for lxml
@@ -412,11 +412,11 @@ xmlns:oebpackage="http://openebook.org/namespaces/oeb-package/1.0/">
                 prefix, suffix = instring.split(':')
                 return '{'+self.package.nsmap[prefix]+'}'+suffix
         
-        if attr_pairs is None:
-            attr_pairs = ()
+        if attrs is None:
+            attrs = {}
         new_element = etree.SubElement(parent, ns_check(tag_name))
-        for attr_key, value in attr_pairs:
-            new_element.attrib[ns_check(attr_key)] = value
+        for attr_key in attrs.keys():
+            new_element.attrib[ns_check(attr_key)] = attrs[attr_key]
         if text is not None:
             new_element.text = text
 

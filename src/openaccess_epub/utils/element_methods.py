@@ -29,7 +29,60 @@ def text_content(element):
         text = [element.text]
     tails = [child.tail.strip() for child in element if child.tail.strip()]
     return ' '.join(text + tails)
-    
+
+def remove_all_attributes(element):
+    """
+    This method will remove all attributes of any provided element.
+    """
+    for k in element.attrib.keys():
+        element.attrib.pop(k)
+
+def get_attribute(element, attribute):
+    """
+    With lxml's built in methods, if you attempt to access an attribute
+    that does not exist, you will get a KeyError. To deal with attributes
+    that are optional, you would have to follow one of these patterns:
+
+      try:
+        optional_attr = some_element.attrib['optional']
+      except KeyError:
+        optional_attr = None
+      if optional_attr:  # Or this could be an else clause
+        do_stuff
+
+      if 'optional' in some_element.attrib:
+        optional_attr = some_element.attrib:['optional']
+      else:
+        optional_attr = None
+      if optional_attr:
+        do_stuff
+
+    Doing this for such a common job is an annoyance, so this method
+    encapsulates the first pattern above to make things cleaner. The new
+    pattern, using this method, is:
+
+      optional_attr = get_attribute(some_element, 'optional')
+      if optional_attr:
+        do_stuff
+    """
+    try:
+        optional_attribute = element.attrib[attribute]
+    except KeyError:
+        return None
+    else:
+        return optional_attribute
+
+def ns_format(element, namespaced_string):
+    """
+    Provides a convenient method for adapting a tag or attribute name to
+    use lxml's format. Use this for tags like ops:switch or attributes like
+    xlink:href.
+    """
+    if ':' not in namespaced_string:
+        print('This name contains no namespace, returning it unmodified: ' + namespaced_string)
+        return namespaced_string
+    namespace, name = namespaced_string.split(':')
+    return '{' + element.nsmap[namespace] + '}' + name
 
 def get_children_by_tag_name(tagname, node):
     """
@@ -63,15 +116,6 @@ def get_optional_child(tagname, node, not_found=None):
     except IndexError:
         child = not_found
     return child
-
-
-def remove_all_attributes(node):
-    """
-    This method will remove all attributes of any provided element.
-    """
-    while node.attributes.length:
-        node.removeAttribute(node.attributes.item(0).name)
-
 
 def get_all_attributes(node, remove=False):
     """

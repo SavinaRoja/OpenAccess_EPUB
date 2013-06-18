@@ -7,6 +7,7 @@ from the OPSGenerator base class in opsgenerator.py
 import openaccess_epub.utils as utils
 import openaccess_epub.utils.element_methods as element_methods
 from openaccess_epub.ops.opsmeta import OPSMeta
+from lxml import etree
 import os.path
 import logging
 
