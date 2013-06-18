@@ -219,7 +219,6 @@ its DTD.'.format(xml_file))
             metadata_tuple = namedtuple('Metadata', 'front, back')
             front = recursive_element_packing(self.front)
             back = recursive_element_packing(self.back)
-            #test_root = recursive_element_packing(self.document.getroot())
             return metadata_tuple(front, back)
 
     def get_publisher(self):

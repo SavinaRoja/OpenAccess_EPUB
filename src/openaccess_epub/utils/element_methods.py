@@ -84,25 +84,18 @@ def ns_format(element, namespaced_string):
     namespace, name = namespaced_string.split(':')
     return '{' + element.nsmap[namespace] + '}' + name
 
-def get_children_by_tag_name(tagname, node):
+def rename_attributes(element, attrs):
     """
-    Search for all direct children with a particular element type name.
-
-    This method is similar to getElementsByTagName except it does not search
-    any deeper than the immediate children. It returns a list with 0 or more
-    nodes.
+    Renames the attributes of the element. Accepts the element and a dictionary
+    of string values. The keys are the original names, and their values will be
+    the altered names. This method treats all attributes as optional and will
+    not fail on missing attributes.
     """
-    child_list = []
-    for child in node.childNodes:
-        try:
-            tag = child.tagName
-        #Some nodes (text and comments) have no tagName
-        except AttributeError:
-            pass
+    for name in attrs.keys():
+        if name not in element.attrib:
+            continue
         else:
-            if tag == tagname:
-                child_list.append(child)
-    return child_list
+            element.attrib[attrs[name]] = element.attrib.pop(name)
 
 def get_optional_child(tagname, node, not_found=None):
     """

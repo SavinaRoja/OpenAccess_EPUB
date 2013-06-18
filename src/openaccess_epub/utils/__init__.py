@@ -396,14 +396,18 @@ def epub_zip(outdirect):
     os.chdir(outdirect)
     epub.write('mimetype')
     log.info('Recursively zipping META-INF and OPS')
-    recursive_zip(epub, 'META-INF')
-    recursive_zip(epub, 'OPS')
+    for item in os.listdir('.'):
+        if item == 'mimetype':
+            continue
+        recursive_zip(epub, item)
     os.chdir(current_dir)
     epub.close()
 
 
-def recursive_zip(zipf, directory, folder=''):
+def recursive_zip(zipf, directory, folder=None):
     """Recursively traverses the output directory to construct the zipfile"""
+    if folder is None:
+        folder = ''
     for item in os.listdir(directory):
         if os.path.isfile(os.path.join(directory, item)):
             zipf.write(os.path.join(directory, item), os.path.join(directory,
