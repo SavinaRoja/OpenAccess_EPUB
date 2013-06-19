@@ -105,7 +105,7 @@ class OPSMeta(object):
             if xlink_href:
                 ext_link.attrib['href'] = xlink_href
             else:
-                ext_link.attrib['href'] = element_methods.text_content(ext_link)
+                ext_link.attrib['href'] = element_methods.all_text(ext_link)
             if ext_id:
                 ext_link.attrib['id'] = ext_id
         #Uris often declare their address as xlink:href attribute
@@ -118,4 +118,4 @@ class OPSMeta(object):
             if xlink_href:
                 uri.attrib['href'] = xlink_href
             else:
-                uri.attrib['href'] = element_methods.text_content(uri)
+                uri.attrib['href'] = element_methods.all_text(uri)

@@ -178,7 +178,7 @@ its DTD.'.format(xml_file))
             sub_elements = get_sub_elements(element_def.content)
             get_text = False  # A control variable, used later if PCDATA in content model
             for sub_element in sub_elements:
-                #We have the sub elements according to tag and occurence
+                #We have the sub elements according to tag and occurrence
                 if sub_element.tag == 'pcdata':
                     get_text = True
                     continue
@@ -200,7 +200,7 @@ its DTD.'.format(xml_file))
                     field_vals.append(child)
             if get_text:
                 field_names.append('text')
-                field_vals.append(element_methods.text_content(element))
+                field_vals.append(element_methods.all_text(element))
                 #field_vals.append(str(etree.tostring(element, method='text', encoding='utf-8').strip(), encoding='utf-8'))
 
             #Make items in field_names safe for namedtuple
