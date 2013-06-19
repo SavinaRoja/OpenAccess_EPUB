@@ -943,48 +943,51 @@ class OPSPLoS(OPSMeta):
         """
         A recursive function to convert <title> nodes directly beneath <div>
         nodes into appropriate OPS compatible header tags.
+
+        A div element may or may not have a label sub-element, and it may or
+        may not have a title sub-element. This results in 4 unique scenarios.
+        Having an empty title element, or an empty label element, will be
+        treated as not having the element at all.
         """
         depth_tags = ['h2', 'h3', 'h4', 'h5', 'h6']
         #Look for divs
         for div in element.findall('div'):
             #Look for a label
             div_label = div.find('label')
-            if div_label is None:
-                div_label_text = ''
-            else:
-                if len(div_label) == 0:  # No children
-                    div_label.remove()
-                else:
-                    div_label_text = element
-            try:
-                div.find('label')
-                div_label = element_methods.get_children_by_tag_name('label', div)[0]
-            except IndexError:
-                div_label_text = ''
-            else:
-                if not div_label.childNodes:
-                    div.removeChild(div_label)
-                else:
-                    div_label_text = utils.nodeText(div_label)
-                    div.removeChild(div_label)
+            if div_label is not None:
+                #Check if empty, no elements and no text
+                if len(div_label) == 0 and div_label.text is None:
+                    div_label.getparent().remove(div_label)  # remove the element from the tree
+                    div_label = None
             #Look for a title
-            try:
-                div_title = element_methods.get_children_by_tag_name('title', div)[0]
-            except IndexError:
-                div_title = None
-            else:
-                if not div_title.childNodes:
-                    div.removeChild(div_title)
+            div_title = div.find('title')
+            if div_title is not None:
+                #Check if empty, no elements and no text
+                if len(div_title) == 0 and div_title.text is None:
+                    div_title.getparent().remove(div_title)  # remove the element from the tree
+                    div_title = None
+            #Now we have div_label and div_title (they may be None)
+            #If there is a div_title
+            if div_title is not None:
+                #Rename the tag
+                if depth < len(depth_tags):
+                    div_title.tag = depth_tags[depth]
                 else:
-                    if depth < len(depth_tags):
-                        div_title.tagName = depth_tags[depth]
-                    else:
-                        div_title.tagName = 'span'
-                        div_title.setAttribute('class', 'extendedheader{0}'.format(depth+2))
-                    if div_label_text:
-                        label_node = self.document.createTextNode(div_label_text)
-                        div_title.insertBefore(label_node, div_title.firstChild)
-            self.convert_div_titles(div, depth=depth + 1)
+                    div_title.tag = 'span'
+                    div_title.attrib['class'] = 'extendedheader{0}'.format(depth+2)
+                #If there is a div_label
+                if div_label is not None:
+                    #Prepend the label text to the title
+                    div_title.text = ' '.join(div_label.text, div_title.text)
+                    div_label.getparent().remove(div_label)  # Remove the label
+            elif div_label is not None:  # No title, but there is a label
+                #Rename the tag
+                div_label.tag = 'b'  # Convert to a bold element
+            else:  # Neither label nor title
+                pass
+
+            #Move on to the next level
+            self.convert_div_titles(div, depth=depth+1)
 
     def convert_xref_elements(self, node):
         """
