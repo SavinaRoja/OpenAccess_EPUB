@@ -57,7 +57,7 @@ class OPSPLoS(OPSMeta):
 
         #The section that contains the Article Title, List of Authors and
         #Affiliations, and Abstracts is referred to as the Heading
-        #self.make_heading(body)
+        self.make_heading(body)
 
         #The ArticleInfo section contains the (self) Citation, Editors, Dates,
         #Copyright, Funding Statement, Competing Interests Statement,
@@ -111,12 +111,13 @@ class OPSPLoS(OPSMeta):
         all generated output as new childNodes.
         """
         #Create a div for Heading, exposing it to linking and formatting
-        heading_div = self.appendNewElement('div', receiving_node)
-        heading_div.setAttribute('id', 'Heading')
+        heading_div = etree.SubElement(receiving_node, 'div')
+        heading_div.attrib['id'] = 'Heading'
         #Creation of the title
         self.make_heading_title(heading_div)
         #Creation of the Authors
         list_of_authors = self.get_authors_list()
+        print(list_of_authors)
         self.make_heading_authors(list_of_authors, heading_div)
         #Creation of the Authors Affiliations text
         self.make_heading_affiliations(heading_div)
@@ -253,24 +254,35 @@ class OPSPLoS(OPSMeta):
         """
         Gets a list of all authors described in the metadata.
         """
-        return [i for i in self.metadata.contrib if i.attrs['contrib-type']=='author']
+        authors_list = []
+        for contrib_group in self.metadata.front.article_meta.contrib_group:
+            for contrib in contrib_group.contrib:
+                if contrib.attrs['contrib-type'] == 'author':
+                    authors_list.append(contrib)
+        return authors_list
 
     def get_editors_list(self):
         """
         Gets a list of all editors described in the metadata.
         """
-        return [i for i in self.metadata.contrib if i.attrs['contrib-type']=='editor']
+        editors_list = []
+        for contrib_group in self.metadata.front.article_meta.contrib_group:
+            for contrib in contrib_group.contrib:
+                if contrib.attrs['contrib-type'] == 'editor':
+                    editors_list.append(contrib)
+        return editors_list
 
-    def make_heading_title(self, receiving_node):
+    def make_heading_title(self, receiving_element):
         """
         Makes the Article Title for the Heading.
 
         Metadata element, content derived from FrontMatter
         """
-        title = self.appendNewElement('h1', receiving_node)
-        self.setSomeAttributes(title, {'id': 'title',
-                                       'class': 'article-title'})
-        title.childNodes = self.metadata.title.article_title.childNodes
+        article_title = deepcopy(self.metadata.front.article_meta.title_group.article_title.node)
+        article_title.tag = 'h1'
+        article_title.attrib['id'] = 'title'
+        article_title.attrib['class'] = 'article-title'
+        receiving_element.append(article_title)
 
     def make_heading_authors(self, authors, receiving_node):
         """
@@ -280,30 +292,40 @@ class OPSPLoS(OPSMeta):
         Metadata element, content derived from FrontMatter
         """
         #Make and append a new element to the passed receiving_node
-        author_element = self.appendNewElement('h3', receiving_node)
-        author_element.setAttribute('class', 'authors')
+        author_element = etree.SubElement(receiving_node, 'h3')
+        author_element.attrib['class'] = 'authors'
         #Construct content for the author element
         first = True
         for author in authors:
             if first:
                 first = False
             else:
-                self.appendNewText(', ', author_element)
-            if author.collab:  # If collab, just add rich content
+                element_methods.append_new_text(author_element, ',', join_str='')
+            if author.collab is not None:  # If collab, just add rich content
                 #Assume only one collab
-                author_element.childNodes += author.collab[0].childNodes
-            elif not author.anonymous:
-                if author.name[0].given:
-                    name = author.name[0].given + ' ' + author.name[0].surname
+                element_methods.append_all_below(author_element, author.collab[0].node)
+            elif author.anonymous is not None:  # If anonymous, just add "Anonymous"
+                element_methods.append_new_text(author_element, 'Anonymous')
+            else:  # Author is neither Anonymous or a Collaboration
+                name = author.name[0]  # Work with only first name listed
+                surname = name.surname.text
+                if name.given_names is not None:
+                    name_text = ' '.join(name.given_names.text, surname)
                 else:
-                    name = author.name[0].surname
-                self.appendNewText(name, author_element)
-            else:
-                name = 'Anonymous'
-                self.appendNewText(name, author_element)
+                    name_text = surname
+                element_methods.append_new_text(author_element, name_text)
             #TODO: Handle author footnote references, also put footnotes in the ArticleInfo
             #Example: journal.pbio.0040370.xml
             for xref in author.xref:
+                if xref.attrs['ref-type'] in ['corresp', 'aff']:
+                    try:
+                        sup_element = xref.sup[0].node
+                    except IndexError:
+                        sup_text = ''
+                    else:
+                        sup_text = element_methods.all_text(sup_element)
+                    new_sup = etree.SubElement(author_element, 'sup')
+                
                 if xref.ref_type in ['corresp', 'aff']:
                     try:
                         sup_element = element_methods.get_children_by_tag_name('sup', xref.node)[0]
