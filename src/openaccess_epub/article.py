@@ -95,46 +95,49 @@ its DTD.'.format(xml_file))
         
         eltuple = namedtuple('ElTuple', 'tag, occurrence')
         
-        def get_sub_elements(content, multiple=False):
-            if content is None:
-                return []
-            if content.type == 'pcdata':
-                return([eltuple('pcdata', 'multiple')])
-            sub_elements = []
-            left, right = content.left, content.right
-            for branch in [left, right]:
-                if branch:
-                    #PCDATA is a special case, it is always multiple, and it
-                    #has no possible sub-elements
-                    if branch.type == 'pcdata':
-                        sub_elements.append(eltuple('pcdata', 'multiple'))
-                    #For our purposes, both "seq" and "or" types are sequences
-                    #If a sequence component occurrence is mult or plus, then
-                    #every internal component should inherit plurality that may
-                    #not be overridden
-                    #If a sequence component occurence is once or opt, then
-                    #every internal component should inherit singularity, but
-                    #this singularity may be overridden to plural.
-                    #Plurality is passed on through the multiple argument
-                    elif branch.type in ['seq', 'or']:
-                        if multiple:
-                            sub_elements += get_sub_elements(branch, multiple=True)
-                        elif branch.occur in ['mult', 'plus']:
-                            sub_elements += get_sub_elements(branch, multiple=True)
-                        else:
-                            sub_elements += get_sub_elements(branch, multiple=False)
-                    else:  # element
-                        #If an element inherits plurality, it will stay plural
-                        if multiple is True:
-                            sub_elements.append(eltuple(branch.name, 'multiple'))
-                        #If an element inherits singularity, it should check to
-                        #see if it overrides to plural
-                        else:
-                            occurrence = branch.occur
-                            if occurrence in ['mult', 'plus']:
+        def get_sub_elements(content, multiple=False, first=None):
+            sub_elements = []  #The final list of tuples to be returned
+
+            #The first level of recursion is special, and we need not be
+            #concerned with inheriting plurality from an upper branch.
+            if first:
+                if content is None:
+                    return []
+                elif content.type == 'pcdata':
+                    #If an element can only contain pcdata (text), look no more
+                    return([eltuple('pcdata', 'multiple')])
+                elif content.type in ['seq', 'or']:
+                    if content.occur in ['mult', 'plus']:  # Pass on multiple
+                        sub_elements += get_sub_elements(content, multiple=True)
+                    else:  # Don't pass on multiple
+                        sub_elements += get_sub_elements(content, multiple=False)
+                elif content.type == 'element':  # May only contain one kind of element
+                    if content.occur in ['mult', 'plus']:
+                        return [eltuple(content.name, 'multiple')]
+                    else:
+                        return [eltuple(content.name, 'singular')]
+
+            #This is for everything that is not the first point of recursion
+            else:
+                for branch in [content.left, content.right]:
+                    if branch is not None:
+                        #PCDATA is a special case, look no deeper, always multiple
+                        if branch.type == 'pcdata':
+                            sub_elements.append(eltuple('pcdata', 'multiple'))
+                        #"seq" and "or" are sequence types, their plurality may
+                        #be passed down to internal structures. Plurality is
+                        #never lost, only gained.
+                        elif branch.type in ['seq', 'or']:
+                            if multiple or branch.occur in ['mult', 'plus']:
+                                sub_elements += get_sub_elements(branch, multiple=True)
+                            else:
+                                sub_elements += get_sub_elements(branch, multiple=False)
+                        elif branch.type == 'element':
+                            if multiple or branch.occur in ['mult', 'plus']:
                                 sub_elements.append(eltuple(branch.name, 'multiple'))
                             else:
                                 sub_elements.append(eltuple(branch.name, 'singular'))
+
             return sub_elements
         
         def recursive_element_packing(element):
@@ -175,7 +178,7 @@ its DTD.'.format(xml_file))
             #Add the attrs dict to field values
             field_vals.append(attrs)
             #Get the sub_elements for the element
-            sub_elements = get_sub_elements(element_def.content)
+            sub_elements = get_sub_elements(element_def.content, first=True)
             get_text = False  # A control variable, used later if PCDATA in content model
             for sub_element in sub_elements:
                 #We have the sub elements according to tag and occurrence
