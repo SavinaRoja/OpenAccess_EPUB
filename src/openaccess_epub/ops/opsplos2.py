@@ -111,7 +111,11 @@ class OPSPLoS(OPSMeta):
         all generated output as new childNodes.
         """
         #Create a div for Heading, exposing it to linking and formatting
-        heading_div = etree.SubElement(receiving_node, 'div')
+        #heading_div = etree.SubElement(receiving_node, 'div')
+        heading_div = etree.Element('div')
+        receiving_node.insert(0, heading_div)
+        
+        
         heading_div.attrib['id'] = 'Heading'
         #Creation of the title
         self.make_heading_title(heading_div)
@@ -316,7 +320,6 @@ class OPSPLoS(OPSMeta):
             #TODO: Handle author footnote references, also put footnotes in the ArticleInfo
             #Example: journal.pbio.0040370.xml
             for xref in author.xref:
-                print(xref)
                 if xref.attrs['ref-type'] in ['corresp', 'aff']:
                     try:
                         sup_element = xref.sup[0].node
@@ -336,32 +339,37 @@ class OPSPLoS(OPSMeta):
 
         Metadata element, content derived from FrontMatter
         """
-        if self.metadata.affs:
-            affs_div = self.appendNewElement('div', receiving_node)
-            affs_div.setAttribute('id', 'affiliations')
+        #Get all of the aff element tuples from the metadata
+        affs = self.metadata.front.article_meta.aff
+        #Create a list of all those pertaining to the authors
+        author_affs = [i for i in affs if 'aff' in i.attrs['id']]
+        #Count them, used for formatting
+        author_aff_count = len(self.metadata.front.article_meta.aff)
+        if author_aff_count > 0:
+            affs_div = etree.SubElement(receiving_node, 'div')
+            affs_div.attrib['id'] = 'affiliations'
 
         #A simple way that seems to work by PLoS convention, but does not treat
         #the full scope of the <aff> element
-        for aff in self.metadata.affs:
-            aff_id = aff.getAttribute('id')
-            if not 'aff' in aff_id:  # Skip affs for editors...
-                continue
-            #Get the label node and the addr-line node
-            #<label> might be missing, especially for one author works
-            label_node = element_methods.get_children_by_tag_name('label', aff)
-            #I expect there to always be the <addr-line>
-            addr_line_node = element_methods.get_optional_child('addr-line', aff)
-            if addr_line_node:
-                addr_line_text = utils.nodeText(addr_line_node)
+        for aff in author_affs:
+            #Expecting id to always be present
+            aff_id = aff.attrs['id']
+            #Create a span element to accept extracted content
+            aff_span = etree.SubElement(affs_div, 'span')
+            aff_span.attrib['id'] = aff_id
+            #Get the first label node and the first addr-line node
+            if len(aff.label) > 0:
+                label = aff.label[0].node
+                label_text = element_methods.all_text(label)
+                bold = etree.SubElement(aff_span, 'b')
+                bold.text = label_text+' '
+            if len(aff.addr_line) > 0:
+                addr_line = aff.addr_line[0].node
+                element_methods.append_new_text(aff_span, element_methods.all_text(addr_line))
             else:
-                addr_line_text = utils.getTagText(aff)
-            cur_aff_span = self.appendNewElement('span', affs_div)
-            cur_aff_span.setAttribute('id', aff_id)
-            if label_node:
-                label_text = utils.nodeText(label_node[0]) + ' '
-                label_b = self.appendNewElementWithText('b', label_text, cur_aff_span)
-            
-            self.appendNewText(addr_line_text + ', ', cur_aff_span)
+                element_methods.append_new_text(aff_span, element_methods.all_text(aff))
+            if author_affs.index(aff) < author_aff_count-1:
+                element_methods.append_new_text(aff_span, ', ', join_str='')
 
     def make_heading_abstracts(self, receiving_node):
         """
@@ -371,28 +379,36 @@ class OPSPLoS(OPSMeta):
 
         Metadata element, content derived from FrontMatter
         """
-        for abstract in self.metadata.abstract:
-            #Remove <title> elements in the abstracts
-            for title in element_methods.get_children_by_tag_name('title', abstract.node):
-                abstract.node.removeChild(title)
-            if abstract.type == '':  # If no type is listed -> main abstract
-                element_methods.remove_all_attributes(abstract.node)
-                self.appendNewElementWithText('h2', 'Abstract', receiving_node)
-                receiving_node.appendChild(abstract.node)
-                abstract.node.tagName = 'div'
-                abstract.node.setAttribute('id', 'abstract')
-            if abstract.type == 'summary':
-                element_methods.remove_all_attributes(abstract.node)
-                self.appendNewElementWithText('h2', 'Author Summary', receiving_node)
-                receiving_node.appendChild(abstract.node)
-                abstract.node.tagName = 'div'
-                abstract.node.setAttribute('id', 'author-summary')
-            if abstract.type == 'editors-summary':
-                element_methods.remove_all_attributes(abstract.node)
-                self.appendNewElementWithText('h2', 'Editors\' Summary', receiving_node)
-                receiving_node.appendChild(abstract.node)
-                abstract.node.tagName = 'div'
-                abstract.node.setAttribute('id', 'editors-summary')
+        for abstract in self.metadata.front.article_meta.abstract:
+            #Make a copy of the abstract
+            abstract_copy = deepcopy(abstract.node)
+            #Remove title elements in the abstracts
+            for title in abstract_copy.findall('.//title'):
+                title.getparent().remove(title)
+            #Create a header for the abstract
+            abstract_header = etree.Element('h2')
+            #Rename the abstract tag
+            abstract_copy.tag = 'div'
+            #Remove all of the attributes from the abstract copy top element
+            element_methods.remove_all_attributes(abstract_copy)
+            #Set the header text and abstract id according to abstract type
+            abstract_type = abstract.attrs['abstract-type']
+            if abstract_type == 'summary':  # Should be an Author Summary
+                abstract_header.text = 'Author Summary'
+                abstract_copy.attrib['id'] = 'author-summary'
+            elif abstract_type == 'editors-summary': # Should be an Editor Summary
+                abstract_header.text = 'Editors\' Summary'
+                abstract_copy.attrib['id'] = 'editor-summary'
+            elif abstract_type is None:  # The attribute was missing, implying main
+                abstract_header.text = 'Abstract'
+                abstract_copy.attrib['id'] = 'abstract'
+            elif abstract_type == 'toc':
+                continue
+            else:
+                abstract_header.text = 'Unhandled value for abstract-type {0}'.format(abstract_type)
+                abstract_copy.attrib['id'] = abstract_type
+            receiving_node.append(abstract_header)
+            receiving_node.append(abstract_copy)
 
     def make_article_info_citation(self, receiving_node):
         """
