@@ -327,7 +327,7 @@ class OPSPLoS(OPSMeta):
                     new_sup = etree.SubElement(author_element, 'sup')
                     new_sup.text = sup_text
                     sup_link = etree.SubElement(new_sup, 'a')
-                    sup_link.attrib['href'] = self.main_frag.format(xref.attrib['rid'])
+                    sup_link.attrib['href'] = self.main_frag.format(xref.attrs['rid'])
 
     def make_heading_affiliations(self, receiving_node):
         """
