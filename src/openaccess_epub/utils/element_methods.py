@@ -75,7 +75,8 @@ def all_text(element):
         text = []
     else:
         text = [element.text]
-    tails = [child.tail.strip() for child in element if child.tail.strip()]
+    tails = [child.tail for child in element if child.tail is not None]
+    tails = [tail.strip() for tail in tails if tail.strip()]
     return ' '.join(text + tails)
 
 def remove_all_attributes(element):
