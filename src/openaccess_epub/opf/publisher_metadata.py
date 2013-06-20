@@ -173,15 +173,15 @@ def plos_dc_date(article):
             month_el = date.find('month')
             day_el = date.find('day')
             if year_el is not None:
-                year = element_methods.text_content(year_el)
+                year = element_methods.all_text(year_el)
             else:
                 year = ''
             if month_el is not None:
-                month = element_methods.text_content(month_el)
+                month = element_methods.all_text(month_el)
             else:
                 month = ''
             if day_el is not None:
-                day = element_methods.text_content(day_el)
+                day = element_methods.all_text(day_el)
             date_list.append(date_tup(year, month, day, 'creation'))
 
     #Publication is another Dublin Core event value: I use date of epub

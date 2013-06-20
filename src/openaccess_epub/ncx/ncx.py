@@ -187,7 +187,7 @@ e
             child_title = child.find('title')
             if child_title is None:
                 continue
-            label = element_methods.text_content(child_title)
+            label = element_methods.all_text(child_title)
             if not label:
                 continue
             source = 'main.{0}.xml#{1}'.format(self.article_doi, source_id)

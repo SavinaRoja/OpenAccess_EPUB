@@ -29,12 +29,12 @@ def append_new_text(destination, text, join_str=None):
         if last.tail is None:  # Last child has no tail
             last.tail = text
         else:  # Last child has a tail
-            last.tail = join_str.join(last.tail, text)
+            last.tail = join_str.join([last.tail, text])
     else:  # Destination has no children
         if destination.text is None:  # Destination has no text
             destination.text = text
         else:  # Destination has a text
-            destination.text = join_str.join(destination.text, text)
+            destination.text = join_str.join([destination.text, text])
 
 def append_all_below(destination, source, join_str=None):
     """
@@ -52,14 +52,14 @@ def append_all_below(destination, source, join_str=None):
             if destination.text is None:  # Destination has no text
                 destination.text = source.text
             else:  # Destination has a text
-                destination.text = join_str.join(destination.text, source.text)
+                destination.text = join_str.join([destination.text, source.text])
         else:  # Destination has children
             #Select last child
             last = destination[-1]
             if last.tail is None:  # Last child has no tail
                 last.tail = source.text
             else:  # Last child has a tail
-                last.tail = join_str.join(last.tail, source.text)
+                last.tail = join_str.join([last.tail, source.text])
     for each_child in source:
         destination.append(deepcopy(each_child))
 

@@ -117,7 +117,6 @@ class OPSPLoS(OPSMeta):
         self.make_heading_title(heading_div)
         #Creation of the Authors
         list_of_authors = self.get_authors_list()
-        print(list_of_authors)
         self.make_heading_authors(list_of_authors, heading_div)
         #Creation of the Authors Affiliations text
         self.make_heading_affiliations(heading_div)
@@ -301,22 +300,23 @@ class OPSPLoS(OPSMeta):
                 first = False
             else:
                 element_methods.append_new_text(author_element, ',', join_str='')
-            if author.collab is not None:  # If collab, just add rich content
+            if len(author.collab) > 0:  # If collab, just add rich content
                 #Assume only one collab
                 element_methods.append_all_below(author_element, author.collab[0].node)
-            elif author.anonymous is not None:  # If anonymous, just add "Anonymous"
+            elif len(author.anonymous) > 0:  # If anonymous, just add "Anonymous"
                 element_methods.append_new_text(author_element, 'Anonymous')
             else:  # Author is neither Anonymous or a Collaboration
                 name = author.name[0]  # Work with only first name listed
                 surname = name.surname.text
                 if name.given_names is not None:
-                    name_text = ' '.join(name.given_names.text, surname)
+                    name_text = ' '.join([name.given_names.text, surname])
                 else:
                     name_text = surname
                 element_methods.append_new_text(author_element, name_text)
             #TODO: Handle author footnote references, also put footnotes in the ArticleInfo
             #Example: journal.pbio.0040370.xml
             for xref in author.xref:
+                print(xref)
                 if xref.attrs['ref-type'] in ['corresp', 'aff']:
                     try:
                         sup_element = xref.sup[0].node
@@ -325,20 +325,9 @@ class OPSPLoS(OPSMeta):
                     else:
                         sup_text = element_methods.all_text(sup_element)
                     new_sup = etree.SubElement(author_element, 'sup')
-                
-                if xref.ref_type in ['corresp', 'aff']:
-                    try:
-                        sup_element = element_methods.get_children_by_tag_name('sup', xref.node)[0]
-                    except IndexError:
-                        log.info('Author xref did not contain <sup> element')
-                        #sup_text = utils.nodeText(xref.node)
-                        sup_text = ''
-                    else:
-                        sup_text = utils.nodeText(sup_element)
-                    new_sup = self.appendNewElement('sup', author_element)
-                    sup_link = self.appendNewElement('a', new_sup)
-                    sup_link.setAttribute('href', self.main_frag.format(xref.rid))
-                    self.appendNewText(sup_text, sup_link)
+                    new_sup.text = sup_text
+                    sup_link = etree.SubElement(new_sup, 'a')
+                    sup_link.attrib['href'] = self.main_frag.format(xref.attrib['rid'])
 
     def make_heading_affiliations(self, receiving_node):
         """
