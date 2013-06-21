@@ -62,7 +62,7 @@ class OPSPLoS(OPSMeta):
         #The ArticleInfo section contains the (self) Citation, Editors, Dates,
         #Copyright, Funding Statement, Competing Interests Statement,
         #Correspondence, and Footnotes. Maybe more...
-        #self.make_article_info(body)
+        self.make_article_info(body)
 
         #The Back Section of an article may contain important information aside
         #from the Bibliography. Unlike the Body, this method will look for
@@ -140,8 +140,8 @@ class OPSPLoS(OPSMeta):
         all generated output as new childNodes.
         """
         #Create a div for ArticleInfo, exposing it to linking and formatting
-        article_info_div = self.appendNewElement('div', receiving_node)
-        article_info_div.setAttribute('id', 'ArticleInfo')
+        article_info_div = etree.SubElement(receiving_node, 'div')
+        article_info_div.attrib['id'] ='ArticleInfo'
         #Creation of the self Citation
         self.make_article_info_citation(article_info_div)
         #Creation of the Editors
@@ -419,10 +419,10 @@ class OPSPLoS(OPSMeta):
         composes content for the display of that string in the ArticleInfo.
         """
         citation_text = self.format_self_citation()
-        citation_div = self.appendNewElement('div', receiving_node)
-        citation_div.setAttribute('id', 'article-citation')
-        self.appendNewElementWithText('b', 'Citation: ', citation_div)
-        self.appendNewText(citation_text, citation_div)
+        citation_div = etree.SubElement(receiving_node, 'div')
+        citation_div.attrib['id'] = 'article-citation'
+        b = etree.SubElement(citation_div, 'b')
+        b.text = 'Citation: {0}'.format(citation_text)
 
     def make_article_info_editors(self, editors, body):
         if not editors:  # No editors
