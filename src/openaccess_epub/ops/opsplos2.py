@@ -147,7 +147,7 @@ class OPSPLoS(OPSMeta):
         list_of_editors = self.get_editors_list()
         self.make_article_info_editors(list_of_editors, article_info_div)
         #Creation of the important Dates segment
-        #self.make_article_info_dates(article_info_div)
+        self.make_article_info_dates(article_info_div)
         #Creation of the Copyright statement
         #self.make_article_info_copyright(article_info_div)
         #Creation of the Funding statement
@@ -466,30 +466,45 @@ class OPSPLoS(OPSMeta):
                                 element_methods.append_new_text(editors_div, ', ')
                                 element_methods.append_all_below(editors_div, aff.node)
 
-    def make_article_info_dates(self, body):
+    def make_article_info_dates(self, receiving_el):
         """
         Makes the section containing important dates for the article: typically
         Received, Accepted, and Published.
         """
-        dates_div = self.appendNewElement('div', body)
-        dates_div.setAttribute('id', 'article-dates')
+        dates_div = etree.SubElement(receiving_el, 'div')
+        dates_div.attrib['id'] = 'article-dates'
 
-        #Received - Optional
-        received = self.metadata.history['received']
-        if received:
-            self.appendNewElementWithText('b', 'Received: ', dates_div)
-            self.appendNewText(self.format_date_string(received) + '; ', dates_div)
-
-        #Accepted - Optional
-        accepted = self.metadata.history['accepted']
-        if accepted:
-            self.appendNewElementWithText('b', 'Accepted: ', dates_div)
-            self.appendNewText(self.format_date_string(accepted) + '; ', dates_div)
-
-        #Published - Required
-        published = self.metadata.pub_date['epub']
-        self.appendNewElementWithText('b', 'Published: ', dates_div)
-        self.appendNewText(self.format_date_string(published), dates_div)
+        if self.metadata.front.article_meta.history is not None:
+            dates = self.metadata.front.article_meta.history.date
+        received = None
+        accepted = None
+        for date in dates:
+            if date.attrs['date-type'] is None:
+                continue
+            elif date.attrs['date-type'] == 'received':
+                received = date
+            elif date.attrs['date-type'] == 'accepted':
+                accepted = date
+            else:
+                pass
+        if received is not None:  # Optional
+            b = etree.SubElement(dates_div, 'b')
+            b.text = 'Received: '
+            formatted_date_string = self.format_date_string(received)
+            element_methods.append_new_text(dates_div, formatted_date_string+'; ')
+        if accepted is not None:  # Optional
+            b = etree.SubElement(dates_div, 'b')
+            b.text = 'Accepted: '
+            formatted_date_string = self.format_date_string(accepted)
+            element_methods.append_new_text(dates_div, formatted_date_string+'; ')
+        #Published date is required
+        for pub_date in self.metadata.front.article_meta.pub_date:
+            if pub_date.attrs['pub-type'] == 'epub':
+                b = etree.SubElement(dates_div, 'b')
+                b.text = 'Published: '
+                formatted_date_string = self.format_date_string(pub_date)
+                element_methods.append_new_text(dates_div, formatted_date_string)
+                break
 
     def make_article_info_copyright(self, body):
         """
@@ -740,15 +755,15 @@ class OPSPLoS(OPSMeta):
                   'July', 'August', 'September', 'October', 'November', 'December']
         date_string = ''
         if date_tuple.season:
-            return '{0}, {1}'.format(date_tuple.season, date_tuple.year)
+            return '{0}, {1}'.format(date_tuple.season.text, date_tuple.year.text)
         else:
             if not date_tuple.month and not date_tuple.day:
-                return '{0}'.format(date_tuple.year)
+                return '{0}'.format(date_tuple.year.text)
             if date_tuple.month:
-                date_string += months[int(date_tuple.month)]
+                date_string += months[int(date_tuple.month.text)]
             if date_tuple.day:
-                date_string += ' ' + date_tuple.day
-            return ', '.join([date_string, date_tuple.year])
+                date_string += ' ' + date_tuple.day.text
+            return ', '.join([date_string, date_tuple.year.text])
 
     def format_self_citation(self):
         """
