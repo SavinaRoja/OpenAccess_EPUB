@@ -114,8 +114,6 @@ class OPSPLoS(OPSMeta):
         #heading_div = etree.SubElement(receiving_node, 'div')
         heading_div = etree.Element('div')
         receiving_node.insert(0, heading_div)
-        
-        
         heading_div.attrib['id'] = 'Heading'
         #Creation of the title
         self.make_heading_title(heading_div)
@@ -140,7 +138,8 @@ class OPSPLoS(OPSMeta):
         all generated output as new childNodes.
         """
         #Create a div for ArticleInfo, exposing it to linking and formatting
-        article_info_div = etree.SubElement(receiving_node, 'div')
+        article_info_div = etree.Element('div')
+        receiving_node.insert(1, article_info_div)
         article_info_div.attrib['id'] ='ArticleInfo'
         #Creation of the self Citation
         self.make_article_info_citation(article_info_div)
@@ -148,17 +147,17 @@ class OPSPLoS(OPSMeta):
         list_of_editors = self.get_editors_list()
         self.make_article_info_editors(list_of_editors, article_info_div)
         #Creation of the important Dates segment
-        self.make_article_info_dates(article_info_div)
+        #self.make_article_info_dates(article_info_div)
         #Creation of the Copyright statement
-        self.make_article_info_copyright(article_info_div)
+        #self.make_article_info_copyright(article_info_div)
         #Creation of the Funding statement
-        self.make_article_info_funding(article_info_div)
+        #self.make_article_info_funding(article_info_div)
         #Creation of the Competing Interests statement
-        self.make_article_info_competing_interests(article_info_div)
+        #self.make_article_info_competing_interests(article_info_div)
         #Creation of the Correspondences (contact information) for the article
-        self.make_article_info_correspondences(article_info_div)
+        #self.make_article_info_correspondences(article_info_div)
         #Creation of the Footnotes (other) for the ArticleInfo
-        self.make_article_info_footnotes_other(article_info_div)
+        #self.make_article_info_footnotes_other(article_info_div)
 
     def post_processing_node_conversion(self, node):
         """
@@ -410,7 +409,7 @@ class OPSPLoS(OPSMeta):
             receiving_node.append(abstract_header)
             receiving_node.append(abstract_copy)
 
-    def make_article_info_citation(self, receiving_node):
+    def make_article_info_citation(self, receiving_el):
         """
         Creates a self citation node for the ArticleInfo of the article.
 
@@ -419,48 +418,53 @@ class OPSPLoS(OPSMeta):
         composes content for the display of that string in the ArticleInfo.
         """
         citation_text = self.format_self_citation()
-        citation_div = etree.SubElement(receiving_node, 'div')
+        citation_div = etree.SubElement(receiving_el, 'div')
         citation_div.attrib['id'] = 'article-citation'
         b = etree.SubElement(citation_div, 'b')
         b.text = 'Citation: {0}'.format(citation_text)
 
-    def make_article_info_editors(self, editors, body):
+    def make_article_info_editors(self, editors, receiving_el):
         if not editors:  # No editors
             return
-        editors_div = self.appendNewElement('div', body)
+
+        editors_div = etree.SubElement(receiving_el, 'div')
+        editor_bold = etree.SubElement(editors_div, 'b')
         if len(editors) > 1:  # Pluralize if more than one editor
-            self.appendNewElementWithText('b', 'Editors: ', editors_div)
+            editor_bold.text = 'Editors: '
         else:
-            self.appendNewElementWithText('b', 'Editor: ', editors_div)
+            editor_bold.text = 'Editor: '
         first = True
         for editor in editors:
             if first:
                 first = False
             else:
-                self.appendNewText('; ', editors_div)
-
-            if editor.anonymous:
-                self.appendNewText('Anonymous', editors_div)
-            elif editor.collab:
-                editors_div.childNodes += editor.collab[0].childNodes
+                element_methods.append_new_text(editors_div, '; ', join_str='')
+            
+            if len(editor.anonymous) > 0:
+                element_methods.append_new_text(editors_div, 'Anonymous', join_str='')
+            elif len(editor.collab) > 0:
+                element_methods.append_all_below(editors_div, editor.collab[0].node)
             else:
-                name = editor.name[0].surname
-                if editor.name[0].given:
-                    name = editor.name[0].given + ' ' + name
-                self.appendNewText(name, editors_div)
-            #Add some text for the editor affiliations
+                name = editor.name[0]  # Work with only first name listed
+                surname = name.surname.text
+                if name.given_names is not None:
+                    name_text = ' '.join([name.given_names.text, surname])
+                else:
+                    name_text = surname
+                element_methods.append_new_text(editors_div, name_text)
+
             for xref in editor.xref:
-                if xref.ref_type == 'aff':
-                    #Relate this xref to the appropriate aff tag
-                    ref_id = xref.rid
-                    refer_aff = self.metadata.affs_by_id[ref_id]
-                    #Put in appropriate text
-                    self.appendNewText(', ', editors_div)
-                    addr = refer_aff.getElementsByTagName('addr-line')
-                    if addr:
-                        editors_div.childNodes += addr[0].childNodes
-                    else:
-                        editors_div.childNodes += refer_aff.childNodes
+                if xref.attrs['ref-type'] == 'aff':
+                    ref_id = xref.attrs['rid']
+                    for aff in self.metadata.front.article_meta.aff:
+                        if aff.attrs['id'] == ref_id:
+                            if len(aff.addr_line) > 0:
+                                addr = aff.addr_line[0].node
+                                element_methods.append_new_text(editors_div, ', ')
+                                element_methods.append_all_below(editors_div, addr)
+                            else:
+                                element_methods.append_new_text(editors_div, ', ')
+                                element_methods.append_all_below(editors_div, aff.node)
 
     def make_article_info_dates(self, body):
         """
