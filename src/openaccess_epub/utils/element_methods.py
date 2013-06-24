@@ -159,23 +159,6 @@ def get_optional_child(tagname, node, not_found=None):
         child = not_found
     return child
 
-def get_all_attributes(node, remove=False):
-    """
-    Returns a dictionary of all the attributes for an Element; takes the form
-    of dict[attribute_name]=attribute_value.
-
-    If the optional argument "remove" is set to True, this method will also
-    remove all of the attributes from the element.
-    """
-    attributes = {}
-    keys = node.attributes.keys()
-    for key in keys:
-        attributes[key] = node.getAttribute(key)
-    if remove:
-        remove_all_attributes(node)
-    return attributes
-
-
 def elevate_node(node, adopt_name=''):
         """
         This method serves a specialized function. It will effectively elevate
@@ -206,21 +189,27 @@ def elevate_node(node, adopt_name=''):
 
 def remove(node):
     """
-    Removes the node from its parent. This is a convenience method which
-    accesses the node's parentNode, then calls parent.removeChild() on itself.
+    A simple way to remove an element node from its tree.
     """
-    parent = node.parentNode
-    parent.removeChild(node)
+    parent = node.getparent()
+    parent.remove(node)
 
 
-def replace_with(node, new_child):
+def replace(old, new):
     """
-    Replace an existing node with a new node. This is a convenience method
-    which accesses the node's parentNode, then calls parent.replaceChild()
-    on the node with the newChild.
+    A simple way to replace one element node with another.
     """
-    parent = node.parentNode
-    parent.replaceChild(new_child, node)
+    parent  = old.getparent()
+    parent.replace(old, new)
+
+
+def insert_before(old, new):
+    """
+    A simple way to insert a new element node before the old element node among
+    its siblings.
+    """
+    parent = old.getparent()
+    parent.insert(parent.index(old), new)
 
 
 def comment(node):
@@ -232,6 +221,7 @@ def comment(node):
     comment = node.ownerDocument.createComment(node.toxml())
     parent.replaceChild(comment, node)
     return comment
+
 
 def uncomment(comment):
     """

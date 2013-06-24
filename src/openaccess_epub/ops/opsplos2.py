@@ -8,7 +8,7 @@ import openaccess_epub.utils as utils
 import openaccess_epub.utils.element_methods as element_methods
 from .opsmeta import OPSMeta
 from lxml import etree
-from copy import deepcopy
+from copy import copy, deepcopy
 import os
 import logging
 
@@ -69,11 +69,11 @@ class OPSPLoS(OPSMeta):
         self.make_back_matter(body)
 
         #Handle node conversion
-        #self.convert_disp_formula_elements(body)
-        #self.convert_inline_formula_elements(body)
+        self.convert_disp_formula_elements(body)
+        self.convert_inline_formula_elements(body)
         #self.convert_named_content_elements(body)
         #self.convert_disp_quote_elements(body)
-        #self.convert_emphasis_elements(body)
+        #self.convert_JPTS_emphasis(body)
         #self.convert_address_linking_elements(body)
         #self.convert_xref_elements(body)
         #self.convert_boxed_text_elements(body)
@@ -92,8 +92,9 @@ class OPSPLoS(OPSMeta):
         #TODO: Back matter stuffs
 
         #These come last for a reason
-        self.convert_sec_elements(body)
-        self.convert_div_titles(body)
+        #self.convert_sec_elements(body)
+        #self.convert_div_titles(body)
+        self.post_processing_conversion(body)
 
         #Finally, write to a document
         self.write_document(os.path.join(self.ops_dir, self.main_frag[:-4]), self.document)
@@ -157,24 +158,23 @@ class OPSPLoS(OPSMeta):
         #Creation of the Footnotes (other) for the ArticleInfo
         self.make_article_info_footnotes_other(article_info_div)
 
-    def post_processing_node_conversion(self, node):
+    def post_processing_conversion(self, top):
         """
         This is a top-level function for calling a suite of methods which
         translate JPTS 3.0 XML to OPS XML for PLoS content.
 
-        These methods will search the DOM tree beneath the specified Node with
-        its getElementsByTagName('tagname') method; they will find elements
-        at any depth beneath the Node and attempt conversion/translation.
+        These methods will search the element tree beneath the specified top
+        element node, finding the elements at any depth in order to coerce them
+        to OPS-suitable elements. This should be called as a final step, to
+        operate on all such elements in the final product.
         """
-        #This current listing was simply grabbed from the old create_synopsis
-        #method and will receive later review and development
-        #TODO: Review this function and decide what to do with it
-        self.convert_emphasis_elements(node)
-        self.convert_address_linking_elements(node)
-        self.convert_xref_elements(node)
-        self.convert_named_content_elements(node)
-        self.convert_sec_elements(node)
-        self.convert_div_titles(node, depth=1)
+        #TODO: Review this function for completion
+        self.convert_JPTS_emphasis(top)
+        self.convert_address_linking_elements(top)
+        self.convert_xref_elements(top)
+        #self.convert_named_content_elements(top)
+        self.convert_sec_elements(top)
+        self.convert_div_titles(top, depth=1)
 
     def create_biblio(self):
         """
@@ -1034,7 +1034,7 @@ class OPSPLoS(OPSMeta):
             #Move on to the next level
             self.convert_div_titles(div, depth=depth+1)
 
-    def convert_xref_elements(self, node):
+    def convert_xref_elements(self, top):
         """
         xref elements are used for internal referencing to document components
         such as figures, tables, equations, bibliography, or supplementary
@@ -1056,116 +1056,99 @@ class OPSPLoS(OPSMeta):
                    'fn': self.main_frag,
                    'app': self.main_frag,
                    '': self.main_frag}
-        for x in node.getElementsByTagName('xref'):
-            x.tagName = 'a'
-            x_attrs = element_methods.get_all_attributes(x, remove=True)
-            if 'ref-type' in x_attrs:
-                ref_type = x_attrs['ref-type']
+        for xref in top.findall('.//xref'):
+            xref.tag = 'a'
+            xref_attrs = copy(xref.attrib)
+            element_methods.remove_all_attributes(xref)
+            if 'ref-type' in xref_attrs:
+                ref_type = xref_attrs['ref-type']
             else:
                 ref_type = ''
-            rid = x_attrs['rid']
+            rid = xref_attrs['rid']
             address = ref_map[ref_type].format(rid)
-            x.setAttribute('href', address)
+            xref.attrib['href'] = address
 
-    def convert_disp_formula_elements(self, body):
+    def convert_disp_formula_elements(self, top):
         """
         <disp-formula> elements must be converted to OPS conforming elements
         """
-        disp_formulas = body.getElementsByTagName('disp-formula')
+        disp_formulas = top.findall('.//disp-formula')
         for disp in disp_formulas:
-            #Parse all fig attributes to a dict
-            disp_attributes = element_methods.get_all_attributes(disp, remove=False)
-            #Determine if there is a <label>, 0 or 1, grab_node
-            try:
-                label_node = element_methods.get_children_by_tag_name('label', disp)[0]
-            except IndexError:  # No label tag
-                label_node = None
-
-            #Get the graphic node in the disp, not always present
-            graphic_node = element_methods.get_optional_child('graphic', disp)
-            #If graphic not present
-            if not graphic_node:  #Assume there is math text instead
-                text_span = self.document.createElement('span')
-                if 'id' in disp_attributes:
-                    text_span.setAttribute('id', disp_attributes['id'])
-                text_span.setAttribute('class', 'disp-formula')
-                text_span.childNodes = disp.childNodes
-                #Create OPS content, using image path, and label
-                disp_parent = disp.parentNode
-                #Insert the img element
-                disp_parent.insertBefore(text_span, disp)
-                #Create content for the label
-                if label_node:
-                    disp_parent.insertBefore(label_node, text_span)
-                    label_node.tagName = 'b'
-                #Remove the old disp-formula element
+            #find label element
+            label_el = disp.find('label')
+            graphic_el = disp.find('graphic')
+            if graphic_el is None:  # No graphic, assume math as text instead
+                text_span = etree.Element('span', {'class': 'disp-formula'})
+                if 'id' in disp.attrib:
+                    text_span.attrib['id'] = disp.attrib['id']
+                element_methods.append_all_below(text_span, disp)
+                #Insert the text span before the disp-formula
+                element_methods.insert_before(disp, text_span)
+                #If a label exists, modify and insert before text_span
+                if label_el is not None:
+                    label_el.tag = 'b'
+                    element_methods.insert_before(text_span, label_el)
+                #Remove the disp-formula
                 element_methods.remove(disp)
+                #Skip the rest, which deals with the graphic element
                 continue
-            
-            #If graphic present
-            graphic_node = element_methods.get_children_by_tag_name('graphic', disp)[0]
+            #The graphic element is present
             #Create a file reference for the image
-            graphic_xlink_href = graphic_node.getAttribute('xlink:href')
+            xlink_href = element_methods.ns_format(graphic_el, 'xlink:href')
+            graphic_xlink_href = graphic_el.attrib[xlink_href]
             file_name = graphic_xlink_href.split('.')[-1] + '.png'
             img_dir = 'images-' + self.doi_frag
             img_path = '/'.join([img_dir, file_name])
 
             #Create OPS content, using image path, and label
-            disp_parent = disp.parentNode
-
             #Create the img element
-            img_element = self.document.createElement('img')
-            img_element.setAttribute('alt', 'A Display Formula')
-            if 'id' in disp_attributes:
-                img_element.setAttribute('id', disp_attributes['id'])
-            img_element.setAttribute('class', 'disp-formula')
-            img_element.setAttribute('src', img_path)
-
+            img_element = etree.Element('img', {'alt': 'A Display Formula',
+                                                'class': 'disp-formula',
+                                                'src': img_path})
+            #Transfer the id attribute
+            if 'id' in disp.attrib:
+                img_element.attrib['id'] = disp.attrib['id']
             #Insert the img element
-            disp_parent.insertBefore(img_element, disp)
+            element_methods.insert_before(disp, img_element)
             #Create content for the label
-            if label_node:
-                disp_parent.insertBefore(label_node, img_element)
-                label_node.tagName = 'b'
-
+            if label_el is not None:
+                label_el.tag = 'b'
+                element_methods.insert_before(img_element, label_el)
             #Remove the old disp-formula element
             element_methods.remove(disp)
 
-    def convert_inline_formula_elements(self, body):
+    def convert_inline_formula_elements(self, top):
         """
         <inline-formula> elements must be converted to OPS conforming elements
 
         These elements may contain <inline-graphic> elements, textual content,
         or both.
         """
-        for inline in body.getElementsByTagName('inline-formula'):
-            #Grab all the attributes of the formula element
-            inline_attributes = element_methods.get_all_attributes(inline, remove=True)
-            #Convert the inline-formula element to a div and give it a class
-            inline.tagName = 'span'
-            inline.setAttribute('class', 'inline-formula')
-            #Determine if there is an <inline-graphic>
-            try:
-                inline_graphic = element_methods.get_children_by_tag_name('inline-graphic', inline)[0]
-            except IndexError:
-                inline_graphic = None
-            else:
-                #Convert the inline-graphic element to an img element
-                inline_graphic.tagName = 'img'
-                #Get all of the attributes, with removal on
-                inline_graphic_attributes = element_methods.get_all_attributes(inline_graphic, remove=True)
-                #Create a file reference for the image using the xlink:href attribute value
-                graphic_xlink_href = inline_graphic_attributes['xlink:href']
-                file_name = graphic_xlink_href.split('.')[-1] + '.png'
-                img_dir = 'images-' + self.doi_frag
-                img_path = '/'.join([img_dir, file_name])
-                #Set the source to the image path
-                inline_graphic.setAttribute('src', img_path)
-                #Give it an inline-formula class
-                inline_graphic.setAttribute('class', 'disp-formula')
-                #Alt text
-                inline_graphic.setAttribute('alt', 'An Inline Formula')
-
+        inline_formulas = top.findall('.//inline-formula')
+        for inline in inline_formulas:
+            #inline-formula elements will be modified in situ
+            element_methods.remove_all_attributes(inline)
+            inline.tag = 'span'
+            inline.attrib['class'] = 'inline-formula'
+            inline_graphic = inline.find('inline-graphic')
+            if inline_graphic is None:
+                # Do nothing more if there is no graphic
+                continue
+            #Need to conver the inline-graphic element to an img element
+            inline_graphic.tag = 'img'
+            #Get a copy of the attributes, then remove them
+            inline_graphic_attributes = copy(inline_graphic.attrib)
+            element_methods.remove_all_attributes(inline_graphic)
+            #Create a file reference for the image
+            xlink_href = element_methods.ns_format(inline_graphic, 'xlink:href')
+            graphic_xlink_href = inline_graphic_attributes[xlink_href]
+            file_name = graphic_xlink_href.split('.')[-1] + '.png'
+            img_dir = 'images-' + self.doi_frag
+            img_path = '/'.join([img_dir, file_name])
+            #Set the source to the image path
+            inline_graphic.attrib['src'] = img_path
+            inline_graphic.attrib['class'] = 'inline-formula'
+            inline_graphic.attrib['alt'] = 'An Inline Formula'
 
     def convert_named_content_elements(self, body):
         """
