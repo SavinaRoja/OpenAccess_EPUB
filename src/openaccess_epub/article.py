@@ -204,7 +204,6 @@ its DTD.'.format(xml_file))
             if get_text:
                 field_names.append('text')
                 field_vals.append(element_methods.all_text(element))
-                #field_vals.append(str(etree.tostring(element, method='text', encoding='utf-8').strip(), encoding='utf-8'))
 
             #Make items in field_names safe for namedtuple
             #Coerce characters in string
