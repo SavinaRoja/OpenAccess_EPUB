@@ -6,7 +6,9 @@ from the OPSGenerator base class in opsgenerator.py
 
 import openaccess_epub.utils as utils
 import openaccess_epub.utils.element_methods as element_methods
-from openaccess_epub.ops.opsmeta import OPSMeta
+from .opsmeta import OPSMeta
+from lxml import etree
+from copy import copy, deepcopy
 import os
 import logging
 
@@ -19,12 +21,11 @@ class OPSPLoS(OPSMeta):
     from a PLoS journal article.
     """
     def __init__(self, article, output_dir):
-        OPSMeta.__init__(self)
+        OPSMeta.__init__(self, article)
         log.info('Initiating OPSPLoS')
         #Set some initial hooks into the input article content
-        self.article = article.root_tag
+        self.article = article
         self.metadata = article.metadata
-        self.backmatter = article.metadata.backmatter
         self.doi = article.get_DOI()
         #From "10.1371/journal.pone.0035956" get "journal.pone.0335956"
         self.doi_frag = self.doi.split('10.1371/')[1]
@@ -32,9 +33,10 @@ class OPSPLoS(OPSMeta):
         self.ops_dir = os.path.join(output_dir, 'OPS')
         self.html_tables = []
         self.main_body = self.create_main()
-        self.create_biblio()
-        if self.html_tables:
-            self.create_tables()
+        #self.create_biblio()
+        #if self.html_tables:
+        #    self.create_tables()
+
 
     def create_main(self):
         """
@@ -44,9 +46,13 @@ class OPSPLoS(OPSMeta):
         the bibliography or the separate tables document, both of which are
         technically optional and make sense as "nonlinear elements.
         """
-        #The first job is to create a file and get a handle on its body element
+        #The first job is to create a file copy the article body to it
         self.document = self.make_document('main')
-        body = self.document.getElementsByTagName('body')[0]
+        if self.article.body is not None:
+            self.document.getroot().append(deepcopy(self.article.body))
+        else:
+            return None  # TODO: Backmatter handling without body
+        body = self.document.getroot().find('body')
 
         #The section that contains the Article Title, List of Authors and
         #Affiliations, and Abstracts is referred to as the Heading
@@ -57,18 +63,6 @@ class OPSPLoS(OPSMeta):
         #Correspondence, and Footnotes. Maybe more...
         self.make_article_info(body)
 
-        #Handling the main Body of the text is done by first copying everything
-        #over and then converting/translating to the OPS XML spec.
-        #Here I make a complete copy of the article's body tag to the the main
-        #document's DOM
-        try:
-            article_body = self.article.getElementsByTagName('body')[0]
-        except IndexError:  # Article has no body...
-            return None
-        else:
-            for item in article_body.childNodes:
-                body.appendChild(item.cloneNode(deep=True))
-
         #The Back Section of an article may contain important information aside
         #from the Bibliography. Unlike the Body, this method will look for
         #supported elements and add them appropriately to the XML
@@ -77,35 +71,33 @@ class OPSPLoS(OPSMeta):
         #Handle node conversion
         self.convert_disp_formula_elements(body)
         self.convert_inline_formula_elements(body)
-        self.convert_named_content_elements(body)
-        self.convert_disp_quote_elements(body)
-        self.convert_emphasis_elements(body)
-        self.convert_address_linking_elements(body)
-        self.convert_xref_elements(body)
-        self.convert_boxed_text_elements(body)
-        self.convert_verse_group_elements(body)
-        self.convert_supplementary_material_elements(body)
-        self.convert_fn_elements(body)
-        self.convert_def_list_elements(body)
-        self.convert_ref_list_elements(body)
-        self.convert_list_elements(body)
+        #self.convert_named_content_elements(body)
+        #self.convert_disp_quote_elements(body)
+        #self.convert_JPTS_emphasis(body)
+        #self.convert_address_linking_elements(body)
+        #self.convert_xref_elements(body)
+        #self.convert_boxed_text_elements(body)
+        #self.convert_verse_group_elements(body)
+        #self.convert_supplementary_material_elements(body)
+        #self.convert_fn_elements(body)
+        #self.convert_def_list_elements(body)
+        #self.convert_ref_list_elements(body)
+        #self.convert_list_elements(body)
 
-        self.convert_fig_elements(body)
-        self.convert_table_wrap_elements(body)
+        #self.convert_fig_elements(body)
+        #self.convert_table_wrap_elements(body)
 
-        self.convert_graphic_elements(body)
+        #self.convert_graphic_elements(body)
 
         #TODO: Back matter stuffs
 
         #These come last for a reason
-        self.convert_sec_elements(body)
-        self.convert_div_titles(body)
+        #self.convert_sec_elements(body)
+        #self.convert_div_titles(body)
+        self.post_processing_conversion(body)
 
         #Finally, write to a document
-        with open(os.path.join(self.ops_dir, self.main_frag[:-4]), 'wb') as op:
-            op.write(self.document.toxml(encoding='utf-8'))
-            #op.write(self.document.toprettyxml(encoding='utf-8'))
-        return body
+        self.write_document(os.path.join(self.ops_dir, self.main_frag[:-4]), self.document)
 
     def make_heading(self, receiving_node):
         """
@@ -119,8 +111,10 @@ class OPSPLoS(OPSMeta):
         all generated output as new childNodes.
         """
         #Create a div for Heading, exposing it to linking and formatting
-        heading_div = self.appendNewElement('div', receiving_node)
-        heading_div.setAttribute('id', 'Heading')
+        #heading_div = etree.SubElement(receiving_node, 'div')
+        heading_div = etree.Element('div')
+        receiving_node.insert(0, heading_div)
+        heading_div.attrib['id'] = 'Heading'
         #Creation of the title
         self.make_heading_title(heading_div)
         #Creation of the Authors
@@ -144,8 +138,8 @@ class OPSPLoS(OPSMeta):
         all generated output as new childNodes.
         """
         #Create a div for ArticleInfo, exposing it to linking and formatting
-        article_info_div = self.appendNewElement('div', receiving_node)
-        article_info_div.setAttribute('id', 'ArticleInfo')
+        article_info_div = etree.Element('div', {'id': 'ArticleInfo'})
+        receiving_node.insert(1, article_info_div)
         #Creation of the self Citation
         self.make_article_info_citation(article_info_div)
         #Creation of the Editors
@@ -164,24 +158,23 @@ class OPSPLoS(OPSMeta):
         #Creation of the Footnotes (other) for the ArticleInfo
         self.make_article_info_footnotes_other(article_info_div)
 
-    def post_processing_node_conversion(self, node):
+    def post_processing_conversion(self, top):
         """
         This is a top-level function for calling a suite of methods which
         translate JPTS 3.0 XML to OPS XML for PLoS content.
 
-        These methods will search the DOM tree beneath the specified Node with
-        its getElementsByTagName('tagname') method; they will find elements
-        at any depth beneath the Node and attempt conversion/translation.
+        These methods will search the element tree beneath the specified top
+        element node, finding the elements at any depth in order to coerce them
+        to OPS-suitable elements. This should be called as a final step, to
+        operate on all such elements in the final product.
         """
-        #This current listing was simply grabbed from the old create_synopsis
-        #method and will receive later review and development
-        #TODO: Review this function and decide what to do with it
-        self.convert_emphasis_elements(node)
-        self.convert_address_linking_elements(node)
-        self.convert_xref_elements(node)
-        self.convert_named_content_elements(node)
-        self.convert_sec_elements(node)
-        self.convert_div_titles(node, depth=1)
+        #TODO: Review this function for completion
+        self.convert_JPTS_emphasis(top)
+        self.convert_address_linking_elements(top)
+        self.convert_xref_elements(top)
+        #self.convert_named_content_elements(top)
+        self.convert_sec_elements(top)
+        self.convert_div_titles(top, depth=1)
 
     def create_biblio(self):
         """
@@ -261,24 +254,35 @@ class OPSPLoS(OPSMeta):
         """
         Gets a list of all authors described in the metadata.
         """
-        return [i for i in self.metadata.contrib if i.attrs['contrib-type']=='author']
+        authors_list = []
+        for contrib_group in self.metadata.front.article_meta.contrib_group:
+            for contrib in contrib_group.contrib:
+                if contrib.attrs['contrib-type'] == 'author':
+                    authors_list.append(contrib)
+        return authors_list
 
     def get_editors_list(self):
         """
         Gets a list of all editors described in the metadata.
         """
-        return [i for i in self.metadata.contrib if i.attrs['contrib-type']=='editor']
+        editors_list = []
+        for contrib_group in self.metadata.front.article_meta.contrib_group:
+            for contrib in contrib_group.contrib:
+                if contrib.attrs['contrib-type'] == 'editor':
+                    editors_list.append(contrib)
+        return editors_list
 
-    def make_heading_title(self, receiving_node):
+    def make_heading_title(self, receiving_element):
         """
         Makes the Article Title for the Heading.
 
         Metadata element, content derived from FrontMatter
         """
-        title = self.appendNewElement('h1', receiving_node)
-        self.setSomeAttributes(title, {'id': 'title',
-                                       'class': 'article-title'})
-        title.childNodes = self.metadata.title.article_title.childNodes
+        article_title = deepcopy(self.metadata.front.article_meta.title_group.article_title.node)
+        article_title.tag = 'h1'
+        article_title.attrib['id'] = 'title'
+        article_title.attrib['class'] = 'article-title'
+        receiving_element.append(article_title)
 
     def make_heading_authors(self, authors, receiving_node):
         """
@@ -288,43 +292,41 @@ class OPSPLoS(OPSMeta):
         Metadata element, content derived from FrontMatter
         """
         #Make and append a new element to the passed receiving_node
-        author_element = self.appendNewElement('h3', receiving_node)
-        author_element.setAttribute('class', 'authors')
+        author_element = etree.SubElement(receiving_node, 'h3', {'class': 'authors'})
         #Construct content for the author element
         first = True
         for author in authors:
             if first:
                 first = False
             else:
-                self.appendNewText(', ', author_element)
-            if author.collab:  # If collab, just add rich content
+                element_methods.append_new_text(author_element, ',', join_str='')
+            if len(author.collab) > 0:  # If collab, just add rich content
                 #Assume only one collab
-                author_element.childNodes += author.collab[0].childNodes
-            elif not author.anonymous:
-                if author.name[0].given:
-                    name = author.name[0].given + ' ' + author.name[0].surname
+                element_methods.append_all_below(author_element, author.collab[0].node)
+            elif len(author.anonymous) > 0:  # If anonymous, just add "Anonymous"
+                element_methods.append_new_text(author_element, 'Anonymous')
+            else:  # Author is neither Anonymous or a Collaboration
+                name = author.name[0]  # Work with only first name listed
+                surname = name.surname.text
+                if name.given_names is not None:
+                    name_text = ' '.join([name.given_names.text, surname])
                 else:
-                    name = author.name[0].surname
-                self.appendNewText(name, author_element)
-            else:
-                name = 'Anonymous'
-                self.appendNewText(name, author_element)
+                    name_text = surname
+                element_methods.append_new_text(author_element, name_text)
             #TODO: Handle author footnote references, also put footnotes in the ArticleInfo
             #Example: journal.pbio.0040370.xml
             for xref in author.xref:
-                if xref.ref_type in ['corresp', 'aff']:
+                if xref.attrs['ref-type'] in ['corresp', 'aff']:
                     try:
-                        sup_element = element_methods.get_children_by_tag_name('sup', xref.node)[0]
+                        sup_element = xref.sup[0].node
                     except IndexError:
-                        log.info('Author xref did not contain <sup> element')
-                        #sup_text = utils.nodeText(xref.node)
                         sup_text = ''
                     else:
-                        sup_text = utils.nodeText(sup_element)
-                    new_sup = self.appendNewElement('sup', author_element)
-                    sup_link = self.appendNewElement('a', new_sup)
-                    sup_link.setAttribute('href', self.main_frag.format(xref.rid))
-                    self.appendNewText(sup_text, sup_link)
+                        sup_text = element_methods.all_text(sup_element)
+                    new_sup = etree.SubElement(author_element, 'sup')
+                    new_sup.text = sup_text
+                    sup_link = etree.SubElement(new_sup, 'a')
+                    sup_link.attrib['href'] = self.main_frag.format(xref.attrs['rid'])
 
     def make_heading_affiliations(self, receiving_node):
         """
@@ -333,32 +335,36 @@ class OPSPLoS(OPSMeta):
 
         Metadata element, content derived from FrontMatter
         """
-        if self.metadata.affs:
-            affs_div = self.appendNewElement('div', receiving_node)
-            affs_div.setAttribute('id', 'affiliations')
+        #Get all of the aff element tuples from the metadata
+        affs = self.metadata.front.article_meta.aff
+        #Create a list of all those pertaining to the authors
+        author_affs = [i for i in affs if 'aff' in i.attrs['id']]
+        #Count them, used for formatting
+        author_aff_count = len(self.metadata.front.article_meta.aff)
+        if author_aff_count > 0:
+            affs_div = etree.SubElement(receiving_node, 'div', {'id': 'affiliations'})
 
         #A simple way that seems to work by PLoS convention, but does not treat
         #the full scope of the <aff> element
-        for aff in self.metadata.affs:
-            aff_id = aff.getAttribute('id')
-            if not 'aff' in aff_id:  # Skip affs for editors...
-                continue
-            #Get the label node and the addr-line node
-            #<label> might be missing, especially for one author works
-            label_node = element_methods.get_children_by_tag_name('label', aff)
-            #I expect there to always be the <addr-line>
-            addr_line_node = element_methods.get_optional_child('addr-line', aff)
-            if addr_line_node:
-                addr_line_text = utils.nodeText(addr_line_node)
+        for aff in author_affs:
+            #Expecting id to always be present
+            aff_id = aff.attrs['id']
+            #Create a span element to accept extracted content
+            aff_span = etree.SubElement(affs_div, 'span')
+            aff_span.attrib['id'] = aff_id
+            #Get the first label node and the first addr-line node
+            if len(aff.label) > 0:
+                label = aff.label[0].node
+                label_text = element_methods.all_text(label)
+                bold = etree.SubElement(aff_span, 'b')
+                bold.text = label_text+' '
+            if len(aff.addr_line) > 0:
+                addr_line = aff.addr_line[0].node
+                element_methods.append_new_text(aff_span, element_methods.all_text(addr_line))
             else:
-                addr_line_text = utils.getTagText(aff)
-            cur_aff_span = self.appendNewElement('span', affs_div)
-            cur_aff_span.setAttribute('id', aff_id)
-            if label_node:
-                label_text = utils.nodeText(label_node[0]) + ' '
-                label_b = self.appendNewElementWithText('b', label_text, cur_aff_span)
-            
-            self.appendNewText(addr_line_text + ', ', cur_aff_span)
+                element_methods.append_new_text(aff_span, element_methods.all_text(aff))
+            if author_affs.index(aff) < author_aff_count-1:
+                element_methods.append_new_text(aff_span, ', ', join_str='')
 
     def make_heading_abstracts(self, receiving_node):
         """
@@ -368,30 +374,39 @@ class OPSPLoS(OPSMeta):
 
         Metadata element, content derived from FrontMatter
         """
-        for abstract in self.metadata.abstract:
-            #Remove <title> elements in the abstracts
-            for title in element_methods.get_children_by_tag_name('title', abstract.node):
-                abstract.node.removeChild(title)
-            if abstract.type == '':  # If no type is listed -> main abstract
-                element_methods.remove_all_attributes(abstract.node)
-                self.appendNewElementWithText('h2', 'Abstract', receiving_node)
-                receiving_node.appendChild(abstract.node)
-                abstract.node.tagName = 'div'
-                abstract.node.setAttribute('id', 'abstract')
-            if abstract.type == 'summary':
-                element_methods.remove_all_attributes(abstract.node)
-                self.appendNewElementWithText('h2', 'Author Summary', receiving_node)
-                receiving_node.appendChild(abstract.node)
-                abstract.node.tagName = 'div'
-                abstract.node.setAttribute('id', 'author-summary')
-            if abstract.type == 'editors-summary':
-                element_methods.remove_all_attributes(abstract.node)
-                self.appendNewElementWithText('h2', 'Editors\' Summary', receiving_node)
-                receiving_node.appendChild(abstract.node)
-                abstract.node.tagName = 'div'
-                abstract.node.setAttribute('id', 'editors-summary')
+        for abstract in self.metadata.front.article_meta.abstract:
+            #Make a copy of the abstract
+            abstract_copy = deepcopy(abstract.node)
+            #Remove title elements in the abstracts
+            #TODO: Fix this removal, this is not always appropriate
+            for title in abstract_copy.findall('.//title'):
+                title.getparent().remove(title)
+            #Create a header for the abstract
+            abstract_header = etree.Element('h2')
+            #Rename the abstract tag
+            abstract_copy.tag = 'div'
+            #Remove all of the attributes from the abstract copy top element
+            element_methods.remove_all_attributes(abstract_copy)
+            #Set the header text and abstract id according to abstract type
+            abstract_type = abstract.attrs['abstract-type']
+            if abstract_type == 'summary':  # Should be an Author Summary
+                abstract_header.text = 'Author Summary'
+                abstract_copy.attrib['id'] = 'author-summary'
+            elif abstract_type == 'editors-summary': # Should be an Editor Summary
+                abstract_header.text = 'Editors\' Summary'
+                abstract_copy.attrib['id'] = 'editor-summary'
+            elif abstract_type is None:  # The attribute was missing, implying main
+                abstract_header.text = 'Abstract'
+                abstract_copy.attrib['id'] = 'abstract'
+            elif abstract_type == 'toc':
+                continue
+            else:
+                abstract_header.text = 'Unhandled value for abstract-type {0}'.format(abstract_type)
+                abstract_copy.attrib['id'] = abstract_type
+            receiving_node.append(abstract_header)
+            receiving_node.append(abstract_copy)
 
-    def make_article_info_citation(self, receiving_node):
+    def make_article_info_citation(self, receiving_el):
         """
         Creates a self citation node for the ArticleInfo of the article.
 
@@ -400,186 +415,211 @@ class OPSPLoS(OPSMeta):
         composes content for the display of that string in the ArticleInfo.
         """
         citation_text = self.format_self_citation()
-        citation_div = self.appendNewElement('div', receiving_node)
-        citation_div.setAttribute('id', 'article-citation')
-        self.appendNewElementWithText('b', 'Citation: ', citation_div)
-        self.appendNewText(citation_text, citation_div)
+        citation_div = etree.SubElement(receiving_el, 'div')
+        citation_div.attrib['id'] = 'article-citation'
+        b = etree.SubElement(citation_div, 'b')
+        b.text = 'Citation: {0}'.format(citation_text)
 
-    def make_article_info_editors(self, editors, body):
+    def make_article_info_editors(self, editors, receiving_el):
         if not editors:  # No editors
             return
-        editors_div = self.appendNewElement('div', body)
+
+        editors_div = etree.SubElement(receiving_el, 'div')
+        editor_bold = etree.SubElement(editors_div, 'b')
         if len(editors) > 1:  # Pluralize if more than one editor
-            self.appendNewElementWithText('b', 'Editors: ', editors_div)
+            editor_bold.text = 'Editors: '
         else:
-            self.appendNewElementWithText('b', 'Editor: ', editors_div)
+            editor_bold.text = 'Editor: '
         first = True
         for editor in editors:
             if first:
                 first = False
             else:
-                self.appendNewText('; ', editors_div)
-
-            if editor.anonymous:
-                self.appendNewText('Anonymous', editors_div)
-            elif editor.collab:
-                editors_div.childNodes += editor.collab[0].childNodes
+                element_methods.append_new_text(editors_div, '; ', join_str='')
+            
+            if len(editor.anonymous) > 0:
+                element_methods.append_new_text(editors_div, 'Anonymous', join_str='')
+            elif len(editor.collab) > 0:
+                element_methods.append_all_below(editors_div, editor.collab[0].node)
             else:
-                name = editor.name[0].surname
-                if editor.name[0].given:
-                    name = editor.name[0].given + ' ' + name
-                self.appendNewText(name, editors_div)
-            #Add some text for the editor affiliations
-            for xref in editor.xref:
-                if xref.ref_type == 'aff':
-                    #Relate this xref to the appropriate aff tag
-                    ref_id = xref.rid
-                    refer_aff = self.metadata.affs_by_id[ref_id]
-                    #Put in appropriate text
-                    self.appendNewText(', ', editors_div)
-                    addr = refer_aff.getElementsByTagName('addr-line')
-                    if addr:
-                        editors_div.childNodes += addr[0].childNodes
-                    else:
-                        editors_div.childNodes += refer_aff.childNodes
+                name = editor.name[0]  # Work with only first name listed
+                surname = name.surname.text
+                if name.given_names is not None:
+                    name_text = ' '.join([name.given_names.text, surname])
+                else:
+                    name_text = surname
+                element_methods.append_new_text(editors_div, name_text)
 
-    def make_article_info_dates(self, body):
+            for xref in editor.xref:
+                if xref.attrs['ref-type'] == 'aff':
+                    ref_id = xref.attrs['rid']
+                    for aff in self.metadata.front.article_meta.aff:
+                        if aff.attrs['id'] == ref_id:
+                            if len(aff.addr_line) > 0:
+                                addr = aff.addr_line[0].node
+                                element_methods.append_new_text(editors_div, ', ')
+                                element_methods.append_all_below(editors_div, addr)
+                            else:
+                                element_methods.append_new_text(editors_div, ', ')
+                                element_methods.append_all_below(editors_div, aff.node)
+
+    def make_article_info_dates(self, receiving_el):
         """
         Makes the section containing important dates for the article: typically
         Received, Accepted, and Published.
         """
-        dates_div = self.appendNewElement('div', body)
-        dates_div.setAttribute('id', 'article-dates')
+        dates_div = etree.SubElement(receiving_el, 'div')
+        dates_div.attrib['id'] = 'article-dates'
 
-        #Received - Optional
-        received = self.metadata.history['received']
-        if received:
-            self.appendNewElementWithText('b', 'Received: ', dates_div)
-            self.appendNewText(self.format_date_string(received) + '; ', dates_div)
+        if self.metadata.front.article_meta.history is not None:
+            dates = self.metadata.front.article_meta.history.date
+        received = None
+        accepted = None
+        for date in dates:
+            if date.attrs['date-type'] is None:
+                continue
+            elif date.attrs['date-type'] == 'received':
+                received = date
+            elif date.attrs['date-type'] == 'accepted':
+                accepted = date
+            else:
+                pass
+        if received is not None:  # Optional
+            b = etree.SubElement(dates_div, 'b')
+            b.text = 'Received: '
+            formatted_date_string = self.format_date_string(received)
+            element_methods.append_new_text(dates_div, formatted_date_string+'; ')
+        if accepted is not None:  # Optional
+            b = etree.SubElement(dates_div, 'b')
+            b.text = 'Accepted: '
+            formatted_date_string = self.format_date_string(accepted)
+            element_methods.append_new_text(dates_div, formatted_date_string+'; ')
+        #Published date is required
+        for pub_date in self.metadata.front.article_meta.pub_date:
+            if pub_date.attrs['pub-type'] == 'epub':
+                b = etree.SubElement(dates_div, 'b')
+                b.text = 'Published: '
+                formatted_date_string = self.format_date_string(pub_date)
+                element_methods.append_new_text(dates_div, formatted_date_string)
+                break
 
-        #Accepted - Optional
-        accepted = self.metadata.history['accepted']
-        if accepted:
-            self.appendNewElementWithText('b', 'Accepted: ', dates_div)
-            self.appendNewText(self.format_date_string(accepted) + '; ', dates_div)
-
-        #Published - Required
-        published = self.metadata.pub_date['epub']
-        self.appendNewElementWithText('b', 'Published: ', dates_div)
-        self.appendNewText(self.format_date_string(published), dates_div)
-
-    def make_article_info_copyright(self, body):
+    def make_article_info_copyright(self, receiving_el):
         """
         Makes the copyright section for the ArticleInfo. For PLoS, this means
         handling the information contained in the metadata <permissions>
         element.
         """
-        permissions = self.metadata.permissions
-        if not permissions:
+        permissions = self.metadata.front.article_meta.permissions
+        if permissions is None:  # Article contains no permissions element
             return
-        copyright_div = self.appendNewElement('div', body)
-        copyright_div.setAttribute('id', 'copyright')
-        self.appendNewElementWithText('b', 'Copyright: ', copyright_div)
+        copyright_div = etree.SubElement(receiving_el, 'div')
+        copyright_div.attrib['id'] = 'copyright'
+        cp_bold = etree.SubElement(copyright_div, 'b')
+        cp_bold.text = 'Copyright: '
+        copyright_string = '\u00A9 '
+        if len(permissions.copyright_holder) > 0:
+            copyright_string += element_methods.all_text(permissions.copyright_holder[0].node)
+            copyright_string += '. ' 
+        if len(permissions.license) > 0:  # I'm assuming only one license
+            #Taking only the first license_p element
+            license_p = permissions.license[0].license_p[0]
+            #I expect to see only text in the 
+            copyright_string += element_methods.all_text(license_p.node)
+        element_methods.append_new_text(copyright_div, copyright_string)
 
-        #Construct the string for the copyright statement
-        copyright_string = ' \u00A9 '
-        #I expect year to always be there
-        copyright_string += utils.nodeText(permissions.year) + ' '
-        #Holder won't always be there
-        if permissions.holder:
-            try:
-                copyright_string += utils.nodeText(permissions.holder) + '.'
-            except AttributeError:  # Some articles have empty <copyright-holder>s
-                pass
-        #I don't know if the license will always be included
-        if permissions.license:  # I hope this is a general solution
-            license_p = element_methods.get_children_by_tag_name('license-p', permissions.license)[0]
-            copyright_string += ' ' + utils.nodeText(license_p)
-        self.appendNewText(copyright_string, copyright_div)
-
-    def make_article_info_funding(self, body):
+    def make_article_info_funding(self, receiving_el):
         """
         Creates the element for declaring Funding in the article info.
         """
-        funding = self.metadata.funding_group
-        if not funding:
+        funding_group = self.metadata.front.article_meta.funding_group
+        if len(funding_group) == 0:
             return
-        funding_div = self.appendNewElement('div', body)
-        funding_div.setAttribute('id', 'funding')
-        self.appendNewElementWithText('b', 'Funding: ', funding_div)
+        funding_div = etree.SubElement(receiving_el, 'div')
+        funding_div.attrib['id'] = 'funding'
+        funding_b = etree.SubElement(funding_div, 'b')
+        funding_b.text = 'Funding: '
         #As far as I can tell, PLoS only uses one funding-statement
-        funding_div.childNodes += funding[0].funding_statement[0].childNodes
+        element_methods.append_all_below(funding_div, funding_group[0].node)
 
-    def make_article_info_competing_interests(self, body):
+    def make_article_info_competing_interests(self, receiving_el ):
         """
         Creates the element for declaring competing interests in the article
         info.
         """
         #Check for author-notes
-        author_notes = self.metadata.author_notes
-        if not author_notes:  # skip if not found
+        author_notes = self.metadata.front.article_meta.author_notes
+        if author_notes is None:  # skip if not found
             return
-        #Check for conflict of interest statement
-        fn_nodes = element_methods.get_children_by_tag_name('fn', author_notes)
+        #Check each of the fn elements to see if they are a conflict of
+        #interest statement
         conflict = None
-        for fn in fn_nodes:
-            if fn.getAttribute('fn-type') == 'conflict':
-                conflict = fn
-        if not conflict:  # skip if not found
+        for fn in author_notes.fn:
+            #This is a workaround, using lxml search, because of an odd issue
+            #with the loading of the prescription of fn in the DTD
+            fn_node = fn.node
+            if 'fn-type' in fn_node.attrib:
+                if fn_node.attrib['fn-type'] == 'conflict':
+                    conflict = fn
+                    break
+        if conflict is None:  # Return since no conflict found
             return
-        #Go about creating the content
-        conflict_div = self.appendNewElement('div', body)
-        conflict_div.setAttribute('id', 'conflict')
-        self.appendNewElementWithText('b', 'Competing Interests: ', conflict_div)
-        conflict_p = element_methods.get_children_by_tag_name('p', conflict)[0]
-        conflict_div.childNodes += conflict_p.childNodes
+        #Create the content
+        conflict_div = etree.SubElement(receiving_el, 'div')
+        conflict_div.attrib['id'] = 'conflict'
+        conflict_b = etree.SubElement(conflict_div, 'b')
+        conflict_b.text = 'Competing Interests: '
+        #Grab the first paragraph in the fn element
+        fn_p = conflict.node.find('p')
+        if fn_p is not None:
+            #Add all of its children to the conflict div
+            element_methods.append_all_below(conflict_div, fn_p)
 
-    def make_article_info_correspondences(self, body):
+    def make_article_info_correspondences(self, receiving_el):
         """
         Articles generally provide a first contact, typically an email address
         for one of the authors. This will supply that content.
         """
         #Check for author-notes
-        author_notes = self.metadata.author_notes
-        if not author_notes:  # skip if not found
+        author_notes = self.metadata.front.article_meta.author_notes
+        if author_notes is None:  # skip if not found
             return
         #Check for correspondences
-        correspondence = element_methods.get_children_by_tag_name('corresp', author_notes)
-        if not correspondence:  # skip if none found
+        correspondence = author_notes.corresp
+        if len(correspondence) == 0:  # Return since no correspondence found
             return
-        #Go about creating the content
-        corresp_div = self.appendNewElement('div', body)
-        corresp_div.setAttribute('id', 'correspondence')
-        for corresp_fn in correspondence:
-            corresp_subdiv = self.appendNewElement('div', corresp_div)
-            corresp_subdiv.setAttribute('id', corresp_fn.getAttribute('id'))
-            corresp_subdiv.childNodes = corresp_fn.childNodes
+        corresp_div = etree.SubElement(receiving_el, 'div')
+        corresp_div.attrib['id'] = 'correspondence'
+        for corresp in correspondence:
+            corresp_sub_div = etree.SubElement(corresp_div, 'div')
+            corresp_sub_div.attrib['id'] = corresp.node.attrib['id']
+            element_methods.append_all_below(corresp_sub_div, corresp.node)
 
-    def make_article_info_footnotes_other(self, body):
+    def make_article_info_footnotes_other(self, receiving_el):
         """
         This will catch all of the footnotes of type 'other' in the <fn-group>
         of the <back> element.
         """
-        #Check for backmatter, skip if it doesn't exist
-        if not self.backmatter:
+        #Check for back, skip if it doesn't exist
+        if self.metadata.back is None:
             return
-        #Check for backmatter fn-groups, skip if empty
-        fn_groups = self.backmatter.fn_group
-        if not fn_groups:
+        #Check for back fn-groups, skip if empty
+        fn_groups = self.metadata.back.fn_group
+        if len(fn_groups) == 0:
             return
         #Look for fn nodes of fn-type 'other'
         other_fns = []
         for fn_group in fn_groups:
-            for fn in element_methods.get_children_by_tag_name('fn', fn_group):
-                if fn.getAttribute('fn-type') == 'other':
+            for fn in fn_groups.fn:
+                if not 'fn-type' in fn.node.attrib:
+                    continue
+                elif fn.node.attrib['fn-type'] == 'other':
                     other_fns.append(fn)
         if other_fns:
-            other_fn_div = self.appendNewElement('div', body)
-            other_fn_div.setAttribute('id', 'back-fn-other')
+            other_fn_div = etree.SubElement(receiving_el, 'div', {'class': 'back-fn-other'})
         for other_fn in other_fns:
-            other_fn_div.childNodes += other_fn.childNodes
+            element_methods.append_all_below(other_fn_div, other_fn.node)
 
-    def make_back_matter(self, receiving_node):
+    def make_back_matter(self, receiving_el):
         """
         The <back> element may have 0 or 1 <label> elements and 0 or 1 <title>
         elements. Then it may have any combination of the following: <ack>,
@@ -597,87 +637,82 @@ class OPSPLoS(OPSMeta):
         general post-processing steps; keep in mind that this is also the
         opportunity to permit special handling of content in the Back
         """
-        #Back is not to be treated as a content section, I also don't expect to
-        #see nodes for label or title
-        try:  # Grab the back node
-            self.back = self.article.getElementsByTagName('back')[0]
-        except IndexError:  # If there is none, quit
-            self.back = None
-        #Each of the methods below will append 0, 1, or more Nodes to the passed
-        #receiving node; Their order is in what I believe is a standard format
-        #for PLoS publications
-
-        #Acknowledgments, typically 0 or 1
-        self.make_back_acknowledgments(receiving_node)
+        #Back is technically metadata content that needs to be interpreted to
+        #presentable content
+        if self.metadata.back is None: 
+            return
+        #The following things are ordered in such a way to adhere to what
+        #appears to be a consistent presentation order for PLoS
+        #Acknowledgments
+        self.make_back_acknowledgments(receiving_el)
         #Author Contributions
-        self.make_back_author_contributions(receiving_node)
+        self.make_back_author_contributions(receiving_el)
         #Glossaries
-        self.make_back_glossary(receiving_node)
+        self.make_back_glossary(receiving_el)
         #Notes
-        self.make_back_notes(receiving_node)
+        self.make_back_notes(receiving_el)
 
-    def make_back_acknowledgments(self, receiving_node):
+    def make_back_acknowledgments(self, receiving_el):
         """
         The <ack> is an important piece of back matter information, and will be
         including immediately after the main text.
 
-        This element should only occur once, if at all. It would be possible to
-        support multiple Nodes, but such a use case is unknown.
+        This element should only occur once, optionally, for PLoS, if a need
+        becomes known, then multiple instances may be supported.
         """
-        #Check if self.back exists
-        if not self.back:
+        if len(self.metadata.back.ack) == 0:
             return
-        #Look for the ack node
-        try:
-            ack = element_methods.get_children_by_tag_name('ack', self.back)[0]
-        except IndexError:
-            return
-        #Just change the tagName to 'div' and provide the id
-        ack.tagName = 'div'
-        ack.setAttribute('id', 'acknowledgments')
-        #Create a <title> element; this is not an OPS element but we expect
-        #it to be picked up and depth-formatted later by convert_div_titles()
-        ack_title = self.document.createElement('title')
-        self.appendNewText('Acknowledgments', ack_title)
-        #Place the title as the first childNode
-        ack.insertBefore(ack_title, ack.firstChild)
-        #Append the ack, now adjusted to 'div', to the receiving node
-        receiving_node.appendChild(ack)
+        #Take a copy of the first ack element, using its xml form
+        ack = deepcopy(self.metadata.back.ack[0].node)
+        #Modify the tag to div
+        ack.tag = 'div'
+        #Give it an id
+        ack.attrib['id'] = 'acknowledgments'
+        #Give it a title element--this is not an OPS element but doing so will
+        #allow it to later be depth-formatted by self.convert_div_titles()
+        ack_title = etree.Element('title')
+        ack_title.text = 'Acknowledgments'
+        ack.insert(0, ack_title)
+        #Append our modified copy of the first ack element to the receiving_el
+        receiving_el.append(ack)
 
-    def make_back_author_contributions(self, receiving_node):
+    def make_back_author_contributions(self, receiving_el):
         """
-        TThough this goes in the back of the document with the rest of the back
+        Though this goes in the back of the document with the rest of the back
         matter, it is not an element found under <back>.
 
         I don't expect to see more than one of these. Compare this method to
         make_article_info_competing_interests()
         """
         #Check for author-notes
-        author_notes = self.metadata.author_notes
-        if not author_notes:  # skip if not found
+        author_notes = self.metadata.front.article_meta.author_notes
+        if author_notes is None:  # skip if not found
             return
-        #Check for conflict of interest statement
-        fn_nodes = element_methods.get_children_by_tag_name('fn', author_notes)
-        contributions = None
-        for fn in fn_nodes:
-            if fn.getAttribute('fn-type') == 'con':
-                contributions = fn
-        if not contributions:  # skip if not found
+        #Check for contributions statement
+        contribution = None
+        #Grab the fn element for the contribution statement
+        for fn in author_notes.fn:
+            if 'fn-type' not in fn.node.attrib:
+                continue
+            elif fn.node.attrib['fn-type'] == 'con':
+                contribution = fn
+                break
+        if not contribution:
             return
-        #Go about creating the content, change tagName and set id
-        contributions.tagName = 'div'
-        contributions.setAttribute('id', 'author-contributions')
-        contributions.removeAttribute('fn-type')
-        #Create a <title> element; this is not an OPS element but we expect
-        #it to be picked up and depth-formatted later by convert_div_titles()
-        contributions_title = self.document.createElement('title')
-        self.appendNewText('Author Contributions', contributions_title)
-        #Place the title as the first childNode
-        contributions.insertBefore(contributions_title, contributions.firstChild)
-        #Append the ack, now adjusted to 'div', to the receiving node
-        receiving_node.appendChild(contributions)
+        #Create a deepcopy of the fn to modify and add to the receiving_el
+        author_contrib = deepcopy(contribution.node)
+        element_methods.remove_all_attributes(author_contrib)
+        author_contrib.tag = 'div'
+        author_contrib.attrib['id'] = 'author-contributions'
+        #Give it a title element--this is not an OPS element but doing so will
+        #allow it to later be depth-formatted by self.convert_div_titles()
+        contributions_title = etree.Element('title')
+        contributions_title.text = 'Author Contributions'
+        author_contrib.insert(0, contributions_title)
+        #Append the modified copy of the author contribution fn to receiving_el
+        receiving_el.append(author_contrib)
 
-    def make_back_glossary(self, receiving_node):
+    def make_back_glossary(self, receiving_el):
         """
         Glossaries are a fairly common item in papers for PLoS, but it also
         seems that they are rarely incorporated into the PLoS web-site or PDF
@@ -685,28 +720,30 @@ class OPSPLoS(OPSMeta):
         helpful and because we can.
         """
         #Check if self.back exists
-        if not self.back:
+        glossaries = self.metadata.back.glossary
+        if len(glossaries) == 0:
             return
-        for glossary in element_methods.get_children_by_tag_name('glossary', self.back):
-            glossary.tagName = 'div'
-            glossary.setAttribute('class', 'back-glossary')
-            receiving_node.appendChild(glossary)
+        for glossary in glossaries:
+            glossary_copy = deepcopy(glossary.node)
+            glossary_copy.tag = 'div'
+            glossary_copy.attrib['class'] = 'back-glossary'
+            receiving_el.append(glossary_copy)
 
-    def make_back_notes(self, receiving_node):
+    def make_back_notes(self, receiving_el):
         """
         The notes element in PLoS articles can be employed for posting notices
         of corrections or adjustments in proof. The <notes> element has a very
         diverse content model, but PLoS practice appears to be fairly
         consistent: a single <sec> containing a <title> and a <p>
         """
-        #Check if self.back exists
-        if not self.back:
+        all_notes = self.metadata.back.notes
+        if len(all_notes) == 0:
             return
-        for notes in element_methods.get_children_by_tag_name('notes', self.back):
-            notes_sec = element_methods.get_children_by_tag_name('sec', notes)[0]
-            notes_sec.tagName = 'div'
-            notes_sec.setAttribute('class', 'back-notes')
-            receiving_node.appendChild(notes_sec)
+        for notes in all_notes:
+            notes_sec = deepcopy(notes.sec[0].node)
+            notes_sec.tag = 'div'
+            notes_sec.attrib['class'] = 'back-notes'
+            receiving_el.append(notes_sec)
 
     def format_date_string(self, date_tuple):
         """
@@ -717,15 +754,15 @@ class OPSPLoS(OPSMeta):
                   'July', 'August', 'September', 'October', 'November', 'December']
         date_string = ''
         if date_tuple.season:
-            return '{0}, {1}'.format(date_tuple.season, date_tuple.year)
+            return '{0}, {1}'.format(date_tuple.season.text, date_tuple.year.text)
         else:
             if not date_tuple.month and not date_tuple.day:
-                return '{0}'.format(date_tuple.year)
+                return '{0}'.format(date_tuple.year.text)
             if date_tuple.month:
-                date_string += months[int(date_tuple.month)]
+                date_string += months[int(date_tuple.month.text)]
             if date_tuple.day:
-                date_string += ' ' + date_tuple.day
-            return ', '.join([date_string, date_tuple.year])
+                date_string += ' ' + date_tuple.day.text
+            return ', '.join([date_string, date_tuple.year.text])
 
     def format_self_citation(self):
         """
@@ -937,55 +974,67 @@ class OPSPLoS(OPSMeta):
         Convert <sec> elements to <div> elements and handle ids and attributes
         """
         #Find all <sec> in body
-        sec_elements = body.getElementsByTagName('sec')
+        sec_elements = body.findall('.//sec')
         count = 0
         #Convert the sec elements
         for sec in sec_elements:
-            sec.tagName = 'div'
-            self.renameAttributes(sec, [('sec-type', 'class')])
-            if not sec.getAttribute('id'):  # Give it an id if it is missing
-                sec.setAttribute('id', 'OA-EPUB-{0}'.format(str(count)))
+            sec.tag = 'div'
+            element_methods.rename_attributes(sec, {'sec-type': 'class'})
+            if 'id' not in sec.attrib:  # Give it an id if it is missing
+                sec.attrib['id'] = 'OA-EPUB-{0}'.format(str(count))
                 count += 1
 
-    def convert_div_titles(self, node, depth=0):
+    def convert_div_titles(self, element, depth=0):
         """
         A recursive function to convert <title> nodes directly beneath <div>
         nodes into appropriate OPS compatible header tags.
+
+        A div element may or may not have a label sub-element, and it may or
+        may not have a title sub-element. This results in 4 unique scenarios.
+        Having an empty title element, or an empty label element, will be
+        treated as not having the element at all.
         """
         depth_tags = ['h2', 'h3', 'h4', 'h5', 'h6']
         #Look for divs
-        for div in element_methods.get_children_by_tag_name('div', node):
+        for div in element.findall('div'):
             #Look for a label
-            try:
-                div_label = element_methods.get_children_by_tag_name('label', div)[0]
-            except IndexError:
-                div_label_text = ''
-            else:
-                if not div_label.childNodes:
-                    div.removeChild(div_label)
-                else:
-                    div_label_text = utils.nodeText(div_label)
-                    div.removeChild(div_label)
+            div_label = div.find('label')
+            if div_label is not None:
+                #Check if empty, no elements and no text
+                if len(div_label) == 0 and div_label.text is None:
+                    div_label.getparent().remove(div_label)  # remove the element from the tree
+                    div_label = None
             #Look for a title
-            try:
-                div_title = element_methods.get_children_by_tag_name('title', div)[0]
-            except IndexError:
-                div_title = None
-            else:
-                if not div_title.childNodes:
-                    div.removeChild(div_title)
+            div_title = div.find('title')
+            if div_title is not None:
+                #Check if empty, no elements and no text
+                if len(div_title) == 0 and div_title.text is None:
+                    div_title.getparent().remove(div_title)  # remove the element from the tree
+                    div_title = None
+            #Now we have div_label and div_title (they may be None)
+            #If there is a div_title
+            if div_title is not None:
+                #Rename the tag
+                if depth < len(depth_tags):
+                    div_title.tag = depth_tags[depth]
                 else:
-                    if depth < len(depth_tags):
-                        div_title.tagName = depth_tags[depth]
-                    else:
-                        div_title.tagName = 'span'
-                        div_title.setAttribute('class', 'extendedheader{0}'.format(depth+2))
-                    if div_label_text:
-                        label_node = self.document.createTextNode(div_label_text)
-                        div_title.insertBefore(label_node, div_title.firstChild)
-            self.convert_div_titles(div, depth=depth + 1)
+                    div_title.tag = 'span'
+                    div_title.attrib['class'] = 'extendedheader{0}'.format(depth+2)
+                #If there is a div_label
+                if div_label is not None:
+                    #Prepend the label text to the title
+                    div_title.text = ' '.join(div_label.text, div_title.text)
+                    div_label.getparent().remove(div_label)  # Remove the label
+            elif div_label is not None:  # No title, but there is a label
+                #Rename the tag
+                div_label.tag = 'b'  # Convert to a bold element
+            else:  # Neither label nor title
+                pass
 
-    def convert_xref_elements(self, node):
+            #Move on to the next level
+            self.convert_div_titles(div, depth=depth+1)
+
+    def convert_xref_elements(self, top):
         """
         xref elements are used for internal referencing to document components
         such as figures, tables, equations, bibliography, or supplementary
@@ -1007,116 +1056,99 @@ class OPSPLoS(OPSMeta):
                    'fn': self.main_frag,
                    'app': self.main_frag,
                    '': self.main_frag}
-        for x in node.getElementsByTagName('xref'):
-            x.tagName = 'a'
-            x_attrs = element_methods.get_all_attributes(x, remove=True)
-            if 'ref-type' in x_attrs:
-                ref_type = x_attrs['ref-type']
+        for xref in top.findall('.//xref'):
+            xref.tag = 'a'
+            xref_attrs = copy(xref.attrib)
+            element_methods.remove_all_attributes(xref)
+            if 'ref-type' in xref_attrs:
+                ref_type = xref_attrs['ref-type']
             else:
                 ref_type = ''
-            rid = x_attrs['rid']
+            rid = xref_attrs['rid']
             address = ref_map[ref_type].format(rid)
-            x.setAttribute('href', address)
+            xref.attrib['href'] = address
 
-    def convert_disp_formula_elements(self, body):
+    def convert_disp_formula_elements(self, top):
         """
         <disp-formula> elements must be converted to OPS conforming elements
         """
-        disp_formulas = body.getElementsByTagName('disp-formula')
+        disp_formulas = top.findall('.//disp-formula')
         for disp in disp_formulas:
-            #Parse all fig attributes to a dict
-            disp_attributes = element_methods.get_all_attributes(disp, remove=False)
-            #Determine if there is a <label>, 0 or 1, grab_node
-            try:
-                label_node = element_methods.get_children_by_tag_name('label', disp)[0]
-            except IndexError:  # No label tag
-                label_node = None
-
-            #Get the graphic node in the disp, not always present
-            graphic_node = element_methods.get_optional_child('graphic', disp)
-            #If graphic not present
-            if not graphic_node:  #Assume there is math text instead
-                text_span = self.document.createElement('span')
-                if 'id' in disp_attributes:
-                    text_span.setAttribute('id', disp_attributes['id'])
-                text_span.setAttribute('class', 'disp-formula')
-                text_span.childNodes = disp.childNodes
-                #Create OPS content, using image path, and label
-                disp_parent = disp.parentNode
-                #Insert the img element
-                disp_parent.insertBefore(text_span, disp)
-                #Create content for the label
-                if label_node:
-                    disp_parent.insertBefore(label_node, text_span)
-                    label_node.tagName = 'b'
-                #Remove the old disp-formula element
+            #find label element
+            label_el = disp.find('label')
+            graphic_el = disp.find('graphic')
+            if graphic_el is None:  # No graphic, assume math as text instead
+                text_span = etree.Element('span', {'class': 'disp-formula'})
+                if 'id' in disp.attrib:
+                    text_span.attrib['id'] = disp.attrib['id']
+                element_methods.append_all_below(text_span, disp)
+                #Insert the text span before the disp-formula
+                element_methods.insert_before(disp, text_span)
+                #If a label exists, modify and insert before text_span
+                if label_el is not None:
+                    label_el.tag = 'b'
+                    element_methods.insert_before(text_span, label_el)
+                #Remove the disp-formula
                 element_methods.remove(disp)
+                #Skip the rest, which deals with the graphic element
                 continue
-            
-            #If graphic present
-            graphic_node = element_methods.get_children_by_tag_name('graphic', disp)[0]
+            #The graphic element is present
             #Create a file reference for the image
-            graphic_xlink_href = graphic_node.getAttribute('xlink:href')
+            xlink_href = element_methods.ns_format(graphic_el, 'xlink:href')
+            graphic_xlink_href = graphic_el.attrib[xlink_href]
             file_name = graphic_xlink_href.split('.')[-1] + '.png'
             img_dir = 'images-' + self.doi_frag
             img_path = '/'.join([img_dir, file_name])
 
             #Create OPS content, using image path, and label
-            disp_parent = disp.parentNode
-
             #Create the img element
-            img_element = self.document.createElement('img')
-            img_element.setAttribute('alt', 'A Display Formula')
-            if 'id' in disp_attributes:
-                img_element.setAttribute('id', disp_attributes['id'])
-            img_element.setAttribute('class', 'disp-formula')
-            img_element.setAttribute('src', img_path)
-
+            img_element = etree.Element('img', {'alt': 'A Display Formula',
+                                                'class': 'disp-formula',
+                                                'src': img_path})
+            #Transfer the id attribute
+            if 'id' in disp.attrib:
+                img_element.attrib['id'] = disp.attrib['id']
             #Insert the img element
-            disp_parent.insertBefore(img_element, disp)
+            element_methods.insert_before(disp, img_element)
             #Create content for the label
-            if label_node:
-                disp_parent.insertBefore(label_node, img_element)
-                label_node.tagName = 'b'
-
+            if label_el is not None:
+                label_el.tag = 'b'
+                element_methods.insert_before(img_element, label_el)
             #Remove the old disp-formula element
             element_methods.remove(disp)
 
-    def convert_inline_formula_elements(self, body):
+    def convert_inline_formula_elements(self, top):
         """
         <inline-formula> elements must be converted to OPS conforming elements
 
         These elements may contain <inline-graphic> elements, textual content,
         or both.
         """
-        for inline in body.getElementsByTagName('inline-formula'):
-            #Grab all the attributes of the formula element
-            inline_attributes = element_methods.get_all_attributes(inline, remove=True)
-            #Convert the inline-formula element to a div and give it a class
-            inline.tagName = 'span'
-            inline.setAttribute('class', 'inline-formula')
-            #Determine if there is an <inline-graphic>
-            try:
-                inline_graphic = element_methods.get_children_by_tag_name('inline-graphic', inline)[0]
-            except IndexError:
-                inline_graphic = None
-            else:
-                #Convert the inline-graphic element to an img element
-                inline_graphic.tagName = 'img'
-                #Get all of the attributes, with removal on
-                inline_graphic_attributes = element_methods.get_all_attributes(inline_graphic, remove=True)
-                #Create a file reference for the image using the xlink:href attribute value
-                graphic_xlink_href = inline_graphic_attributes['xlink:href']
-                file_name = graphic_xlink_href.split('.')[-1] + '.png'
-                img_dir = 'images-' + self.doi_frag
-                img_path = '/'.join([img_dir, file_name])
-                #Set the source to the image path
-                inline_graphic.setAttribute('src', img_path)
-                #Give it an inline-formula class
-                inline_graphic.setAttribute('class', 'disp-formula')
-                #Alt text
-                inline_graphic.setAttribute('alt', 'An Inline Formula')
-
+        inline_formulas = top.findall('.//inline-formula')
+        for inline in inline_formulas:
+            #inline-formula elements will be modified in situ
+            element_methods.remove_all_attributes(inline)
+            inline.tag = 'span'
+            inline.attrib['class'] = 'inline-formula'
+            inline_graphic = inline.find('inline-graphic')
+            if inline_graphic is None:
+                # Do nothing more if there is no graphic
+                continue
+            #Need to conver the inline-graphic element to an img element
+            inline_graphic.tag = 'img'
+            #Get a copy of the attributes, then remove them
+            inline_graphic_attributes = copy(inline_graphic.attrib)
+            element_methods.remove_all_attributes(inline_graphic)
+            #Create a file reference for the image
+            xlink_href = element_methods.ns_format(inline_graphic, 'xlink:href')
+            graphic_xlink_href = inline_graphic_attributes[xlink_href]
+            file_name = graphic_xlink_href.split('.')[-1] + '.png'
+            img_dir = 'images-' + self.doi_frag
+            img_path = '/'.join([img_dir, file_name])
+            #Set the source to the image path
+            inline_graphic.attrib['src'] = img_path
+            inline_graphic.attrib['class'] = 'inline-formula'
+            inline_graphic.attrib['alt'] = 'An Inline Formula'
 
     def convert_named_content_elements(self, body):
         """
