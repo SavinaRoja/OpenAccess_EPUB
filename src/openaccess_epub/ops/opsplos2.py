@@ -149,13 +149,13 @@ class OPSPLoS(OPSMeta):
         #Creation of the important Dates segment
         self.make_article_info_dates(article_info_div)
         #Creation of the Copyright statement
-        #self.make_article_info_copyright(article_info_div)
+        self.make_article_info_copyright(article_info_div)
         #Creation of the Funding statement
-        #self.make_article_info_funding(article_info_div)
+        self.make_article_info_funding(article_info_div)
         #Creation of the Competing Interests statement
-        #self.make_article_info_competing_interests(article_info_div)
+        self.make_article_info_competing_interests(article_info_div)
         #Creation of the Correspondences (contact information) for the article
-        #self.make_article_info_correspondences(article_info_div)
+        self.make_article_info_correspondences(article_info_div)
         #Creation of the Footnotes (other) for the ArticleInfo
         #self.make_article_info_footnotes_other(article_info_div)
 
@@ -506,92 +506,96 @@ class OPSPLoS(OPSMeta):
                 element_methods.append_new_text(dates_div, formatted_date_string)
                 break
 
-    def make_article_info_copyright(self, body):
+    def make_article_info_copyright(self, receiving_el):
         """
         Makes the copyright section for the ArticleInfo. For PLoS, this means
         handling the information contained in the metadata <permissions>
         element.
         """
-        permissions = self.metadata.permissions
-        if not permissions:
+        permissions = self.metadata.front.article_meta.permissions
+        if permissions is None:  # Article contains no permissions element
             return
-        copyright_div = self.appendNewElement('div', body)
-        copyright_div.setAttribute('id', 'copyright')
-        self.appendNewElementWithText('b', 'Copyright: ', copyright_div)
+        copyright_div = etree.SubElement(receiving_el, 'div')
+        copyright_div.attrib['id'] = 'copyright'
+        cp_bold = etree.SubElement(copyright_div, 'b')
+        cp_bold.text = 'Copyright: '
+        copyright_string = '\u00A9 '
+        if len(permissions.copyright_holder) > 0:
+            copyright_string += element_methods.all_text(permissions.copyright_holder[0].node)
+            copyright_string += '. ' 
+        if len(permissions.license) > 0:  # I'm assuming only one license
+            #Taking only the first license_p element
+            license_p = permissions.license[0].license_p[0]
+            #I expect to see only text in the 
+            copyright_string += element_methods.all_text(license_p.node)
+        element_methods.append_new_text(copyright_div, copyright_string)
 
-        #Construct the string for the copyright statement
-        copyright_string = ' \u00A9 '
-        #I expect year to always be there
-        copyright_string += utils.nodeText(permissions.year) + ' '
-        #Holder won't always be there
-        if permissions.holder:
-            try:
-                copyright_string += utils.nodeText(permissions.holder) + '.'
-            except AttributeError:  # Some articles have empty <copyright-holder>s
-                pass
-        #I don't know if the license will always be included
-        if permissions.license:  # I hope this is a general solution
-            license_p = element_methods.get_children_by_tag_name('license-p', permissions.license)[0]
-            copyright_string += ' ' + utils.nodeText(license_p)
-        self.appendNewText(copyright_string, copyright_div)
-
-    def make_article_info_funding(self, body):
+    def make_article_info_funding(self, receiving_el):
         """
         Creates the element for declaring Funding in the article info.
         """
-        funding = self.metadata.funding_group
-        if not funding:
+        funding_group = self.metadata.front.article_meta.funding_group
+        if len(funding_group) == 0:
             return
-        funding_div = self.appendNewElement('div', body)
-        funding_div.setAttribute('id', 'funding')
-        self.appendNewElementWithText('b', 'Funding: ', funding_div)
+        funding_div = etree.SubElement(receiving_el, 'div')
+        funding_div.attrib['id'] = 'funding'
+        funding_b = etree.SubElement(funding_div, 'b')
+        funding_b.text = 'Funding: '
         #As far as I can tell, PLoS only uses one funding-statement
-        funding_div.childNodes += funding[0].funding_statement[0].childNodes
+        element_methods.append_all_below(funding_div, funding_group[0].node)
 
-    def make_article_info_competing_interests(self, body):
+    def make_article_info_competing_interests(self, receiving_el ):
         """
         Creates the element for declaring competing interests in the article
         info.
         """
         #Check for author-notes
-        author_notes = self.metadata.author_notes
-        if not author_notes:  # skip if not found
+        author_notes = self.metadata.front.article_meta.author_notes
+        if author_notes is None:  # skip if not found
             return
-        #Check for conflict of interest statement
-        fn_nodes = element_methods.get_children_by_tag_name('fn', author_notes)
+        #Check each of the fn elements to see if they are a conflict of
+        #interest statement
         conflict = None
-        for fn in fn_nodes:
-            if fn.getAttribute('fn-type') == 'conflict':
-                conflict = fn
-        if not conflict:  # skip if not found
+        for fn in author_notes.fn:
+            #This is a workaround, using lxml search, because of an odd issue
+            #with the loading of the prescription of fn in the DTD
+            fn_node = fn.node
+            if 'fn-type' in fn_node.attrib:
+                if fn_node.attrib['fn-type'] == 'conflict':
+                    conflict = fn
+                    break
+        if conflict is None:  # Return since no conflict found
             return
-        #Go about creating the content
-        conflict_div = self.appendNewElement('div', body)
-        conflict_div.setAttribute('id', 'conflict')
-        self.appendNewElementWithText('b', 'Competing Interests: ', conflict_div)
-        conflict_p = element_methods.get_children_by_tag_name('p', conflict)[0]
-        conflict_div.childNodes += conflict_p.childNodes
+        #Create the content
+        conflict_div = etree.SubElement(receiving_el, 'div')
+        conflict_div.attrib['id'] = 'conflict'
+        conflict_b = etree.SubElement(conflict_div, 'b')
+        conflict_b.text = 'Competing Interests: '
+        #Grab the first paragraph in the fn element
+        fn_p = conflict.node.find('p')
+        if fn_p is not None:
+            #Add all of its children to the conflict div
+            element_methods.append_all_below(conflict_div, fn_p)
 
-    def make_article_info_correspondences(self, body):
+    def make_article_info_correspondences(self, receiving_el):
         """
         Articles generally provide a first contact, typically an email address
         for one of the authors. This will supply that content.
         """
         #Check for author-notes
-        author_notes = self.metadata.author_notes
-        if not author_notes:  # skip if not found
+        author_notes = self.metadata.front.article_meta.author_notes
+        if author_notes is None:  # skip if not found
             return
         #Check for correspondences
-        correspondence = element_methods.get_children_by_tag_name('corresp', author_notes)
-        if not correspondence:  # skip if none found
+        correspondence = author_notes.corresp
+        if len(correspondence) == 0:  # Return since no correspondence found
             return
-        #Go about creating the content
-        corresp_div = self.appendNewElement('div', body)
-        corresp_div.setAttribute('id', 'correspondence')
-        for corresp_fn in correspondence:
-            corresp_subdiv = self.appendNewElement('div', corresp_div)
-            corresp_subdiv.setAttribute('id', corresp_fn.getAttribute('id'))
-            corresp_subdiv.childNodes = corresp_fn.childNodes
+        corresp_div = etree.SubElement(receiving_el, 'div')
+        corresp_div.attrib['id'] = 'correspondence'
+        for corresp in correspondence:
+            corresp_sub_div = etree.SubElement(corresp_div, 'div')
+            corresp_sub_div.attrib['id'] = corresp.node.attrib['id']
+            element_methods.append_all_below(corresp_sub_div, corresp.node)
 
     def make_article_info_footnotes_other(self, body):
         """
