@@ -26,7 +26,6 @@ class OPSPLoS(OPSMeta):
         #Set some initial hooks into the input article content
         self.article = article
         self.metadata = article.metadata
-        self.backmatter = article.metadata.back
         self.doi = article.get_DOI()
         #From "10.1371/journal.pone.0035956" get "journal.pone.0335956"
         self.doi_frag = self.doi.split('10.1371/')[1]
@@ -67,7 +66,7 @@ class OPSPLoS(OPSMeta):
         #The Back Section of an article may contain important information aside
         #from the Bibliography. Unlike the Body, this method will look for
         #supported elements and add them appropriately to the XML
-        #self.make_back_matter(body)
+        self.make_back_matter(body)
 
         #Handle node conversion
         #self.convert_disp_formula_elements(body)
@@ -138,9 +137,8 @@ class OPSPLoS(OPSMeta):
         all generated output as new childNodes.
         """
         #Create a div for ArticleInfo, exposing it to linking and formatting
-        article_info_div = etree.Element('div')
+        article_info_div = etree.Element('div', {'id': 'ArticleInfo'})
         receiving_node.insert(1, article_info_div)
-        article_info_div.attrib['id'] ='ArticleInfo'
         #Creation of the self Citation
         self.make_article_info_citation(article_info_div)
         #Creation of the Editors
@@ -157,7 +155,7 @@ class OPSPLoS(OPSMeta):
         #Creation of the Correspondences (contact information) for the article
         self.make_article_info_correspondences(article_info_div)
         #Creation of the Footnotes (other) for the ArticleInfo
-        #self.make_article_info_footnotes_other(article_info_div)
+        self.make_article_info_footnotes_other(article_info_div)
 
     def post_processing_node_conversion(self, node):
         """
@@ -294,8 +292,7 @@ class OPSPLoS(OPSMeta):
         Metadata element, content derived from FrontMatter
         """
         #Make and append a new element to the passed receiving_node
-        author_element = etree.SubElement(receiving_node, 'h3')
-        author_element.attrib['class'] = 'authors'
+        author_element = etree.SubElement(receiving_node, 'h3', {'class': 'authors'})
         #Construct content for the author element
         first = True
         for author in authors:
@@ -345,8 +342,7 @@ class OPSPLoS(OPSMeta):
         #Count them, used for formatting
         author_aff_count = len(self.metadata.front.article_meta.aff)
         if author_aff_count > 0:
-            affs_div = etree.SubElement(receiving_node, 'div')
-            affs_div.attrib['id'] = 'affiliations'
+            affs_div = etree.SubElement(receiving_node, 'div', {'id': 'affiliations'})
 
         #A simple way that seems to work by PLoS convention, but does not treat
         #the full scope of the <aff> element
@@ -382,6 +378,7 @@ class OPSPLoS(OPSMeta):
             #Make a copy of the abstract
             abstract_copy = deepcopy(abstract.node)
             #Remove title elements in the abstracts
+            #TODO: Fix this removal, this is not always appropriate
             for title in abstract_copy.findall('.//title'):
                 title.getparent().remove(title)
             #Create a header for the abstract
@@ -597,31 +594,32 @@ class OPSPLoS(OPSMeta):
             corresp_sub_div.attrib['id'] = corresp.node.attrib['id']
             element_methods.append_all_below(corresp_sub_div, corresp.node)
 
-    def make_article_info_footnotes_other(self, body):
+    def make_article_info_footnotes_other(self, receiving_el):
         """
         This will catch all of the footnotes of type 'other' in the <fn-group>
         of the <back> element.
         """
-        #Check for backmatter, skip if it doesn't exist
-        if not self.backmatter:
+        #Check for back, skip if it doesn't exist
+        if self.metadata.back is None:
             return
-        #Check for backmatter fn-groups, skip if empty
-        fn_groups = self.backmatter.fn_group
-        if not fn_groups:
+        #Check for back fn-groups, skip if empty
+        fn_groups = self.metadata.back.fn_group
+        if len(fn_groups) == 0:
             return
         #Look for fn nodes of fn-type 'other'
         other_fns = []
         for fn_group in fn_groups:
-            for fn in element_methods.get_children_by_tag_name('fn', fn_group):
-                if fn.getAttribute('fn-type') == 'other':
+            for fn in fn_groups.fn:
+                if not 'fn-type' in fn.node.attrib:
+                    continue
+                elif fn.node.attrib['fn-type'] == 'other':
                     other_fns.append(fn)
         if other_fns:
-            other_fn_div = self.appendNewElement('div', body)
-            other_fn_div.setAttribute('id', 'back-fn-other')
+            other_fn_div = etree.SubElement(receiving_el, 'div', {'class': 'back-fn-other'})
         for other_fn in other_fns:
-            other_fn_div.childNodes += other_fn.childNodes
+            element_methods.append_all_below(other_fn_div, other_fn.node)
 
-    def make_back_matter(self, receiving_node):
+    def make_back_matter(self, receiving_el):
         """
         The <back> element may have 0 or 1 <label> elements and 0 or 1 <title>
         elements. Then it may have any combination of the following: <ack>,
@@ -639,87 +637,82 @@ class OPSPLoS(OPSMeta):
         general post-processing steps; keep in mind that this is also the
         opportunity to permit special handling of content in the Back
         """
-        #Back is not to be treated as a content section, I also don't expect to
-        #see nodes for label or title
-        try:  # Grab the back node
-            self.back = self.article.getElementsByTagName('back')[0]
-        except IndexError:  # If there is none, quit
-            self.back = None
-        #Each of the methods below will append 0, 1, or more Nodes to the passed
-        #receiving node; Their order is in what I believe is a standard format
-        #for PLoS publications
-
-        #Acknowledgments, typically 0 or 1
-        self.make_back_acknowledgments(receiving_node)
+        #Back is technically metadata content that needs to be interpreted to
+        #presentable content
+        if self.metadata.back is None: 
+            return
+        #The following things are ordered in such a way to adhere to what
+        #appears to be a consistent presentation order for PLoS
+        #Acknowledgments
+        self.make_back_acknowledgments(receiving_el)
         #Author Contributions
-        self.make_back_author_contributions(receiving_node)
+        self.make_back_author_contributions(receiving_el)
         #Glossaries
-        self.make_back_glossary(receiving_node)
+        self.make_back_glossary(receiving_el)
         #Notes
-        self.make_back_notes(receiving_node)
+        self.make_back_notes(receiving_el)
 
-    def make_back_acknowledgments(self, receiving_node):
+    def make_back_acknowledgments(self, receiving_el):
         """
         The <ack> is an important piece of back matter information, and will be
         including immediately after the main text.
 
-        This element should only occur once, if at all. It would be possible to
-        support multiple Nodes, but such a use case is unknown.
+        This element should only occur once, optionally, for PLoS, if a need
+        becomes known, then multiple instances may be supported.
         """
-        #Check if self.back exists
-        if not self.back:
+        if len(self.metadata.back.ack) == 0:
             return
-        #Look for the ack node
-        try:
-            ack = element_methods.get_children_by_tag_name('ack', self.back)[0]
-        except IndexError:
-            return
-        #Just change the tagName to 'div' and provide the id
-        ack.tagName = 'div'
-        ack.setAttribute('id', 'acknowledgments')
-        #Create a <title> element; this is not an OPS element but we expect
-        #it to be picked up and depth-formatted later by convert_div_titles()
-        ack_title = self.document.createElement('title')
-        self.appendNewText('Acknowledgments', ack_title)
-        #Place the title as the first childNode
-        ack.insertBefore(ack_title, ack.firstChild)
-        #Append the ack, now adjusted to 'div', to the receiving node
-        receiving_node.appendChild(ack)
+        #Take a copy of the first ack element, using its xml form
+        ack = deepcopy(self.metadata.back.ack[0].node)
+        #Modify the tag to div
+        ack.tag = 'div'
+        #Give it an id
+        ack.attrib['id'] = 'acknowledgments'
+        #Give it a title element--this is not an OPS element but doing so will
+        #allow it to later be depth-formatted by self.convert_div_titles()
+        ack_title = etree.Element('title')
+        ack_title.text = 'Acknowledgments'
+        ack.insert(0, ack_title)
+        #Append our modified copy of the first ack element to the receiving_el
+        receiving_el.append(ack)
 
-    def make_back_author_contributions(self, receiving_node):
+    def make_back_author_contributions(self, receiving_el):
         """
-        TThough this goes in the back of the document with the rest of the back
+        Though this goes in the back of the document with the rest of the back
         matter, it is not an element found under <back>.
 
         I don't expect to see more than one of these. Compare this method to
         make_article_info_competing_interests()
         """
         #Check for author-notes
-        author_notes = self.metadata.author_notes
-        if not author_notes:  # skip if not found
+        author_notes = self.metadata.front.article_meta.author_notes
+        if author_notes is None:  # skip if not found
             return
-        #Check for conflict of interest statement
-        fn_nodes = element_methods.get_children_by_tag_name('fn', author_notes)
-        contributions = None
-        for fn in fn_nodes:
-            if fn.getAttribute('fn-type') == 'con':
-                contributions = fn
-        if not contributions:  # skip if not found
+        #Check for contributions statement
+        contribution = None
+        #Grab the fn element for the contribution statement
+        for fn in author_notes.fn:
+            if 'fn-type' not in fn.node.attrib:
+                continue
+            elif fn.node.attrib['fn-type'] == 'con':
+                contribution = fn
+                break
+        if not contribution:
             return
-        #Go about creating the content, change tagName and set id
-        contributions.tagName = 'div'
-        contributions.setAttribute('id', 'author-contributions')
-        contributions.removeAttribute('fn-type')
-        #Create a <title> element; this is not an OPS element but we expect
-        #it to be picked up and depth-formatted later by convert_div_titles()
-        contributions_title = self.document.createElement('title')
-        self.appendNewText('Author Contributions', contributions_title)
-        #Place the title as the first childNode
-        contributions.insertBefore(contributions_title, contributions.firstChild)
-        #Append the ack, now adjusted to 'div', to the receiving node
-        receiving_node.appendChild(contributions)
+        #Create a deepcopy of the fn to modify and add to the receiving_el
+        author_contrib = deepcopy(contribution.node)
+        element_methods.remove_all_attributes(author_contrib)
+        author_contrib.tag = 'div'
+        author_contrib.attrib['id'] = 'author-contributions'
+        #Give it a title element--this is not an OPS element but doing so will
+        #allow it to later be depth-formatted by self.convert_div_titles()
+        contributions_title = etree.Element('title')
+        contributions_title.text = 'Author Contributions'
+        author_contrib.insert(0, contributions_title)
+        #Append the modified copy of the author contribution fn to receiving_el
+        receiving_el.append(author_contrib)
 
-    def make_back_glossary(self, receiving_node):
+    def make_back_glossary(self, receiving_el):
         """
         Glossaries are a fairly common item in papers for PLoS, but it also
         seems that they are rarely incorporated into the PLoS web-site or PDF
@@ -727,28 +720,30 @@ class OPSPLoS(OPSMeta):
         helpful and because we can.
         """
         #Check if self.back exists
-        if not self.back:
+        glossaries = self.metadata.back.glossary
+        if len(glossaries) == 0:
             return
-        for glossary in element_methods.get_children_by_tag_name('glossary', self.back):
-            glossary.tagName = 'div'
-            glossary.setAttribute('class', 'back-glossary')
-            receiving_node.appendChild(glossary)
+        for glossary in glossaries:
+            glossary_copy = deepcopy(glossary.node)
+            glossary_copy.tag = 'div'
+            glossary_copy.attrib['class'] = 'back-glossary'
+            receiving_el.append(glossary_copy)
 
-    def make_back_notes(self, receiving_node):
+    def make_back_notes(self, receiving_el):
         """
         The notes element in PLoS articles can be employed for posting notices
         of corrections or adjustments in proof. The <notes> element has a very
         diverse content model, but PLoS practice appears to be fairly
         consistent: a single <sec> containing a <title> and a <p>
         """
-        #Check if self.back exists
-        if not self.back:
+        all_notes = self.metadata.back.notes
+        if len(all_notes) == 0:
             return
-        for notes in element_methods.get_children_by_tag_name('notes', self.back):
-            notes_sec = element_methods.get_children_by_tag_name('sec', notes)[0]
-            notes_sec.tagName = 'div'
-            notes_sec.setAttribute('class', 'back-notes')
-            receiving_node.appendChild(notes_sec)
+        for notes in all_notes:
+            notes_sec = deepcopy(notes.sec[0].node)
+            notes_sec.tag = 'div'
+            notes_sec.attrib['class'] = 'back-notes'
+            receiving_el.append(notes_sec)
 
     def format_date_string(self, date_tuple):
         """
