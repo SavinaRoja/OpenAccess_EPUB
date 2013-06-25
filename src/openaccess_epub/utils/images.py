@@ -144,6 +144,7 @@ def get_images(doi, outdirect, images, config, document):
             success = fetch_plos_images(article_doi, img_dir, document)
             if success:
                 if config.use_image_cache:
+                    print('moving images to cache!')
                     move_images_to_cache(img_dir, article_cache)
             return success
         else:
@@ -290,7 +291,7 @@ def fetch_plos_images(article_doi, output_dir, document):
     for graphic in graphics:
         nsmap = document.document.getroot().nsmap
         xlink_href = graphic.attrib['{'+nsmap['xlink']+'}'+'href']
-        if xlink_href[-4] == 'e':  # Equations are handled differently
+        if xlink_href[-4] == 'e' or xlink_href[-3] == 'e':  # Equations are handled differently
             resource = 'fetchObject.action?uri=' + xlink_href + '&representation=PNG'
         else:
             resource = xlink_href + '/largerimage'
@@ -306,7 +307,7 @@ def fetch_plos_images(article_doi, output_dir, document):
                     return False  # Happened twice, give up
             else:
                 log.error('urllib.error.HTTPError {0}'.format(e.code))
-            return False
+                return False
         else:
             img_name = xlink_href.split('.')[-1] + '.png'
             img_path = os.path.join(output_dir, img_name)
