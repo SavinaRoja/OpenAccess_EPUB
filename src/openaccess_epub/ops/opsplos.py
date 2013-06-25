@@ -71,11 +71,7 @@ class OPSPLoS(OPSMeta):
         #Handle node conversion
         self.convert_disp_formula_elements(body)
         self.convert_inline_formula_elements(body)
-        #self.convert_named_content_elements(body)
-        #self.convert_disp_quote_elements(body)
-        #self.convert_JPTS_emphasis(body)
-        #self.convert_address_linking_elements(body)
-        #self.convert_xref_elements(body)
+        self.convert_disp_quote_elements(body)
         #self.convert_boxed_text_elements(body)
         #self.convert_verse_group_elements(body)
         #self.convert_supplementary_material_elements(body)
@@ -84,7 +80,7 @@ class OPSPLoS(OPSMeta):
         #self.convert_ref_list_elements(body)
         #self.convert_list_elements(body)
 
-        #self.convert_fig_elements(body)
+        self.convert_fig_elements(body)
         #self.convert_table_wrap_elements(body)
 
         #self.convert_graphic_elements(body)
@@ -172,7 +168,7 @@ class OPSPLoS(OPSMeta):
         self.convert_JPTS_emphasis(top)
         self.convert_address_linking_elements(top)
         self.convert_xref_elements(top)
-        #self.convert_named_content_elements(top)
+        self.convert_named_content_elements(top)
         self.convert_sec_elements(top)
         self.convert_div_titles(top, depth=1)
 
@@ -774,78 +770,53 @@ class OPSPLoS(OPSMeta):
         #So for now I just put in the DOI
         return self.doi
 
-    def convert_fig_elements(self, body):
+    def convert_fig_elements(self, top):
         """
         Responsible for the correct conversion of JPTS 3.0 <fig> elements to
         OPS xhtml. Aside from translating <fig> to <img>, the content model
         must be edited.
         """
-        for fig in body.getElementsByTagName('fig'):
-            if fig.parentNode.tagName == 'p':
-                element_methods.elevate_node(fig)
-        figs = body.getElementsByTagName('fig')
+        figs = top.findall('.//fig')
+        for fig in figs:
+            if fig.getparent().tag == 'p':
+                element_methods.elevate_element(fig)
         for fig in figs:
             #self.convert_fn_elements(fig)
             #self.convert_disp_formula_elements(fig)
-            #Parse all fig attributes to a dict
-            fig_attributes = element_methods.get_all_attributes(fig, remove=False)
-            #Determine if there is a <label>, 0 or 1, grab the node
-            try:
-                label_node = element_methods.get_children_by_tag_name('label', fig)[0]
-            except IndexError:  # No label tag
-                label_node = None
-            #Determine if there is a <caption>, grab the node
-            try:
-                caption_node = element_methods.get_children_by_tag_name('caption', fig)[0]
-            except IndexError:
-                caption_node = None
-
-            #Get the graphic node in the fig, treat as mandatory
-            graphic_node = element_methods.get_children_by_tag_name('graphic', fig)[0]
+            #Find label and caption
+            label_el = fig.find('label')
+            caption_el = fig.find('caption')
+            #Get the graphic node, this should be mandatory later on
+            graphic_el = fig.find('graphic')
             #Create a file reference for the image
-            graphic_xlink_href = graphic_node.getAttribute('xlink:href')
+            xlink_href = element_methods.ns_format(graphic_el, 'xlink:href')
+            graphic_xlink_href = graphic_el.attrib[xlink_href]
             file_name = graphic_xlink_href.split('.')[-1] + '.png'
             img_dir = 'images-' + self.doi_frag
             img_path = '/'.join([img_dir, file_name])
 
-            #Create OPS content, using image path, label, and caption
-            fig_parent = fig.parentNode
-            #Create a horizontal rule
-            fig_parent.insertBefore(self.document.createElement('hr'), fig)
-            #Create the img element
-            img_element = self.document.createElement('img')
-            img_element.setAttribute('alt', 'A Figure')
-            if 'id' in fig_attributes:
-                img_element.setAttribute('id', fig_attributes['id'])
-            img_element.setAttribute('src', img_path)
-            img_element.setAttribute('class', 'figure')
-            #Insert the img element
-            fig_parent.insertBefore(img_element, fig)
+            #Create the OPS content: using image path, label, and caption
+            img_el = etree.Element('img', {'alt': 'A Figure', 'src': img_path,
+                                           'class': 'figure'})
+            if 'id' in fig.attrib:
+                img_el.attrib['id'] = fig.attrib['id']
+            element_methods.insert_before(fig, img_el)
 
             #Create content for the label and caption
-            if caption_node or label_node:  # These will go into a <div> after <img>
-                img_caption_div = self.document.createElement('div')
-                img_caption_div.setAttribute('class', 'figure-caption')
-                img_caption_div_b = self.appendNewElement('b', img_caption_div)
-                if label_node:
-                    img_caption_div_b.childNodes += label_node.childNodes
-                    self.appendNewText('. ', img_caption_div_b)
-                #The caption element may have <title> 0 or 1, and <p> 0 or more
-                if caption_node:
-                    #Detect caption title
-                    caption_title = element_methods.get_children_by_tag_name('title', caption_node)
-                    if caption_title:
-                        img_caption_div_b.childNodes += caption_title[0].childNodes
-                        self.appendNewText(' ', img_caption_div_b)
-                    #Detect <p>s
-                    caption_ps = element_methods.get_children_by_tag_name('p', caption_node)
-                    for each_p in caption_ps:
-                        img_caption_div.childNodes += each_p.childNodes
-                #Now that we have created the img caption div content, insert
-                fig_parent.insertBefore(img_caption_div, fig)
-
-            #Create a horizontal rule
-            fig_parent.insertBefore(self.document.createElement('hr'), fig)
+            if caption_el is not None or label_el is not None:
+                img_caption_div = etree.Element('div', {'class': 'figure-caption'})
+                img_caption_div_b = etree.SubElement(img_caption_div, 'b')
+                if label_el is not None:
+                    element_methods.append_all_below(img_caption_div_b, label_el)
+                    element_methods.append_new_text(img_caption_div_b, '. ', join_str='')
+                if caption_el is not None:
+                    caption_title = caption_el.find('title')
+                    if caption_title is not None:
+                        element_methods.append_all_below(img_caption_div_b, caption_title)
+                        element_methods.append_new_text(img_caption_div_b, ' ', join_str='')
+                    for each_p in caption_el.findall('p'):
+                        element_methods.append_all_below(img_caption_div, each_p)
+                element_methods.insert_before(fig, img_caption_div)
 
             #Remove the original <fig>
             element_methods.remove(fig)
@@ -1150,20 +1121,21 @@ class OPSPLoS(OPSMeta):
             inline_graphic.attrib['class'] = 'inline-formula'
             inline_graphic.attrib['alt'] = 'An Inline Formula'
 
-    def convert_named_content_elements(self, body):
+    def convert_named_content_elements(self, top):
         """
         <named-content> elements are used by PLoS for certain spcecial kinds
         of content, such as genus-species denotations. This method will convert
         the tagname to <span> and the content-type attribute to class. I expect
         that this will provide an easily extensible basis for CSS handling.
         """
-        for named_content in body.getElementsByTagName('named-content'):
-            named_content.tagName = 'span'
-            attrs = element_methods.get_all_attributes(named_content, remove=True)
+        for named_content in top.findall('.//named-content'):
+            named_content.tag = 'span'
+            attrs = copy(named_content.attrib)
+            element_methods.remove_all_attributes(named_content)
             if 'content-type' in attrs:
-                named_content.setAttribute('class', attrs['content-type'])
+                named_content.attrib['class'] = attrs['content-type']
 
-    def convert_disp_quote_elements(self, body):
+    def convert_disp_quote_elements(self, top):
         """
         Extract or extended quoted passage from another work, usually made
         typographically distinct from surrounding text
@@ -1171,11 +1143,11 @@ class OPSPLoS(OPSMeta):
         <disp-quote> elements have a relatively complex content model, but PLoS
         appears to employ either <p>s or <list>s.
         """
-        for disp_quote in body.getElementsByTagName('disp-quote'):
-            if disp_quote.parentNode.tagName =='p':
-                element_methods.elevate_node(disp_quote)
-            disp_quote.tagName = 'div'
-            disp_quote.setAttribute('class', 'disp-quote')
+        for disp_quote in top.findall('.//disp-quote'):
+            if disp_quote.getparent().tag =='p':
+                element_methods.elevate_element(disp_quote)
+            disp_quote.tag = 'div'
+            disp_quote.attrib['class'] = 'disp-quote'
 
     def convert_boxed_text_elements(self, body):
         """
@@ -1375,7 +1347,7 @@ class OPSPLoS(OPSMeta):
 
         for list_el in body.getElementsByTagName('list'):
             if list_el.parentNode.tagName == 'p':
-                element_methods.elevate_node(list_el)
+                element_methods.elevate_element(list_el)
 
         #list_el is used instead of list (list is reserved)
         for list_el in body.getElementsByTagName('list'):

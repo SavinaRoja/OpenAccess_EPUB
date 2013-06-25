@@ -83,20 +83,20 @@ class OPSMeta(object):
             under.tag = 'span'
             under.attrib['style'] = 'text-decoration:underline'
 
-    def convert_address_linking_elements(self, element):
+    def convert_address_linking_elements(self, top):
         """
         The Journal Publishing Tag Set defines the following elements as
         address linking elements: <email>, <ext-link>, <uri>. The only
         appropriate hypertext element for linking in OPS is the <a> element.
         """
         #Convert email to a mailto link addressed to the text it contains
-        for email in element.findall('.//email'):
+        for email in top.findall('.//email'):
             element_methods.remove_all_attributes(email)
             email.tag = 'a'
             email.attrib['href'] = 'mailto:{0}'.format(email.text)
         #Ext-links often declare their address as xlink:href attribute
         #if that fails, direct the link to the contained text
-        for ext_link in element.findall('.//ext-link'):
+        for ext_link in top.findall('.//ext-link'):
             ext_id = ext_link['id']
             ext_link.tag = 'a'
             xlink_href_name = element_methods.ns_format(ext_link, 'xlink:href')
@@ -110,7 +110,7 @@ class OPSMeta(object):
                 ext_link.attrib['id'] = ext_id
         #Uris often declare their address as xlink:href attribute
         #if that fails, direct the link to the contained text
-        for uri in element.findall('.//uri'):
+        for uri in top.findall('.//uri'):
             uri.tag = 'a'
             xlink_href_name = element_methods.ns_format(uri, 'xlink:href')
             xlink_href = element_methods.get_attribute(uri, xlink_href_name)
