@@ -74,7 +74,7 @@ class OPSPLoS(OPSMeta):
         self.convert_disp_quote_elements(body)
         self.convert_boxed_text_elements(body)
         self.convert_verse_group_elements(body)
-        #self.convert_supplementary_material_elements(body)
+        self.convert_supplementary_material_elements(body)
         #self.convert_fn_elements(body)
         #self.convert_def_list_elements(body)
         #self.convert_ref_list_elements(body)
@@ -1179,7 +1179,7 @@ class OPSPLoS(OPSMeta):
                 element_methods.append_all_below(div_el, boxed_text)
                 element_methods.replace(boxed_text, div_el)
 
-    def convert_supplementary_material_elements(self, body):
+    def convert_supplementary_material_elements(self, top):
         """
         Supplementary material are not, nor are they generally expected to be,
         packaged into the epub file. Though this is a technical possibility,
@@ -1194,9 +1194,10 @@ class OPSPLoS(OPSMeta):
         contain 1 <label> element, followed by a <caption><title><p></caption>
         substructure.
         """
-        for supplementary in body.getElementsByTagName('supplementary-material'):
+        supplementary_materials = top.findall('.//supplementary-material')
+        return
+        for supplementary in supplementary_materials: 
             transfer_id = False
-            attributes = element_methods.get_all_attributes(supplementary, remove=False)
             supplementary_parent = supplementary.parentNode
             labels = element_methods.get_children_by_tag_name('label', supplementary)
             resource_url = utils.plos_fetch_single_representation(self.doi_frag, attributes['xlink:href'])
@@ -1243,25 +1244,31 @@ class OPSPLoS(OPSMeta):
         to italicized lines.
         """
         for verse_group in top.findall('.//verse-group'):
-            label
-            
-            label = element_methods.get_children_by_tag_name('label', verse_group)
-            title = element_methods.get_children_by_tag_name('title', verse_group)
-            subtitle = element_methods.get_children_by_tag_name('subtitle', verse_group)
-            verse_group.tagName = 'div'
-            verse_group.setAttribute('id', 'verse-group')
-            if any([label, title, subtitle]):
-                new_verse_title = self.document.createElement('b')
-                verse_group.insertBefore(verse_group.firstChild)
-                if label:
-                    new_verse_title.childNodes += label[0].childNodes
-                if title:
-                    new_verse_title.childNodes += title[0].childNodes
-                if subtitle:
-                    new_verse_title.childNodes += subtitle[0].childNodes
-            for verse_line in element_methods.get_children_by_tag_name('verse-line', verse_group):
-                verse_line.tagName = 'p'
-                verse_line.setAttribute('class', 'verse-line')
+            #Find some possible sub elements for the heading
+            label = verse_group.find('label')
+            title = verse_group.find('title')
+            subtitle = verse_group.find('subtitle')
+            #Modify the verse-group element
+            verse_group.tag = 'div'
+            verse_group.attrib['id'] = 'verse-group'
+            #Create a title for the verse_group
+            if label is not None or title is not None or subtitle is not None:
+                new_verse_title = etree.Element('b')
+                #Insert it at the beginning
+                verse_group.insert(0, new_verse_title)
+                #Induct the title elements into the new title
+                if label is not None:
+                    element_methods.append_all_below(new_verse_title, label)
+                    element_methods.remove(label)
+                if title is not None:
+                    element_methods.append_all_below(new_verse_title, title)
+                    element_methods.remove(title)
+                if subtitle is not None:
+                    element_methods.append_all_below(new_verse_title, subtitle)
+                    element_methods.remove(subtitle)
+            for verse_line in verse_group.findall('verse-line'):
+                verse_line.tag = 'p'
+                verse_line.attrib['class'] = 'verse-line'
 
     def convert_fn_elements(self, body):
         """
