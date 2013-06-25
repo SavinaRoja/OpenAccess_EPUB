@@ -83,7 +83,7 @@ class OPSPLoS(OPSMeta):
         self.convert_fig_elements(body)
         #self.convert_table_wrap_elements(body)
 
-        #self.convert_graphic_elements(body)
+        self.convert_graphic_elements(body)
 
         #TODO: Back matter stuffs
 
@@ -1418,24 +1418,24 @@ class OPSPLoS(OPSMeta):
                 ref_p.text = str(etree.tostring(ref, method='text', encoding='utf-8'), encoding='utf-8')
                 element_methods.replace(ref, ref_p)
 
-    def convert_graphic_elements(self, body):
+    def convert_graphic_elements(self, top):
         """
         This is a method for the odd special cases where <graphic> elements are
         standalone, or rather, not a part of a standard graphical element such
         as a figure or a table. This method should always be employed after the
         standard cases have already been handled.
         """
-        graphics = body.getElementsByTagName('graphic')
-        for graphic in graphics:
-            graphic_attributes = element_methods.get_all_attributes(graphic, remove=True)
-            graphic.tagName = 'img'
-            graphic.setAttribute('alt', 'unowned-graphic')
-            if 'xlink:href' in graphic_attributes:
-                xlink_href = graphic_attributes['xlink:href']
+        for graphic in top.findall('.//graphic'):
+            graphic.tag = 'img'
+            ns_xlink_href = element_methods.ns_format(graphic, 'xlink:href')
+            graphic.attrib['alt'] = 'unowned-graphic'
+            if ns_xlink_href in graphic.attrib:
+                xlink_href = graphic_attributes[ns_xlink_href]
                 file_name = xlink_href.split('.')[-1] + '.png'
                 img_dir = 'images-' + self.doi_frag
                 img_path = '/'.join([img_dir, file_name])
-                graphic.setAttribute('src', img_path)
+                graphic.attrib['src'] = img_path
+            element_methods.remove_all_attributes(graphic, exclude=['id', 'class', 'alt', 'src'])
 
     def fetch_single_representation(self, item_xlink_href):
         """
