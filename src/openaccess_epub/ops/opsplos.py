@@ -526,7 +526,8 @@ class OPSPLoS(OPSMeta):
         funding_b = etree.SubElement(funding_div, 'b')
         funding_b.text = 'Funding: '
         #As far as I can tell, PLoS only uses one funding-statement
-        element_methods.append_all_below(funding_div, funding_group[0].node)
+        funding_statement = funding_group[0].funding_statement[0]
+        element_methods.append_all_below(funding_div, funding_statement.node)
 
     def make_article_info_competing_interests(self, receiving_el ):
         """
