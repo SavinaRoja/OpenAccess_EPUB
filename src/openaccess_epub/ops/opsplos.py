@@ -81,7 +81,7 @@ class OPSPLoS(OPSMeta):
         self.convert_list_elements(body)
 
         self.convert_fig_elements(body)
-        #self.convert_table_wrap_elements(body)
+        self.convert_table_wrap_elements(body)
 
         self.convert_graphic_elements(body)
 
@@ -813,17 +813,39 @@ class OPSPLoS(OPSMeta):
             #Remove the original <fig>
             element_methods.remove(fig)
 
-    def convert_table_wrap_elements(self, body):
+    def convert_table_wrap_elements(self, top):
         """
         Responsible for the correct conversion of JPTS 3.0 <table-wrap>
         elements to OPS content.
         """
-        table_wraps = body.getElementsByTagName('table-wrap')
-        for tab in table_wraps:
+        for table_wrap in top.findall('.//table-wrap'):
             #TODO: Address table uncommenting, for now this is not workable
             #for child in tab.childNodes:
             #    if child.nodeType == 8:
             #        element_methods.uncomment(child)
+            
+            #Get the optional label and caption
+            label = table_wrap.find('label')
+            caption = table_wrap.find('caption')
+            #Check for the alternatives element
+            alternatives = table_wrap.find('alternatives')
+            #Look for the graphic node, under table-wrap and alternatives
+            graphic = table_wrap.find('graphic')
+            if graphic is None and alternatives is not None:
+                graphic = alternatives.find('graphic')
+            #Look for the table node, under table-wrap and alternatives
+            table = table_wrap.find('table')
+            if table is None and alternatives is not None:
+                table = alternatives.find('table')
+
+            #A table may have both, one of, or neither of graphic and table
+            #These combinations should be handled, but a table-wrap with
+            #neither should fail with an error
+            if graphic is None and table is not None:  #Table only
+                element_methods.replace(table_wrap, table)
+                continue
+            
+
             #Parse all attributes to a dict
             tab_attributes = element_methods.get_all_attributes(tab, remove=False)
             #Determine if there is a <label>, 0 or 1, grab the node
@@ -840,6 +862,8 @@ class OPSPLoS(OPSMeta):
                 caption_node = element_methods.get_children_by_tag_name('caption', tab)[0]
             except IndexError:
                 caption_node = None
+
+            
 
             #Get the alternatives node, for almost all articles, it will hold
             #the <graphic> and the <table>
