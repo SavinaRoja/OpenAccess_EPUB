@@ -304,7 +304,7 @@ xmlns:oebpackage="http://openebook.org/namespaces/oeb-package/1.0/">
         biblio_idref = 'biblio-{0}-xml'.format(dashed_article_doi)
         #Add biblio idref if there is a bibliography
         if self.article.back is not None:
-            if self.article.back.findall('ref'):
+            if self.article.back.findall('.//ref'):
                 self.spine.append(spine_itemref(biblio_idref, 'yes'))
         #Create tables idref
         tables_idref = 'tables-{0}-xml'.format(dashed_article_doi)

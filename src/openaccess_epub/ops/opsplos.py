@@ -33,7 +33,7 @@ class OPSPLoS(OPSMeta):
         self.ops_dir = os.path.join(output_dir, 'OPS')
         self.html_tables = []
         self.main_body = self.create_main()
-        #self.create_biblio()
+        self.create_biblio()
         #if self.html_tables:
         #    self.create_tables()
 
@@ -88,8 +88,8 @@ class OPSPLoS(OPSMeta):
         #TODO: Back matter stuffs
 
         #These come last for a reason
-        #self.convert_sec_elements(body)
-        #self.convert_div_titles(body)
+        self.convert_sec_elements(body)
+        self.convert_div_titles(body)
         self.post_processing_conversion(body)
 
         #Finally, write to a document
@@ -178,25 +178,16 @@ class OPSPLoS(OPSMeta):
         segment of the article.
         """
         self.document = self.make_document('biblio')
-        body = self.document.getElementsByTagName('body')[0]
-        body.setAttribute('id', 'references')
-        try:
-            back = self.article.getElementsByTagName('back')[0]
-        except IndexError:
-            return None
-        else:
-            refs = back.getElementsByTagName('ref')
-        if not refs:
-            return None
+        body = etree.SubElement(self.document.getroot(), 'body')
+        body.attrib['id'] = 'references'
+        if self.article.metadata.back is not None:
+            refs = self.metadata.back.node.findall('.//ref')
         for ref in refs:
-            p = self.appendNewElement('p', body)
-            p.setAttribute('id', ref.getAttribute('id'))
-            self.appendNewText(utils.serializeText(ref, []), p)
+            ref_p = etree.SubElement(body, 'p')
+            ref_p.attrib['id'] = ref.attrib['id']
+            ref_p.text = str(etree.tostring(ref, method='text', encoding='utf-8'))
 
-        #Finally, write to a document
-        with open(os.path.join(self.ops_dir, self.bib_frag[:-4]), 'wb') as op:
-            op.write(self.document.toxml(encoding='utf-8'))
-            #op.write(self.document.toprettyxml(encoding='utf-8'))
+        self.write_document(os.path.join(self.ops_dir, self.bib_frag[:-4]), self.document)
 
     def create_tables(self):
         """
@@ -1195,39 +1186,33 @@ class OPSPLoS(OPSMeta):
         substructure.
         """
         supplementary_materials = top.findall('.//supplementary-material')
-        return
-        for supplementary in supplementary_materials: 
-            transfer_id = False
-            supplementary_parent = supplementary.parentNode
-            labels = element_methods.get_children_by_tag_name('label', supplementary)
-            resource_url = utils.plos_fetch_single_representation(self.doi_frag, attributes['xlink:href'])
-            if labels:
-                label = labels[0]
-                label.tagName = 'a'
-                label.setAttribute('href', resource_url)
-                if 'id' in attributes:
-                    label.setAttribute('id', attributes['id'])
-                self.appendNewText('. ', label)
-                transfer_id = True
-                supplementary_parent.insertBefore(label, supplementary)
-            caption = element_methods.get_children_by_tag_name('caption', supplementary)
-            if caption:
-                titles = element_methods.get_children_by_tag_name('title', caption[0])
-                paragraphs = element_methods.get_children_by_tag_name('p', caption[0])
-                if titles:
-                    title = titles[0]
-                    title.tagName = 'b'
-                    if not transfer_id:
-                        if 'id' in attributes:
-                            title.setAttribute('id', attributes['id'])
-                    supplementary_parent.insertBefore(title, supplementary)
-                if paragraphs:
-                    paragraph = paragraphs[0]
-                    if not transfer_id:
-                        if 'id' in attributes:
-                            paragraph.setAttribute('id', attributes['id'])
-                    supplementary_parent.insertBefore(paragraph, supplementary)
-            supplementary_parent.removeChild(supplementary)
+        for supplementary in supplementary_materials:
+            #Create a div element to hold the supplementary content
+            suppl_div = etree.Element('div')
+            if 'id' in supplementary.attrib:
+                suppl_div.attrib['id'] = supplementary.attrib['id']
+            element_methods.insert_before(supplementary, suppl_div)
+            #Get the sub elements
+            label = supplementary.find('label')
+            caption = supplementary.find('caption')
+            #Get the external resource URL for the supplementary information
+            ns_xlink_href = element_methods.ns_format(supplementary, 'xlink:href')
+            xlink_href = supplementary.attrib[ns_xlink_href]
+            resource_url = self.fetch_single_representation(xlink_href)
+            if label is not None:
+                label.tag = 'a'
+                label.attrib['href'] = resource_url
+                element_methods.append_new_text(label, '. ', join_str='')
+                suppl_div.append(label)
+            if caption is not None:
+                title = caption.find('title')
+                paragraphs = caption.findall('p')
+                if title is not None:
+                    title.tag = 'b'
+                    suppl_div.append(title)
+                for paragraph in paragraphs:
+                    suppl_div.append(paragraph)
+            element_methods.remove(supplementary)
 
     def convert_verse_group_elements(self, top):
         """
@@ -1468,3 +1453,25 @@ class OPSPLoS(OPSMeta):
                 img_dir = 'images-' + self.doi_frag
                 img_path = '/'.join([img_dir, file_name])
                 graphic.setAttribute('src', img_path)
+
+    def fetch_single_representation(self, item_xlink_href):
+        """
+        This function will render a formatted URL for accessing the PLoS' server
+        SingleRepresentation of an object.
+        """
+        #A dict of URLs for PLoS subjournals
+        journal_urls = {'pgen': 'http://www.plosgenetics.org/article/{0}',
+                        'pcbi': 'http://www.ploscompbiol.org/article/{0}',
+                        'ppat': 'http://www.plospathogens.org/article/{0}',
+                        'pntd': 'http://www.plosntds.org/article/{0}',
+                        'pmed': 'http://www.plosmedicine.org/article/{0}',
+                        'pbio': 'http://www.plosbiology.org/article/{0}',
+                        'pone': 'http://www.plosone.org/article/{0}',
+                        'pctr': 'http://clinicaltrials.ploshubs.org/article/{0}'}
+        #Identify subjournal name for base URl
+        subjournal_name = self.doi_frag.split('.')[1]
+        base_url = journal_urls[subjournal_name]
+    
+        #Compose the address for fetchSingleRepresentation
+        resource = 'fetchSingleRepresentation.action?uri=' + item_xlink_href
+        return base_url.format(resource)
