@@ -97,20 +97,14 @@ class OPSMeta(object):
         #Ext-links often declare their address as xlink:href attribute
         #if that fails, direct the link to the contained text
         for ext_link in top.findall('.//ext-link'):
-            if 'id' in ext_link.attrib:
-                ext_id = ext_link.attrib['id']
-            else:
-                ext_id = False
             ext_link.tag = 'a'
             xlink_href_name = element_methods.ns_format(ext_link, 'xlink:href')
             xlink_href = element_methods.get_attribute(ext_link, xlink_href_name)
-            element_methods.remove_all_attributes(ext_link)
+            element_methods.remove_all_attributes(ext_link, exclude=['id'])
             if xlink_href:
                 ext_link.attrib['href'] = xlink_href
             else:
                 ext_link.attrib['href'] = element_methods.all_text(ext_link)
-            if ext_id:
-                ext_link.attrib['id'] = ext_id
         #Uris often declare their address as xlink:href attribute
         #if that fails, direct the link to the contained text
         for uri in top.findall('.//uri'):

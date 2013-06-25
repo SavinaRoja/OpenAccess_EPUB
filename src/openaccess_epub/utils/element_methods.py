@@ -79,12 +79,18 @@ def all_text(element):
     tails = [tail.strip() for tail in tails if tail.strip()]
     return ' '.join(text + tails)
 
-def remove_all_attributes(element):
+def remove_all_attributes(element, exclude=None):
     """
     This method will remove all attributes of any provided element.
+
+    A list of strings may be passed to the keyward-argument "exclude", which
+    will serve as a list of attributes which will not be removed.
     """
+    if exclude is None:
+        exclude = []
     for k in element.attrib.keys():
-        element.attrib.pop(k)
+        if k not in exclude:
+            element.attrib.pop(k)
 
 def get_attribute(element, attribute):
     """
@@ -100,13 +106,13 @@ def get_attribute(element, attribute):
         do_stuff
 
       if 'optional' in some_element.attrib:
-        optional_attr = some_element.attrib:['optional']
+        optional_attr = some_element.attrib['optional']
       else:
         optional_attr = None
       if optional_attr:
         do_stuff
 
-    Doing this for such a common job is an annoyance, so this method
+    Doing this for such a common job may be an annoyance, so this method
     encapsulates the first pattern above to make things cleaner. The new
     pattern, using this method, is:
 
@@ -146,18 +152,6 @@ def rename_attributes(element, attrs):
         else:
             element.attrib[attrs[name]] = element.attrib.pop(name)
 
-def get_optional_child(tagname, node, not_found=None):
-    """
-    This method is used to return the first child with the supplied tagName
-    when the child may or may not exist.
-
-    This saves some repetitive code during checks for child existence.
-    """
-    try:
-        child = get_children_by_tag_name(tagname, node)[0]
-    except IndexError:
-        child = not_found
-    return child
 
 def elevate_element(node, adopt_name=None, adopt_attrs=None):
         """
@@ -266,21 +260,4 @@ def uncomment(comment):
     else:
         parent.replaceChild(node, comment)
         return node
-
-
-def node_text(node):
-    """
-    This is to be used when a node may only contain text, numbers or special
-    characters. This function will return the text contained in the node.
-    Sometimes this text data contains spurious newlines and spaces due to
-    parsing and original xml formatting. This function should strip such
-    artifacts.
-    """
-    #Get data from first child of the node
-    try:
-        first_child_data = node.firstChild.data
-    except AttributeError:  # Usually caused by an empty node
-        return ''
-    else:
-        return '{0}'.format(first_child_data.strip())
 

@@ -75,10 +75,10 @@ class OPSPLoS(OPSMeta):
         self.convert_boxed_text_elements(body)
         self.convert_verse_group_elements(body)
         self.convert_supplementary_material_elements(body)
-        #self.convert_fn_elements(body)
-        #self.convert_def_list_elements(body)
-        #self.convert_ref_list_elements(body)
-        #self.convert_list_elements(body)
+        self.convert_fn_elements(body)
+        self.convert_def_list_elements(body)
+        self.convert_ref_list_elements(body)
+        self.convert_list_elements(body)
 
         self.convert_fig_elements(body)
         #self.convert_table_wrap_elements(body)
@@ -1255,7 +1255,7 @@ class OPSPLoS(OPSMeta):
                 verse_line.tag = 'p'
                 verse_line.attrib['class'] = 'verse-line'
 
-    def convert_fn_elements(self, body):
+    def convert_fn_elements(self, top):
         """
         <fn> elements may be used in the main text body outside of tables and
         figures for purposes such as erratum notes. It appears that PLoS
@@ -1267,41 +1267,30 @@ class OPSPLoS(OPSMeta):
         identified as an Erratum, in which case it will be removed in
         accordance with PLoS' apparent guidelines.
         """
-        footnotes = body.getElementsByTagName('fn')
+        footnotes = top.findall('.//fn')
         for footnote in footnotes:
-            #Get the attributes
-            attributes = element_methods.get_all_attributes(footnote, remove=False)
-            footnote_parent = footnote.parentNode
-            #Find the footnote paragraph
-            footnote_paragraphs = element_methods.get_children_by_tag_name('p', footnote)
-            if footnote_paragraphs:  # A footnote paragraph exists
-                #Grab the first, and only, paragraph
-                paragraph = footnote_paragraphs[0]
-                #Graph the paragraph text
-                paragraph_text = utils.serializeText(paragraph, stringlist=[])
-                #See if it is a corrected erratum
-                corrected_erratum = False
-                if paragraph_text.startswith('Erratum') and 'Corrected' in paragraph_text:
-                    corrected_erratum = True
-                #Now remove the footnote if it is a corrected erratum
-                if corrected_erratum:
-                    element_methods.remove(footnote)
-                    continue  # Move on to the next footnote
-
-                #Process the footnote paragraph if it is not a corrected erratum
-                if 'id' in attributes:
-                    paragraph.setAttribute('id', attributes['id'])
-                if 'fn-type' in attributes:
-                    paragraph_class = 'fn-type-{0}'.format(attributes['fn-type'])
-                    paragraph.setAttribute('class', paragraph_class)
-                else:
-                    paragraph.setAttribute('class', 'fn')
-                element_methods.replace_with(footnote, paragraph)
-
-            else:  # A footnote paragraph does not exist
+            #Use only the first paragraph
+            paragraph = footnote.find('p')
+            #If no paragraph, move on
+            if paragraph is None:
                 element_methods.remove(footnote)
+                continue
+            #Simply remove corrected errata items
+            paragraph_text = str(etree.tostring(paragraph, method='text', encoding='utf-8'), encoding='utf-8')
+            if paragraph_text.startswith('Erratum') and 'Corrected' in paragraph_text:
+                element_methods.remove(footnote)
+                continue
+            #Transfer some attribute information from the fn element to the paragraph
+            if 'id' in footnote.attrib:
+                paragraph.attrib['id'] = footnote.attrib['id']
+            if 'fn-type' in footnote.attrib:
+                paragraph.attrib['class'] = 'fn-type-{0}'.footnote.attrib['fn-type']
+            else:
+                paragraph.attrib['class'] = 'fn'
+                #Replace the 
+            element_methods.replace(footnote, paragraph)
 
-    def convert_list_elements(self, body):
+    def convert_list_elements(self, top):
         """
         A sequence of two or more items, which may or may not be ordered.
 
@@ -1340,37 +1329,33 @@ class OPSPLoS(OPSMeta):
         #TODO: prefix-words, one possible solution would be to have this method
         #edit the CSS to provide formatting support for arbitrary prefixes...
 
-        for list_el in body.getElementsByTagName('list'):
-            if list_el.parentNode.tagName == 'p':
+        #This is a block level element, so elevate it if found in p
+        for list_el in top.findall('.//list'):
+            if list_el.getparent().tag == 'p':
                 element_methods.elevate_element(list_el)
 
         #list_el is used instead of list (list is reserved)
-        for list_el in body.getElementsByTagName('list'):
-            list_el_attributes = element_methods.get_all_attributes(list_el, remove=True)
-            list_el_parent = list_el.parentNode
-            try:
-                list_el_type = list_el_attributes['list-type']
-            except KeyError:
+        for list_el in top.findall('.//list'):
+            if 'list-type' not in list_el.attrib:
                 list_el_type = 'order'
-            #Unordered list if '', 'bullet', or 'simple'
-            if list_el_type in ['', 'bullet', 'simple']:
-                list_el.tagName = 'ul'
-                #'' and 'bullet' are treated as the same default case
-                #If the unordered list is simple, we wish to suppress bullets
-                if list_el_type == 'simple':  # Use CSS to suppress
-                    list_el.setAttribute('class', 'simple')
-            #Ordered list if otherwise
             else:
-                list_el.tagName = 'ol'
-                list_el.setAttribute('class', list_el_type)
-            #Pass on the id if it exists
-            if 'id' in list_el_attributes:
-                list_el.setAttribute('id', list_el_attributes['id'])
-            #Convert the <list-item> element tags to 'li'
-            for list_item in element_methods.get_children_by_tag_name('list-item', list_el):
-                list_item.tagName = 'li'
+                list_el_type = list_el.attrib['list-type']
+            #Unordered lists
+            if list_el_type in ['', 'bullet', 'simple']:
+                list_el.tag = 'ul'
+                #CSS must be used to recognize the class and suppress bullets
+                if list_el_type == 'simple':
+                    list_el.attrib['class'] = 'simple'
+            #Ordered lists
+            else:
+                list_el.tag = 'ol'
+                list_el.attrib['class'] = list_el_type
+            #Convert the list-item element tags to 'li'
+            for list_item in list_el.findall('list-item'):
+                list_item.tag = 'li'
+            element_methods.remove_all_attributes(list_el, exclude['id', 'class'])
 
-    def convert_def_list_elements(self, body):
+    def convert_def_list_elements(self, top):
         """
         A list in which each item consists of two parts: a word, phrase, term,
         graphic, chemical structure, or equation paired with one of more
@@ -1381,32 +1366,32 @@ class OPSPLoS(OPSMeta):
         will convert the <def-list> to a classed <div> with a styled format
         for the terms and definitions.
         """
-        for def_list in body.getElementsByTagName('def-list'):
-            def_list_attributes = element_methods.get_all_attributes(def_list, remove=True)
-            def_list.tagName = 'div'
-            def_list.setAttribute('class', 'def-list')
-            if 'id' in def_list_attributes:
-                def_list.setAttribute('id', def_list_attributes['id'])
-            def_item_list = element_methods.get_children_by_tag_name('def-item', def_list)
-            for def_item in def_item_list:
-                term = element_methods.get_children_by_tag_name('term', def_item)[0]
-                term.tagName = 'p'
-                term.setAttribute('class', 'def-item-term')
-                def_list.insertBefore(term, def_item)
-                try:
-                    definition = element_methods.get_children_by_tag_name('def', def_item)[0]
-                except IndexError:
-                    print('WARNING! Missing definition in def-item!')
-                else:
-                    def_para = element_methods.get_children_by_tag_name('p', definition)[0]
-                    definition.childNodes += def_para.childNodes
-                    definition.removeChild(def_para)
-                    definition.tagName = 'p'
-                    definition.setAttribute('class', 'def-item-def')
-                    def_list.insertBefore(definition, def_item)
-                def_list.removeChild(def_item)
+        for def_list in top.findall('.//def-list'):
+            #Remove the attributes, excepting id
+            element_methods.remove_all_attributes(def_list, exclude=['id'])
+            #Modify the def-list element
+            def_list.tag = 'div'
+            def_list.attrib['class'] = 'def-list'
+            for def_item in def_list.findall('def-item'):
+                #Get the term being defined, modify it
+                term = def_item.find('term')
+                term.tag = 'p'
+                term.attrib['class']= 'def-item-term'
+                #Insert it before its parent def_item
+                element_methods.insert_before(def_item, term)
+                #Get the definition, handle missing with a warning
+                definition = def_item.find('def')
+                if definition is None:
+                    log.warning('Missing def element in def-item')
+                    element_methods.remove(def_item)
+                #PLoS appears to consistently place all definition text in a
+                #paragraph subelement of the def element
+                def_para = def_item.find('p')
+                def_para.attrib['class'] = 'def-item-def'
+                #Replace the def-item element with the p element
+                element_methods.replace(def_item, def_para)
 
-    def convert_ref_list_elements(self, body):
+    def convert_ref_list_elements(self, top):
         """
         List of references (citations) for an article, which is often called
         “References”, “Bibliography”, or “Additional Reading”.
@@ -1419,21 +1404,18 @@ class OPSPLoS(OPSMeta):
         Similarly, this is an area of major openness in development, I lack
         access to PLOS' algorithm for proper citation formatting.
         """
-        #TODO: DOES NOT FUNCTION AS INTENDED; make a proper one someday
-        for ref_list in body.getElementsByTagName('ref-list'):
-            ref_list_attributes = element_methods.get_all_attributes(ref_list, remove=True)
-            ref_list.tagName = 'div'
-            ref_list.setAttribute('class', 'ref-list')
-            try:
-                label = element_methods.get_children_by_tag_name('label', ref_list)[0]
-            except IndexError:
-                pass
-            else:
-                label.tagName = 'h3'
-            for ref in element_methods.get_children_by_tag_name('ref', ref_list):
-                ref_text = utils.serializeText(ref, stringlist=[])
-                ref_list_p = self.appendNewElementWithText('p', ref_text, ref_list)
-                ref_list.removeChild(ref)
+        #TODO: Handle nested ref-lists
+        for ref_list in top.findall('.//ref-list'):
+            element_methods.remove_all_attributes(ref_list)
+            ref_list.tag = 'div'
+            ref_list.attrib['class'] = 'ref-list'
+            label = ref_list.find('label')
+            if label is not None:
+                label.tag = 'h3'
+            for ref in ref_list.findall('ref'):
+                ref_p = etree.Element('p')
+                ref_p.text = str(etree.tostring(ref, method='text', encoding='utf-8'), encoding='utf-8')
+                element_methods.replace(ref, ref_p)
 
     def convert_graphic_elements(self, body):
         """
