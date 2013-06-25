@@ -175,20 +175,6 @@ def elevate_element(node, adopt_name=None, adopt_attrs=None):
         The adopting parent node will have identical attributes and tag name
         as the original parent unless specified otherwise.
         """
-        def create_adoptive_parent():
-            """
-            A submethod for creating the adoptive parent
-            """
-            if adopt_name is None:
-                adopt = etree.Element(parent.tag)
-            else:
-                adopt = etree.Element(adopt_name)
-            if adopt_attrs is None:
-                adopt.attrib = {i:parent.attrib[i] for i in parent.attrib}
-            else:
-                for key in adopt_attrs.keys():
-                    adopt.attrib[key] = adopt_attrs[key]
-            return adopt
 
         #These must be collected before modifying the xml
         parent = node.getparent()
@@ -200,9 +186,17 @@ def elevate_element(node, adopt_name=None, adopt_attrs=None):
         #Insert the child after the parent
         grandparent.insert(parent_index+1, child)
         #Only create the adoptive parent if there are siblings
-        if len(siblings) > 0:
+        if len(siblings) > 0 or child.tail is not None:
             #Create the adoptive parent
-            adopt = create_adoptive_parent()
+            if adopt_name is None:
+                adopt = etree.Element(parent.tag)
+            else:
+                adopt = etree.Element(adopt_name)
+            if adopt_attrs is None:
+                adopt.attrib = {i:parent.attrib[i] for i in parent.attrib}
+            else:
+                for key in adopt_attrs.keys():
+                    adopt.attrib[key] = adopt_attrs[key]
             #Insert the adoptive parent after the elevated child
             grandparent.insert(grandparent.index(child)+1, adopt)
         #Transfer the siblings to the adoptive parent
@@ -210,18 +204,10 @@ def elevate_element(node, adopt_name=None, adopt_attrs=None):
             adopt.append(sibling)
         #lxml's element.tail attribute presents a slight problem, requiring the
         #following oddity
-        #Prepend the tail text to the sibling's text if sibling exists
-        if child.tail is not None and len(siblings) > 0:
-            sibling.text = child.tail + sibling.text
-            child.tail = None  # Remove the tail
-        #If there is a tail and there are no siblings
-        elif child.tail is not None:
-            #Create the adoptive parent
-            adopt = create_adoptive_parent()
+        #Set the adoptive parent's text to the child.tail
+        if child.tail is not None:
             adopt.text = child.tail
             child.tail = None  # Remove the tail
-            #Insert the adoptive parent after the elevated child
-            grandparent.insert(grandparent.index(child)+1, adopt)
 
 
 def remove(node):

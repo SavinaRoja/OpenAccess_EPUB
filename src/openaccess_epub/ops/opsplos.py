@@ -72,8 +72,8 @@ class OPSPLoS(OPSMeta):
         self.convert_disp_formula_elements(body)
         self.convert_inline_formula_elements(body)
         self.convert_disp_quote_elements(body)
-        #self.convert_boxed_text_elements(body)
-        #self.convert_verse_group_elements(body)
+        self.convert_boxed_text_elements(body)
+        self.convert_verse_group_elements(body)
         #self.convert_supplementary_material_elements(body)
         #self.convert_fn_elements(body)
         #self.convert_def_list_elements(body)
@@ -1149,7 +1149,7 @@ class OPSPLoS(OPSMeta):
             disp_quote.tag = 'div'
             disp_quote.attrib['class'] = 'disp-quote'
 
-    def convert_boxed_text_elements(self, body):
+    def convert_boxed_text_elements(self, top):
         """
         Textual material that is part of the body of text but outside the
         flow of the narrative text, for example, a sidebar, marginalia, text
@@ -1160,23 +1160,24 @@ class OPSPLoS(OPSMeta):
         This method will elevate the <sec> element, adding class information as
         well as processing the title.
         """
-        for boxed_text in body.getElementsByTagName('boxed-text'):
-            boxed_text_attrs = element_methods.get_all_attributes(boxed_text, remove=False)
-            boxed_text_parent = boxed_text.parentNode
-            sec = element_methods.get_optional_child('sec', boxed_text)
-            if sec:
-                sec.tagName = 'div'
-                title = element_methods.get_optional_child('title', sec)
-                if title:
-                    title.tagName = 'b'
+        for boxed_text in top.findall('.//boxed-text'):
+            sec_el = boxed_text.find('sec')
+            if sec_el is not None:
+                sec_el.tag = 'div'
+                title = sec_el.find('title')
+                if title is not None:
+                    title.tag = 'b'
+                sec_el.attrib['class'] = 'boxed-text'
+                if 'id' in boxed_text.attrib:
+                    sec_el.attrib['id'] = boxed_text.attrib['id']
+                element_methods.replace(boxed_text, sec_el)
+                continue
             else:
-                sec = self.document.createElement('div')
-                sec.childNodes = boxed_text.childNodes
-            sec.setAttribute('class', 'boxed-text')
-            if 'id' in boxed_text_attrs:
-                sec.setAttribute('id', boxed_text_attrs['id'])
-            boxed_text_parent.insertBefore(sec, boxed_text)
-            boxed_text_parent.removeChild(boxed_text)
+                div_el = etree.Element('div', {'class': 'boxed-text'})
+                if 'id' in boxed_text.attrib:
+                    div_el.attrib['id'] = boxed_text.attrib['id']
+                element_methods.append_all_below(div_el, boxed_text)
+                element_methods.replace(boxed_text, div_el)
 
     def convert_supplementary_material_elements(self, body):
         """
@@ -1227,7 +1228,7 @@ class OPSPLoS(OPSMeta):
                     supplementary_parent.insertBefore(paragraph, supplementary)
             supplementary_parent.removeChild(supplementary)
 
-    def convert_verse_group_elements(self, body):
+    def convert_verse_group_elements(self, top):
         """
         A song, poem, or verse
 
@@ -1241,7 +1242,9 @@ class OPSPLoS(OPSMeta):
         title, and subtitle elements correctly, while converting <verse-lines>
         to italicized lines.
         """
-        for verse_group in body.getElementsByTagName('verse-group'):
+        for verse_group in top.findall('.//verse-group'):
+            label
+            
             label = element_methods.get_children_by_tag_name('label', verse_group)
             title = element_methods.get_children_by_tag_name('title', verse_group)
             subtitle = element_methods.get_children_by_tag_name('subtitle', verse_group)
