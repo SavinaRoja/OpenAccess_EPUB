@@ -817,12 +817,17 @@ class OPSPLoS(OPSMeta):
         """
         Responsible for the correct conversion of JPTS 3.0 <table-wrap>
         elements to OPS content.
+        
+        The 'id' attribute is treated as mandatory by this method.
         """
         for table_wrap in top.findall('.//table-wrap'):
             #TODO: Address table uncommenting, for now this is not workable
             #for child in tab.childNodes:
             #    if child.nodeType == 8:
             #        element_methods.uncomment(child)
+            
+            #TODO: Depart from the old model, encapsulate all table-stuff into a div
+            #Create a div for the table 
             
             #Get the optional label and caption
             label = table_wrap.find('label')
@@ -839,106 +844,87 @@ class OPSPLoS(OPSMeta):
                 table = alternatives.find('table')
 
             #A table may have both, one of, or neither of graphic and table
-            #These combinations should be handled, but a table-wrap with
-            #neither should fail with an error
+            #The different combinations should be handled, but a table-wrap
+            #with neither should fail with an error
+            #Start with handling the label and caption
+            if label is not None and caption is not None:
+                caption_div = etree.Element('div', {'class': 'table-caption'})
+                caption_div_b = etree.SubElement(caption_div, 'b')
+                if label is not None:
+                    element_methods.append_all_below(caption_div_b, label)
+                if caption is not None:
+                    #Find, optional, title element and paragraph elements
+                    caption_title = caption.find('title')
+                    caption_ps = caption.findall('p')
+                    #For title and each paragraph, give children to the div
+                    for el in [caption_title] + caption_ps:
+                        if el is None:
+                            continue
+                        element_methods.append_all_below(caption_div, el)
+                #Insert this caption div before the table wrap
+                element_methods.insert_before(table_wrap, caption_div)
+            
+            #If there is both an image and a table, the image should be placed
+            #in the text flow with a link to the html table
+
+            #If there is an image and no table, the image should be placed in
+            #the text flow without a link to an html table
+            
+            #If there is a table with no image, then the table should be placed
+            #in the text flow.
+            
+            if graphic is not None:
+                #Create the image path for the graphic
+                xlink_href = element_methods.ns_format(graphic, 'xlink:href')
+                graphic_xlink_href = graphic.attrib[xlink_href]
+                file_name = graphic_xlink_href.split('.')[-1] + '.png'
+                img_dir = 'images-' + self.doi_frag
+                img_path = '/'.join([img_dir, file_name])
+                #Create the new img element
+                img_element = etree.Element('img', {'alt': 'A Table',
+                                                    'src': img_path,
+                                                    'class': 'table'})
+                #Transfer the id from the table-wrap to the img
+                img_element.attrib['id'] = table_wrap.attrib['id']
+                #Insert the image element before the table-wrap
+                element_methods.insert_before(table_wrap, img_element)
+                #If table, add it to the list, and link to it
+                if table is not None:
+                    table.attrib['id'] = table_wrap.attrib['id']
+                    #The label attribute is just a means of transmitting some
+                    #plaintext which will be used for the labeling in the html
+                    #tables file
+                    if label is not None:
+                        #Serialize the text, set as label attribute
+                        table.attrib['label'] = str(etree.tostring(label, method='text', encoding='utf-8'), encoding='utf-8')
+                    #Add the table to the tables list
+                    self.html_tables.append(table)
+                    #Also add the table's foot if it exists
+                    table_wrap_foot = table_wrap.find('table-wrap-foot')
+                    if table_wrap_foot is not None:
+                        self.html_tables.append(table_wrap_foot)
+                    #Create a link to the html version of the table
+                    html_table_link = etree.Element('a')
+                    html_table_link.attrib['href'] = self.tab_frag.format(table_wrap.attrib['id'])
+                    html_table_link.text = 'Go to HTML version of this table'
+                    element_methods.insert_before(table_wrap, html_table_link)
+                #Remove the original table-wrap
+                element_methods.remove(table_wrap)
+                
+            
             if graphic is None and table is not None:  #Table only
                 element_methods.replace(table_wrap, table)
                 continue
-            
-
-            #Parse all attributes to a dict
-            tab_attributes = element_methods.get_all_attributes(tab, remove=False)
-            #Determine if there is a <label>, 0 or 1, grab the node
-            #label_text is for serialized text for the tabled version
-            try:
-                label_node = element_methods.get_children_by_tag_name('label', tab)[0]
-            except IndexError:  # No label tag
-                label_node = None
-                label_text = ''
-            else:
-                label_text = utils.serializeText(label_node, stringlist=[])
-            #Determine if there is a <caption>, grab the node
-            try:
-                caption_node = element_methods.get_children_by_tag_name('caption', tab)[0]
-            except IndexError:
-                caption_node = None
-
-            
-
-            #Get the alternatives node, for almost all articles, it will hold
-            #the <graphic> and the <table>
-            #I am assuming only one graphic and only one table per table-wrap
-            alternatives = element_methods.get_optional_child('alternatives', tab)
-            if alternatives:
-                graphic_node = element_methods.get_optional_child('graphic', alternatives)
-                table_node = element_methods.get_optional_child('table', alternatives)
-            #If the article doesn't have the <alternatives> node, or either of
-            #these are not under alternatives, check directly under table-wrap
-            else:
-                graphic_node = None
-                table_node = None
-            if not graphic_node:
-                graphic_node = element_methods.get_optional_child('graphic', tab)
-            if not table_node:
-                table_node = element_methods.get_optional_child('table', tab)
+            if table is None and graphic is not None:  # Graphic only
+                pass
+                
 
             if not graphic_node and table_node:
                 element_methods.replace_with(tab, table_node)
                 continue  # Just replace table-wrap with this node and move on
             #Past this point, there must be a graphic... fails if neither
 
-            #Label and move the html table node to the list of html tables
-            if table_node:
-                if 'id' in tab_attributes:
-                    table_node.setAttribute('id', tab_attributes['id'])
-                table_node.setAttribute('label', label_text)
-                self.html_tables.append(table_node)
-                try:
-                    foot = element_methods.get_children_by_tag_name('table-wrap-foot', tab)[0]
-                except IndexError:
-                    pass
-                else:
-                    self.html_tables.append(foot)
 
-            #Create a file reference for the image
-            graphic_xlink_href = graphic_node.getAttribute('xlink:href')
-            file_name = graphic_xlink_href.split('.')[-1] + '.png'
-            img_dir = 'images-' + self.doi_frag
-            img_path = '/'.join([img_dir, file_name])
-
-            #Create OPS content, using image path, label, and caption
-            tab_parent = tab.parentNode
-            #Create a horizontal rule
-            tab_parent.insertBefore(self.document.createElement('hr'), tab)
-            #Create the img element
-            img_element = self.document.createElement('img')
-            img_element.setAttribute('alt', 'A Table')
-            if 'id' in tab_attributes:
-                img_element.setAttribute('id', tab_attributes['id'])
-            img_element.setAttribute('src', img_path)
-            img_element.setAttribute('class', 'table')
-
-            #Create content for the label and caption
-            if caption_node or label_node:  # These will go into a <div> before <img>
-                img_caption_div = self.document.createElement('div')
-                img_caption_div.setAttribute('class', 'table-caption')
-                img_caption_div_b = self.appendNewElement('b', img_caption_div)
-                if label_node:
-                    img_caption_div_b.childNodes += label_node.childNodes
-                    self.appendNewText('. ', img_caption_div_b)
-                #The caption element may have <title> 0 or 1, and <p> 0 or more
-                if caption_node:
-                    #Detect caption title
-                    caption_title = element_methods.get_children_by_tag_name('title', caption_node)
-                    if caption_title:
-                        img_caption_div.childNodes += caption_title[0].childNodes
-                        self.appendNewText(' ', img_caption_div)
-                    #Detect <p>s
-                    caption_ps = element_methods.get_children_by_tag_name('p', caption_node)
-                    for each_p in caption_ps:
-                        img_caption_div.childNodes += each_p.childNodes
-                #Now that we have created the img caption div content, insert
-                tab_parent.insertBefore(img_caption_div, tab)
 
             #Insert the img element
             tab_parent.insertBefore(img_element, tab)
@@ -950,11 +936,6 @@ class OPSPLoS(OPSMeta):
                 self.appendNewText('HTML version of this table', html_table_link)
                 tab_parent.insertBefore(html_table_link, tab)
 
-            #Create a horizontal rule
-            tab_parent.insertBefore(self.document.createElement('hr'), tab)
-
-            #Remove the original <table-wrap>
-            tab_parent.removeChild(tab)
 
     def convert_sec_elements(self, body):
         """
