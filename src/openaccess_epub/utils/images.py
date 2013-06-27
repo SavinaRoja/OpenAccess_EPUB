@@ -144,7 +144,6 @@ def get_images(doi, outdirect, images, config, document):
             success = fetch_plos_images(article_doi, img_dir, document)
             if success:
                 if config.use_image_cache:
-                    print('moving images to cache!')
                     move_images_to_cache(img_dir, article_cache)
             return success
         else:
