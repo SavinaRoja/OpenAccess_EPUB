@@ -181,7 +181,9 @@ class OPSPLoS(OPSMeta):
         self.document = self.make_document('biblio')
         body = etree.SubElement(self.document.getroot(), 'body')
         body.attrib['id'] = 'references'
-        if self.article.metadata.back is not None:
+        if self.article.metadata.back is None:
+            return
+        else:
             refs = self.metadata.back.node.findall('.//ref')
         for ref in refs:
             ref_p = etree.SubElement(body, 'p')
@@ -600,7 +602,7 @@ class OPSPLoS(OPSMeta):
         #Look for fn nodes of fn-type 'other'
         other_fns = []
         for fn_group in fn_groups:
-            for fn in fn_groups.fn:
+            for fn in fn_group.fn:
                 if not 'fn-type' in fn.node.attrib:
                     continue
                 elif fn.node.attrib['fn-type'] == 'other':

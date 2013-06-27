@@ -148,7 +148,10 @@ def plos_dc_description(article):
     abstract = article.metadata.front.article_meta.abstract
     if abstract:
         abstract_text = etree.tostring(abstract[0].node, method='text', encoding='utf-8').strip()
-    return str(abstract_text, encoding='utf-8')
+    if abstract_text:
+        return str(abstract_text, encoding='utf-8')
+    else:
+        return ''
 
 def plos_dc_date(article):
     """
