@@ -27,23 +27,6 @@ resources/base_epub/
 output/*
 *.epub
 
-# Cache #
-############
-cache/PLoS/*
-cache/Frontiers/*
-
-# Logs #
-############
-logs/*
-
-# Collections #
-############
-collections/*
-
-# Downloaded XML files #
-############
-downloaded_xml_files/*
-
 # Build#
 ############
 build/*
