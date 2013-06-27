@@ -185,6 +185,8 @@ class OPSPLoS(OPSMeta):
             return
         else:
             refs = self.metadata.back.node.findall('.//ref')
+        if len(refs) == 0:
+            return
         for ref in refs:
             ref_p = etree.SubElement(body, 'p')
             ref_p.attrib['id'] = ref.attrib['id']
@@ -1348,7 +1350,7 @@ class OPSPLoS(OPSMeta):
             #Convert the list-item element tags to 'li'
             for list_item in list_el.findall('list-item'):
                 list_item.tag = 'li'
-            element_methods.remove_all_attributes(list_el, exclude['id', 'class'])
+            element_methods.remove_all_attributes(list_el, exclude=['id', 'class'])
 
     def convert_def_list_elements(self, top):
         """
