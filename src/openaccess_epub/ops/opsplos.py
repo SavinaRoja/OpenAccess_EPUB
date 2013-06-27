@@ -10,6 +10,7 @@ from .opsmeta import OPSMeta
 from lxml import etree
 from copy import copy, deepcopy
 import os
+import sys
 import logging
 
 log = logging.getLogger('OPSPLoS')
@@ -460,6 +461,8 @@ class OPSPLoS(OPSMeta):
 
         if self.metadata.front.article_meta.history is not None:
             dates = self.metadata.front.article_meta.history.date
+        else:
+            dates = []
         received = None
         accepted = None
         for date in dates:
@@ -826,9 +829,10 @@ class OPSPLoS(OPSMeta):
             #    if child.nodeType == 8:
             #        element_methods.uncomment(child)
             
-            #TODO: Depart from the old model, encapsulate all table-stuff into a div
-            #Create a div for the table 
-            
+            #Create a div for all of the table stuff
+            table_div = etree.Element('div')
+            table_div.attrib['id'] = table_wrap.attrib['id']
+
             #Get the optional label and caption
             label = table_wrap.find('label')
             caption = table_wrap.find('caption')
@@ -843,10 +847,7 @@ class OPSPLoS(OPSMeta):
             if table is None and alternatives is not None:
                 table = alternatives.find('table')
 
-            #A table may have both, one of, or neither of graphic and table
-            #The different combinations should be handled, but a table-wrap
-            #with neither should fail with an error
-            #Start with handling the label and caption
+            #Handling the label and caption
             if label is not None and caption is not None:
                 caption_div = etree.Element('div', {'class': 'table-caption'})
                 caption_div_b = etree.SubElement(caption_div, 'b')
@@ -855,21 +856,26 @@ class OPSPLoS(OPSMeta):
                 if caption is not None:
                     #Find, optional, title element and paragraph elements
                     caption_title = caption.find('title')
+                    if caption_title is not None:
+                        element_methods.append_all_below(caption_div_b, caption_title)
                     caption_ps = caption.findall('p')
                     #For title and each paragraph, give children to the div
-                    for el in [caption_title] + caption_ps:
-                        if el is None:
-                            continue
-                        element_methods.append_all_below(caption_div, el)
-                #Insert this caption div before the table wrap
-                element_methods.insert_before(table_wrap, caption_div)
-            
+                    for caption_p in caption_ps:
+                        element_methods.append_all_below(caption_div, caption_p)
+                #Add this to the table div
+                table_div.append(caption_div)
+
+            ### Practical Description ###
+            #A table may have both, one of, or neither of graphic and table
+            #The different combinations should be handled, but a table-wrap
+            #with neither should fail with an error
+            #
             #If there is both an image and a table, the image should be placed
             #in the text flow with a link to the html table
-
+            #
             #If there is an image and no table, the image should be placed in
             #the text flow without a link to an html table
-            
+            #
             #If there is a table with no image, then the table should be placed
             #in the text flow.
             
@@ -884,13 +890,10 @@ class OPSPLoS(OPSMeta):
                 img_element = etree.Element('img', {'alt': 'A Table',
                                                     'src': img_path,
                                                     'class': 'table'})
-                #Transfer the id from the table-wrap to the img
-                img_element.attrib['id'] = table_wrap.attrib['id']
-                #Insert the image element before the table-wrap
-                element_methods.insert_before(table_wrap, img_element)
+                #Add this to the table div
+                table_div.append(img_element)
                 #If table, add it to the list, and link to it
-                if table is not None:
-                    table.attrib['id'] = table_wrap.attrib['id']
+                if table is not None:  # Both graphic and table
                     #The label attribute is just a means of transmitting some
                     #plaintext which will be used for the labeling in the html
                     #tables file
@@ -907,35 +910,19 @@ class OPSPLoS(OPSMeta):
                     html_table_link = etree.Element('a')
                     html_table_link.attrib['href'] = self.tab_frag.format(table_wrap.attrib['id'])
                     html_table_link.text = 'Go to HTML version of this table'
-                    element_methods.insert_before(table_wrap, html_table_link)
-                #Remove the original table-wrap
-                element_methods.remove(table_wrap)
-                
-            
-            if graphic is None and table is not None:  #Table only
-                element_methods.replace(table_wrap, table)
-                continue
-            if table is None and graphic is not None:  # Graphic only
-                pass
-                
+                    #Add this to the table div
+                    table_div.append(html_table_link)
 
-            if not graphic_node and table_node:
-                element_methods.replace_with(tab, table_node)
-                continue  # Just replace table-wrap with this node and move on
-            #Past this point, there must be a graphic... fails if neither
+            elif table is not None:  # Table only
+                #Simply append the table to the table div
+                table_div.append(table)
+            elif graphic is None and table is None:
+                print('Encountered table-wrap element with neither graphic nor table. Exiting.')
+                sys.exit(1)
 
-
-
-            #Insert the img element
-            tab_parent.insertBefore(img_element, tab)
-
-            #Create a link to the html version of the table
-            if table_node:
-                html_table_link = self.document.createElement('a')
-                html_table_link.setAttribute('href', self.tab_frag.format(tab_attributes['id']))
-                self.appendNewText('HTML version of this table', html_table_link)
-                tab_parent.insertBefore(html_table_link, tab)
-
+            #Replace the original table-wrap with the newly constructed div
+            element_methods.replace(table_wrap, table_div)
+        #Finally done
 
     def convert_sec_elements(self, body):
         """
@@ -1392,7 +1379,7 @@ class OPSPLoS(OPSMeta):
                     element_methods.remove(def_item)
                 #PLoS appears to consistently place all definition text in a
                 #paragraph subelement of the def element
-                def_para = def_item.find('p')
+                def_para = definition.find('p')
                 def_para.attrib['class'] = 'def-item-def'
                 #Replace the def-item element with the p element
                 element_methods.replace(def_item, def_para)
