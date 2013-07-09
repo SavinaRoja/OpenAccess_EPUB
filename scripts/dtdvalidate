@@ -28,7 +28,6 @@ from openaccess_epub import JPTS10_PATH, JPTS11_PATH, JPTS20_PATH,\
 import os
 from lxml import etree
 
-print('getting dtds loaded')
 dtds = {'-//NLM//DTD Journal Archiving and Interchange DTD v1.0 20021201//EN': etree.DTD(JPTS10_PATH),
         '-//NLM//DTD Journal Archiving and Interchange DTD v1.1 20031101//EN': etree.DTD(JPTS11_PATH),
         '-//NLM//DTD Journal Publishing DTD v2.0 20040830//EN': etree.DTD(JPTS20_PATH),
@@ -36,7 +35,6 @@ dtds = {'-//NLM//DTD Journal Archiving and Interchange DTD v1.0 20021201//EN': e
         '-//NLM//DTD Journal Publishing DTD v2.2 20060430//EN': etree.DTD(JPTS22_PATH),
         '-//NLM//DTD Journal Publishing DTD v2.3 20070202//EN': etree.DTD(JPTS23_PATH),
         '-//NLM//DTD Journal Publishing DTD v3.0 20080202//EN': etree.DTD(JPTS30_PATH)}
-print('dtds loaded')
 
 def get_dtd_validator():
     pass
@@ -49,7 +47,7 @@ def main():
     #Populate a list of all the xml files in the directory
     xml_files = []
     for item in os.listdir('.'):
-        if os.path.isfile(item) and os.path.splitext(item)[1] == 'xml':
+        if os.path.isfile(item) and os.path.splitext(item)[1] == '.xml':
             xml_files.append(item)
     #Iterate over that list
     for xml_file in xml_files:
@@ -78,5 +76,4 @@ Please contact the maintainers of OpenAccess_EPUB.')
     all_failed.close()
 
 if __name__ == '__main__':
-    print('going mainstream')
     main()
