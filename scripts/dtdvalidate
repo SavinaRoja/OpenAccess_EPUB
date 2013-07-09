@@ -26,7 +26,8 @@ Email: pablo.barton@gmail.com
 from openaccess_epub import JPTS10_PATH, JPTS11_PATH, JPTS20_PATH,\
     JPTS21_PATH, JPTS22_PATH, JPTS23_PATH, JPTS30_PATH
 import os
-from lxml import etree
+import lxml
+import lxml.etree as etree
 
 dtds = {'-//NLM//DTD Journal Archiving and Interchange DTD v1.0 20021201//EN': etree.DTD(JPTS10_PATH),
         '-//NLM//DTD Journal Archiving and Interchange DTD v1.1 20031101//EN': etree.DTD(JPTS11_PATH),
@@ -43,7 +44,7 @@ def main():
     #Create a file to store names of all failed files
     #By updating this file live during execution, it can be monitored by tail
     #or other methods
-    all_failed = open('validation_failed.log', 'w')
+    all_failed = open('dtdvalidate.log', 'w')
     #Populate a list of all the xml files in the directory
     xml_files = []
     for item in os.listdir('.'):
@@ -52,7 +53,17 @@ def main():
     #Iterate over that list
     for xml_file in xml_files:
         #Parse the file
-        document = etree.parse(xml_file)
+        try:
+            document = etree.parse(xml_file)
+        except lxml.etree.XMLSyntaxError as err:
+            #The file could not be parsed
+            print('Parse Error!')
+            print('The following file could not be parsed, and so could not be validated:')
+            print('  ' + xml_file)
+            #Add the file to the all_failed, noting as ParseError
+            all_failed.write('ParseError: ' + xml_file + '\n')
+            with open(os.path.splitext(xml_file)[0]+'.err', 'w') as err_file:
+                err_file.write(str(err))
         #Find its public id so we can identify the appropriate DTD
         public_id = document.docinfo.public_id
         #Get the dtd by the public id
@@ -66,7 +77,7 @@ Please contact the maintainers of OpenAccess_EPUB.')
         if not dtd.validate(document):  # It failed
             #Add the name to all_failed
             all_failed.write(xml_file + '\n')
-            with open(os.path.split(xml_file)[0]+'.err', 'w') as err_file:
+            with open(os.path.splitext(xml_file)[0]+'.err', 'w') as err_file:
                 err_file.write(dtd.error_log.filter_from_errors())
             #Clear the error_log
             dtd.clear_error_log()
