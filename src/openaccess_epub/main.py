@@ -50,9 +50,15 @@ def OAEParser():
     parser.add_argument('-c', '--clean', action='store_true', default=False,
                         help='''Use to toggle on cleanup. With this flag,
                                 the pre-zipped output will be removed.''')
-    parser.add_argument('-N', '--no-epubcheck', action='store_false',
+    parser.add_argument('-e', '--no-epubcheck', action='store_false',
                         default=True,
                         help='''Use this to skip ePub validation by EpubCheck.''')
+    parser.add_argument('-d', '--no-dtd-validation', action='store_false',
+                        default=True,
+                        help='''Use this to skip DTD-validation on the input
+                                file(s). This is advised only for use on files
+                                that have already been validated by dtdvalidate
+                                or otherwise.''')
     modes = parser.add_mutually_exclusive_group()
     modes.add_argument('-i', '--input', action='store', default=False,
                        help='''Input may be a path to a local directory, a
@@ -110,17 +116,17 @@ def single_input(args, config=None):
     if 'http:' in args.input:
         raw_name = u_input.url_input(args.input)
         abs_input_path = os.path.join(LOCAL_DIR, raw_name+'.xml')
-        parsed_article = Article(abs_input_path)
+        parsed_article = Article(abs_input_path, validation=args.no_dtd_validation)
     #Fetch by DOI
     elif args.input[:4] == 'doi:':
         raw_name = u_input.doi_input(args.input)
         abs_input_path = os.path.join(LOCAL_DIR, raw_name+'.xml')
-        parsed_article = Article(abs_input_path)
+        parsed_article = Article(abs_input_path, validation=args.no_dtd_validation)
     #Local XML input
     else:
         abs_input_path = utils.get_absolute_path(args.input)
         raw_name = u_input.local_input(abs_input_path)
-        parsed_article = Article(abs_input_path)
+        parsed_article = Article(abs_input_path, validation=args.no_dtd_validation)
 
     #Generate the output path name, this will be the directory name for the
     #output. This output directory will later be zipped into an EPUB
@@ -179,7 +185,8 @@ def batch_input(args, config=None):
         except:
             traceback.print_exc(file=error_file)
         else:
-            parsed_article = Article(os.path.join(args.batch, raw_name+'.xml'))
+            parsed_article = Article(os.path.join(args.batch, raw_name+'.xml'),
+                                     validation=args.no_dtd_validation)
 
         #Create the output name
         output_name = os.path.join(utils.get_output_directory(args), raw_name)
@@ -272,7 +279,7 @@ def collection_input(args, config=None):
     #Now it is time to operate on each of the xml files
     for xml_file in xml_files:
         raw_name = u_input.local_input(xml_file)  # is this used?
-        parsed_article = Article(xml_file)
+        parsed_article = Article(xml_file, validation=args.no_dtd_validation)
         toc.take_article(parsed_article)
         myopf.take_article(parsed_article)
     
