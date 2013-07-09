@@ -1,0 +1,82 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+This script will attempt to validate every xml file in the local directory in
+which the script was executed. The files are validated according to the
+the appropriate DTD and versions. Please note that this is NOT for validating
+ePub output according to the ePub specification, but only for validating input
+journal articles against their DTD.
+
+This script will produce a log file containing the names of all xml files
+which did not pass validation. If the file is empty, then no invalid files were
+detected. For every failing file, an error log file will be created with the
+same name (with a .err extension instead of .xml) which will contain
+the information about why it did not pass validation.
+
+This script relies on having local copies of the DTD specification for lxml to
+parse and then execute validation. If your DTD is not among the standard set
+of DTDs that come with OpenAccess_EPUB, please submit an issue on the project
+page or contact the author.
+
+GitHub Project Page: https://github.com/SavinaRoja/OpenAccess_EPUB
+Author: Paul Barton (SavinaRoja)
+Email: pablo.barton@gmail.com
+"""
+
+from openaccess_epub import JPTS10_PATH, JPTS11_PATH, JPTS20_PATH,\
+    JPTS21_PATH, JPTS22_PATH, JPTS23_PATH, JPTS30_PATH
+import os
+from lxml import etree
+
+print('getting dtds loaded')
+dtds = {'-//NLM//DTD Journal Archiving and Interchange DTD v1.0 20021201//EN': etree.DTD(JPTS10_PATH),
+        '-//NLM//DTD Journal Archiving and Interchange DTD v1.1 20031101//EN': etree.DTD(JPTS11_PATH),
+        '-//NLM//DTD Journal Publishing DTD v2.0 20040830//EN': etree.DTD(JPTS20_PATH),
+        '-//NLM//DTD Journal Publishing DTD v2.1 20050630//EN': etree.DTD(JPTS21_PATH),
+        '-//NLM//DTD Journal Publishing DTD v2.2 20060430//EN': etree.DTD(JPTS22_PATH),
+        '-//NLM//DTD Journal Publishing DTD v2.3 20070202//EN': etree.DTD(JPTS23_PATH),
+        '-//NLM//DTD Journal Publishing DTD v3.0 20080202//EN': etree.DTD(JPTS30_PATH)}
+print('dtds loaded')
+
+def get_dtd_validator():
+    pass
+
+def main():
+    #Create a file to store names of all failed files
+    #By updating this file live during execution, it can be monitored by tail
+    #or other methods
+    all_failed = open('validation_failed.log', 'w')
+    #Populate a list of all the xml files in the directory
+    xml_files = []
+    for item in os.listdir('.'):
+        if os.path.isfile(item) and os.path.splitext(item)[1] == 'xml':
+            xml_files.append(item)
+    #Iterate over that list
+    for xml_file in xml_files:
+        #Parse the file
+        document = etree.parse(xml_file)
+        #Find its public id so we can identify the appropriate DTD
+        public_id = document.docinfo.public_id
+        #Get the dtd by the public id
+        try:
+            dtd = dtds[public_id]
+        except KeyError as err:
+            print('Document published according to unsupported specification. \
+Please contact the maintainers of OpenAccess_EPUB.')
+            raise err
+        #Validate
+        if not dtd.validate(document):  # It failed
+            #Add the name to all_failed
+            all_failed.write(xml_file + '\n')
+            with open(os.path.split(xml_file)[0]+'.err', 'w') as err_file:
+                err_file.write(dtd.error_log.filter_from_errors())
+            dtd.clear_error_log()
+        else:  # It passed
+            #Nothing to do really
+            pass
+    #Close the all_failed file
+    all_failed.close()
+
+if __name__ == '__main__':
+    print('going mainstream')
+    main()
