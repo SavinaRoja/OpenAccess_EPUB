@@ -35,8 +35,8 @@ class OPSPLoS(OPSMeta):
         self.html_tables = []
         self.main_body = self.create_main()
         self.create_biblio()
-        #if self.html_tables:
-        #    self.create_tables()
+        if self.html_tables:
+            self.create_tables()
 
 
     def create_main(self):
@@ -201,27 +201,28 @@ class OPSPLoS(OPSMeta):
         are no tables, the file is not created.
         """
 
-        self.doc = self.make_document('tables')
-        body = self.doc.getElementsByTagName('body')[0]
+        self.document = self.make_document('tables')
+        body = etree.SubElement(self.document.getroot(), 'body')
+        body.attrib['id'] = 'references'
 
         for table in self.html_tables:
-            if table.tagName == 'table-wrap-foot':
-                foot_div = self.appendNewElement('div', body)
-                foot_div.setAttribute('class', 'table-wrap-foot')
-                foot_div.childNodes = table.childNodes
+            if table.tag == 'table-wrap-foot':
+                foot_div = etree.SubElement(body, 'div')
+                foot_div.attrib['class'] = 'table-wrap-foot'
+                element_methods.append_all_below(body, table)
                 continue
-            label = table.getAttribute('label')
-            if label:
-                table.removeAttribute('label')
-                label_div = self.appendNewElement('div', body)
-                label_div_b = self.appendNewElement('b', label_div)
-                self.appendNewText(label, label_div_b)
+            #Use the custom created label attribute to pass table heading to the tables file
+            if 'label' in table.attrib:
+                #Take the label value and remove the attribute
+                label = table.attrib.pop('label')
+                label_div = etree.SubElement(body, 'div')
+                label_div_b = etree.SubElement(label_div, 'b')
+                label_div_b.text = label
             #Move the table to the body
-            body.appendChild(table)
-            for d in table.getElementsByTagName('div'):
-                body.appendChild(d)
-                #Move the link back to the body
-                #body.appendChild(table.lastChild)
+            body.append(table)
+            #Move all divs under the table to the body
+            for div in table.findall('.//div'):
+                body.append(div)
 
         #Handle node conversion
         self.convert_emphasis_elements(body)
@@ -230,9 +231,8 @@ class OPSPLoS(OPSMeta):
         self.convert_inline_formula_elements(body)
         self.convert_xref_elements(body)
 
-        with open(os.path.join(self.ops_dir, self.tab_frag[:-4]), 'wb') as op:
-            op.write(self.doc.toxml(encoding='utf-8'))
-            #op.write(self.doc.toprettyxml(encoding='utf-8'))
+        #Finally, write to a document
+        self.write_document(os.path.join(self.ops_dir, self.tab_frag[:-4]), self.document)
 
     def make_fragment_identifiers(self):
         """
@@ -904,6 +904,7 @@ class OPSPLoS(OPSMeta):
                     if label is not None:
                         #Serialize the text, set as label attribute
                         table.attrib['label'] = str(etree.tostring(label, method='text', encoding='utf-8'), encoding='utf-8')
+                    table.attrib['id'] = table_wrap.attrib['id']
                     #Add the table to the tables list
                     self.html_tables.append(table)
                     #Also add the table's foot if it exists
