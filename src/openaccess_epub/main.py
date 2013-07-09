@@ -29,7 +29,6 @@ LOCAL_DIR = os.getcwd()
 
 log = logging.getLogger('Main')
 
-
 def OAEParser():
     """
     This function returns the parser args to the main method.
