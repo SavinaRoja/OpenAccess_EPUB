@@ -70,9 +70,12 @@ def main():
         try:
             dtd = dtds[public_id]
         except KeyError as err:
+            #Add the file to the all_failed, noting as DTDError
+            all_failed.write('DTDError: ' + xml_file + '\n')
+            with open(os.path.splitext(xml_file)[0]+'.err', 'w') as err_file:
+                err_file.write(str(err))
             print('Document published according to unsupported specification. \
 Please contact the maintainers of OpenAccess_EPUB.')
-            raise err
         #Validate
         if not dtd.validate(document):  # It failed
             #Add the name to all_failed
