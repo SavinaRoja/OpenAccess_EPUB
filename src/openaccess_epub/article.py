@@ -15,7 +15,7 @@ from lxml import etree
 
 log = logging.getLogger('Article')
 
-dtd_tuple = namedtuple('DTD_Tuple', 'path, name, version ')
+dtd_tuple = namedtuple('DTD_Tuple', 'path, name, version')
 
 dtds = {'-//NLM//DTD Journal Archiving and Interchange DTD v1.0 20021201//EN':
         dtd_tuple(JPTS10_PATH, 'JPTS', 1.0),
@@ -43,10 +43,13 @@ class Article(object):
     """
     def __init__(self, xml_file, validation=True):
         log.info('Parsing file: {0}'.format(xml_file))
+
         #Parse the document
         self.document = etree.parse(xml_file)
+
         #Find its public id so we can identify the appropriate DTD
         public_id = self.document.docinfo.public_id
+
         #Instantiate an lxml.etree.DTD class from the dtd files in our data
         try:
             dtd = dtds[public_id]
@@ -57,6 +60,7 @@ Please contact the maintainers of OpenAccess_EPUB.')
         else:
             self.dtd = etree.DTD(dtd.path)
             self.dtd_name, self.dtd_version = dtd.name, dtd.version
+
         #If using a supported DTD type, execute validation
         if validation:
             if not self.dtd.validate(self.document):
@@ -64,6 +68,7 @@ Please contact the maintainers of OpenAccess_EPUB.')
 its DTD.'.format(xml_file))
                 print(self.dtd.error_log.filter_from_errors())
                 sys.exit(1)
+
         #Get basic elements, per DTD (and version if necessary)
         if self.dtd_name == 'JPTS':
             self.front = self.document.find('front')  # Element: mandatory
