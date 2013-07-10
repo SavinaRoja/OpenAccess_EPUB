@@ -81,9 +81,9 @@ Please contact the maintainers of OpenAccess_EPUB.')
             #Add the name to all_failed
             all_failed.write(xml_file + '\n')
             with open(os.path.splitext(xml_file)[0]+'.err', 'w') as err_file:
-                err_file.write(dtd.error_log.filter_from_errors())
+                err_file.write(str(dtd.error_log.filter_from_errors()))
             #Clear the error_log
-            dtd.clear_error_log()
+            dtd._clear_error_log()
         else:  # It passed
             #Nothing to do really
             pass
