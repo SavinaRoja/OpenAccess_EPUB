@@ -274,7 +274,7 @@ def collection_input(args, config=None):
     
     toc = ncx.NCX(oae_version=__version__, location=output_name, collection_mode=True)
     myopf = opf.OPF(location=output_name, collection_mode=True, title=title)
-    
+
     #Now it is time to operate on each of the xml files
     for xml_file in xml_files:
         raw_name = u_input.local_input(xml_file)  # is this used?
@@ -282,9 +282,6 @@ def collection_input(args, config=None):
         toc.take_article(parsed_article)
         myopf.take_article(parsed_article)
     
-        if parsed_article.metadata.dtdVersion() == '2.0':  #Not supported
-            print('Article published with JPTS DTDv2.0, not supported!')
-            sys.exit(1)
         #Get the Digital Object Identifier
         doi = parsed_article.get_DOI()
         journal_doi, article_doi = doi.split('/')

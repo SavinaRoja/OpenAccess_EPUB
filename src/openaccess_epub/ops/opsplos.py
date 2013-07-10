@@ -307,6 +307,7 @@ class OPSPLoS(OPSMeta):
                 element_methods.append_new_text(author_element, name_text)
             #TODO: Handle author footnote references, also put footnotes in the ArticleInfo
             #Example: journal.pbio.0040370.xml
+            first = True
             for xref in author.xref:
                 if xref.attrs['ref-type'] in ['corresp', 'aff']:
                     try:
@@ -316,9 +317,13 @@ class OPSPLoS(OPSMeta):
                     else:
                         sup_text = element_methods.all_text(sup_element)
                     new_sup = etree.SubElement(author_element, 'sup')
-                    new_sup.text = sup_text
                     sup_link = etree.SubElement(new_sup, 'a')
                     sup_link.attrib['href'] = self.main_frag.format(xref.attrs['rid'])
+                    sup_link.text = sup_text
+                    if first:
+                        first = False
+                    else:
+                        new_sup.text = ','
 
     def make_heading_affiliations(self, receiving_node):
         """
@@ -334,7 +339,8 @@ class OPSPLoS(OPSMeta):
         #Count them, used for formatting
         author_aff_count = len(self.metadata.front.article_meta.aff)
         if author_aff_count > 0:
-            affs_div = etree.SubElement(receiving_node, 'div', {'id': 'affiliations'})
+            affs_list = etree.SubElement(receiving_node, 'ul', {'id': 'affiliations',
+                                                                'class': 'simple'})
 
         #A simple way that seems to work by PLoS convention, but does not treat
         #the full scope of the <aff> element
@@ -342,21 +348,19 @@ class OPSPLoS(OPSMeta):
             #Expecting id to always be present
             aff_id = aff.attrs['id']
             #Create a span element to accept extracted content
-            aff_span = etree.SubElement(affs_div, 'span')
-            aff_span.attrib['id'] = aff_id
+            aff_item = etree.SubElement(affs_list, 'li')
+            aff_item.attrib['id'] = aff_id
             #Get the first label node and the first addr-line node
             if len(aff.label) > 0:
                 label = aff.label[0].node
                 label_text = element_methods.all_text(label)
-                bold = etree.SubElement(aff_span, 'b')
+                bold = etree.SubElement(aff_item, 'b')
                 bold.text = label_text+' '
             if len(aff.addr_line) > 0:
                 addr_line = aff.addr_line[0].node
-                element_methods.append_new_text(aff_span, element_methods.all_text(addr_line))
+                element_methods.append_new_text(aff_item, element_methods.all_text(addr_line))
             else:
-                element_methods.append_new_text(aff_span, element_methods.all_text(aff))
-            if author_affs.index(aff) < author_aff_count-1:
-                element_methods.append_new_text(aff_span, ', ', join_str='')
+                element_methods.append_new_text(aff_item, element_methods.all_text(aff))
 
     def make_heading_abstracts(self, receiving_node):
         """

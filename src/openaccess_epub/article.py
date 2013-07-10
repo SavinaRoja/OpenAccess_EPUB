@@ -81,7 +81,7 @@ its DTD.'.format(xml_file))
         #top-level elements in it, and now we must translate its metadata into
         #a data structure.
         self.metadata = self.get_metadata()
-        
+
         #Attempt, as well as possible, to identify the publisher and doi for
         #the article.
         self.doi = self.get_DOI()
