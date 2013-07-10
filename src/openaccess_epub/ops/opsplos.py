@@ -1210,6 +1210,18 @@ class OPSPLoS(OPSMeta):
                     suppl_div.append(title)
                 for paragraph in paragraphs:
                     suppl_div.append(paragraph)
+            #This is a fix for odd articles with <p>s outside of <caption>
+            #See journal.pctr.0020006, PLoS themselves fail to format this for
+            #the website, though the .pdf is good
+            #It should be noted that journal.pctr.0020006 does not pass
+            #validation because it places a <p> before a <caption>
+            #By placing this at the end of the method, it conforms to the spec
+            #by expecting such p tags after caption. This causes a hiccup in
+            #the rendering for journal.pctr.0020006, but it's better than
+            #skipping the data entirely AND it should also work for conforming
+            #articles.
+            for paragraph in supplementary.findall('p'):
+                suppl_div.append(paragraph)
             element_methods.remove(supplementary)
 
     def convert_verse_group_elements(self, top):
