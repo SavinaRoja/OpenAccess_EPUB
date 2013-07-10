@@ -275,7 +275,7 @@ def fetch_plos_images(article_doi, output_dir, document):
                     'pmed': 'http://www.plosmedicine.org/article/{0}',
                     'pbio': 'http://www.plosbiology.org/article/{0}',
                     'pone': 'http://www.plosone.org/article/{0}',
-                    'pctr': 'http://clinicaltrials.ploshubs.org/article/{0]}'}
+                    'pctr': 'http://clinicaltrials.ploshubs.org/article/{0}'}
 
     #Identify subjournal name for base URl
     subjournal_name = article_doi.split('.')[1]
