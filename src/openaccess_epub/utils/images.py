@@ -105,8 +105,8 @@ def get_images(doi, outdirect, images, config, document):
     """
     #Split the DOI
     journal_doi, article_doi = doi.split('/')
-    log.debug('journal-doi-{0}'.format(journal_doi))
-    log.debug('article-doi-{0}'.format(article_doi))
+    log.debug('journal-doi : {0}'.format(journal_doi))
+    log.debug('article-doi : {0}'.format(article_doi))
 
     #Specify where to place the images in the output
     img_dir = os.path.join(outdirect, 'OPS', 'images-{0}'.format(article_doi))

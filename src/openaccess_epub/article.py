@@ -232,7 +232,7 @@ its DTD.'.format(xml_file))
         """
         This function will attempt to identify the publisher of the article.
         """
-        publisher_dois = {'10.1371': 'PLoS'}
+        publisher_dois = {'10.1371': 'PLoS', '10.3389': 'Frontiers'}
         #Try to look up the publisher by DOI
         if self.doi:
             try:
@@ -244,10 +244,12 @@ its DTD.'.format(xml_file))
         #If that fails, attempt to extract the publisher through inspection
         if self.dtd_name == 'JPTS':
             publisher_meta = self.metadata.front.journal_meta.publisher
-            if publisher_meta:  #Optional element
+            if publisher_meta is not None:  #Optional element
                 print(publisher_meta.publisher_name.text, type(publisher_meta.publisher_name.text))
                 if publisher_meta.publisher_name.text == 'Public Library of Science':
                     return 'PLoS'
+                elif publisher_meta.publisher_name.text == 'Frontiers Media S.A.':
+                    return 'Frontiers'
         print('Warning! Unable to identify publisher for this article!')
         return None
             

@@ -360,7 +360,13 @@ def make_epub(article, outdirect, explicit_images, batch, config=None):
     myopf = opf.OPF(outdirect, False)
     toc.take_article(article)
     myopf.take_article(article)
-    ops_doc = ops.OPSPLoS(article, outdirect)
+    #While NCX and OPF adapt automatically to the publisher, here we must
+    #distinguish between the publishers for the instantiation of the correct
+    #publisher's OPS
+    if DOI.split('/')[0] == '10.1371':  # PLoS
+        ops_doc = ops.OPSPLoS(article, outdirect)
+    elif DOI.split('/')[0] == '10.3389':  # Frontiers
+        ops_doc = ops.OPSFrontiers(article, outdirect)
     toc.write()
     myopf.write()
     utils.epub_zip(outdirect)

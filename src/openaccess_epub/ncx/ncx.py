@@ -230,9 +230,12 @@ e
         """
         Sets internal methods to be publisher specific for the article at hand.
         """
-        if self.journal_doi == '10.1371':
+        if self.journal_doi == '10.1371':  # PLoS
             self.get_article_creator = plos_creator
             self.get_article_title= plos_title
+        elif self.journal_doi == '10.3389':  # Frontiers
+            self.get_article_creator = frontiers_creator
+            self.get_article_title= frontiers_title
         else:
             raise ValueError('This publisher, {0}, is not supported'.format(self.journal_doi))
 

@@ -183,7 +183,7 @@ xmlns:oebpackage="http://openebook.org/namespaces/oeb-package/1.0/">
         """
         Sets internal methods to be publisher specific for the article at hand.
         """
-        if self.journal_doi == '10.1371':
+        if self.journal_doi == '10.1371':  # PLoS
             self.get_article_identifier = plos_dc_identifier
             self.get_article_language = plos_dc_language
             self.get_article_title = plos_dc_title
@@ -193,6 +193,16 @@ xmlns:oebpackage="http://openebook.org/namespaces/oeb-package/1.0/">
             self.get_article_description = plos_dc_description
             self.get_article_date = plos_dc_date
             self.get_article_subject = plos_dc_subject
+        elif self.journal_doi == '10.3389':  # Frontiers
+            self.get_article_identifier = frontiers_dc_identifier
+            self.get_article_language = frontiers_dc_language
+            self.get_article_title = frontiers_dc_title
+            self.get_article_creator = frontiers_dc_creator
+            self.get_article_contributor = frontiers_dc_contributor
+            self.get_article_publisher = frontiers_dc_publisher
+            self.get_article_description = frontiers_dc_description
+            self.get_article_date = frontiers_dc_date
+            self.get_article_subject = frontiers_dc_subject
         else:
             raise ValueError('This publisher, {0}, is not supported'.format(self.journal_doi))
 
