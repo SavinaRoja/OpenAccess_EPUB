@@ -337,7 +337,7 @@ class OPSPLoS(OPSMeta):
         #Create a list of all those pertaining to the authors
         author_affs = [i for i in affs if 'aff' in i.attrs['id']]
         #Count them, used for formatting
-        author_aff_count = len(self.metadata.front.article_meta.aff)
+        author_aff_count = len(author_affs)
         if author_aff_count > 0:
             affs_list = etree.SubElement(receiving_node, 'ul', {'id': 'affiliations',
                                                                 'class': 'simple'})
@@ -1440,10 +1440,10 @@ class OPSPLoS(OPSMeta):
         """
         for graphic in top.findall('.//graphic'):
             graphic.tag = 'img'
-            ns_xlink_href = element_methods.ns_format(graphic, 'xlink:href')
             graphic.attrib['alt'] = 'unowned-graphic'
+            ns_xlink_href = element_methods.ns_format(graphic, 'xlink:href')
             if ns_xlink_href in graphic.attrib:
-                xlink_href = graphic_attributes[ns_xlink_href]
+                xlink_href = graphic.attrib[ns_xlink_href]
                 file_name = xlink_href.split('.')[-1] + '.png'
                 img_dir = 'images-' + self.doi_frag
                 img_path = '/'.join([img_dir, file_name])
