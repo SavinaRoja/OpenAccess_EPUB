@@ -107,4 +107,8 @@ span.pullquote {
     border-top:5px solid #333;
     display:block;
     margin-left:5%;
-}'''
+}
+span.gene {
+    font-family: monospace;
+}
+'''
