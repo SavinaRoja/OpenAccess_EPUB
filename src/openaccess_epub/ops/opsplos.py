@@ -89,8 +89,6 @@ class OPSPLoS(OPSMeta):
         #TODO: Back matter stuffs
 
         #These come last for a reason
-        self.convert_sec_elements(body)
-        self.convert_div_titles(body)
         self.post_processing_conversion(body)
 
         #Finally, write to a document
@@ -230,6 +228,9 @@ class OPSPLoS(OPSMeta):
         self.convert_disp_formula_elements(body)
         self.convert_inline_formula_elements(body)
         self.convert_xref_elements(body)
+
+        #Lastly
+        self.post_processing_conversion(body)
 
         #Finally, write to a document
         self.write_document(os.path.join(self.ops_dir, self.tab_frag[:-4]), self.document)
