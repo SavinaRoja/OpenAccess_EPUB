@@ -1399,6 +1399,7 @@ class OPSPLoS(OPSMeta):
                 if definition is None:
                     log.warning('Missing def element in def-item')
                     element_methods.remove(def_item)
+                    continue
                 #PLoS appears to consistently place all definition text in a
                 #paragraph subelement of the def element
                 def_para = definition.find('p')

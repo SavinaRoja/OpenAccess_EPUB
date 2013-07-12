@@ -108,7 +108,7 @@ def plos_dc_contributor(article):
             if not contrib.attrs['contrib-type'] == 'editor':
                 continue
             if contrib.collab:
-                auth = etree.tostring(contrib.collab[0], method='text', encoding='utf-8')
+                auth = etree.tostring(contrib.collab[0].node, method='text', encoding='utf-8')
                 file_as = auth
             else:
                 name = contrib.name[0]  # Work with only first name listed
@@ -293,7 +293,7 @@ def frontiers_dc_contributor(article):
             if not contrib.attrs['contrib-type'] == 'editor':
                 continue
             if contrib.collab:
-                auth = etree.tostring(contrib.collab[0], method='text', encoding='utf-8')
+                auth = etree.tostring(contrib.collab[0].node, method='text', encoding='utf-8')
                 file_as = auth
             else:
                 name = contrib.name[0]  # Work with only first name listed
