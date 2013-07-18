@@ -86,8 +86,6 @@ class OPSPLoS(OPSMeta):
 
         self.convert_graphic_elements(body)
 
-        #TODO: Back matter stuffs
-
         #These come last for a reason
         self.post_processing_conversion(body)
 
@@ -407,15 +405,101 @@ class OPSPLoS(OPSMeta):
         """
         Creates a self citation node for the ArticleInfo of the article.
 
-        This method relies on self.format_self_citation() as an implementation
-        of converting an article's metadata to a plain string, and then adds
-        composes content for the display of that string in the ArticleInfo.
+        This method uses code from this page as a reference implementation:
+        https://github.com/PLOS/ambra/blob/master/base/src/main/resources/articleTransform-v3.xsl
         """
-        citation_text = self.format_self_citation()
         citation_div = etree.SubElement(receiving_el, 'div')
         citation_div.attrib['id'] = 'article-citation'
         b = etree.SubElement(citation_div, 'b')
-        b.text = 'Citation: {0}'.format(citation_text)
+        b.text = 'Citation: '
+        
+        #Add author stuff to the citation
+        author_list = self.get_authors_list()
+        for author in author_list:
+            author_index = author_list.index(author)
+            #At the 6th author, simply append an et al., then stop iterating
+            if author_index == 5:
+                element_methods.append_new_text(citation_div, 'et al.', join_str='')
+                break
+            else:
+                #Check if the author contrib has a collab
+                #This will signify unique behavior
+                if len(author.collab) > 0:  #Author element is a collab
+                    #As best as I can tell from PLoS' reference implementation
+                    #The thing to do is append all below, but remove any child
+                    #contrib-group elements
+                    collab = deepcopy(author.collab[0])
+                    for contrib_group in collab.contrib_group:
+                        element_methods.remove(contrib_group)
+                    element_methods.append_all_below(citation_div, collab, join_str='')
+                #If the author is not a collab, do this instead
+                else:  # Author element is not a collab
+                    name = author.name[0]
+                    #Note that this does not support eastern names
+                    #Grab the surname information
+                    element_methods.append_new_text(citation_div, name.surname.text, join_str='')
+                    #Make initials from the given-name information
+                    if name.given_names is not None:
+                        #Add a space
+                        element_methods.append_new_text(citation_div, ' ', join_str='')
+                        #Split by whitespace and take first character
+                        given_initials = [i[0] for i in name.given_names.text.split() if i]
+                        for initial in given_initials:
+                            element_methods.append_new_text(citation_div, initial, join_str='')
+                    #If there is a suffix, add its text, but don't include the
+                    #trailing period if there is one
+                    if name.suffix is not None:
+                        #Add a space
+                        element_methods.append_new_text(citation_div, ' ', join_str='')
+                        suffix_text = name.suffix.text
+                        #Check for the trailing period
+                        if suffix_text[-1] == '.':
+                            suffix_text = suffix_text[:-1]
+                        element_methods.append_new_text(citation_div, suffix_text, join_str='')
+                #If this is not the last author to be added, add a ", "
+                #This is satisfied by being less than the 6th author, or less
+                #than the length of the author_list - 1
+                if author_index < 5 or author_index < len(author_list) -1:
+                    element_methods.append_new_text(citation_div, ', ', join_str='')
+        #Add Publication Year to the citation
+        #Find pub-date elements, use pub-type=collection, or else pub-type=ppub
+        for pub_date in self.metadata.front.article_meta.pub_date:
+            pub_year = '1337'
+            if 'pub-type' not in pub_date.attrs:
+                continue
+            elif pub_date.attrs['pub-type'] == 'collection':
+                pub_year = pub_date.year.text
+                break
+            elif pub_date.attrs['pub-type'] == 'ppub':
+                pub_year = pub_date.year.text
+        element_methods.append_new_text(citation_div, ' ({0}) '.format(pub_year), join_str='')
+        #Add the Article Title to the Citation
+        #As best as I can tell from the reference implementation, they
+        #serialize the article title to text-only, and expunge redundant spaces
+        #This might need later review
+        article_title = self.metadata.front.article_meta.title_group.article_title.node
+        article_title_text = str(etree.tostring(article_title, method='text', encoding='utf-8'), encoding='utf-8')
+        normalized = ' '.join(article_title_text.split())  # Remove redundant whitespace
+        #Add a period unless there is some other valid punctuation
+        if normalized[-1] not in '.?!':
+            normalized += '.'
+        element_methods.append_new_text(citation_div, normalized + ' ', join_str='')
+        #Add the article's journal name using the journal-id of type "nlm-ta"
+        for journal_id in self.metadata.front.journal_meta.journal_id:
+            if 'journal-id-type' not in journal_id.attrs:
+                continue
+            elif journal_id.attrs['journal-id-type'] == 'nlm-ta':
+                journal = journal_id.text
+        element_methods.append_new_text(citation_div, journal + ' ', join_str='')
+        #Add the article's volume, issue, and elocation_id  values
+        volume = self.metadata.front.article_meta.volume.text
+        issue = self.metadata.front.article_meta.issue.text
+        elocation_id = self.metadata.front.article_meta.elocation_id.text
+        stuff = '{0}({1}): {2}. '.format(volume, issue, elocation_id)
+        element_methods.append_new_text(citation_div, stuff, join_str='')
+        #Grab the article's DOI, I'll cheat by using self.doi
+        element_methods.append_new_text(citation_div, 'doi:{0}'.format(self.doi), join_str='')
+        #Done!
 
     def make_article_info_editors(self, editors, receiving_el):
         if not editors:  # No editors
@@ -672,7 +756,7 @@ class OPSPLoS(OPSMeta):
         #allow it to later be depth-formatted by self.convert_div_titles()
         ack_title = etree.Element('title')
         ack_title.text = 'Acknowledgments'
-        ack.insert(0, ack_title)
+        ack.insert(0, ack_title)  # Make it the first element
         #Append our modified copy of the first ack element to the receiving_el
         receiving_el.append(ack)
 
@@ -763,16 +847,6 @@ class OPSPLoS(OPSMeta):
             if date_tuple.day:
                 date_string += ' ' + date_tuple.day.text
             return ', '.join([date_string, date_tuple.year.text])
-
-    def format_self_citation(self):
-        """
-        PLoS articles present a citation for the article itself. This method
-        will return the citation for the article as a string.
-        """
-        #This is not yet fully implemented.
-        #I need clarification/documentation from PLoS
-        #So for now I just put in the DOI
-        return self.doi
 
     def convert_fig_elements(self, top):
         """
