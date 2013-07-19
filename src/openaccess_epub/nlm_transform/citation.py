@@ -8,6 +8,7 @@ Reference material may be found here:
 https://github.com/PLOS/ambra/blob/master/base/src/main/resources/viewnlm-v2.3.xsl
 """
 
+from lxml import etree
 
 class CitationFormatter(object):
     """
@@ -77,7 +78,38 @@ def format_citation(citation, citation_type=None):
         citation-type=\"book\"
         """
         #Get the count of authors
-        author_group_count = int(nlm_citation.xpath('count(person-group) + count(collab)'))
+        author_group_count = int(citation.xpath('count(person-group) + count(collab)'))
+        #Detect if there are non-authors
+        if citation.xpath('person-group[@person-group-type!=\'author\']'):
+            non_authors = True
+        else:
+            non_authors= False
+        #Detect article-title
+        if citation.xpath('article-title'):
+            article_title = True
+        else:
+            article_title = False
+        #Find out if there is at least one author or compiler
+        auth_or_comp = False
+        for person_group in citation.findall('person-group'):
+            if 'person-group-type' in person_group.attrib:
+                if person_group.attrib['person-group-type'] in ['author', 'compiler']:
+                    auth_or_comp = True
+                    break
+
+        #These pieces of information allow us to provide two special use cases
+        #and one general use case.
+        #First special case:
+        if author_group_count > 0 and non_authors and article_title:
+            pass
+
+        #Second special case
+        elif auth_or_comp:
+            pass
+
+        #General case
+        else:
+            pass
 
     @staticmethod
     def format_commun_citation(self, citation):
