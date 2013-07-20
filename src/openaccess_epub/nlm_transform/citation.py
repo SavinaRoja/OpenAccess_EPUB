@@ -77,6 +77,7 @@ def format_citation(citation, citation_type=None):
         """
         citation-type=\"book\"
         """
+
         #Get the count of authors
         author_group_count = int(citation.xpath('count(person-group) + count(collab)'))
         #Detect if there are non-authors
