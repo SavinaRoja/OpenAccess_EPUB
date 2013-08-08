@@ -326,6 +326,8 @@ def zipped_input(args, config=None):
     """
     if config is None:
         config = get_config_module()
+    #Zipped input is provided for Frontiers. If other wish to supply input via
+    #zipfile, this will need to be altered a bit
 
 
 def make_epub(article, outdirect, explicit_images, batch, config=None):
