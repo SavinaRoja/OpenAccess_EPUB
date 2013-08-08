@@ -31,11 +31,12 @@ output/*
 ############
 build/*
 
-# Eclipse Files #
+# IDE Files #
 ############
 .project
 .pydevproject
 .settings
+.nja
 
 # Packages #
 ############
