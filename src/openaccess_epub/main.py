@@ -51,7 +51,7 @@ def OAEParser():
                                 the pre-zipped output will be removed.''')
     parser.add_argument('-e', '--no-epubcheck', action='store_false',
                         default=True,
-                        help='''Use this to skip ePub validation by EpubCheck.''')
+                        help='Use this to skip ePub validation by EpubCheck.')
     parser.add_argument('-d', '--no-dtd-validation', action='store_false',
                         default=True,
                         help='''Use this to skip DTD-validation on the input
@@ -71,9 +71,6 @@ def OAEParser():
     modes.add_argument('-b', '--batch', action='store', default=False,
                        help='''Use to specify a batch directory; each
                                article inside will be processed.''')
-    modes.add_argument('-p', '--parallel-batch', action='store', default=False,
-                       help='''Use to specify a batch directory for parallel
-                               processing.''')
     modes.add_argument('-C', '--collection', action='store', default=False,
                        nargs='?', const=True,
                        help='''Use to combine all xml files in the local
@@ -271,7 +268,7 @@ def collection_input(args, config=None):
                 print('Defaulting to name of parent directory. {0}'.format(title))
     else:
         title = args.collection
-    
+
     toc = ncx.NCX(oae_version=__version__, location=output_name, collection_mode=True)
     myopf = opf.OPF(location=output_name, collection_mode=True, title=title)
 
@@ -281,11 +278,11 @@ def collection_input(args, config=None):
         parsed_article = Article(xml_file, validation=args.no_dtd_validation)
         toc.take_article(parsed_article)
         myopf.take_article(parsed_article)
-    
+
         #Get the Digital Object Identifier
         doi = parsed_article.get_DOI()
         journal_doi, article_doi = doi.split('/')
-        
+
         #Check for images
         img_dir = os.path.join(output_name, 'OPS', 'images-{0}'.format(article_doi))
         expected_local = 'images-{0}'.format(raw_name)
@@ -310,11 +307,11 @@ def collection_input(args, config=None):
         if journal_doi == '10.1371':  # PLoS's publisher DOI
             ops_doc = ops.OPSPLoS(parsed_article, output_name)
             #TODO: Workflow change, parse table of contents from OPS processed document
-            
+
     toc.write()
     myopf.write()
     utils.epub_zip(output_name)
-    
+
 
     #Running epubcheck on the output verifies the validity of the ePub,
     #requires a local installation of java and epubcheck.
@@ -428,10 +425,10 @@ def main(args):
 
     #Make sure that the base_epub is in place
     utils.make_epub_base()  # Static location
-    
+
     #Import the config module, this fails and exits if it does not exist
     config = get_config_module()
-    
+
     #Even if they don't plan on using the image cache, make sure it exists
     utils.images.make_image_cache(config.image_cache)  # User configurable
 
@@ -441,9 +438,7 @@ def main(args):
         single_input(args, config)
     elif args.batch:  # Convert large numbers of XML files to EPUB
         batch_input(args, config)
-    elif args.parallel_batch:  # Convert large numbers of XML files to EPUB in parallel
-        parallel_batch_input(args, config)
     elif args.collection:  # Convert multiple XML articles into single EPUB
         collection_input(args, config)
-    elif args.zipped:  # Convert Frontiers zipfile into single EPUB
+    elif args.zip:  # Convert Frontiers zipfile into single EPUB
         zipped_input(args, config)

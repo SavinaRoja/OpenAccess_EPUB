@@ -22,7 +22,7 @@ import collections
 class OrderedSet(collections.MutableSet):
 
     def __init__(self, iterable=None):
-        self.end = end = [] 
+        self.end = end = []
         end += [None, end, end]         # sentinel node for doubly linked list
         self.map = {}                   # key --> [key, prev, next]
         if iterable is not None:
@@ -41,7 +41,7 @@ class OrderedSet(collections.MutableSet):
             curr[2] = end[1] = self.map[key] = [key, curr, end]
 
     def discard(self, key):
-        if key in self.map:        
+        if key in self.map:
             key, prev, next = self.map.pop(key)
             prev[2] = next
             next[1] = prev
@@ -177,10 +177,11 @@ def get_output_directory(args):
                 #Batch should only work on a supplied directory
                 abs_batch_path = get_absolute_path(args.batch)
                 return abs_batch_path
-            elif args.parallel_batch:
-                #Batch should only work on a supplied directory
-                abs_batch_path = get_absolute_path(args.parallel_batch)
-                return abs_batch_path
+            elif args.zip:
+                #Zip is a local-only option, behaves just like local xml
+                abs_input_path = get_absolute_path(args.zip)
+                abs_input_parent = os.path.split(abs_input_path)[0]
+                return evaluate_relative_path(abs_input_parent, config.default_output)
             elif args.collection:
                 return os.getcwd()
             else:  # Un-handled or currently unsupported options
