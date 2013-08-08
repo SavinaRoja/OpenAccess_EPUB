@@ -796,7 +796,7 @@ class OPSFrontiers(OPSMeta):
             #Create a file reference for the image
             xlink_href = element_methods.ns_format(graphic_el, 'xlink:href')
             graphic_xlink_href = graphic_el.attrib[xlink_href]
-            file_name = graphic_xlink_href.split('.')[-1] + '.jpg'
+            file_name = graphic_xlink_href.split('.')[0].split('-')[-1] + '.jpg'
             img_dir = 'images-' + self.doi_frag
             img_path = '/'.join([img_dir, file_name])
 
