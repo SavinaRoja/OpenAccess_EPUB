@@ -36,7 +36,7 @@ build/*
 .project
 .pydevproject
 .settings
-.nja
+*.nja
 
 # Packages #
 ############
