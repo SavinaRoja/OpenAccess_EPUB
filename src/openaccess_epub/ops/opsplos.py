@@ -190,6 +190,34 @@ class OPSPLoS(OPSMeta):
 
         self.write_document(os.path.join(self.ops_dir, self.bib_frag[:-4]), self.document)
 
+    def format_nlm_citation(self, nlm_citation):
+        """
+        This method does the job of properly formatting an nlm-citation element
+        for display in the ePub. The nlm-citation element should be passed in
+        as the argument, and this function will return an element containing
+        the formatted data.
+
+        This method relies on the following resources for reference:
+        https://github.com/PLOS/ambra/blob/master/base/src/main/resources/viewnlm-v2.3.xsl
+        https://github.com/PLOS/ambra/blob/master/base/src/main/resources/articleTransform-v3.xsl
+
+        PLoS employs the nlm-citation formatting for mixed-citation and
+        element-citations as well.
+        """
+        #Count the number of authors
+        author_group_count = int(nlm_citation.xpath('count(person-group) + count(collab)'))
+        if author_group_count == 1:
+            pass
+
+    def hyperlink_citation(self, citation):
+        """
+        PLoS adds hyperlinks to locate the resource on the web at the end of
+        its bibliographic citations. This method does that job.
+
+        This method relies on the following resource for reference:
+        https://github.com/PLOS/ambra/blob/master/base/src/main/resources/articleTransform-v3.xsl
+        """
+
     def create_tables(self):
         """
         This method encapsulates the functions necessary to create a file
@@ -412,7 +440,7 @@ class OPSPLoS(OPSMeta):
         citation_div.attrib['id'] = 'article-citation'
         b = etree.SubElement(citation_div, 'b')
         b.text = 'Citation: '
-        
+
         #Add author stuff to the citation
         author_list = self.get_authors_list()
         for author in author_list:
@@ -464,7 +492,7 @@ class OPSPLoS(OPSMeta):
         #Add Publication Year to the citation
         #Find pub-date elements, use pub-type=collection, or else pub-type=ppub
         for pub_date in self.metadata.front.article_meta.pub_date:
-            pub_year = '1337'
+            #pub_year = '1337'
             if 'pub-type' not in pub_date.attrs:
                 continue
             elif pub_date.attrs['pub-type'] == 'collection':
@@ -517,7 +545,7 @@ class OPSPLoS(OPSMeta):
                 first = False
             else:
                 element_methods.append_new_text(editors_div, '; ', join_str='')
-            
+
             if len(editor.anonymous) > 0:
                 element_methods.append_new_text(editors_div, 'Anonymous', join_str='')
             elif len(editor.collab) > 0:
@@ -602,11 +630,11 @@ class OPSPLoS(OPSMeta):
         copyright_string = '\u00A9 '
         if len(permissions.copyright_holder) > 0:
             copyright_string += element_methods.all_text(permissions.copyright_holder[0].node)
-            copyright_string += '. ' 
+            copyright_string += '. '
         if len(permissions.license) > 0:  # I'm assuming only one license
             #Taking only the first license_p element
             license_p = permissions.license[0].license_p[0]
-            #I expect to see only text in the 
+            #I expect to see only text in the
             copyright_string += element_methods.all_text(license_p.node)
         element_methods.append_new_text(copyright_div, copyright_string)
 
@@ -723,7 +751,7 @@ class OPSPLoS(OPSMeta):
         """
         #Back is technically metadata content that needs to be interpreted to
         #presentable content
-        if self.metadata.back is None: 
+        if self.metadata.back is None:
             return
         #The following things are ordered in such a way to adhere to what
         #appears to be a consistent presentation order for PLoS
@@ -903,7 +931,7 @@ class OPSPLoS(OPSMeta):
         """
         Responsible for the correct conversion of JPTS 3.0 <table-wrap>
         elements to OPS content.
-        
+
         The 'id' attribute is treated as mandatory by this method.
         """
         for table_wrap in top.findall('.//table-wrap'):
@@ -911,7 +939,7 @@ class OPSPLoS(OPSMeta):
             #for child in tab.childNodes:
             #    if child.nodeType == 8:
             #        element_methods.uncomment(child)
-            
+
             #Create a div for all of the table stuff
             table_div = etree.Element('div')
             table_div.attrib['id'] = table_wrap.attrib['id']
@@ -961,7 +989,7 @@ class OPSPLoS(OPSMeta):
             #
             #If there is a table with no image, then the table should be placed
             #in the text flow.
-            
+
             if graphic is not None:
                 #Create the image path for the graphic
                 xlink_href = element_methods.ns_format(graphic, 'xlink:href')
@@ -1376,7 +1404,7 @@ class OPSPLoS(OPSMeta):
                 paragraph.attrib['class'] = 'fn-type-{0}'.footnote.attrib['fn-type']
             else:
                 paragraph.attrib['class'] = 'fn'
-                #Replace the 
+                #Replace the
             element_methods.replace(footnote, paragraph)
 
     def convert_list_elements(self, top):
@@ -1543,7 +1571,7 @@ class OPSPLoS(OPSMeta):
         #Identify subjournal name for base URl
         subjournal_name = self.doi_frag.split('.')[1]
         base_url = journal_urls[subjournal_name]
-    
+
         #Compose the address for fetchSingleRepresentation
         resource = 'fetchSingleRepresentation.action?uri=' + item_xlink_href
         return base_url.format(resource)

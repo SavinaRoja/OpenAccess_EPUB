@@ -116,3 +116,6 @@ class OPSMeta(object):
                 uri.attrib['href'] = xlink_href
             else:
                 uri.attrib['href'] = element_methods.all_text(uri)
+
+    def format_nlm_citation(self):
+        pass
