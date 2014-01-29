@@ -25,6 +25,7 @@ creator = namedtuple('Creator', 'name, role, file_as')
 contributor = namedtuple('Contributor', 'name, role, file_as')
 date_tup = namedtuple('Date', 'year, month, day, event')
 
+
 #### Public Library of Science - PLoS ###
 def plos_dc_identifier(article):
     """
@@ -37,6 +38,7 @@ def plos_dc_identifier(article):
     else:
         return None
 
+
 def plos_dc_language(article):
     """
     Given an Article class instance, this will return the language in which
@@ -44,6 +46,7 @@ def plos_dc_language(article):
     english, this will return 'en'.
     """
     return 'en'
+
 
 def plos_dc_title(article):
     """
@@ -53,6 +56,7 @@ def plos_dc_title(article):
     """
     article_title = article.metadata.front.article_meta.title_group.article_title.node
     return str(etree.tostring(article_title, method='text', encoding='utf-8'), encoding='utf-8')
+
 
 def plos_dc_creator(article):
     """
@@ -93,7 +97,6 @@ def plos_dc_creator(article):
     return creator_list
 
 
-
 def plos_dc_contributor(article):
     """
     Given an Article class instance, this is responsible for returning the
@@ -129,6 +132,7 @@ def plos_dc_contributor(article):
             contributor_list.append(new_contributor)
     return contributor_list
 
+
 def plos_dc_publisher(article):
     """
     Given an Article class instance, this is responsible for returning a string
@@ -136,6 +140,7 @@ def plos_dc_publisher(article):
     just returns a string regardless of article content.
     """
     return 'Public Library of Science'
+
 
 def plos_dc_description(article):
     """
@@ -153,6 +158,7 @@ def plos_dc_description(article):
     else:
         return ''
 
+
 def plos_dc_date(article):
     """
     Given an Article class instance, this provides the method for extracting
@@ -161,12 +167,13 @@ def plos_dc_date(article):
     the dates when PLoS accepted the article and when it was published online.
     """
     date_list = []
+
+    #Creation is a Dublin Core event value: I interpret it as the date of acceptance
     history = article.metadata.front.article_meta.history
+    #For some reason, the lxml dtd parser fails to recognize the content model of
+    #history (something to do with expanded content model? I am not sure yet)
+    #So for now, this will illustrate a work-around using lxml search
     if history is not None:
-        #Creation is a Dublin Core event value: I interpret it as the date of acceptance
-        #For some reason, the lxml dtd parser fails to recognize the content model
-        #history (something to do with expanded content model? I am not sure yet)
-        #So for now, this will illustrate a work-around using lxml search
         for date in history.node.findall('date'):
             if not 'date-type' in date.attrib:
                 continue
@@ -194,6 +201,7 @@ def plos_dc_date(article):
                                       pub_date.day.text, 'publication'))
     return date_list
 
+
 def plos_dc_subject(article):
     """
     Given an Article class instance, this provides a way to extract keyword
@@ -209,6 +217,7 @@ def plos_dc_subject(article):
             subject_list.append(etree.tostring(kwd.node, method='text', encoding='utf-8'))
     return subject_list
 
+
 #### Frontiers ###
 def frontiers_dc_identifier(article):
     """
@@ -221,6 +230,7 @@ def frontiers_dc_identifier(article):
     else:
         return None
 
+
 def frontiers_dc_language(article):
     """
     Given an Article class instance, this will return the language in which
@@ -228,6 +238,7 @@ def frontiers_dc_language(article):
     english, this will return 'en'.
     """
     return 'en'
+
 
 def frontiers_dc_title(article):
     """
@@ -237,6 +248,7 @@ def frontiers_dc_title(article):
     """
     article_title = article.metadata.front.article_meta.title_group.article_title.node
     return str(etree.tostring(article_title, method='text', encoding='utf-8'), encoding='utf-8')
+
 
 def frontiers_dc_creator(article):
     """
@@ -277,7 +289,6 @@ def frontiers_dc_creator(article):
     return creator_list
 
 
-
 def frontiers_dc_contributor(article):
     """
     Given an Article class instance, this is responsible for returning the
@@ -313,6 +324,7 @@ def frontiers_dc_contributor(article):
             contributor_list.append(new_contributor)
     return contributor_list
 
+
 def frontiers_dc_publisher(article):
     """
     Given an Article class instance, this is responsible for returning a string
@@ -320,6 +332,7 @@ def frontiers_dc_publisher(article):
     just returns a string regardless of article content.
     """
     return 'Frontiers Media S.A.'
+
 
 def frontiers_dc_description(article):
     """
@@ -336,6 +349,7 @@ def frontiers_dc_description(article):
         return str(abstract_text, encoding='utf-8')
     else:
         return ''
+
 
 def frontiers_dc_date(article):
     """
@@ -380,6 +394,7 @@ def frontiers_dc_date(article):
                                       pub_date.day.text, 'publication'))
     return date_list
 
+
 def frontiers_dc_subject(article):
     """
     Given an Article class instance, this provides a way to extract keyword
@@ -394,4 +409,3 @@ def frontiers_dc_subject(article):
         for kwd in kwd_group.kwd:
             subject_list.append(etree.tostring(kwd.node, method='text', encoding='utf-8'))
     return subject_list
-
