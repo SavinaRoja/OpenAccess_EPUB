@@ -162,30 +162,29 @@ def plos_dc_date(article):
     """
     date_list = []
     history = article.metadata.front.article_meta.history
-    if history is None:
-        return date_list
-    #Creation is a Dublin Core event value: I interpret it as the date of acceptance
-    #For some reason, the lxml dtd parser fails to recognize the content model
-    #history (something to do with expanded content model? I am not sure yet)
-    #So for now, this will illustrate a work-around using lxml search
-    for date in history.node.findall('date'):
-        if not 'date-type' in date.attrib:
-            continue
-        if date.attrib['date-type'] == 'accepted':
-            year_el = date.find('year')
-            month_el = date.find('month')
-            day_el = date.find('day')
-            if year_el is not None:
-                year = element_methods.all_text(year_el)
-            else:
-                year = ''
-            if month_el is not None:
-                month = element_methods.all_text(month_el)
-            else:
-                month = ''
-            if day_el is not None:
-                day = element_methods.all_text(day_el)
-            date_list.append(date_tup(year, month, day, 'creation'))
+    if history is not None:
+        #Creation is a Dublin Core event value: I interpret it as the date of acceptance
+        #For some reason, the lxml dtd parser fails to recognize the content model
+        #history (something to do with expanded content model? I am not sure yet)
+        #So for now, this will illustrate a work-around using lxml search
+        for date in history.node.findall('date'):
+            if not 'date-type' in date.attrib:
+                continue
+            if date.attrib['date-type'] == 'accepted':
+                year_el = date.find('year')
+                month_el = date.find('month')
+                day_el = date.find('day')
+                if year_el is not None:
+                    year = element_methods.all_text(year_el)
+                else:
+                    year = ''
+                if month_el is not None:
+                    month = element_methods.all_text(month_el)
+                else:
+                    month = ''
+                if day_el is not None:
+                    day = element_methods.all_text(day_el)
+                date_list.append(date_tup(year, month, day, 'creation'))
 
     #Publication is another Dublin Core event value: I use date of epub
     pub_dates = article.metadata.front.article_meta.pub_date
