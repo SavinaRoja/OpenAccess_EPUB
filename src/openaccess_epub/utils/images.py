@@ -277,7 +277,7 @@ def fetch_plos_images(article_doi, output_dir, document):
                     'pone': 'http://www.plosone.org/article/{0}',
                     'pctr': 'http://clinicaltrials.ploshubs.org/article/{0}'}
 
-    #Identify subjournal name for base URl
+    #Identify subjournal name for base URL
     subjournal_name = article_doi.split('.')[1]
     base_url = journal_urls[subjournal_name]
 
@@ -289,8 +289,11 @@ def fetch_plos_images(article_doi, output_dir, document):
     print('Downloading images, this may take some time...')
     for graphic in graphics:
         nsmap = document.document.getroot().nsmap
-        xlink_href = graphic.attrib['{'+nsmap['xlink']+'}'+'href']
-        if xlink_href[-4] == 'e' or xlink_href[-3] == 'e':  # Equations are handled differently
+        xlink_href = graphic.attrib['{' + nsmap['xlink'] + '}' + 'href']
+
+        #Equations are handled a bit differently than the others
+        #Here we decide that an image name starting with "e" is an equation
+        if xlink_href.split('.')[-1].startswith('e'):
             resource = 'fetchObject.action?uri=' + xlink_href + '&representation=PNG'
         else:
             resource = xlink_href + '/largerimage'
