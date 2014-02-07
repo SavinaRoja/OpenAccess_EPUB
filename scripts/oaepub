@@ -5,6 +5,7 @@ import openaccess_epub.utils as utils
 import os.path
 import logging
 import shutil
+import sys
 
 CACHE_LOCATION = utils.cache_location()
 
@@ -20,7 +21,7 @@ except IOError:
 def main():
     """The main method of the launch script"""
     args = oae.OAEParser()
-    #Configure logging, 
+    #Configure logging,
     if args.input:
         #Get the name of the article xml file, replacing .xml with .log
         if 'http:' in args.input:
@@ -35,7 +36,7 @@ def main():
         log_name = os.path.splitext(os.path.basename(args.zip))[0] + '.log'
     elif args.collection:
         log_name = os.path.split(os.getcwd())[1] + '.log'
-    
+
     output_dir = utils.get_output_directory(args)
     log_path = os.path.join(output_dir, log_name)
     if not os.path.isdir(output_dir):
