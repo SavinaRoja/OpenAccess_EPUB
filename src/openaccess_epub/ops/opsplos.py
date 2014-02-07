@@ -38,9 +38,8 @@ class OPSPLoS(OPSMeta):
         if self.html_tables:
             self.create_tables()
 
-
     def create_main(self):
-        """
+        """Have started to look at this one.
         This method encapsulates the process required to generate the primary
         body of the article. This includes the heading, article info, and main
         text, including some elements of the back matter. It does not include
@@ -68,6 +67,11 @@ class OPSPLoS(OPSMeta):
         #from the Bibliography. Unlike the Body, this method will look for
         #supported elements and add them appropriately to the XML
         self.make_back_matter(body)
+
+        #A work-around for XML with <boxed-text> elements placed irregularly in
+        #the <back> of the article. We cut them over to the back of the body
+        #journal.pgen.0020002 is the known offender
+        self.move_back_boxed_texts(body)
 
         #Handle node conversion
         self.convert_disp_formula_elements(body)
@@ -856,6 +860,19 @@ class OPSPLoS(OPSMeta):
             notes_sec.tag = 'div'
             notes_sec.attrib['class'] = 'back-notes'
             receiving_el.append(notes_sec)
+
+    def move_back_boxed_texts(self, receiving_el):
+        """
+        The only intended use for this function is to patch a problem seen in
+        at least one PLoS article (journal.pgen.0020002). This will move any
+        <boxed-text> elements over to the receiving element, which is probably
+        the main body.
+        """
+        back_boxed_texts = self.metadata.back.node.findall('.//boxed-text')
+        if len(back_boxed_texts) == 0:
+            return
+        for back_boxed_text in back_boxed_texts:
+            receiving_el.append(back_boxed_text)
 
     def format_date_string(self, date_tuple):
         """
