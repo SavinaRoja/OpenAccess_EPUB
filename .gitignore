@@ -30,6 +30,7 @@ output/*
 # Build#
 ############
 build/*
+src/openaccess_epub.egg-info/*
 
 # IDE Files #
 ############
