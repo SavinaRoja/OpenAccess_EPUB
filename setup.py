@@ -34,5 +34,6 @@ setup(name='openaccess_epub',
                    'Programming Language :: Python :: 3.2',
                    'Operating System :: OS Independent',
                    'Topic :: Text Processing :: Markup :: XML',
-                   'Topic :: Other/Nonlisted Topic']
+                   'Topic :: Other/Nonlisted Topic'],
+      install_requires=['docopt']
       )
