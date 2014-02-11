@@ -1,5 +1,79 @@
 #!/usr/bin/env python3
 
+#I'm planning on implementing a "git style" system for subcommands in OAE,
+#Bear with me as I cobble this together; I've not done this job before
+"""
+OpenAccess_EPUB
+
+Usage:
+  oaepub [--version | --help] [--output DIR] [--log-to DIR] [--images DIR]
+         COMMAND [ARGS ...]
+
+Options:
+  -o --output DIR  set a directory path for placement of output
+  -l --log-to DIR  set a directory path for placement of logs
+  -h --help        show this help message and exit
+  -v --version     show program version and exit
+
+The available commands are:
+  convert     Convert the input(s) to ePub
+  batch       Convert all the contents of a directory to ePub
+  configure   Configure some global settings for your OpenAccess_EPUB install
+  clearcache  Delete some, or all, of the contents of OpenAccess_EPUB's cache
+
+See 'oaepub help COMMAND' for more information on a specific command.
+
+"""
+#help message from argparse for reference
+"""
+
+
+usage: oaepub [-h] [--version] [-o OUTPUT] [-l LOG_TO] [-I IMAGES] [-c]
+              [-i INPUT | -z ZIP | -b BATCH | -cI | -cX | -cC]
+
+Options:
+  -o --output DIR  Set a directory
+  -l --log-to DIR
+  -h --help            show this help message and exit
+  -v --version         show program version and exit
+
+OpenAccess_EPUB Parser
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --version             show program's version number and exit
+  -o OUTPUT, --output OUTPUT
+                        Use to specify a desired output directory
+  -l LOG_TO, --log-to LOG_TO
+                        Use to specify a non-default log directory
+  -I IMAGES, --images IMAGES
+                        Specify a path to the directory containing the images.
+                        This overrides the program's attempts to get the
+                        images from the default directory, the image cache, or
+                        the internet.
+  -c, --clean           Use to toggle off cleanup. Without this flag, the pre-
+                        zipped output will be removed.
+  -i INPUT, --input INPUT
+                        Input may be a path to a local directory, a URL to a
+                        PLoS journal article, or a PLoS DOI string
+  -z ZIP, --zip ZIP     Input mode supporting Frontiers production from
+                        zipfiles. Use the name of either of the zipfiles with
+                        this mode, both zipfiles are required to be in the
+                        same directory.
+  -b BATCH, --batch BATCH
+                        Use to specify a batch directory; each article inside
+                        will be processed.
+  -cI, --clear-image-cache
+                        Clears the image cache
+  -cX, --clear-xml-cache
+                        Clears the xml cache
+  -cC, --clear-cache    Clears the entire cache
+"""
+
+from subprocess import call
+
+from docopt import docopt
+
 import openaccess_epub as oae
 import openaccess_epub.utils as utils
 import os.path
@@ -48,4 +122,13 @@ def main():
 
 
 if __name__ == '__main__':
+    args = docopt(__doc__,
+                  version='OpenAccess_EPUB Docoptify 0.1',
+                  options_first=True)
+
+    print('global arguments:')
+    print(args)
+    print('command arguments:')
+
+    argv = [args['<>']
     main()
