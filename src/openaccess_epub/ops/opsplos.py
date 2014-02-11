@@ -463,7 +463,7 @@ class OPSPLoS(OPSMeta):
                     collab = deepcopy(author.collab[0])
                     for contrib_group in collab.contrib_group:
                         element_methods.remove(contrib_group)
-                    element_methods.append_all_below(citation_div, collab, join_str='')
+                    element_methods.append_all_below(citation_div, collab.node, join_str='')
                 #If the author is not a collab, do this instead
                 else:  # Author element is not a collab
                     name = author.name[0]
