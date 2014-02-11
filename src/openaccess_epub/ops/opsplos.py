@@ -868,6 +868,8 @@ class OPSPLoS(OPSMeta):
         <boxed-text> elements over to the receiving element, which is probably
         the main body.
         """
+        if self.metadata.back is None:
+            return
         back_boxed_texts = self.metadata.back.node.findall('.//boxed-text')
         if len(back_boxed_texts) == 0:
             return
