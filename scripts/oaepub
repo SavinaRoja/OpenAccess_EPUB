@@ -6,7 +6,7 @@
 OpenAccess_EPUB
 
 Usage:
-  oaepub [--version | --help] [--output DIR] [--log-to DIR] [--images DIR]
+  oaepub [--version | --help] [--output=DIR] [--log-to=DIR] [--images=DIR]
          COMMAND [ARGS ...]
 
 Options:
@@ -130,5 +130,7 @@ if __name__ == '__main__':
     print(args)
     print('command arguments:')
 
-    argv = [args['<>']
-    main()
+    argv = [args['COMMAND']] + args['ARGS']
+    print(argv)
+    if args['COMMAND'] == 'test':
+        print('TEST!')
