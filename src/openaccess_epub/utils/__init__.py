@@ -19,6 +19,7 @@ from openaccess_epub.utils.input import doi_input, url_input
 #http://code.activestate.com/recipes/576694/
 import collections
 
+
 class OrderedSet(collections.MutableSet):
 
     def __init__(self, iterable=None):
@@ -77,6 +78,7 @@ class OrderedSet(collections.MutableSet):
             return len(self) == len(other) and list(self) == list(other)
         return set(self) == set(other)
 
+
 def cache_location():
     '''Cross-platform placement of cached files'''
     if sys.platform == 'win32':  # Windows
@@ -98,6 +100,7 @@ def mkdir_p(dir):
     if os.path.isdir(dir):
         return
     os.makedirs(dir)
+
 
 def evaluate_relative_path(working=os.getcwd(), relative=''):
     """
@@ -204,7 +207,6 @@ def getFileRoot(path):
     return root
 
 
-
 def make_epub_base():
     """
     Contains the  functionality to create the ePub directory hierarchy from
@@ -248,6 +250,7 @@ def make_epub_base():
     css_path = os.path.join(location, 'OPS', 'css', 'article.css')
     with open(css_path, 'wb') as css:
         css.write(bytes(DEFAULT_CSS, 'UTF-8'))
+
 
 def createDCElement(document, name, data, attributes = None):
     """
@@ -419,7 +422,7 @@ def recursive_zip(zipf, directory, folder=None):
 
 
 suggested_article_types = ['abstract', 'addendum', 'announcement',
-    'article-commentary','book-review', 'books-received', 'brief-report',
+    'article-commentary', 'book-review', 'books-received', 'brief-report',
     'calendar', 'case-report', 'collection', 'correction', 'discussion',
     'dissertation', 'editorial', 'in-brief', 'introduction', 'letter',
     'meeting-report', 'news', 'obituary', 'oration', 'partial-retraction',
@@ -439,7 +442,7 @@ def initiateDocument(titlestring,
     mytype = impl.createDocumentType('article', _publicId, _systemId)
     doc = impl.createDocument(None, 'root', mytype)
 
-    root = doc.lastChild #IGNORE:E1101
+    root = doc.lastChild  # IGNORE:E1101
     root.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml')
     root.setAttribute('xml:lang', 'en-US')
 
@@ -451,7 +454,7 @@ def initiateDocument(titlestring,
 
     link = doc.createElement('link')
     link.setAttribute('rel', 'stylesheet')
-    link.setAttribute('href','css/reference.css')
+    link.setAttribute('href', 'css/reference.css')
     link.setAttribute('type', 'text/css')
 
     meta = doc.createElement('meta')
@@ -476,7 +479,7 @@ def scrapePLoSIssueCollection(issue_url):
     instead of xml.dom.minidom because of malformed html/xml
     """
     iu = urllib.urlopen(issue_url)
-    with open('temp','w') as temp:
+    with open('temp', 'w') as temp:
         temp.write(iu.read())
     with open('temp', 'r') as temp:
         soup = BeautifulStoneSoup(temp)
