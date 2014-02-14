@@ -11,6 +11,7 @@ Usage:
 Options:
   -h --help        show this help message and exit
   -v --version     show program version and exit
+  -s --silent      print nothing to the console during execution
   -V --verbose     print extra information to the console during execution
 
 Batch Specific Options:
