@@ -22,7 +22,12 @@ The available commands are:
 
 See 'oaepub COMMAND --help' for more information on a specific command.
 
+For more information, please visit the project's GitHub page at:
+https://github.com/SavinaRoja/OpenAccess_EPUB
+
+Feel free to bother the developer for issues/suggestions/help.
 """
+
 #Standard Library modules
 import sys
 #import os
@@ -40,8 +45,6 @@ import openaccess_epub.commands.convert as convert
 import openaccess_epub.commands.validate as validate
 
 
-
-
 if __name__ == '__main__':
     args = docopt(__doc__,
                   version='OpenAccess_EPUB Docoptify 0.1',
@@ -51,14 +54,16 @@ if __name__ == '__main__':
         if args['--verbose']:
             print(info)
 
-    #Let's shape what gets passed along to the sub commands
+    #Let's shape what gets passed along to the subcommands
     argv = []
     
-    #If we want to pass an ubercommand option to a subcommand, do now and like:
+    #If we want to pass an ubercommand option to a subcommand, do now because
+    #options are first, and like so:
     #if args['--verbose']:
     #    argv.append('--verbose')  # this would pass --verbose onward
+    #argv += ['--verbose'] if args['--verbose'] else argv  # Cute, one-liner
     
-    #Add on all of the ARGS...  (mixture of options and args for new parsing)
+    #Add on all of the ARGS ...  (mixture of options and args for sub-parsing)
     argv += args['ARGS']
     
     #Decide which subcommand to run based on args['COMMAND']
