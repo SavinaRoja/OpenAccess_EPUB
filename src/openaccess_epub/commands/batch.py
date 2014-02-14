@@ -14,13 +14,14 @@ Options:
   -V --verbose     print extra information to the console during execution
 
 Batch Specific Options:
-  -r --recursive   Recursively traverse subdirectories for conversion
   --no-epubcheck   Disable the use of epubcheck to validate EPUBs
   --no-validate    Disable DTD validation of XML files during conversion. This
                    is only advised if you have pre-validated the files (see
                    'oaepub validate -h')
+  -r --recursive   Recursively traverse subdirectories for conversion
 
-This
+
+This conversion method, in contrast to 'oaepub convert' supports only XML files.
 """
 
 from docopt import docopt
