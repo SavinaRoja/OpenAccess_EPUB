@@ -19,7 +19,7 @@ The available commands are:
   convert     Convert explicit input(s) individually to EPUB
   validate    Validate article XML files according to their specification
 
-See 'oaepub help COMMAND' for more information on a specific command.
+See 'oaepub COMMAND --help' for more information on a specific command.
 
 """
 #Standard Library modules
