@@ -12,11 +12,11 @@ Options:
   -V --verbose     print additional information about command execution
 
 The available commands are:
-  batch       Convert all the contents of a directory to individual ePubs
+  batch       Convert all the contents of a directory to individual EPUB
   clearcache  Delete some, or all, of the contents of OpenAccess_EPUB's cache
-  collection  Convert multiple articles into a single omnibus ePub
+  collection  Convert multiple articles into a single omnibus EPUB
   configure   Configure some settings for your OpenAccess_EPUB install
-  convert     Convert explicit input(s) individually to ePub
+  convert     Convert explicit input(s) individually to EPUB
   validate    Validate article XML files according to their specification
 
 See 'oaepub help COMMAND' for more information on a specific command.
@@ -87,10 +87,28 @@ Collection command script located at:
 {1}'''.format(str(argv), str(collection.__file__)))
     elif args['COMMAND'] == 'configure':
         main = configure.main
+        printverbose(
+'''Running Configure command with the following options/arguments:
+{0}
+
+Configure command script located at:
+{1}'''.format(str(argv), str(configure.__file__)))
     elif args['COMMAND'] == 'convert':
         main = convert.main
+        printverbose(
+'''Running Convert command with the following options/arguments:
+{0}
+
+Convert command script located at:
+{1}'''.format(str(argv), str(clearcache.__file__)))
     elif args['COMMAND'] == 'validate':
         main = validate.main
+        printverbose(
+'''Running Validate command with the following options/arguments:
+{0}
+
+Validate command script located at:
+{1}'''.format(str(argv), str(clearcache.__file__)))
     elif args['COMMAND'] == 'haiku':
         print('''
 A field of cotton--
@@ -101,6 +119,7 @@ had flowered.
         sys.exit()
     else:
         print('Your command \'{0}\' was not recognized'.format(args['COMMAND']))
+        sys.exit()
         
     main(argv=argv)
 
