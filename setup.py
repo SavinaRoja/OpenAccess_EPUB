@@ -35,5 +35,5 @@ setup(name='openaccess_epub',
                    'Operating System :: OS Independent',
                    'Topic :: Text Processing :: Markup :: XML',
                    'Topic :: Other/Nonlisted Topic'],
-      install_requires=['docopt']
+      install_requires=['docopt', 'lxml']
       )
