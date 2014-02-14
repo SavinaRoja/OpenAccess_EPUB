@@ -15,7 +15,9 @@ Options:
   -V --verbose     print extra information to the console during execution
 
 Batch Specific Options:
+    -l --log=LOG   Specify a location to store the collection production log
   --no-epubcheck   Disable the use of epubcheck to validate EPUBs
+  --no-log         Disable logging entirely
   --no-validate    Disable DTD validation of XML files during conversion. This
                    is only advised if you have pre-validated the files (see
                    'oaepub validate -h')
