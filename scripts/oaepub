@@ -1,124 +1,44 @@
 #!/usr/bin/env python3
 
-#I'm planning on implementing a "git style" system for subcommands in OAE,
-#Bear with me as I cobble this together; I've not done this job before
 """
 OpenAccess_EPUB
 
 Usage:
-  oaepub [--version | --help] [--output=DIR] [--log-to=DIR] [--images=DIR]
-         COMMAND [ARGS ...]
+  oaepub [--version | --help] [options] COMMAND [ARGS ...]
 
 Options:
-  -o --output DIR  set a directory path for placement of output
-  -l --log-to DIR  set a directory path for placement of logs
   -h --help        show this help message and exit
   -v --version     show program version and exit
+  -V --verbose     print additional information about command execution
 
 The available commands are:
-  convert     Convert the input(s) to ePub
-  batch       Convert all the contents of a directory to ePub
-  configure   Configure some global settings for your OpenAccess_EPUB install
+  batch       Convert all the contents of a directory to individual ePubs
   clearcache  Delete some, or all, of the contents of OpenAccess_EPUB's cache
+  collection  Convert multiple articles into a single omnibus ePub
+  configure   Configure some settings for your OpenAccess_EPUB install
+  convert     Convert explicit input(s) individually to ePub
+  validate    Validate article XML files according to their specification
 
 See 'oaepub help COMMAND' for more information on a specific command.
 
 """
-#help message from argparse for reference
-"""
+#Standard Library modules
+import sys
+#import os
+#import logging
 
-
-usage: oaepub [-h] [--version] [-o OUTPUT] [-l LOG_TO] [-I IMAGES] [-c]
-              [-i INPUT | -z ZIP | -b BATCH | -cI | -cX | -cC]
-
-Options:
-  -o --output DIR  Set a directory
-  -l --log-to DIR
-  -h --help            show this help message and exit
-  -v --version         show program version and exit
-
-OpenAccess_EPUB Parser
-
-optional arguments:
-  -h, --help            show this help message and exit
-  --version             show program's version number and exit
-  -o OUTPUT, --output OUTPUT
-                        Use to specify a desired output directory
-  -l LOG_TO, --log-to LOG_TO
-                        Use to specify a non-default log directory
-  -I IMAGES, --images IMAGES
-                        Specify a path to the directory containing the images.
-                        This overrides the program's attempts to get the
-                        images from the default directory, the image cache, or
-                        the internet.
-  -c, --clean           Use to toggle off cleanup. Without this flag, the pre-
-                        zipped output will be removed.
-  -i INPUT, --input INPUT
-                        Input may be a path to a local directory, a URL to a
-                        PLoS journal article, or a PLoS DOI string
-  -z ZIP, --zip ZIP     Input mode supporting Frontiers production from
-                        zipfiles. Use the name of either of the zipfiles with
-                        this mode, both zipfiles are required to be in the
-                        same directory.
-  -b BATCH, --batch BATCH
-                        Use to specify a batch directory; each article inside
-                        will be processed.
-  -cI, --clear-image-cache
-                        Clears the image cache
-  -cX, --clear-xml-cache
-                        Clears the xml cache
-  -cC, --clear-cache    Clears the entire cache
-"""
-
-from subprocess import call
-
+#Non-Standard Library modules
 from docopt import docopt
 
-import openaccess_epub as oae
-import openaccess_epub.utils as utils
-import os.path
-import logging
-import shutil
-import sys
+#OpenAccess_EPUB modules
+import openaccess_epub.commands.batch as batch
+import openaccess_epub.commands.clearcache as clearcache
+import openaccess_epub.commands.collection as collection
+import openaccess_epub.commands.configure as configure
+import openaccess_epub.commands.convert as convert
+import openaccess_epub.commands.validate as validate
 
-CACHE_LOCATION = utils.cache_location()
 
-#Import the global config file as a module
-import imp
-config_path = os.path.join(CACHE_LOCATION, 'config.py')
-try:
-    config = imp.load_source('config', config_path)
-except IOError:
-    print('Could not find {0}, please run oae-quickstart'.format(config_path))
-    sys.exit()
-
-def main():
-    """The main method of the launch script"""
-    args = oae.OAEParser()
-    #Configure logging,
-    if args.input:
-        #Get the name of the article xml file, replacing .xml with .log
-        if 'http:' in args.input:
-            log_name = utils.url_input(args.input, download=False) + '.log'
-        elif 'doi:' in args.input:
-            log_name = utils.doi_input(args.input, download=False) + '.log'
-        else:
-            log_name = os.path.splitext(os.path.basename(args.input))[0] + '.log'
-    elif args.batch:
-        log_name = os.path.split(utils.get_absolute_path(args.batch))[1] + '.log'
-    elif args.zip:
-        log_name = os.path.splitext(os.path.basename(args.zip))[0] + '.log'
-    elif args.collection:
-        log_name = os.path.split(os.getcwd())[1] + '.log'
-
-    output_dir = utils.get_output_directory(args)
-    log_path = os.path.join(output_dir, log_name)
-    if not os.path.isdir(output_dir):
-        utils.mkdir_p(output_dir)
-    logging.basicConfig(filename=log_path, level=logging.DEBUG)
-    logging.info('openaccess_epub Log v.{0}'.format(oae.__version__))
-    #Run the main script
-    oae.main(args)
 
 
 if __name__ == '__main__':
@@ -126,11 +46,61 @@ if __name__ == '__main__':
                   version='OpenAccess_EPUB Docoptify 0.1',
                   options_first=True)
 
-    print('global arguments:')
-    print(args)
-    print('command arguments:')
+    def printverbose(printable):
+        if args['--verbose']:
+            print(printable)
 
-    argv = [args['COMMAND']] + args['ARGS']
-    print(argv)
-    if args['COMMAND'] == 'test':
-        print('TEST!')
+    #Let's shape what gets passed along to the sub commands
+    argv = []
+    
+    #If we want to pass an ubercommand option to a subcommand, do now and like:
+    #if args['--verbose']:
+    #    argv.append('--verbose')  # this would pass --verbose onward
+    
+    #Add on all of the ARGS...  (mixture of options and args for new parsing)
+    argv += args['ARGS']
+    
+    #Decide which subcommand to run based on args['COMMAND']
+    if args['COMMAND'] == 'batch':
+        main = batch.main
+        printverbose(
+'''Running Batch command with the following options/arguments:
+{0}
+
+Batch command script located at:
+{1}'''.format(str(argv), str(batch.__file__)))
+    elif args['COMMAND'] == 'clearcache':
+        main = clearcache.main
+        printverbose(
+'''Running Clearcache command with the following options/arguments:
+{0}
+
+Clearcache command script located at:
+{1}'''.format(str(argv), str(clearcache.__file__)))
+    elif args['COMMAND'] == 'collection':
+        main = collection.main
+        printverbose(
+'''Running Collection command with the following options/arguments:
+{0}
+
+Collection command script located at:
+{1}'''.format(str(argv), str(collection.__file__)))
+    elif args['COMMAND'] == 'configure':
+        main = configure.main
+    elif args['COMMAND'] == 'convert':
+        main = convert.main
+    elif args['COMMAND'] == 'validate':
+        main = validate.main
+    elif args['COMMAND'] == 'haiku':
+        print('''
+A field of cotton--
+as if the moon
+had flowered.
+
+- Matsuo Bashō''')
+        sys.exit()
+    else:
+        print('Your command \'{0}\' was not recognized'.format(args['COMMAND']))
+        
+    main(argv=argv)
+
