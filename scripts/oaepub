@@ -17,6 +17,7 @@ The available commands are:
   collection  Convert multiple articles into a single omnibus EPUB
   configure   Configure some settings for your OpenAccess_EPUB install
   convert     Convert explicit input(s) individually to EPUB
+  publishers  Show which publishers are currently supported by OpenAccess_EPUB
   validate    Validate article XML files according to their specification
 
 See 'oaepub COMMAND --help' for more information on a specific command.
@@ -46,9 +47,9 @@ if __name__ == '__main__':
                   version='OpenAccess_EPUB Docoptify 0.1',
                   options_first=True)
 
-    def printverbose(printable):
+    def printverbose(info):
         if args['--verbose']:
-            print(printable)
+            print(info)
 
     #Let's shape what gets passed along to the sub commands
     argv = []
@@ -109,6 +110,11 @@ Convert command script located at:
 
 Validate command script located at:
 {1}'''.format(str(argv), str(clearcache.__file__)))
+    elif args['COMMAND'] == 'publishers':
+        print('''\
+PLoS      - http://www.plos.org/
+Frontiers - http://www.frontiersin.org/''')
+        sys.exit()
     elif args['COMMAND'] == 'haiku':
         print('''
 A field of cotton--
