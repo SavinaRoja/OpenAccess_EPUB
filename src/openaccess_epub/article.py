@@ -13,7 +13,7 @@ from keyword import iskeyword
 #Other, nonstandard lib modules
 from lxml import etree
 
-log = logging.getLogger('Article')
+log = logging.getLogger('openaccess_epub.article')
 
 dtd_tuple = namedtuple('DTD_Tuple', 'path, name, version')
 
@@ -76,7 +76,7 @@ its DTD.'.format(xml_file))
             self.back = self.document.find('back')  # Element or None
             self.sub_article = self.document.findall('sub-article')  # 0 or more
             self.response = self.document.findall('response')  # 0 or more
-        
+
         #At this point we have parsed the article, validated it, defined key
         #top-level elements in it, and now we must translate its metadata into
         #a data structure.
@@ -88,18 +88,18 @@ its DTD.'.format(xml_file))
         self.publisher = self.get_publisher()
 
     def get_metadata(self):
-        
+
         #Dictionary comprehension - element name : element definition
         dtd_dict = {i.name: i for i in self.dtd.elements()}
-        
+
         def coerce_string(input):
             for char in input:
                 if char.lower() not in 'abcdefghijklmnopqrstuvwxyz1234567890_':
                     input = input.replace(char, '_')
             return input
-        
+
         eltuple = namedtuple('ElTuple', 'tag, occurrence')
-        
+
         def get_sub_elements(content, multiple=False, first=None):
             sub_elements = []  #The final list of tuples to be returned
 
@@ -144,7 +144,7 @@ its DTD.'.format(xml_file))
                                 sub_elements.append(eltuple(branch.name, 'singular'))
 
             return sub_elements
-        
+
         def recursive_element_packing(element):
             if element is None:
                 return None
@@ -252,7 +252,7 @@ its DTD.'.format(xml_file))
                     return 'Frontiers'
         print('Warning! Unable to identify publisher for this article!')
         return None
-            
+
     def get_DOI(self):
         """
         This function will attempt to locate the DOI string associated with the

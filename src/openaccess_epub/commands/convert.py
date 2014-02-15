@@ -6,7 +6,7 @@ oaepub convert
 Convert explicitly listed articles to EPUB, takes input of XML file, DOI, or URL
 
 Usage:
-  convert [options] INPUT ...
+  convert [--silent | --log-echo] [options] INPUT ...
 
 General Options:
   -h --help        show this help message and exit
@@ -22,10 +22,15 @@ Convert Specific Options:
                    'oaepub validate -h')
 
 Logging Options:
-    --no-log           Disable logging entirely
-    -l --log=LOG       Specify a filepath to hold the log data
-    --log-level=LEVEL  Set a level for the logging (one of: "CRITICAL",
-                       "ERROR", "WARNING", "INFO", "DEBUG") [default: DEBUG]
+    --no-log            Disable logging entirely
+    -l --log=LOG        Specify a filepath to hold the log data
+    --log-level=LEVEL   Set the level for the logging (one of: "CRITICAL",
+                        "ERROR", "WARNING", "INFO", "DEBUG") [default: DEBUG]
+    --log-echo          Log data will also be printed to console, at a level
+                        determined by '--echo-level'
+    --echo-level=LEVEL  Set the level of log data echoed to the console.
+                        (one of: "CRITICAL", "ERROR", "WARNING", "INFO",
+                        "DEBUG") [default: DEBUG]
 
 Convert supports input of the following types:
   XML - Input points to the location of a local XML file (ends with: '.xml')
@@ -40,7 +45,7 @@ unless '--log' is used to direct all logging information to a specific file
 
 #Standard Library modules
 import sys
-import os.path
+#import os
 import logging
 
 #Non-Standard Library modules
@@ -50,9 +55,49 @@ from docopt import docopt
 import openaccess_epub.utils
 
 
-log_levels = {'debug': logging.DEBUG, 'info': logging.INFO,
+def null_logging():
+    log = logging.getLogger('openaccess_epub')
+    log.addHandler(logging.NullHandler())
+
+
+def config_logging(log_to, log_level, log_echo, echo_level):
+    """
+    Configures and generates a Logger object based on common parameters used for
+    console script execution in OpenAccess_EPUB.
+
+    These parameters are:
+      log_to - Defines a log file location, if False, filename will not be set
+      log_level - Defines the logging level
+      log_echo - If True, log data will also print to console
+      echo_level - Defines the logging level of console-printed data
+
+    This function assumes it will only be called when logging is desired; it
+    should not be called if an option such as '--no-log' is used.
+    """
+
+    levels = {'debug': logging.DEBUG, 'info': logging.INFO,
               'warning': logging.WARNING, 'error': logging.ERROR,
               'critical': logging.CRITICAL}
+
+    try:
+        log_level = levels[log_level.lower()]
+        echo_level = levels[echo_level.lower()]
+    except KeyError:
+        sys.exit('{0} is not a recognized logging level')
+    else:
+        log = logging.getLogger('openaccess_epub')
+        log.setLevel(log_level)
+        frmt = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+        if log_to:
+            fh = logging.FileHandler(filename=log_to)
+            fh.setFormatter(frmt)
+            log.addHandler(fh)
+        #Add on the console StreamHandler if we are echoing to console
+        if log_echo:
+            sh_echo = logging.StreamHandler(sys.stdout)
+            sh_echo.setLevel(echo_level)
+            sh_echo.setFormatter(frmt)
+            log.addHandler(sh_echo)
 
 
 def main(argv=None):
@@ -65,18 +110,17 @@ def main(argv=None):
                       argv=argv,
                       version='OpenAccess_EPUB Docoptify 0.1',
                       options_first=True)
-    print(args)
 
     #Basic logging configuration, if appropriate
-    if not args['--no-log']:
-        try:
-            level = log_levels[args['--log-level'].lower()]
-        except KeyError:
-            sys.exit('{0} is not a recognized logging level')
-        else:
-            logging.basicConfig(level=level)
-        if args['--log']:  # A specific log file is to be used
-            log = logging.getLogger(filename=args['--log'])
+    if args['--no-log']:
+        null_logging()
+    else:
+        config_logging(args['--log'],
+                       args['--log-level'],
+                       args['--log-echo'],
+                       args['--echo-level'])
+    log = logging.getLogger('openaccess_epub.convert')
+    log.debug('Hello Log World!')
 
     #Our basic action is to iterate over the args['INPUT'] list
     for inpt in args['INPUT']:
@@ -90,9 +134,10 @@ def main(argv=None):
 
         #Set a new log file if a custom one has not been used
         if not args['--no-log'] and not args['--log']:
-            log = logging.getLogger(filename=os.path.join(root_name, '.log'))
+            log = logging.getLogger(name='openaccess_epub.convert')
+            log.addHandler(logging.FileHandler(filename=root_name + '.log'))
 
-        print(log)
+        #log.debug('Hello Log World!')
 
 
 if __name__ == '__main__':
