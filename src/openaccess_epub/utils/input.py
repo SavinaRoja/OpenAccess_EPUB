@@ -8,14 +8,16 @@ output files.
 """
 
 import openaccess_epub.utils
-import urllib.request, urllib.parse, urllib.error
+import urllib.request
+import urllib.parse
+import urllib.error
 import sys
 import os
 import zipfile
 import shutil
 import logging
 
-log = logging.getLogger('utils.input')
+log = logging.getLogger('openaccess_epub.utils.input')
 
 
 def plos_doi_to_xmlurl(doi_string):
@@ -58,13 +60,11 @@ def get_file_root(full_path):
 
 def local_input(xml_path, download=None):
     """
-    
     This method accepts xml path data as an argument, instantiates the Article,
     and returns the two.
-    
     """
     log.info('Local Input - {0}'.format(xml_path))
-    return get_file_root(xml_path)
+    return openaccess_epub.utils.file_root_name(xml_path)
 
 
 def doi_input(doi_string, download=True):
