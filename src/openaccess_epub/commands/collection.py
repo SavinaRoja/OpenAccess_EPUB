@@ -28,15 +28,10 @@ from docopt import docopt
 
 
 def main(argv=None):
-    if argv is None:
-        args = docopt(__doc__,
-                      version='OpenAccess_EPUB Docoptify 0.1',
-                      options_first=True)
-    else:
-        args = docopt(__doc__,
-                      argv=argv,
-                      version='OpenAccess_EPUB Docoptify 0.1',
-                      options_first=True)
+    args = docopt(__doc__,
+                  argv=argv,
+                  version='OpenAccess_EPUB Docoptify 0.1',
+                  options_first=True)
     print(args)
 
 if __name__ == '__main__':
