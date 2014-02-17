@@ -6,7 +6,7 @@ oaepub convert
 Convert explicitly listed articles to EPUB, takes input of XML file, DOI, or URL
 
 Usage:
-  convert [--silent | --echo-log] [options] INPUT ...
+  convert [--silent | --echo-log] [--epub2 | --epub3] [options] INPUT ...
 
 General Options:
   -h --help        show this help message and exit
@@ -15,6 +15,8 @@ General Options:
   -V --verbose     print extra information to the console during execution
 
 Convert Specific Options:
+  -2 --epub2       Convert to EPUB2
+  -3 --epub3       Convert to EPUB3
   --no-cleanup     The EPUB contents prior to .epub-packaging will be retained
   --no-epubcheck   Disable the use of epubcheck to validate EPUBs
   --no-validate    Disable DTD validation of XML files during conversion. This
@@ -78,7 +80,7 @@ def main(argv=None):
     #Get a logger, this
     log = logging.getLogger('openaccess_epub.convert')
 
-    #Our basic action is to iterate over the args['INPUT'] list
+    #Our basic flow is to iterate over the args['INPUT'] list
     for inpt in args['INPUT']:
         #First we need to know the name of the file and where it is
         if inpt.lower().endswith('.xml'):  # This is direct XML file
@@ -94,6 +96,8 @@ def main(argv=None):
             sys.exit('{0} not recognized as XML, DOI, or URL'.format(inpt))
 
         #Set a new log file if a custom one has not been used
+        #For now, the behavior is to put it next to the NAME.xml as NAME.log
+        #This could be changed or made configurable if the need arises
         if not args['--no-log'] and not args['--log']:
             log_path = os.path.join(os.path.dirname(abs_input_path), root_name + '.log')
             log = logging.getLogger(name='openaccess_epub.convert')
