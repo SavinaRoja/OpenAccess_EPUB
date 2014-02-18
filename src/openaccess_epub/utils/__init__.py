@@ -11,6 +11,7 @@ import time
 import shutil
 import re
 import sys
+import platform
 
 from openaccess_epub.utils.css import DEFAULT_CSS
 from openaccess_epub.utils.input import doi_input, url_input
@@ -78,22 +79,52 @@ class OrderedSet(collections.MutableSet):
             return len(self) == len(other) and list(self) == list(other)
         return set(self) == set(other)
 
+log = logging.getLogger('openaccess_epub.utils')
+
+Identifier = namedtuple('Identifer', 'id, type')
+
 
 def cache_location():
     '''Cross-platform placement of cached files'''
-    if sys.platform == 'win32':  # Windows
+    plat = platform.platform()
+    log.debug('Platform read as: {0}'.format(plat))
+    if plat.startswith('Windows'):
+        log.debug('Windows platform detected')
         return os.path.join(os.environ['APPDATA'], 'OpenAccess_EPUB')
-    else:  # Mac or Linux
-        path = os.path.expanduser('~')
-        if path == '~':
-            path = os.path.expanduser('~user')
-            if path == '~user':
-                sys.exit('Could not find the correct cache location')
-        return os.path.join(path, '.OpenAccess_EPUB')
+    elif plat.startswith('Darwin'):
+        log.debug('Mac platform detected')
+    elif plat.startswith('Linux'):
+        log.debug('Linux platform detected')
+    else:
+        log.warning('Unhandled platform for cache_location')
 
-log = logging.getLogger('utils')
+    #This code is written for Linux and Mac, don't expect success for others
+    path = os.path.expanduser('~')
+    if path == '~':
+        path = os.path.expanduser('~user')
+        if path == '~user':
+            log.critical('Could not resolve the correct cache location')
+            sys.exit('Could not resolve the correct cache location')
+    cache_loc = os.path.join(path, '.OpenAccess_EPUB')
+    log.debug('Cache located: {0}'.format(cache_loc))
+    return cache_loc
 
-Identifier = namedtuple('Identifer', 'id, type')
+
+def load_config_as_module():
+    """
+    If the config.py file exists, import it as a module. If it does not exist,
+    call sys.exit() with a request to run oaepub configure.
+    """
+    import imp
+    config_path = os.path.join(cache_location(), 'config.py')
+    try:
+        config = imp.load_source('config', config_path)
+    except IOError:
+        log.critical('Config file not found. oaepub exiting...')
+        sys.exit('Config file not found. Please run \'oaepub configure\'')
+    else:
+        log.debug('Config file loaded from {0}'.format(config_path))
+        return config
 
 
 def mkdir_p(dir):
