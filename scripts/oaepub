@@ -30,8 +30,6 @@ Feel free to bother the developer for issues/suggestions/help.
 
 #Standard Library modules
 import sys
-#import os
-#import logging
 
 #Non-Standard Library modules
 from docopt import docopt

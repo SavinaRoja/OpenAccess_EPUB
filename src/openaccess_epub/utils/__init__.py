@@ -7,11 +7,12 @@ import zipfile
 from collections import namedtuple
 import urllib
 import logging
-import time
-import shutil
-import re
 import sys
 import platform
+
+log = logging.getLogger('openaccess_epub.utils')
+
+Identifier = namedtuple('Identifer', 'id, type')
 
 from openaccess_epub.utils.css import DEFAULT_CSS
 from openaccess_epub.utils.input import doi_input, url_input
@@ -79,10 +80,6 @@ class OrderedSet(collections.MutableSet):
             return len(self) == len(other) and list(self) == list(other)
         return set(self) == set(other)
 
-log = logging.getLogger('openaccess_epub.utils')
-
-Identifier = namedtuple('Identifer', 'id, type')
-
 
 def cache_location():
     '''Cross-platform placement of cached files'''
@@ -110,13 +107,20 @@ def cache_location():
     return cache_loc
 
 
-def load_config_as_module():
+def config_location():
+    """
+    Returns the expected location of the config file
+    """
+    return os.path.join(cache_location(), 'config.py')
+
+
+def load_config_module():
     """
     If the config.py file exists, import it as a module. If it does not exist,
     call sys.exit() with a request to run oaepub configure.
     """
     import imp
-    config_path = os.path.join(cache_location(), 'config.py')
+    config_path = config_location()
     try:
         config = imp.load_source('config', config_path)
     except IOError:
@@ -236,6 +240,26 @@ def file_root_name(name):
         warning = 'file_root_name returned an empty root name from \"{0}\"'
         log.warning(warning.format(name))
     return root
+
+
+def files_with_ext(extension, directory='.'):
+    """
+    Generator function that will iterate over all files in the specified
+    directory and return a path to the files which possess a matching extension.
+
+    You should include the period in your extension, and matching is not case
+    sensitive: '.xml' will also match '.XML' and vice versa.
+
+    An empty string passed to extension will match extensionless files.
+    """
+    log.info('looking in {0} for files with extension:  \'{1}\''.format(directory, extension))
+    for name in os.listdir(directory):
+        filepath = os.path.join(directory, name)
+        if not os.path.isfile(filepath):  # Skip non-files
+            continue
+        _root, ext = os.path.splitext(filepath)
+        if extension.lower() == ext.lower():
+            yield filepath
 
 
 #What the hell was I doing using camelCase? I avoid it whenever I can...
