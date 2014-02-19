@@ -13,22 +13,26 @@ MESSAGE_ONLY_FORMAT = logging.Formatter('%(message)s')
 
 def null_logging():
     """
-    Configures logging to do nothing
+    Configures the Logger for 'openaccess_epub' to do nothing
     """
     log = logging.getLogger('openaccess_epub')
     log.addHandler(logging.NullHandler())
 
 
-def config_logging(log_to, log_level, log_echo, echo_level):
+def config_logging(log_to, log_level, log_echo, echo_level='info'):
     """
-    Configures and generates a Logger object based on common parameters used for
-    console script execution in OpenAccess_EPUB.
+    Configures and generates a Logger object, 'openaccess_epub' based on common
+    parameters used for console script execution in OpenAccess_EPUB.
 
     These parameters are:
-      log_to - Defines a log file location, if False, filename will not be set
-      log_level - Defines the logging level
-      log_echo - If True, log data will also print to console
-      echo_level - Defines the logging level of console-printed data
+      log_to
+          A filename location for logging. If False, no log file will be used
+      log_level
+          Logging level, one of: 'debug', 'info', 'warning', 'error', 'critical'
+      log_echo
+          Will configure Logger to print to console as well if True
+      echo_level
+          Level of console printed logging if log_echo is True. Default : 'info'
 
     This function assumes it will only be called when logging is desired; it
     should not be called if an option such as '--no-log' is used.
