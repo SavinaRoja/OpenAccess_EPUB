@@ -30,6 +30,7 @@ Feel free to bother the developer for issues/suggestions/help.
 
 #Standard Library modules
 import sys
+import logging
 
 #Non-Standard Library modules
 from docopt import docopt
@@ -47,6 +48,8 @@ if __name__ == '__main__':
     args = docopt(__doc__,
                   version='OpenAccess_EPUB Docoptify 0.1',
                   options_first=True)
+
+    log = logging.getLogger()
 
     def printverbose(info):
         if args['--verbose']:
