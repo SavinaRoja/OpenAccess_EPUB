@@ -25,7 +25,7 @@ Convert Specific Options:
 
 Logging Options:
   --no-log            Disable logging entirely
-  -l --log=LOG        Specify a filepath to hold the log data
+  -l --log-to=LOG     Specify a filepath to hold the log data
   --log-level=LEVEL   Set the level for the logging (one of: "CRITICAL",
                       "ERROR", "WARNING", "INFO", "DEBUG") [default: INFO]
   --echo-log          Log data will also be printed to console, at a level
@@ -42,7 +42,7 @@ Convert supports input of the following types:
         (starts with 'http:')
 
 Each individual input will receive its own log (replace '.xml' with '.log')
-unless '--log' is used to direct all logging information to a specific file
+unless '--log-to' is used to direct all logging information to a specific file
 Many default actions for your installation of OpenAccess_EPUB are configurable.
 Execute 'oaepub configure' to interactively configure, or modify the config
 file manually in a text editor; executing 'oaepub configure where' will tell you
@@ -76,19 +76,21 @@ def main(argv=None):
     if args['--no-log']:
         oae_logging.null_logging()  # Makes a log with a NullHandler
     else:
-        oae_logging.config_logging(args['--log'],
+        oae_logging.config_logging(args['--log-to'],
                                    args['--log-level'],
                                    args['--echo-log'],
                                    args['--echo-level'])
 
     #Get a logger, the 'openaccess_epub' logger was set up above
-    log = logging.getLogger()
+    log = logging.getLogger('openaccess_epub.commands.convert')
 
     #Load the config module, we do this after logging configuration
     #config = openaccess_epub.utils.load_config_module()
 
     #Our basic flow is to iterate over the args['INPUT'] list
     for inpt in args['INPUT']:
+        log.info('Operating on input: {0}'.format(inpt))
+
         #First we need to know the name of the file and where it is
         if inpt.lower().endswith('.xml'):  # This is direct XML file
             root_name = openaccess_epub.utils.file_root_name(inpt)
@@ -102,15 +104,14 @@ def main(argv=None):
         else:
             sys.exit('{0} not recognized as XML, DOI, or URL'.format(inpt))
 
-        #Set a new log file if a custom one has not been used
-        #For now, the behavior is to put it next to the NAME.xml as NAME.log
-        #This could be changed or made configurable if the need arises
-        if not args['--no-log'] and not args['--log']:
-            log_path = os.path.join(os.path.dirname(abs_input_path), root_name + '.log')
-            log = logging.getLogger(name='openaccess_epub.convert')
-            fh = logging.FileHandler(filename=log_path)
-            fh.setFormatter(oae_logging.STANDARD_FORMAT)
-            log.addHandler(fh)
+        #Stuff
+        if not args['--no-log'] and not args['--log-to']:
+            log_name = root_name + '.log'
+            log_path = os.path.join(os.path.dirname(abs_input_path), log_name)
+            oae_logging.replace_filehandler(logname='openaccess_epub',
+                                            new_file=log_path,
+                                            level=args['--log-level'],
+                                            frmt=oae_logging.STANDARD_FORMAT)
 
         #Now that we should be done configuring logging, let's parse the article
         parsed_article = Article(abs_input_path,

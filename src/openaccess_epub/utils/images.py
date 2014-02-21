@@ -13,7 +13,7 @@ import logging
 import openaccess_epub.utils as utils
 
 
-log = logging.getLogger('utils.images')
+log = logging.getLogger('openaccess_epub.utils.images')
 
 
 def local_images(images_path, outdirect, doi):

@@ -3,6 +3,10 @@
 For the creation of default CSS files.
 """
 
+import logging
+
+log = logging.getLogger('openaccess_epub.utils.css')
+
 DEFAULT_CSS='''/*A default CSS page, developed while working on PLoS*/
 
 /*Some divs are classed for special treatment*/

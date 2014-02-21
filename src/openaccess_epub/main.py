@@ -27,7 +27,7 @@ from openaccess_epub.article import Article
 CACHE_LOCATION = utils.cache_location()
 LOCAL_DIR = os.getcwd()
 
-log = logging.getLogger('Main')
+log = logging.getLogger('openaccess_epub.main')
 
 def OAEParser():
     """

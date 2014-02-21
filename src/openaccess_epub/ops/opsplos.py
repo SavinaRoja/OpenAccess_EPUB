@@ -13,7 +13,7 @@ import os
 import sys
 import logging
 
-log = logging.getLogger('OPSPLoS')
+log = logging.getLogger('openaccess_epub.ops.opsplos')
 
 
 class OPSPLoS(OPSMeta):

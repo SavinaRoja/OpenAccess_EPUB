@@ -29,7 +29,7 @@ from collections import namedtuple
 
 spine_itemref = namedtuple('SpineItemref', 'idref, linear')
 
-log = logging.getLogger('OPF')
+log = logging.getLogger('openaccess_epub.opf.opf')
 
 single_ccal_rights = '''This is an open-access article distributed under the \
 terms of the Creative Commons Attribution License, which permits unrestricted \
@@ -119,7 +119,7 @@ xmlns:oebpackage="http://openebook.org/namespaces/oeb-package/1.0/">
         Receives an instance of the Article class. This modifies the internal
         state of the OPF class to focus on the new article for the purposes of
         extracting metadata and content information.
-        
+
         In Collection Mode, the addition of new articles to the OPF class
         results in cumulative (in order of receipt) content. In Single Input
         Mode, the addition of a new article will erase any information from the
@@ -246,7 +246,7 @@ xmlns:oebpackage="http://openebook.org/namespaces/oeb-package/1.0/">
         self.contributor = OrderedSet()  # 0+: Editors, reviewers
         self.publisher = OrderedSet()  # 0+: String for each publisher
         self.description = OrderedSet()  # 0+: Long description, often abstract text
-        self.subject = OrderedSet()  # 0+: 
+        self.subject = OrderedSet()  # 0+:
         self.date = OrderedSet()
 
         #These values are invariant, and will always be singular
@@ -276,7 +276,7 @@ xmlns:oebpackage="http://openebook.org/namespaces/oeb-package/1.0/">
                      'image/gif', 'tif': 'image/tif', 'pdf': 'application/pdf'}
         #Acquiring the current directory allows us to return there when complete
         #Thus avoiding problems relating call location, while allowing paths
-        #to be relative to the 
+        #to be relative to the
         current_dir = os.getcwd()
         os.chdir(self.location)
         for path, _subname, filenames in os.walk('OPS'):
@@ -421,7 +421,7 @@ xmlns:oebpackage="http://openebook.org/namespaces/oeb-package/1.0/">
             else:
                 prefix, suffix = instring.split(':')
                 return '{'+self.package.nsmap[prefix]+'}'+suffix
-        
+
         if attrs is None:
             attrs = {}
         new_element = etree.SubElement(parent, ns_check(tag_name))
