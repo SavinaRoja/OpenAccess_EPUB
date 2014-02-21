@@ -75,12 +75,11 @@ def doi_input(doi_string, download=True):
     from http://dx.doi.org/ and then using publisher conventions to identify
     the article xml on that page.
     """
-    log.info('DOI Input - {0}'.format(doi_string))
+    log.debug('DOI Input - {0}'.format(doi_string))
     if '10.1371' in doi_string:  # Corresponds to PLoS
         xml_url = plos_doi_to_xmlurl(doi_string)
     else:
-        print('This publisher is not yet supported by OpenAccess_EPUB')
-        sys.exit(1)
+        sys.exit('This publisher is not yet supported by OpenAccess_EPUB')
     return url_input(xml_url, download)
 
 
@@ -89,7 +88,7 @@ def url_input(url_string, download=True):
     This method expects a direct URL link to an xml file. It will apply no
     modifications to the received URL string, so ensure good input.
     """
-    log.info('URL Input - {0}'.format(url_string))
+    log.debug('URL Input - {0}'.format(url_string))
     try:
         open_xml = urllib.request.urlopen(url_string)
     except urllib.error.URLError as err:
@@ -98,8 +97,7 @@ def url_input(url_string, download=True):
     else:
         #Employ a quick check on the mimetype of the link
         if not open_xml.headers['Content-Type'] == 'text/xml':
-            print('URL request does not appear to be XML')
-            sys.exit(1)  # Nonzero value for "abnormal" termination
+            sys.exit('URL request does not appear to be XML')
         filename = open_xml.headers['Content-Disposition'].split('\"')[1]
         if download:
             with open(filename, 'wb') as xml_file:
@@ -137,9 +135,8 @@ def frontiersZipInput(zip_path, output_prefix, download=None):
         try:
             xml_zip.extract(xml)
         except KeyError:
-            log.error('There is no item {0} in the zipfile'.format(xml))
-            print('There is no item {0} in the zipfile'.format(xml))
-            sys.exit(1)
+            log.critical('There is no item {0} in the zipfile'.format(xml))
+            sys.exit('There is no item {0} in the zipfile'.format(xml))
         else:
             if not os.path.isdir(output_meta):
                 os.makedirs(output_meta)
