@@ -6,33 +6,31 @@ oaepub convert
 Convert explicitly listed articles to EPUB, takes input of XML file, DOI, or URL
 
 Usage:
-  convert [--silent | --echo-log] [--epub2 | --epub3] [options] INPUT ...
+  convert [--silent | --verbosity=LEVEL] [--epub2 | --epub3] [options] INPUT ...
 
 General Options:
-  -h --help        show this help message and exit
-  -v --version     show program version and exit
-  -s --silent      print nothing to the console during execution
-  -V --verbose     print extra information to the console during execution
+  -h --help             Show this help message and exit
+  -v --version          Show program version and exit
+  -s --silent           Print nothing to the console during execution
+  -V --verbosity=LEVEL  Set how much information is printed to the console
+                        during execution (one of: "CRITICAL", "ERROR",
+                        "WARNING", "INFO", "DEBUG") [default: INFO]
 
 Convert Specific Options:
-  -2 --epub2       Convert to EPUB2
-  -3 --epub3       Convert to EPUB3
-  --no-cleanup     The EPUB contents prior to .epub-packaging will be retained
-  --no-epubcheck   Disable the use of epubcheck to validate EPUBs
-  --no-validate    Disable DTD validation of XML files during conversion. This
-                   is only advised if you have pre-validated the files (see
-                   'oaepub validate -h')
+  -2 --epub2            Convert to EPUB2
+  -3 --epub3            Convert to EPUB3
+  --no-cleanup          The EPUB contents prior to .epub-packaging will not be
+                        removed
+  --no-epubcheck        Disable the use of epubcheck to validate EPUBs
+  --no-validate         Disable DTD validation of XML files during conversion.
+                        This is only advised if you have pre-validated the files
+                        (see 'oaepub validate -h')
 
 Logging Options:
-  --no-log            Disable logging entirely
-  -l --log-to=LOG     Specify a filepath to hold the log data
-  --log-level=LEVEL   Set the level for the logging (one of: "CRITICAL",
-                      "ERROR", "WARNING", "INFO", "DEBUG") [default: INFO]
-  --echo-log          Log data will also be printed to console, at a level
-                      determined by '--echo-level'
-  --echo-level=LEVEL  Set the level of log data echoed to the console.
-                      (one of: "CRITICAL", "ERROR", "WARNING", "INFO",
-                      "DEBUG") [default: INFO]
+  --no-log-file         Disable logging to file
+  -l --log-to=FILE      Specify a single filepath to contain all log data
+  --log-level=LEVEL     Set the level for the logging (one of: "CRITICAL",
+                        "ERROR", "WARNING", "INFO", "DEBUG") [default: DEBUG]
 
 Convert supports input of the following types:
   XML - Input points to the location of a local XML file (ends with: '.xml')
@@ -52,6 +50,7 @@ where the config file is located.
 #Standard Library modules
 import logging
 import os
+import shutil
 import sys
 
 #Non-Standard Library modules
@@ -73,23 +72,28 @@ def main(argv=None):
     current_dir = os.getcwd()
 
     #Basic logging configuration
-    if args['--no-log']:
-        oae_logging.null_logging()  # Makes a log with a NullHandler
-    else:
-        oae_logging.config_logging(args['--log-to'],
-                                   args['--log-level'],
-                                   args['--echo-log'],
-                                   args['--echo-level'])
+    oae_logging.config_logging(args['--no-log-file'],
+                               args['--log-to'],
+                               args['--log-level'],
+                               args['--silent'],
+                               args['--verbosity'])
 
     #Get a logger, the 'openaccess_epub' logger was set up above
-    log = logging.getLogger('openaccess_epub.commands.convert')
+    command_log = logging.getLogger('openaccess_epub.commands.convert')
 
     #Load the config module, we do this after logging configuration
     #config = openaccess_epub.utils.load_config_module()
 
     #Our basic flow is to iterate over the args['INPUT'] list
     for inpt in args['INPUT']:
-        log.info('Operating on input: {0}'.format(inpt))
+        #We have to temporarily re-base our log while input utils do some work
+        if not args['--no-log-file'] and not args['--log-to']:
+            oae_logging.replace_filehandler(logname='openaccess_epub',
+                                            new_file='temp.log',
+                                            level=args['--log-level'],
+                                            frmt=oae_logging.STANDARD_FORMAT)
+
+        command_log.info('Converting input: {0}'.format(inpt))
 
         #First we need to know the name of the file and where it is
         if inpt.lower().endswith('.xml'):  # This is direct XML file
@@ -104,10 +108,12 @@ def main(argv=None):
         else:
             sys.exit('{0} not recognized as XML, DOI, or URL'.format(inpt))
 
-        #Stuff
-        if not args['--no-log'] and not args['--log-to']:
+        if not args['--no-log-file'] and not args['--log-to']:
             log_name = root_name + '.log'
             log_path = os.path.join(os.path.dirname(abs_input_path), log_name)
+            #Now we move over to the new log file
+            shutil.move('temp.log', log_path)
+            #And re-base the log file to the new file location
             oae_logging.replace_filehandler(logname='openaccess_epub',
                                             new_file=log_path,
                                             level=args['--log-level'],

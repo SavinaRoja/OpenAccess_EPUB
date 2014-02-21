@@ -8,7 +8,7 @@ import sys
 
 logger = logging.getLogger('openaccess_epub.utils.logs')
 
-STANDARD_FORMAT = '%(name)s - %(levelname)s - %(message)s'
+STANDARD_FORMAT = '%(name)s [%(levelname)s] %(message)s'
 MESSAGE_ONLY_FORMAT = '%(message)s'
 
 
@@ -35,40 +35,50 @@ def null_logging():
     log.addHandler(logging.NullHandler())
 
 
-def config_logging(log_to, log_level, log_echo, echo_level='info'):
+def config_logging(no_log_file, log_to, log_level, silent, verbosity):
     """
     Configures and generates a Logger object, 'openaccess_epub' based on common
-    parameters used for console script execution in OpenAccess_EPUB.
+    parameters used for console interface script execution in OpenAccess_EPUB.
 
     These parameters are:
+      no_log_file
+          Boolean. Disables logging to file. If set to True, log_to and
+          log_level become irrelevant.
       log_to
-          A filename location for logging. If False, no log file will be used
+          A string name indicating a file path for logging.
       log_level
           Logging level, one of: 'debug', 'info', 'warning', 'error', 'critical'
-      log_echo
-          Will configure Logger to print to console as well if True
-      echo_level
-          Level of console printed logging if log_echo is True. Default : 'info'
+      silent
+          Boolean
+      verbosity
+          Console logging level, one of: 'debug', 'info', 'warning', 'error',
+          'critical
 
-    This function assumes it will only be called when logging is desired; it
-    should not be called if an option such as '--no-log' is used.
+    This method currently only configures a console StreamHandler with a
+    message-only Formatter.
     """
 
     log_level = get_level(log_level)
-    echo_level = get_level(echo_level)
+    console_level = get_level(verbosity)
 
+    #We want to configure our openaccess_epub as the parent log
     log = logging.getLogger('openaccess_epub')
-    log.setLevel(log_level)
-    formatter = logging.Formatter(STANDARD_FORMAT)
-    if log_to:
+    log.setLevel(logging.DEBUG)  # Don't filter at the log level
+    standard = logging.Formatter(STANDARD_FORMAT)
+    message_only = logging.Formatter(MESSAGE_ONLY_FORMAT)
+
+    #Only add FileHandler IF it's allowed AND we have a name for it
+    if not no_log_file and log_to is not None:
         fh = logging.FileHandler(filename=log_to)
-        fh.setFormatter(formatter)
+        fh.setLevel(log_level)
+        fh.setFormatter(standard)
         log.addHandler(fh)
-    #Add on the console StreamHandler if we are echoing to console
-    if log_echo:
+
+    #Add on the console StreamHandler at verbosity level if silent not set
+    if not silent:
         sh_echo = logging.StreamHandler(sys.stdout)
-        sh_echo.setLevel(echo_level)
-        sh_echo.setFormatter(formatter)
+        sh_echo.setLevel(console_level)
+        sh_echo.setFormatter(message_only)
         log.addHandler(sh_echo)
 
 
