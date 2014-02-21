@@ -48,25 +48,6 @@ def plos_doi_to_xmlurl(doi_string):
         return xml_url
 
 
-def get_file_root(full_path):
-    """
-    This method provides the standard mode of deriving the file root name from
-    a given path to the file; excludes the file extension and all parent
-    directories.
-    """
-    filename = os.path.split(full_path)[1]
-    return os.path.splitext(filename)[0]
-
-
-def local_input(xml_path, download=None):
-    """
-    This method accepts xml path data as an argument, instantiates the Article,
-    and returns the two.
-    """
-    log.info('Local Input - {0}'.format(xml_path))
-    return openaccess_epub.utils.file_root_name(xml_path)
-
-
 def doi_input(doi_string, download=True):
     """
     This method accepts a DOI string and attempts to download the appropriate

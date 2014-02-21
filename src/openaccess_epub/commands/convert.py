@@ -25,6 +25,14 @@ Convert Specific Options:
   --no-validate         Disable DTD validation of XML files during conversion.
                         This is only advised if you have pre-validated the files
                         (see 'oaepub validate -h')
+  -o --output=DIR       Directory in which to put the output. Default is set in
+                        config file (see 'oaepub configure where')
+  -i --images=DIR       Directory in which to find the images for the article
+                        to be converted to EPUB. If using this option with
+                        multiple XML inputs, be sure to use wildcard filename
+                        matching with a "*", which will expand to the filename
+                        For more information and default configuration see the
+                        config file ('oaepub configure where')
 
 Logging Options:
   --no-log-file         Disable logging to file
@@ -69,8 +77,6 @@ def main(argv=None):
                   version='OpenAccess_EPUB Docoptify 0.1',
                   options_first=True)
 
-    current_dir = os.getcwd()
-
     #Basic logging configuration
     oae_logging.config_logging(args['--no-log-file'],
                                args['--log-to'],
@@ -82,8 +88,9 @@ def main(argv=None):
     command_log = logging.getLogger('openaccess_epub.commands.convert')
 
     #Load the config module, we do this after logging configuration
-    #config = openaccess_epub.utils.load_config_module()
+    config = openaccess_epub.utils.load_config_module()
 
+    current_dir = os.getcwd()
     #Our basic flow is to iterate over the args['INPUT'] list
     for inpt in args['INPUT']:
         #We have to temporarily re-base our log while input utils do some work
@@ -93,7 +100,7 @@ def main(argv=None):
                                             level=args['--log-level'],
                                             frmt=oae_logging.STANDARD_FORMAT)
 
-        command_log.info('Converting input: {0}'.format(inpt))
+        command_log.info('Processing input: {0}'.format(inpt))
 
         #First we need to know the name of the file and where it is
         if inpt.lower().endswith('.xml'):  # This is direct XML file
@@ -122,7 +129,16 @@ def main(argv=None):
         #Now that we should be done configuring logging, let's parse the article
         parsed_article = Article(abs_input_path,
                                  validation=not args['--no-validate'])
-        #print(parsed_article)
+
+        #Get the output directory
+        if args['--output'] is not None:
+            output_directory = openaccess_epub.utils.get_absolute_path(args['--output'])
+        else:
+            output_directory = openaccess_epub.utils.get_absolute_path(config.default_output)
+
+        #Get the image directory
+        print(parsed_article)
+        print(output_directory)
 
         #Generate the output path name, this will be the directory name for the
         #output. This output directory will later be zipped into an EPUB
