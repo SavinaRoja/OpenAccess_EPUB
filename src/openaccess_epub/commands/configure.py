@@ -72,6 +72,10 @@ cache_location = '{cache-location}'
 # A list of paths relative to the input from which to pull images
 # The program will check each of these locations and copy the images from
 # the first one it finds.
+# Note: OpenAccess_EPUB supports the use of wildcard (*) matching and this can
+# be a very useful feature. If an input file is named "journal.pcbi.1002904.xml"
+# and the following list contains the string 'images-*', then a directory named
+# "images-journal.pcbi.1002904.xml" will be found by OpenAccess_EPUB
 input_relative_images = [{input-relative-images}]
 
 # A Boolean toggle for whether or not to use Input-Relative images
@@ -197,7 +201,7 @@ def configure(default=None, dev=None):
     defaults = {'now': time.asctime(),
                 'oae-version': openaccess_epub.__version__,
                 'cache-location': unix_path_coercion(cache_loc),
-                'input-relative-images': 'images',
+                'input-relative-images': 'images-*',
                 'use-input-relative-images': 'y',
                 'image-cache': os.path.join(cache_loc, 'img_cache'),
                 'use-image-cache': 'n',
@@ -262,6 +266,7 @@ to turn them off.''')
     #Input-relative image details
     print('''
 Where should OpenAccess_EPUB look for images relative to the input file?
+A star "*" may be used as a wildcard to match the name of the input file.
 Multiple path values may be specified if separated by commas.''')
     user_prompt(config_dict, 'input-relative-images', 'Input-relative images?:',
                 default=defaults['input-relative-images'], validator=list_opts)
