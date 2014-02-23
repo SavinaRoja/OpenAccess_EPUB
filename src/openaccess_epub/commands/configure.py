@@ -327,9 +327,9 @@ appropriate input-relative path.''')
 
 EpubCheck is a program written and maintained by the IDPF as a tool to validate
 ePub. In order to use it, your system must have Java installed and it is
-recommended to use the latest version. The website for the program is here:
+recommended to use the latest version. Downloads of this program are found here:
 
-http://code.google.com/p/epubcheck/
+https://github.com/IDPF/epubcheck/releases
 
 Once you have downloaded the zip file for the program, unzip the archive and
 write a path to the .jar file here.''')
