@@ -85,7 +85,7 @@ def url_input(url_string, download=True):
         if download:
             with open(filename, 'wb') as xml_file:
                 xml_file.write(open_xml.read())
-        return get_file_root(filename)
+        return openaccess_epub.utils.file_root_name(filename)
 
 
 def frontiersZipInput(zip_path, output_prefix, download=None):
