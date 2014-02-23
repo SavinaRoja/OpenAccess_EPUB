@@ -149,7 +149,7 @@ def get_images(output_directory, explicit, input_path, config, parsed_article):
     #Use manual image directory, explicit images
     if explicit:
         success = explicit_images(explicit, img_dir, rootname, config)
-        if success:
+        if success and config.use_image_cache:
             move_images_to_cache(img_dir, article_cache)
         #Explicit images prevents all other image methods
         return success
@@ -158,7 +158,8 @@ def get_images(output_directory, explicit, input_path, config, parsed_article):
     if config.use_input_relative_images:
         #Prevents other image methods only if successful
         if input_relative_images(input_path, img_dir, rootname, config):
-            move_images_to_cache(img_dir, article_cache)
+            if config.use_image_cache:
+                move_images_to_cache(img_dir, article_cache)
             return True
 
     #Use cache for article if it exists
@@ -177,9 +178,8 @@ def get_images(output_directory, explicit, input_path, config, parsed_article):
             return True
         elif journal_doi == '10.1371':
             success = fetch_plos_images(article_doi, img_dir, parsed_article)
-            if success:
-                if config.use_image_cache:
-                    move_images_to_cache(img_dir, article_cache)
+            if success and config.use_image_cache:
+                move_images_to_cache(img_dir, article_cache)
             return success
         else:
             log.error('Fetching images for this publisher is not supported!')
