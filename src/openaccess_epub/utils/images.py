@@ -21,17 +21,17 @@ def move_images_to_cache(source, destination):
     Handles the movement of images to the cache. Must be helpful if it finds
     that the folder for this article already exists.
     """
-    print('Moving images to cache: {0}'.format(destination))
-    try:
-        shutil.copytree(source, destination)
-    except OSError:  # Should occur if the folder already exists
-        print('An image cache for this article already appears to exist!')
-        print('Would you like to replace it?')
-        choice = input('[y/N]')
-        if choice in ['y', 'Y']:
-            shutil.rmtree(destination)
-            log.debug('Previous cache removed: {0}'.format(destination))
+    if os.path.isdir(destination):
+        log.debug('Cached images for this article already exist')
+        return
+    else:
+        log.debug('Cache location: {0}'.format(destination))
+        try:
             shutil.copytree(source, destination)
+        except:
+            log.exception('Images could not be moved to cache')
+        else:
+            log.info('Moved images to cache'.format(destination))
 
 
 def explicit_images(images, image_destination, rootname, config):
