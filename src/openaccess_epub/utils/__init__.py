@@ -278,7 +278,7 @@ def epubcheck(epubname, config=None):
     location of this .jar file is configured in config.py.
     """
     if config is None:
-        config = get_config_module()
+        config = load_config_module()
     r, e = os.path.splitext(epubname)
     if not e:
         print('Warning: Filename extension is empty, appending \'.epub\'...')
@@ -287,23 +287,7 @@ def epubcheck(epubname, config=None):
     elif not e == '.epub':
         print('Warning: Filename extension is not \'.epub\', appending it...')
         epubname += '.epub'
-    subprocess.call(['java', '-jar', config.epubcheck, epubname])
-
-
-#What the hell was I doing using camelCase? I avoid it whenever I can...
-def getFileRoot(path):
-    """
-    This method provides a standard method for acquiring the root name of a
-    file from a path string. It will not raise an error if it returns an empty
-    string, but it will issue a warning.
-    """
-    bn = os.path.basename(path)
-    root = os.path.splitext(bn)[0]
-    if not root:
-        w = 'getFileRoot could not derive a root file name from\"{0}\"'
-        log.warning(w.format(path))
-        print(w.format(path))
-    return root
+    subprocess.call(['java', '-jar', config.epubcheck_jarfile, epubname])
 
 
 def make_epub_base():
