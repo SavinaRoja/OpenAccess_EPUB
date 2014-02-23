@@ -307,7 +307,7 @@ def make_epub_base():
     location = os.path.join(cache_location(), 'base_epub')
     if os.path.isdir(location):
         return
-    log.info('Making the ePub base at {0}'.format(location))
+    log.info('Making the EPUB base files at {0}'.format(location))
     mkdir_p(location)
     #Create mimetype file in root directory
     mime_path = os.path.join(location, 'mimetype')
@@ -333,145 +333,6 @@ def make_epub_base():
     css_path = os.path.join(location, 'OPS', 'css', 'article.css')
     with open(css_path, 'wb') as css:
         css.write(bytes(DEFAULT_CSS, 'UTF-8'))
-
-
-def createDCElement(document, name, data, attributes = None):
-    """
-    A convenience method for creating DC tag elements.
-    Used in content.opf
-    """
-    newnode = document.createElement(name)
-    newnode.appendChild(document.createTextNode(data))
-    if attributes:
-        for attr, attrval in attributes.iteritems():
-            newnode.setAttribute(attr, attrval)
-    return newnode
-
-
-def stripDOMLayer(oldnodelist, depth=1):
-    """
-    This method strips layers \"off the top\" from a specified NodeList or
-    Node in the DOM. All child Nodes below the stripped layers are returned as
-    a NodeList, treating them as siblings irrespective of the original
-    hierarchy. To be used with caution.
-    """
-    newnodelist = []
-    while depth:
-        try:
-            for child in oldnodelist:
-                newnodelist += child.childNodes
-        except TypeError:
-            newnodelist = oldnodelist.childNodes
-        depth -= 1
-        newnodelist = stripDOMLayer(newnodelist, depth)
-        return newnodelist
-    return oldnodelist
-
-
-def serializeText(fromnode, stringlist=None, sep=''):
-    """
-    Recursively extract the text data from a node and it's children
-    """
-    if stringlist is None:
-        stringlist = []
-    for item in fromnode.childNodes:
-        if item.nodeType == item.TEXT_NODE and not item.data == '\n':
-            stringlist.append(item.data)
-        else:
-            serializeText(item, stringlist, sep)
-    return sep.join(stringlist)
-
-
-#I wish to eventually shift all serializeText references to serialize_text
-def serialize_text(fromnode, stringlist=None, sep=''):
-    """
-    Recursively extract the text data from a node and it's children
-    """
-    if stringlist is None:
-        stringlist = []
-    for item in fromnode.childNodes:
-        if item.nodeType == item.TEXT_NODE and not item.data == '\n':
-            stringlist.append(item.data)
-        else:
-            serializeText(item, stringlist, sep)
-    return sep.join(stringlist)
-
-
-def nodeText(node):
-    """
-    This is to be used when a node may only contain text, numbers or special
-    characters. This function will return the text contained in the node.
-    Sometimes this text data contains spurious newlines and spaces due to
-    parsing and original xml formatting. This function should strip such
-    artifacts.
-    """
-    #Get data from first child of the node
-    try:
-        first_child_data = node.firstChild.data
-    except AttributeError:  # Usually caused by an empty node
-        return ''
-    else:
-        return '{0}'.format(first_child_data.strip())
-
-
-def getTagData(node_list):
-    '''Grab the (string) data from text elements
-    node_list -- NodeList returned by getElementsByTagName
-    '''
-    data = ''
-    try:
-        for node in node_list:
-            if node.firstChild.nodeType == node.TEXT_NODE:
-                data = node.firstChild.data
-        return data
-    except TypeError:
-        getTagData([node_list])
-
-
-def getTagText(node):
-    """
-    Grab the text data from a Node. If it is provided a NodeList, it will
-    return the text data from the first contained Node.
-    """
-    data = ''
-    try:
-        children = node.childNodes
-    except AttributeError:
-        getTagText(node[0])
-    else:
-        if children:
-            for child in children:
-                if child.nodeType == child.TEXT_NODE and child.data != '\n':
-                    data += child.data
-            return data
-
-
-def getFormattedNode(node):
-    """
-    This method is called on a Node whose children may include emphasis
-    elements. The contained emphasis elements will be converted to ePub-safe
-    emphasis elements. Non-emphasis elements will be untouched.
-    """
-    #Some of these elements are to be supported through CSS
-    emphasis_elements = ['bold', 'italic', 'monospace', 'overline',
-                         'sc', 'strike', 'underline']
-    spans = {'monospace': 'font-family:monospace',
-             'overline': 'text-decoration:overline',
-             'sc': 'font-variant:small-caps',
-             'strike': 'text-decoration:line-through',
-             'underline': 'text-decoration:underline'}
-
-    clone = node.cloneNode(deep=True)
-    for element in emphasis_elements:
-        for item in clone.getElementsByTagName(element):
-            if item.tagName == 'bold':
-                item.tagName = 'b'
-            elif item.tagName == 'italic':
-                item.tagName = 'i'
-            elif item in spans:
-                item.tagName = 'span'
-                item.setAttribute('style', spans[item])
-    return clone
 
 
 def dir_exists(directory):
@@ -531,48 +392,6 @@ suggested_article_types = ['abstract', 'addendum', 'announcement',
     'product-review', 'rapid-communication', 'rapid-communication', 'reply',
     'reprint', 'research-article', 'retraction', 'review-article',
     'translation']
-
-
-def initiateDocument(titlestring,
-                     _publicId='-//W3C//DTD XHTML 1.1//EN',
-                     _systemId='http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd'):
-    """A method for conveniently initiating a new xml.DOM Document"""
-    from xml.dom.minidom import getDOMImplementation
-
-    impl = getDOMImplementation()
-
-    mytype = impl.createDocumentType('article', _publicId, _systemId)
-    doc = impl.createDocument(None, 'root', mytype)
-
-    root = doc.lastChild  # IGNORE:E1101
-    root.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml')
-    root.setAttribute('xml:lang', 'en-US')
-
-    head = doc.createElement('head')
-    root.appendChild(head)
-
-    title = doc.createElement('title')
-    title.appendChild(doc.createTextNode(titlestring))
-
-    link = doc.createElement('link')
-    link.setAttribute('rel', 'stylesheet')
-    link.setAttribute('href', 'css/reference.css')
-    link.setAttribute('type', 'text/css')
-
-    meta = doc.createElement('meta')
-    meta.setAttribute('http-equiv', 'Content-Type')
-    meta.setAttribute('content', 'application/xhtml+xml')
-    meta.setAttribute('charset', 'utf-8')
-
-    headlist = [title, link, meta]
-    for tag in headlist:
-        head.appendChild(tag)
-    root.appendChild(head)
-
-    body = doc.createElement('body')
-    root.appendChild(body)
-
-    return doc, body
 
 
 def scrapePLoSIssueCollection(issue_url):
