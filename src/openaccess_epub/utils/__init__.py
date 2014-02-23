@@ -3,6 +3,7 @@
 Common utility functions
 """
 import os.path
+import shutil
 import zipfile
 from collections import namedtuple
 import urllib
@@ -112,6 +113,13 @@ def config_location():
     Returns the expected location of the config file
     """
     return os.path.join(cache_location(), 'config.py')
+
+
+def base_epub_location():
+    """
+    Returns the expected location of the base_epub directory
+    """
+    return os.path.join(cache_location(), 'base_epub')
 
 
 def load_config_module():
@@ -460,6 +468,26 @@ def getFormattedNode(node):
                 item.tagName = 'span'
                 item.setAttribute('style', spans[item])
     return clone
+
+
+def dir_exists(directory):
+    """
+    If a directory already exists that will be overwritten by some action, this
+    will ask the user whether or not to continue with the deletion.
+
+    If the user responds affirmatively, then the directory will be removed. If
+    the user responds negatively, then the process will abort.
+    """
+    log.info('Directory exists! Asking the user')
+    reply = input('''The directory {0} already exists.
+It will be overwritten if the operation continues.
+
+Replace? [Y/n]'''.format(directory))
+    if reply.lower() in ['y', 'yes', '']:
+        shutil.rmtree(directory)
+    else:
+        log.critical('Aborting process, user declined overwriting {0}'.format(directory))
+        sys.exit('Aborting process!')
 
 
 def epub_zip(outdirect):
