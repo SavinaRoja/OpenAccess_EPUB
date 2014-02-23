@@ -16,22 +16,6 @@ import openaccess_epub.utils as utils
 log = logging.getLogger('openaccess_epub.utils.images')
 
 
-def local_images(images_path, outdirect, doi):
-    """
-    This function is employed to copy image files into the ePub's image
-    directory, it expects an existing directory.
-    """
-    jdoi, adoi = doi.split('/')
-    log.debug('Journal DOI-{0}|Article DOI{1}'.format(jdoi, adoi))
-    epub_img_dir = os.path.join(outdirect, 'OPS', 'images-{0}'.format(adoi))
-    log.info('ePub image directory path: {0}'.format(epub_img_dir))
-    os.mkdir(epub_img_dir)
-    for item in os.listdir(images_path):
-        item_path = os.path.join(images_path, item)
-        if os.path.splitext(item_path)[1] == '.tif':
-            shutil.copy2(item_path, epub_img_dir)
-
-
 def move_images_to_cache(source, destination):
     """
     Handles the movement of images to the cache. Must be helpful if it finds
@@ -58,7 +42,7 @@ def explicit_images(images, image_destination, rootname, config):
     log.info('Explicit image directory specified: {0}'.format(images))
     if '*' in images:
         images = images.replace('*', rootname)
-        log.debug('Wildcard expansion for image director: {0}'.format(images))
+        log.debug('Wildcard expansion for image directory: {0}'.format(images))
     try:
         shutil.copytree(images, image_destination)
     except:
@@ -68,8 +52,6 @@ def explicit_images(images, image_destination, rootname, config):
         log.exception('Unable to copy from indicated directory')
         return False
     else:
-        #if config.use_image_cache:
-            #move_images_to_cache(images, config)
         return True
 
 
@@ -93,6 +75,7 @@ def image_cache(article_cache, img_dir):
     """
     The method to be used by get_images() for copying images out of the cache.
     """
+    log.debug('Looking for image directory in the cache')
     if os.path.isdir(article_cache):
         log.info('Cached image directory found: {0}'.format(article_cache))
         shutil.copytree(article_cache, img_dir)
@@ -139,6 +122,8 @@ def get_images(output_directory, explicit, input_path, config, parsed_article):
       explicit
           The explicit directory, perhaps with wildcard expansion, to find the
           article's images
+      input_path
+          The absolute path to the input XML file.
       config
           The imported configuration module
       parsed_article
@@ -163,13 +148,17 @@ def get_images(output_directory, explicit, input_path, config, parsed_article):
 
     #Use manual image directory, explicit images
     if explicit:
+        success = explicit_images(explicit, img_dir, rootname, config)
+        if success:
+            move_images_to_cache(img_dir, article_cache)
         #Explicit images prevents all other image methods
-        return explicit_images(explicit, img_dir, rootname, config)
+        return success
 
     #Input-Relative import, looks for any one of the listed options
     if config.use_input_relative_images:
         #Prevents other image methods only if successful
-        if input_relative_images(config, img_dir):
+        if input_relative_images(input_path, img_dir, rootname, config):
+            move_images_to_cache(img_dir, article_cache)
             return True
 
     #Use cache for article if it exists
