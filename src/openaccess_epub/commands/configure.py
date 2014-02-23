@@ -75,7 +75,7 @@ cache_location = '{cache-location}'
 # Note: OpenAccess_EPUB supports the use of wildcard (*) matching and this can
 # be a very useful feature. If an input file is named "journal.pcbi.1002904.xml"
 # and the following list contains the string 'images-*', then a directory named
-# "images-journal.pcbi.1002904.xml" will be found by OpenAccess_EPUB
+# "images-journal.pcbi.1002904" will be found by OpenAccess_EPUB
 input_relative_images = [{input-relative-images}]
 
 # A Boolean toggle for whether or not to use Input-Relative images

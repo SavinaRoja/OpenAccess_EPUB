@@ -137,8 +137,11 @@ def main(argv=None):
             output_directory = openaccess_epub.utils.get_absolute_path(config.default_output)
 
         #Get the image directory
-        print(parsed_article)
-        print(output_directory)
+        openaccess_epub.utils.images.get_images(output_directory,
+                                                args['--images'],
+                                                abs_input_path,
+                                                config,
+                                                parsed_article)
 
         #Generate the output path name, this will be the directory name for the
         #output. This output directory will later be zipped into an EPUB

@@ -43,35 +43,48 @@ def move_images_to_cache(source, destination):
     except OSError:  # Should occur if the folder already exists
         print('An image cache for this article already appears to exist!')
         print('Would you like to replace it?')
-        choice = raw_input('[y/N]')
+        choice = input('[y/N]')
         if choice in ['y', 'Y']:
             shutil.rmtree(destination)
             log.debug('Previous cache removed: {0}'.format(destination))
             shutil.copytree(source, destination)
 
 
-def explicit_images(images, config, img_dir):
+def explicit_images(images, image_destination, rootname, config):
     """
     The method used to handle an explicitly defined image directory by the
     user as a parsed argument.
     """
     log.info('Explicit image directory specified: {0}'.format(images))
-    shutil.copytree(manual_images, img_dir)
-    if config.use_image_cache:
-        move_images_to_cache(manual_images, article_cache)
-    return True
+    if '*' in images:
+        images = images.replace('*', rootname)
+        log.debug('Wildcard expansion for image director: {0}'.format(images))
+    try:
+        shutil.copytree(images, image_destination)
+    except:
+        #The following is basically a recipe for log.exception() but with a
+        #CRITICAL level if the execution should be killed immediately
+        #log.critical('Unable to copy from indicated directory', exc_info=True)
+        log.exception('Unable to copy from indicated directory')
+        return False
+    else:
+        #if config.use_image_cache:
+            #move_images_to_cache(images, config)
+        return True
 
 
-def input_relative_images(config, img_dir):
+def input_relative_images(input_path, image_destination, rootname, config):
     """
     The method used to handle Input-Relative image inclusion.
     """
-    for dir in config.input_relative_images:
-        if os.path.isdir(dir):
-            log.info('Input-Relative image directory found: {0}'.format(dir))
-            shutil.copytree(dir, img_dir)
-            if config.use_image_cache:
-                move_images_to_cache(dir, article_cache)
+    log.debug('Looking for input relative images')
+    input_dirname = os.path.dirname(input_path)
+    for path in config.input_relative_images:
+        path = path.replace('*', rootname) if '*' in path else path
+        images = os.path.normpath(os.path.join(input_dirname, path))
+        if os.path.isdir(images):
+            log.info('Input-Relative image directory found: {0}'.format(images))
+            shutil.copytree(images, image_destination)
             return True
     return False
 
@@ -87,38 +100,71 @@ def image_cache(article_cache, img_dir):
     return False
 
 
-def get_images(doi, outdirect, images, config, document):
+def get_images(output_directory, explicit, input_path, config, parsed_article):
     """
-    This controls the logic for placing the appropriate image files into the
-    ePub directory.
+    Controlling logic for placement of the appropriate imager files into the
+    EPUB directory. This function operates using argument parameters as well as
+    values stored in the program's configuration file.
 
-    The function will attempt to incorporate the images according to priority
-    as follows: Manually specified image directory (argument flag), default
-    image location (a known place to look, such as ./images/), fetched from
-    the cache (if the images have been downloaded and cached previously).
+    This function will attempt multiple strategies to locate and transfer the
+    image files, and will return True whenever successful. This will return
+    False if a technique fails and no other technique succeeds. These are the
+    strategies in the order they are employed:
+      Explicit Images
+          An image directory was explicitly indicated by a user, if this is used
+          then no other image strategy will be employed. This technique allows
+          wildcard (*) expansion to match the image's rootname and is similar to
+          Input Relative Images, except in that it is rendered relative to the
+          current working directory of the command when issued.
+      Input Relative Images
+          If config.use_input_relative_images is set to True, then all of the
+          paths in config.input_relative_images will be rendered relative to
+          the input's path to look for locally stored, input-relative images.
+          This technique allows wildcard (*) expansion to match the image's
+          rootname.
+      Image Cache
+          If image caching is enabled, then this strategy will check the image
+          cache to see if the images for this article are already stored.
+      Download Images
+          If image fetching is enabled, then (only for supported publishers) the
+          program will attempt to download the images from the internet. This
+          may fail due to connection issues or various other reasons.
 
-    If unable to find images through manual specification, default location, or
-    the cache, get_images will call the appropriate function to download the
-    images from the internet (publisher's website).
+    If config.use_image_cache is set to True, then successfully downloaded
+    images will be stored in the program's image cache.
 
-    Caching=True will ensure that the images are added to the cache.
+    Parameters:
+      output_directory
+          The directory where the EPUB is being constructed/output
+      explicit
+          The explicit directory, perhaps with wildcard expansion, to find the
+          article's images
+      config
+          The imported configuration module
+      parsed_article
+          The openaccess_epub.article.Article instance created for the article
     """
     #Split the DOI
-    journal_doi, article_doi = doi.split('/')
+    journal_doi, article_doi = parsed_article.doi.split('/')
     log.debug('journal-doi : {0}'.format(journal_doi))
     log.debug('article-doi : {0}'.format(article_doi))
 
+    #Get the rootname for wildcard expansion
+    rootname = utils.get_file_root(input_path)
+
     #Specify where to place the images in the output
-    img_dir = os.path.join(outdirect, 'OPS', 'images-{0}'.format(article_doi))
-    log.info('Constructed image directory as {0}'.format(img_dir))
+    img_dir = os.path.join(output_directory,
+                           'OPS',
+                           'images-{0}'.format(article_doi))
+    log.info('Using {0} as image directory target'.format(img_dir))
 
     #Construct path to cache for article
     article_cache = os.path.join(config.image_cache, journal_doi, article_doi)
 
     #Use manual image directory, explicit images
-    if images:
+    if explicit:
         #Explicit images prevents all other image methods
-        return explicit_images(images, config, img_dir)
+        return explicit_images(explicit, img_dir, rootname, config)
 
     #Input-Relative import, looks for any one of the listed options
     if config.use_input_relative_images:
@@ -141,13 +187,13 @@ def get_images(doi, outdirect, images, config, document):
                 move_images_to_cache(img_dir, article_cache)
             return True
         elif journal_doi == '10.1371':
-            success = fetch_plos_images(article_doi, img_dir, document)
+            success = fetch_plos_images(article_doi, img_dir, parsed_article)
             if success:
                 if config.use_image_cache:
                     move_images_to_cache(img_dir, article_cache)
             return success
         else:
-            print('Fetching images for this publisher is not supported!')
+            log.error('Fetching images for this publisher is not supported!')
             return False
     return False
 
@@ -265,7 +311,7 @@ def fetch_plos_images(article_doi, output_dir, document):
     <inline-graphic> elements. The information in these tags are then parsed
     into appropriate URLs for downloading.
     """
-    print('Processing images for {0}...'.format(article_doi))
+    log.info('Processing images for {0}...'.format(article_doi))
 
     #A dict of URLs for PLoS subjournals
     journal_urls = {'pgen': 'http://www.plosgenetics.org/article/{0}',
@@ -286,7 +332,7 @@ def fetch_plos_images(article_doi, output_dir, document):
     graphics += document.document.getroot().findall('.//inline-graphic')
 
     #Begin to download
-    print('Downloading images, this may take some time...')
+    log.info('Downloading images, this may take some time...')
     for graphic in graphics:
         nsmap = document.document.getroot().nsmap
         xlink_href = graphic.attrib['{' + nsmap['xlink'] + '}' + 'href']
@@ -315,6 +361,6 @@ def fetch_plos_images(article_doi, output_dir, document):
             img_path = os.path.join(output_dir, img_name)
             with open(img_path, 'wb') as output:
                 output.write(image.read())
-            print('Downloaded image {0}\n'.format(img_name))
-    print('Done downloading images')
+            log.info('Downloaded image {0}'.format(img_name))
+    log.info('Done downloading images')
     return True
