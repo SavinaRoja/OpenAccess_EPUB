@@ -10,13 +10,14 @@ import urllib
 import logging
 import sys
 import platform
+import subprocess
 
 log = logging.getLogger('openaccess_epub.utils')
 
 Identifier = namedtuple('Identifer', 'id, type')
 
 from openaccess_epub.utils.css import DEFAULT_CSS
-from openaccess_epub.utils.input import doi_input, url_input
+from openaccess_epub.utils.inputs import doi_input, url_input
 
 #Python documentation refers to this recipe for an OrderedSet
 #http://code.activestate.com/recipes/576694/
@@ -270,6 +271,25 @@ def files_with_ext(extension, directory='.'):
             yield filepath
 
 
+def epubcheck(epubname, config=None):
+    """
+    This method takes the name of an epub file as an argument. This name is
+    the input for the java execution of a locally installed epubcheck-.jar. The
+    location of this .jar file is configured in config.py.
+    """
+    if config is None:
+        config = get_config_module()
+    r, e = os.path.splitext(epubname)
+    if not e:
+        print('Warning: Filename extension is empty, appending \'.epub\'...')
+        e = '.epub'
+        epubname = r + e
+    elif not e == '.epub':
+        print('Warning: Filename extension is not \'.epub\', appending it...')
+        epubname += '.epub'
+    subprocess.call(['java', '-jar', config.epubcheck, epubname])
+
+
 #What the hell was I doing using camelCase? I avoid it whenever I can...
 def getFileRoot(path):
     """
@@ -481,7 +501,6 @@ def dir_exists(directory):
     log.info('Directory exists! Asking the user')
     reply = input('''The directory {0} already exists.
 It will be overwritten if the operation continues.
-
 Replace? [Y/n]'''.format(directory))
     if reply.lower() in ['y', 'yes', '']:
         shutil.rmtree(directory)

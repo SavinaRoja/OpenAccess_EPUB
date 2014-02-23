@@ -21,7 +21,7 @@ def move_images_to_cache(source, destination):
     Handles the movement of images to the cache. Must be helpful if it finds
     that the folder for this article already exists.
     """
-    print('Moving images to cache, {0}'.format(destination))
+    print('Moving images to cache: {0}'.format(destination))
     try:
         shutil.copytree(source, destination)
     except OSError:  # Should occur if the folder already exists
@@ -135,7 +135,7 @@ def get_images(output_directory, explicit, input_path, config, parsed_article):
     log.debug('article-doi : {0}'.format(article_doi))
 
     #Get the rootname for wildcard expansion
-    rootname = utils.get_file_root(input_path)
+    rootname = utils.file_root_name(input_path)
 
     #Specify where to place the images in the output
     img_dir = os.path.join(output_directory,
