@@ -66,8 +66,12 @@ from docopt import docopt
 
 #OpenAccess_EPUB modules
 import openaccess_epub
+import openaccess_epub.ncx
+import openaccess_epub.opf
+import openaccess_epub.ops
 import openaccess_epub.utils
-import openaccess_epub.utils.input as input_utils
+import openaccess_epub.utils.images
+import openaccess_epub.utils.inputs as input_utils
 import openaccess_epub.utils.logs as oae_logging
 from openaccess_epub.article import Article
 
@@ -137,6 +141,8 @@ def main(argv=None):
         else:
             output_directory = openaccess_epub.utils.get_absolute_path(config.default_output)
 
+        output_directory = os.path.join(output_directory, root_name)
+
         #Call make_EPUB, the bread to our butter
         make_EPUB(parsed_article,
                   output_directory,
@@ -144,6 +150,15 @@ def main(argv=None):
                   args['--images'],
                   config_module=config)
 
+        #Cleanup removes the produced output directory, keeps the EPUB
+        if not args['--no-cleanup']:
+            shutil.rmtree(output_directory)
+
+        #Running epubcheck on the output verifies the validity of the ePub,
+        #requires a local installation of java and epubcheck.
+        if not args['--no-epubcheck']:
+            openaccess_epub.utils.epubcheck('{0}.epub'.format(output_directory),
+                                            config)
 
 def make_EPUB(parsed_article,
               output_directory,
@@ -171,7 +186,7 @@ def make_EPUB(parsed_article,
           Allows for the injection of a modified or pre-loaded config module. If
           not specified, make_EPUB will load the config file
     """
-    log.info('Creating {0}.epub'.format(output_directory))
+    #command_log.info('Creating {0}.epub'.format(output_directory))
     if config_module is None:
         config = openaccess_epub.utils.load_config_module()
     #Copy over the files from the base_epub to the new output
@@ -179,7 +194,7 @@ def make_EPUB(parsed_article,
         openaccess_epub.utils.dir_exists(output_directory)
 
     #Copy over the basic epub directory
-    base_epub = openaccess_epub.base_epub_location()
+    base_epub = openaccess_epub.utils.base_epub_location()
     shutil.copytree(base_epub, output_directory)
 
     DOI = parsed_article.doi
@@ -188,11 +203,12 @@ def make_EPUB(parsed_article,
     success = openaccess_epub.utils.images.get_images(output_directory,
                                                       image_directory,
                                                       input_path,
-                                                      config,
+                                                      config_module,
                                                       parsed_article)
     if not success:
-        log.critical('Images for the article were not located! Aborting!')
+        #command_log.critical('Images for the article were not located! Aborting!')
         #I am not so bold as to call this without serious testing
+        print('Pretend I am deleting {0}'.format(output_directory))
         #shutil.rmtree(output_directory)
 
     epub_toc = openaccess_epub.ncx.NCX(openaccess_epub.__version__,
