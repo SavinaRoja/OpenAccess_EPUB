@@ -195,6 +195,8 @@ def make_EPUB(parsed_article,
 
     #Copy over the basic epub directory
     base_epub = openaccess_epub.utils.base_epub_location()
+    if not os.path.isdir(base_epub):
+        openaccess_epub.utils.make_epub_base()
     shutil.copytree(base_epub, output_directory)
 
     DOI = parsed_article.doi
