@@ -3,6 +3,7 @@ This is the setup file to install openaccess_epub.
 """
 
 from distutils.core import setup
+#from setuptools import setup
 
 def long_description():
     with open('README.md', 'r') as readme:
