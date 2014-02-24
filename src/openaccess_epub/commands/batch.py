@@ -91,7 +91,6 @@ def main(argv=None):
     for directory in args['DIR']:
         for xml_file in files_with_ext('.xml', directory,
                                        recursive=args['--recursive']):
-            print(xml_file)
 
             #We have to temporarily re-base our log while utils work
             if not args['--no-log-file']:
