@@ -17,8 +17,8 @@ General Options:
                         "WARNING", "INFO", "DEBUG") [default: INFO]
 
 Convert Specific Options:
-  -2 --epub2            Convert to EPUB2
-  -3 --epub3            Convert to EPUB3
+  -2 --epub2            Convert to EPUB2 (not implemented)
+  -3 --epub3            Convert to EPUB3 (not implemented)
   --no-cleanup          The EPUB contents prior to .epub-packaging will not be
                         removed
   --no-epubcheck        Disable the use of epubcheck to validate EPUBs
@@ -136,7 +136,11 @@ def main(argv=None):
         if args['--output'] is not None:
             output_directory = openaccess_epub.utils.get_absolute_path(args['--output'])
         else:
-            output_directory = openaccess_epub.utils.get_absolute_path(config.default_output)
+            if os.path.isabs(config.default_output):  # Absolute remains so
+                output_directory = config.default_output
+            else:  # Else rendered relative to input
+                abs_dirname = os.path.dirname(abs_input_path)
+                output_directory = os.path.normpath(os.path.join(abs_dirname, config.default_output))
 
         #The root name must be added on for output
         output_directory = os.path.join(output_directory, root_name)

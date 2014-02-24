@@ -17,8 +17,8 @@ Options:
                         "WARNING", "INFO", "DEBUG") [default: WARNING]
 
 Batch Specific Options:
-  -2 --epub2            Convert to EPUB2
-  -3 --epub3            Convert to EPUB3
+  -2 --epub2            Convert to EPUB2 (not implemented)
+  -3 --epub3            Convert to EPUB3 (not implemented)
   --no-epubcheck        Disable the use of epubcheck to validate EPUBs
   --no-validate         Disable DTD validation of XML files during conversion.
                         This is only advised if you have pre-validated the files
@@ -89,7 +89,10 @@ def main(argv=None):
     config = openaccess_epub.utils.load_config_module()
 
     for directory in args['DIR']:
-        for xml_file in files_with_ext('.xml', directory):
+        for xml_file in files_with_ext('.xml', directory,
+                                       recursive=args['--recursive']):
+            print(xml_file)
+
             #We have to temporarily re-base our log while utils work
             if not args['--no-log-file']:
                 oae_logging.replace_filehandler(logname='openaccess_epub',
@@ -121,7 +124,11 @@ def main(argv=None):
             if args['--output'] is not None:
                 output_directory = openaccess_epub.utils.get_absolute_path(args['--output'])
             else:
-                output_directory = openaccess_epub.utils.get_absolute_path(config.default_output)
+                if os.path.isabs(config.default_output):  # Absolute remains so
+                    output_directory = config.default_output
+                else:  # Else rendered relative to input
+                    abs_dirname = os.path.dirname(abs_input_path)
+                    output_directory = os.path.normpath(os.path.join(abs_dirname, config.default_output))
 
             #The root name must be added on for output
             output_directory = os.path.join(output_directory, root_name)
