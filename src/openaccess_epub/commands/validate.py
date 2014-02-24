@@ -16,7 +16,7 @@ Options:
 Validate Specific Options:
   -l --log-to=LOG       Specify a location to store the log of DTD validation
   -p --print-only       Report output only to the console
-  -P --record-pass         Keep records of XML files which pass DTD validation,
+  -P --record-pass      Keep records of XML files which pass DTD validation,
                         otherwise only the failures will be recorded
   -r --recursive        Recursively traverse subdirectories for validation
 
