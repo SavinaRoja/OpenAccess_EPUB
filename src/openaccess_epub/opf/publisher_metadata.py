@@ -72,7 +72,7 @@ def plos_dc_creator(article):
             if not contrib.attrs['contrib-type'] == 'author':
                 continue
             if contrib.collab:
-                auth = etree.tostring(contrib.collab[0].node, method='text', encoding='utf-8')
+                auth = str(etree.tostring(contrib.collab[0].node, method='text', encoding='utf-8').strip(), encoding='utf-8')
                 file_as = auth
             elif contrib.anonymous:
                 auth = 'Anonymous'

@@ -18,7 +18,6 @@ from openaccess_epub.utils import OrderedSet
 from .publisher_metadata import *
 from collections import namedtuple
 import os
-import xml.dom.minidom
 from lxml import etree
 import logging
 
@@ -92,7 +91,7 @@ e
         Receives an instance of the Article class. This modifies the internal
         state of the NCX class to focus on the new article for the purposes of
         extracting structural information, and the article authors as metadata.
-        
+
         In Collection Mode, the addition of new articles to the NCX class
         results in cumulative (in order of receipt) content. In Single Input
         Mode, the addition of a new article will erase any information from the
@@ -232,10 +231,10 @@ e
         """
         if self.journal_doi == '10.1371':  # PLoS
             self.get_article_creator = plos_creator
-            self.get_article_title= plos_title
+            self.get_article_title = plos_title
         elif self.journal_doi == '10.3389':  # Frontiers
             self.get_article_creator = frontiers_creator
-            self.get_article_title= frontiers_title
+            self.get_article_title = frontiers_title
         else:
             raise ValueError('This publisher, {0}, is not supported'.format(self.journal_doi))
 
@@ -262,7 +261,7 @@ e
     def reset_metadata(self):
         """
         THe NCX file does not truly exist for metadata, but it has a few
-        elements held over from the Daisy Talking Book specification. The 
+        elements held over from the Daisy Talking Book specification. The
         """
         self.doc_author = OrderedSet()
         self.article_title = ''

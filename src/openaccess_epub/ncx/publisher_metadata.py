@@ -14,6 +14,7 @@ from lxml import etree
 
 creator = namedtuple('Creator', 'name, role, file_as')
 
+
 #### Public Library of Science - PLoS ###
 def plos_creator(article):
     """
@@ -29,7 +30,7 @@ def plos_creator(article):
             if not contrib.attrs['contrib-type'] == 'author':
                 continue
             if contrib.collab:
-                auth = etree.tostring(contrib.collab[0].node, method='text', encoding='utf-8')
+                auth = str(etree.tostring(contrib.collab[0].node, method='text', encoding='utf-8').strip(), encoding='utf-8')
                 file_as = auth
             elif contrib.anonymous:
                 auth = 'Anonymous'
@@ -52,6 +53,7 @@ def plos_creator(article):
             new_creator = creator(auth, 'aut', file_as)
             creator_list.append(new_creator)
     return creator_list
+
 
 def plos_title(article):
     """
@@ -103,6 +105,7 @@ def frontiers_creator(article):
             new_creator = creator(auth, 'aut', file_as)
             creator_list.append(new_creator)
     return creator_list
+
 
 def frontiers_title(article):
     """
