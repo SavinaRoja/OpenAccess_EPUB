@@ -58,6 +58,12 @@ def make_EPUB(parsed_article,
             return False
         else:  # User prompting
             openaccess_epub.utils.dir_exists(output_directory)
+    else:
+        try:
+            os.makedirs(os.path.dirname(output_directory))
+        except OSError as err:
+            if err.errno != 17:
+                log.exception('Unable to recursively create output directories')
 
     #Copy over the basic epub directory
     base_epub = openaccess_epub.utils.base_epub_location()
