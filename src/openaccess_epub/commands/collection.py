@@ -76,7 +76,7 @@ from openaccess_epub.article import Article
 def main(argv=None):
     args = docopt(__doc__,
                   argv=argv,
-                  version='OpenAccess_EPUB Docoptify 0.1',
+                  version='OpenAccess_EPUB v.' + __version__,
                   options_first=True)
 
     c_file = args['COLLECTION_FILE']

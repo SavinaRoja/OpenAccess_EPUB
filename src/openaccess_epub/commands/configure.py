@@ -24,6 +24,7 @@ import time
 from docopt import docopt
 
 #OpenAccess_EPUB modules
+from openaccess_epub._version import __version__
 import openaccess_epub
 import openaccess_epub.utils
 
@@ -346,7 +347,7 @@ Done configuring OpenAccess_EPUB!''')
 def main(argv=None):
     args = docopt(__doc__,
                   argv=argv,
-                  version='OpenAccess_EPUB Docoptify 0.1',
+                  version='OpenAccess_EPUB v.' + __version__,
                   options_first=True)
 
     if args['where']:

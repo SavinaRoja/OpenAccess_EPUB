@@ -66,6 +66,7 @@ import sys
 from docopt import docopt
 
 #OpenAccess_EPUB modules
+from openaccess_epub._version import __version__
 from openaccess_epub.utils.epub import make_EPUB
 import openaccess_epub.utils.images
 import openaccess_epub.utils.inputs as input_utils
@@ -76,7 +77,7 @@ from openaccess_epub.article import Article
 def main(argv=None):
     args = docopt(__doc__,
                   argv=argv,
-                  version='OpenAccess_EPUB Docoptify 0.1',
+                  version='OpenAccess_EPUB v.' + __version__,
                   options_first=True)
 
     #Basic logging configuration

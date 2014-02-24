@@ -41,6 +41,7 @@ import lxml
 import lxml.etree
 
 #OpenAccess_EPUB modules
+from openaccess_epub._version import __version__
 from openaccess_epub import JPTS10_PATH, JPTS11_PATH, JPTS20_PATH,\
     JPTS21_PATH, JPTS22_PATH, JPTS23_PATH, JPTS30_PATH
 from openaccess_epub.utils import files_with_ext
@@ -59,7 +60,7 @@ DTDS = {'-//NLM//DTD Journal Archiving and Interchange DTD v1.0 20021201//EN': l
 def main(argv=None):
     args = docopt(__doc__,
                   argv=argv,
-                  version='OpenAccess_EPUB Docoptify 0.1',
+                  version='OpenAccess_EPUB v.' + __version__,
                   options_first=True)
 
     formatter = logging.Formatter('%(message)s')

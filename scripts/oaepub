@@ -36,6 +36,7 @@ import logging
 from docopt import docopt
 
 #OpenAccess_EPUB modules
+from openaccess_epub._version import __version__
 import openaccess_epub.commands.batch as batch
 import openaccess_epub.commands.clearcache as clearcache
 import openaccess_epub.commands.collection as collection
@@ -46,7 +47,7 @@ import openaccess_epub.commands.validate as validate
 
 if __name__ == '__main__':
     args = docopt(__doc__,
-                  version='OpenAccess_EPUB Docoptify 0.1',
+                  version='OpenAccess_EPUB v.' + __version__,
                   options_first=True)
 
     log = logging.getLogger()
