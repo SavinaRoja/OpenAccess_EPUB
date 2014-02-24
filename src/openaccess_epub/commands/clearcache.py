@@ -11,7 +11,6 @@ Usage:
 Options:
   -h --help        show this help message and exit
   -v --version     show program version and exit
-  -V --verbose     print extra information to the console during execution
 
 Clearcache Specific Options:
   -d --dry-run     Will print out what it would delete (like --verbose), but not
