@@ -34,7 +34,7 @@ regarding the usage can be retrieved by
  etc.
 
 Use the `oaepub configure` command to set up some local OpenAccess_EPUB
-configuration interactiely before converting articles to EPUB. 
+configuration interactively before converting articles to EPUB. 
 
 How to Contribute
 -----------------
