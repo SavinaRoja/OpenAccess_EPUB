@@ -11,6 +11,9 @@ the Article class, and return a list of Creator namedtuples.
 
 from collections import namedtuple
 from lxml import etree
+import logging
+
+log = logging.getLogger('openaccess_epub.ncx.publisher_metadata')
 
 creator = namedtuple('Creator', 'name, role, file_as')
 

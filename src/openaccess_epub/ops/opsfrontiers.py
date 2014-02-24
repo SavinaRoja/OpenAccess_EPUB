@@ -13,7 +13,7 @@ import os
 import sys
 import logging
 
-log = logging.getLogger('OPSPLoS')
+log = logging.getLogger('openaccess_epub.ops.opsfrontiers')
 
 
 class OPSFrontiers(OPSMeta):
@@ -345,7 +345,7 @@ class OPSFrontiers(OPSMeta):
 
         #A simple way that follows Frontiers convention, but does not treat
         #the full scope of the <aff> element
-        
+
         label_number = 1
         for aff in author_affs:
             #Expecting id to always be present
@@ -434,7 +434,7 @@ class OPSFrontiers(OPSMeta):
                 first = False
             else:
                 element_methods.append_new_text(editors_div, '; ', join_str='')
-            
+
             if len(editor.anonymous) > 0:
                 element_methods.append_new_text(editors_div, 'Anonymous', join_str='')
             elif len(editor.collab) > 0:
@@ -519,11 +519,11 @@ class OPSFrontiers(OPSMeta):
         copyright_string = '\u00A9 '
         if len(permissions.copyright_holder) > 0:
             copyright_string += element_methods.all_text(permissions.copyright_holder[0].node)
-            copyright_string += '. ' 
+            copyright_string += '. '
         if len(permissions.license) > 0:  # I'm assuming only one license
             #Taking only the first license_p element
             license_p = permissions.license[0].license_p[0]
-            #I expect to see only text in the 
+            #I expect to see only text in the
             copyright_string += element_methods.all_text(license_p.node)
         element_methods.append_new_text(copyright_div, copyright_string)
 
@@ -640,7 +640,7 @@ class OPSFrontiers(OPSMeta):
         """
         #Back is technically metadata content that needs to be interpreted to
         #presentable content
-        if self.metadata.back is None: 
+        if self.metadata.back is None:
             return
         #The following things are ordered in such a way to adhere to what
         #appears to be a consistent presentation order for PLoS
@@ -830,7 +830,7 @@ class OPSFrontiers(OPSMeta):
         """
         Responsible for the correct conversion of JPTS 3.0 <table-wrap>
         elements to OPS content.
-        
+
         The 'id' attribute is treated as mandatory by this method.
         """
         for table_wrap in top.findall('.//table-wrap'):
@@ -838,7 +838,7 @@ class OPSFrontiers(OPSMeta):
             #for child in tab.childNodes:
             #    if child.nodeType == 8:
             #        element_methods.uncomment(child)
-            
+
             #Create a div for all of the table stuff
             table_div = etree.Element('div')
             table_div.attrib['id'] = table_wrap.attrib['id']
@@ -888,7 +888,7 @@ class OPSFrontiers(OPSMeta):
             #
             #If there is a table with no image, then the table should be placed
             #in the text flow.
-            
+
             if graphic is not None:
                 #Create the image path for the graphic
                 xlink_href = element_methods.ns_format(graphic, 'xlink:href')
@@ -1303,7 +1303,7 @@ class OPSFrontiers(OPSMeta):
                 paragraph.attrib['class'] = 'fn-type-{0}'.footnote.attrib['fn-type']
             else:
                 paragraph.attrib['class'] = 'fn'
-                #Replace the 
+                #Replace the
             element_methods.replace(footnote, paragraph)
 
     def convert_list_elements(self, top):
@@ -1469,7 +1469,7 @@ class OPSFrontiers(OPSMeta):
         #Identify subjournal name for base URl
         subjournal_name = self.doi_frag.split('.')[1]
         base_url = journal_urls[subjournal_name]
-    
+
         #Compose the address for fetchSingleRepresentation
         resource = 'fetchSingleRepresentation.action?uri=' + item_xlink_href
         return base_url.format(resource)

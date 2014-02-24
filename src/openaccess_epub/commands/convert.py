@@ -6,31 +6,40 @@ oaepub convert
 Convert explicitly listed articles to EPUB, takes input of XML file, DOI, or URL
 
 Usage:
-  convert [--silent | --echo-log] [options] INPUT ...
+  convert [--silent | --verbosity=LEVEL] [--epub2 | --epub3] [options] INPUT ...
 
 General Options:
-  -h --help        show this help message and exit
-  -v --version     show program version and exit
-  -s --silent      print nothing to the console during execution
-  -V --verbose     print extra information to the console during execution
+  -h --help             Show this help message and exit
+  -v --version          Show program version and exit
+  -s --silent           Print nothing to the console during execution
+  -V --verbosity=LEVEL  Set how much information is printed to the console
+                        during execution (one of: "CRITICAL", "ERROR",
+                        "WARNING", "INFO", "DEBUG") [default: INFO]
 
 Convert Specific Options:
-  --no-cleanup     The EPUB contents prior to .epub-packaging will be retained
-  --no-epubcheck   Disable the use of epubcheck to validate EPUBs
-  --no-validate    Disable DTD validation of XML files during conversion. This
-                   is only advised if you have pre-validated the files (see
-                   'oaepub validate -h')
+  -2 --epub2            Convert to EPUB2 (not implemented)
+  -3 --epub3            Convert to EPUB3 (not implemented)
+  --no-cleanup          The EPUB contents prior to .epub-packaging will not be
+                        removed
+  --no-epubcheck        Disable the use of epubcheck to validate EPUBs
+  --no-validate         Disable DTD validation of XML files during conversion.
+                        This is only advised if you have pre-validated the files
+                        (see 'oaepub validate -h')
+  -o --output=DIR       Directory in which to put the output. Default is set in
+                        config file (see 'oaepub configure where')
+  -i --images=DIR       Directory in which to find the images for the article
+                        to be converted to EPUB. If using this option with
+                        multiple XML inputs, be sure to use wildcard filename
+                        matching with a "*", which will expand to the filename
+                        without extension. For more information and default
+                        configuration see the config file
+                        ('oaepub configure where')
 
 Logging Options:
-  --no-log            Disable logging entirely
-  -l --log=LOG        Specify a filepath to hold the log data
-  --log-level=LEVEL   Set the level for the logging (one of: "CRITICAL",
-                      "ERROR", "WARNING", "INFO", "DEBUG") [default: INFO]
-  --echo-log          Log data will also be printed to console, at a level
-                      determined by '--echo-level'
-  --echo-level=LEVEL  Set the level of log data echoed to the console.
-                      (one of: "CRITICAL", "ERROR", "WARNING", "INFO",
-                      "DEBUG") [default: INFO]
+  --no-log-file         Disable logging to file
+  -l --log-to=FILE      Specify a single filepath to contain all log data
+  --log-level=LEVEL     Set the level for the logging (one of: "CRITICAL",
+                        "ERROR", "WARNING", "INFO", "DEBUG") [default: DEBUG]
 
 Convert supports input of the following types:
   XML - Input points to the location of a local XML file (ends with: '.xml')
@@ -40,46 +49,62 @@ Convert supports input of the following types:
         (starts with 'http:')
 
 Each individual input will receive its own log (replace '.xml' with '.log')
-unless '--log' is used to direct all logging information to a specific file
+unless '--log-to' is used to direct all logging information to a specific file
+Many default actions for your installation of OpenAccess_EPUB are configurable.
+Execute 'oaepub configure' to interactively configure, or modify the config
+file manually in a text editor; executing 'oaepub configure where' will tell you
+where the config file is located.
 """
 
 #Standard Library modules
-import sys
-import os
 import logging
+import os
+import shutil
+import sys
 
 #Non-Standard Library modules
 from docopt import docopt
 
 #OpenAccess_EPUB modules
-import openaccess_epub.utils
-import openaccess_epub.utils.input as input_utils
-import openaccess_epub.utils.log as oae_logging
+from openaccess_epub._version import __version__
+from openaccess_epub.utils.epub import make_EPUB
+import openaccess_epub.utils.images
+import openaccess_epub.utils.inputs as input_utils
+import openaccess_epub.utils.logs as oae_logging
 from openaccess_epub.article import Article
 
 
 def main(argv=None):
     args = docopt(__doc__,
                   argv=argv,
-                  version='OpenAccess_EPUB Docoptify 0.1',
+                  version='OpenAccess_EPUB v.' + __version__,
                   options_first=True)
 
-    current_dir = os.getcwd()
-
     #Basic logging configuration
-    if args['--no-log']:
-        oae_logging.null_logging()  # Makes a log with a NullHandler
-    else:
-        oae_logging.config_logging(args['--log'],
-                                   args['--log-level'],
-                                   args['--echo-log'],
-                                   args['--echo-level'])
+    oae_logging.config_logging(args['--no-log-file'],
+                               args['--log-to'],
+                               args['--log-level'],
+                               args['--silent'],
+                               args['--verbosity'])
 
-    #Get a logger, this
-    log = logging.getLogger('openaccess_epub.convert')
+    #Get a logger, the 'openaccess_epub' logger was set up above
+    command_log = logging.getLogger('openaccess_epub.commands.convert')
 
-    #Our basic action is to iterate over the args['INPUT'] list
+    #Load the config module, we do this after logging configuration
+    config = openaccess_epub.utils.load_config_module()
+
+    current_dir = os.getcwd()
+    #Our basic flow is to iterate over the args['INPUT'] list
     for inpt in args['INPUT']:
+        #We have to temporarily re-base our log while input utils do some work
+        if not args['--no-log-file'] and not args['--log-to']:
+            oae_logging.replace_filehandler(logname='openaccess_epub',
+                                            new_file='temp.log',
+                                            level=args['--log-level'],
+                                            frmt=oae_logging.STANDARD_FORMAT)
+
+        command_log.info('Processing input: {0}'.format(inpt))
+
         #First we need to know the name of the file and where it is
         if inpt.lower().endswith('.xml'):  # This is direct XML file
             root_name = openaccess_epub.utils.file_root_name(inpt)
@@ -93,20 +118,51 @@ def main(argv=None):
         else:
             sys.exit('{0} not recognized as XML, DOI, or URL'.format(inpt))
 
-        #Set a new log file if a custom one has not been used
-        if not args['--no-log'] and not args['--log']:
-            log_path = os.path.join(os.path.dirname(abs_input_path), root_name + '.log')
-            log = logging.getLogger(name='openaccess_epub.convert')
-            fh = logging.FileHandler(filename=log_path)
-            fh.setFormatter(oae_logging.STANDARD_FORMAT)
-            log.addHandler(fh)
-
-        log.info('Testing')
+        if not args['--no-log-file'] and not args['--log-to']:
+            log_name = root_name + '.log'
+            log_path = os.path.join(os.path.dirname(abs_input_path), log_name)
+            #Now we move over to the new log file
+            shutil.move('temp.log', log_path)
+            #And re-base the log file to the new file location
+            oae_logging.replace_filehandler(logname='openaccess_epub',
+                                            new_file=log_path,
+                                            level=args['--log-level'],
+                                            frmt=oae_logging.STANDARD_FORMAT)
 
         #Now that we should be done configuring logging, let's parse the article
         parsed_article = Article(abs_input_path,
-                                 validation=args['--no-validate'])
-        print(parsed_article)
+                                 validation=not args['--no-validate'])
+
+        #Get the output directory
+        if args['--output'] is not None:
+            output_directory = openaccess_epub.utils.get_absolute_path(args['--output'])
+        else:
+            if os.path.isabs(config.default_output):  # Absolute remains so
+                output_directory = config.default_output
+            else:  # Else rendered relative to input
+                abs_dirname = os.path.dirname(abs_input_path)
+                output_directory = os.path.normpath(os.path.join(abs_dirname, config.default_output))
+
+        #The root name must be added on for output
+        output_directory = os.path.join(output_directory, root_name)
+
+        #Make the call to make_EPUB
+        success = make_EPUB(parsed_article,
+                            output_directory,
+                            abs_input_path,
+                            args['--images'],
+                            config_module=config)
+
+        #Cleanup removes the produced output directory, keeps the EPUB
+        if not args['--no-cleanup']:
+            command_log.info('Removing {0}'.format(output_directory))
+            shutil.rmtree(output_directory)
+
+        #Running epubcheck on the output verifies the validity of the ePub,
+        #requires a local installation of java and epubcheck.
+        if not args['--no-epubcheck'] and success:
+            epub_name = '{0}.epub'.format(output_directory)
+            openaccess_epub.utils.epubcheck(epub_name, config)
 
 
 if __name__ == '__main__':

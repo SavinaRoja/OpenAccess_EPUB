@@ -30,13 +30,13 @@ Feel free to bother the developer for issues/suggestions/help.
 
 #Standard Library modules
 import sys
-#import os
-#import logging
+import logging
 
 #Non-Standard Library modules
 from docopt import docopt
 
 #OpenAccess_EPUB modules
+from openaccess_epub._version import __version__
 import openaccess_epub.commands.batch as batch
 import openaccess_epub.commands.clearcache as clearcache
 import openaccess_epub.commands.collection as collection
@@ -47,8 +47,10 @@ import openaccess_epub.commands.validate as validate
 
 if __name__ == '__main__':
     args = docopt(__doc__,
-                  version='OpenAccess_EPUB Docoptify 0.1',
+                  version='OpenAccess_EPUB v.' + __version__,
                   options_first=True)
+
+    log = logging.getLogger()
 
     def printverbose(info):
         if args['--verbose']:
@@ -56,16 +58,16 @@ if __name__ == '__main__':
 
     #Let's shape what gets passed along to the subcommands
     argv = []
-    
-    #If we want to pass an ubercommand option to a subcommand, do now because
+
+    #If we want to pass an ubercommand option to a subcommand, do it now because
     #options are first, and like so:
     #if args['--verbose']:
     #    argv.append('--verbose')  # this would pass --verbose onward
     #argv += ['--verbose'] if args['--verbose'] else argv  # Cute, one-liner
-    
+
     #Add on all of the ARGS ...  (mixture of options and args for sub-parsing)
     argv += args['ARGS']
-    
+
     #Decide which subcommand to run based on args['COMMAND']
     if args['COMMAND'] == 'batch':
         main = batch.main
@@ -114,14 +116,14 @@ Convert command script located at:
 {0}
 
 Validate command script located at:
-{1}'''.format(str(argv), str(clearcache.__file__)))
+{1}'''.format(str(argv), str(validate.__file__)))
     elif args['COMMAND'] == 'publishers':
         print('''\
 PLoS      - http://www.plos.org/
 Frontiers - http://www.frontiersin.org/''')
         sys.exit()
     elif args['COMMAND'] == 'haiku':
-        print('''
+        print('''\
 A field of cotton--
 as if the moon
 had flowered.
@@ -131,6 +133,6 @@ had flowered.
     else:
         print('Your command \'{0}\' was not recognized'.format(args['COMMAND']))
         sys.exit()
-        
+
     main(argv=argv)
 

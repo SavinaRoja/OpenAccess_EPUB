@@ -29,7 +29,7 @@ from collections import namedtuple
 
 spine_itemref = namedtuple('SpineItemref', 'idref, linear')
 
-log = logging.getLogger('OPF')
+log = logging.getLogger('openaccess_epub.opf.opf')
 
 single_ccal_rights = '''This is an open-access article distributed under the \
 terms of the Creative Commons Attribution License, which permits unrestricted \
@@ -420,6 +420,7 @@ xmlns:oebpackage="http://openebook.org/namespaces/oeb-package/1.0/">
                 return instring
             else:
                 prefix, suffix = instring.split(':')
+
                 return '{' + self.package.nsmap[prefix] + '}' + suffix
 
         if attrs is None:

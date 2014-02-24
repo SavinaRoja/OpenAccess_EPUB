@@ -12,16 +12,20 @@ job is to provide a more advanced Table of Contents-style navigation system for
 the ePub beyond what is done in the OPF file.
 """
 
-import openaccess_epub.utils as utils
-import openaccess_epub.utils.element_methods as element_methods
-from openaccess_epub.utils import OrderedSet
-from .publisher_metadata import *
+#Standard Library modules
 from collections import namedtuple
-import os
-from lxml import etree
 import logging
+import os
 
-log = logging.getLogger('NCX')
+#Non-Standard Library modules
+from lxml import etree
+
+#OpenAccess_EPUB modules
+from .publisher_metadata import *
+from openaccess_epub.utils import OrderedSet
+import openaccess_epub.utils.element_methods as element_methods
+
+log = logging.getLogger('openaccess_epub.ncx.ncx')
 
 navpoint = namedtuple('navPoint', 'id, label, playOrder, source, children')
 navtarget = namedtuple('navTarget', 'id, label, source')

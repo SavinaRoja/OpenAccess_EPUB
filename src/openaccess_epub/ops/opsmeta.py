@@ -12,7 +12,7 @@ import openaccess_epub.utils.element_methods as element_methods
 from lxml import etree
 import logging
 
-log = logging.getLogger('OPSMeta')
+log = logging.getLogger('openaccess_epub.ops.opsmeta')
 
 
 class OPSMeta(object):

@@ -1,17 +1,21 @@
 # -*- coding: utf-8 -*-
-#oaepub modules
+
+#Standard Library modules
+from collections import namedtuple
+from keyword import iskeyword
+import logging
+import os
+import shutil
+import sys
+
+#Non-Standard Library modules
+from lxml import etree
+
+#OpenAccess_EPUB modules
 from openaccess_epub import JPTS10_PATH, JPTS11_PATH, JPTS20_PATH,\
     JPTS21_PATH, JPTS22_PATH, JPTS23_PATH, JPTS30_PATH
 from openaccess_epub.utils import element_methods
-#Standard lib modules
-import os
-import sys
-import shutil
-import logging
-from collections import namedtuple
-from keyword import iskeyword
-#Other, nonstandard lib modules
-from lxml import etree
+
 
 log = logging.getLogger('openaccess_epub.article')
 

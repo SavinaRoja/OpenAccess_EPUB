@@ -2,24 +2,31 @@
 """
 Common utility functions
 """
-import os.path
-import zipfile
-from collections import namedtuple
-import urllib
-import logging
-import time
-import shutil
-import re
-import sys
 
+#Standard Library modules
+import collections
+import logging
+import os
+import platform
+import shutil
+import subprocess
+import sys
+import urllib
+import zipfile
+
+#Non-Standard Library modules
+
+#OpenAccess_EPUB modules
 from openaccess_epub.utils.css import DEFAULT_CSS
-from openaccess_epub.utils.input import doi_input, url_input
+from openaccess_epub.utils.inputs import doi_input, url_input
+
+log = logging.getLogger('openaccess_epub.utils')
+
+Identifier = collections.namedtuple('Identifer', 'id, type')
+
 
 #Python documentation refers to this recipe for an OrderedSet
 #http://code.activestate.com/recipes/576694/
-import collections
-
-
 class OrderedSet(collections.MutableSet):
 
     def __init__(self, iterable=None):
@@ -81,19 +88,59 @@ class OrderedSet(collections.MutableSet):
 
 def cache_location():
     '''Cross-platform placement of cached files'''
-    if sys.platform == 'win32':  # Windows
+    plat = platform.platform()
+    log.debug('Platform read as: {0}'.format(plat))
+    if plat.startswith('Windows'):
+        log.debug('Windows platform detected')
         return os.path.join(os.environ['APPDATA'], 'OpenAccess_EPUB')
-    else:  # Mac or Linux
-        path = os.path.expanduser('~')
-        if path == '~':
-            path = os.path.expanduser('~user')
-            if path == '~user':
-                sys.exit('Could not find the correct cache location')
-        return os.path.join(path, '.OpenAccess_EPUB')
+    elif plat.startswith('Darwin'):
+        log.debug('Mac platform detected')
+    elif plat.startswith('Linux'):
+        log.debug('Linux platform detected')
+    else:
+        log.warning('Unhandled platform for cache_location')
 
-log = logging.getLogger('utils')
+    #This code is written for Linux and Mac, don't expect success for others
+    path = os.path.expanduser('~')
+    if path == '~':
+        path = os.path.expanduser('~user')
+        if path == '~user':
+            log.critical('Could not resolve the correct cache location')
+            sys.exit('Could not resolve the correct cache location')
+    cache_loc = os.path.join(path, '.OpenAccess_EPUB')
+    log.debug('Cache located: {0}'.format(cache_loc))
+    return cache_loc
 
-Identifier = namedtuple('Identifer', 'id, type')
+
+def config_location():
+    """
+    Returns the expected location of the config file
+    """
+    return os.path.join(cache_location(), 'config.py')
+
+
+def base_epub_location():
+    """
+    Returns the expected location of the base_epub directory
+    """
+    return os.path.join(cache_location(), 'base_epub')
+
+
+def load_config_module():
+    """
+    If the config.py file exists, import it as a module. If it does not exist,
+    call sys.exit() with a request to run oaepub configure.
+    """
+    import imp
+    config_path = config_location()
+    try:
+        config = imp.load_source('config', config_path)
+    except IOError:
+        log.critical('Config file not found. oaepub exiting...')
+        sys.exit('Config file not found. Please run \'oaepub configure\'')
+    else:
+        log.debug('Config file loaded from {0}'.format(config_path))
+        return config
 
 
 def mkdir_p(dir):
@@ -207,20 +254,53 @@ def file_root_name(name):
     return root
 
 
-#What the hell was I doing using camelCase? I avoid it whenever I can...
-def getFileRoot(path):
+def files_with_ext(extension, directory='.', recursive=False):
     """
-    This method provides a standard method for acquiring the root name of a
-    file from a path string. It will not raise an error if it returns an empty
-    string, but it will issue a warning.
+    Generator function that will iterate over all files in the specified
+    directory and return a path to the files which possess a matching extension.
+
+    You should include the period in your extension, and matching is not case
+    sensitive: '.xml' will also match '.XML' and vice versa.
+
+    An empty string passed to extension will match extensionless files.
     """
-    bn = os.path.basename(path)
-    root = os.path.splitext(bn)[0]
-    if not root:
-        w = 'getFileRoot could not derive a root file name from\"{0}\"'
-        log.warning(w.format(path))
-        print(w.format(path))
-    return root
+    if recursive:
+        log.info('Recursively searching {0} for files with extension "{1}"'.format(directory, extension))
+        for dirname, subdirnames, filenames in os.walk(directory):
+            for filename in filenames:
+                filepath = os.path.join(dirname, filename)
+                _root, ext = os.path.splitext(filepath)
+                if extension.lower() == ext.lower():
+                    yield filepath
+
+    else:
+        log.info('Looking in {0} for files with extension:  "{1}"'.format(directory, extension))
+        for name in os.listdir(directory):
+            filepath = os.path.join(directory, name)
+            if not os.path.isfile(filepath):  # Skip non-files
+                continue
+            _root, ext = os.path.splitext(filepath)
+            if extension.lower() == ext.lower():
+                yield filepath
+
+
+def epubcheck(epubname, config=None):
+    """
+    This method takes the name of an epub file as an argument. This name is
+    the input for the java execution of a locally installed epubcheck-.jar. The
+    location of this .jar file is configured in config.py.
+    """
+    if config is None:
+        config = load_config_module()
+    r, e = os.path.splitext(epubname)
+    if not e:
+        log.warning('Missing file extension, appending ".epub"')
+        e = '.epub'
+        epubname = r + e
+    elif not e == '.epub':
+        log.warning('File does not have ".epub" extension, appending it')
+        epubname += '.epub'
+    subprocess.call(['java', '-jar', config.epubcheck_jarfile, epubname])
 
 
 def make_epub_base():
@@ -240,7 +320,7 @@ def make_epub_base():
     location = os.path.join(cache_location(), 'base_epub')
     if os.path.isdir(location):
         return
-    log.info('Making the ePub base at {0}'.format(location))
+    log.info('Making the EPUB base files at {0}'.format(location))
     mkdir_p(location)
     #Create mimetype file in root directory
     mime_path = os.path.join(location, 'mimetype')
@@ -268,143 +348,23 @@ def make_epub_base():
         css.write(bytes(DEFAULT_CSS, 'UTF-8'))
 
 
-def createDCElement(document, name, data, attributes = None):
+def dir_exists(directory):
     """
-    A convenience method for creating DC tag elements.
-    Used in content.opf
-    """
-    newnode = document.createElement(name)
-    newnode.appendChild(document.createTextNode(data))
-    if attributes:
-        for attr, attrval in attributes.iteritems():
-            newnode.setAttribute(attr, attrval)
-    return newnode
+    If a directory already exists that will be overwritten by some action, this
+    will ask the user whether or not to continue with the deletion.
 
-
-def stripDOMLayer(oldnodelist, depth=1):
+    If the user responds affirmatively, then the directory will be removed. If
+    the user responds negatively, then the process will abort.
     """
-    This method strips layers \"off the top\" from a specified NodeList or
-    Node in the DOM. All child Nodes below the stripped layers are returned as
-    a NodeList, treating them as siblings irrespective of the original
-    hierarchy. To be used with caution.
-    """
-    newnodelist = []
-    while depth:
-        try:
-            for child in oldnodelist:
-                newnodelist += child.childNodes
-        except TypeError:
-            newnodelist = oldnodelist.childNodes
-        depth -= 1
-        newnodelist = stripDOMLayer(newnodelist, depth)
-        return newnodelist
-    return oldnodelist
-
-
-def serializeText(fromnode, stringlist=None, sep=''):
-    """
-    Recursively extract the text data from a node and it's children
-    """
-    if stringlist is None:
-        stringlist = []
-    for item in fromnode.childNodes:
-        if item.nodeType == item.TEXT_NODE and not item.data == '\n':
-            stringlist.append(item.data)
-        else:
-            serializeText(item, stringlist, sep)
-    return sep.join(stringlist)
-
-
-#I wish to eventually shift all serializeText references to serialize_text
-def serialize_text(fromnode, stringlist=None, sep=''):
-    """
-    Recursively extract the text data from a node and it's children
-    """
-    if stringlist is None:
-        stringlist = []
-    for item in fromnode.childNodes:
-        if item.nodeType == item.TEXT_NODE and not item.data == '\n':
-            stringlist.append(item.data)
-        else:
-            serializeText(item, stringlist, sep)
-    return sep.join(stringlist)
-
-
-def nodeText(node):
-    """
-    This is to be used when a node may only contain text, numbers or special
-    characters. This function will return the text contained in the node.
-    Sometimes this text data contains spurious newlines and spaces due to
-    parsing and original xml formatting. This function should strip such
-    artifacts.
-    """
-    #Get data from first child of the node
-    try:
-        first_child_data = node.firstChild.data
-    except AttributeError:  # Usually caused by an empty node
-        return ''
+    log.info('Directory exists! Asking the user')
+    reply = input('''The directory {0} already exists.
+It will be overwritten if the operation continues.
+Replace? [Y/n]'''.format(directory))
+    if reply.lower() in ['y', 'yes', '']:
+        shutil.rmtree(directory)
     else:
-        return '{0}'.format(first_child_data.strip())
-
-
-def getTagData(node_list):
-    '''Grab the (string) data from text elements
-    node_list -- NodeList returned by getElementsByTagName
-    '''
-    data = ''
-    try:
-        for node in node_list:
-            if node.firstChild.nodeType == node.TEXT_NODE:
-                data = node.firstChild.data
-        return data
-    except TypeError:
-        getTagData([node_list])
-
-
-def getTagText(node):
-    """
-    Grab the text data from a Node. If it is provided a NodeList, it will
-    return the text data from the first contained Node.
-    """
-    data = ''
-    try:
-        children = node.childNodes
-    except AttributeError:
-        getTagText(node[0])
-    else:
-        if children:
-            for child in children:
-                if child.nodeType == child.TEXT_NODE and child.data != '\n':
-                    data += child.data
-            return data
-
-
-def getFormattedNode(node):
-    """
-    This method is called on a Node whose children may include emphasis
-    elements. The contained emphasis elements will be converted to ePub-safe
-    emphasis elements. Non-emphasis elements will be untouched.
-    """
-    #Some of these elements are to be supported through CSS
-    emphasis_elements = ['bold', 'italic', 'monospace', 'overline',
-                         'sc', 'strike', 'underline']
-    spans = {'monospace': 'font-family:monospace',
-             'overline': 'text-decoration:overline',
-             'sc': 'font-variant:small-caps',
-             'strike': 'text-decoration:line-through',
-             'underline': 'text-decoration:underline'}
-
-    clone = node.cloneNode(deep=True)
-    for element in emphasis_elements:
-        for item in clone.getElementsByTagName(element):
-            if item.tagName == 'bold':
-                item.tagName = 'b'
-            elif item.tagName == 'italic':
-                item.tagName = 'i'
-            elif item in spans:
-                item.tagName = 'span'
-                item.setAttribute('style', spans[item])
-    return clone
+        log.critical('Aborting process, user declined overwriting {0}'.format(directory))
+        sys.exit('Aborting process!')
 
 
 def epub_zip(outdirect):
@@ -447,46 +407,81 @@ suggested_article_types = ['abstract', 'addendum', 'announcement',
     'translation']
 
 
-def initiateDocument(titlestring,
-                     _publicId='-//W3C//DTD XHTML 1.1//EN',
-                     _systemId='http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd'):
-    """A method for conveniently initiating a new xml.DOM Document"""
-    from xml.dom.minidom import getDOMImplementation
+def make_EPUB(parsed_article,
+              output_directory,
+              input_path,
+              image_directory,
+              config_module=None):
+    """
+    make_EPUB is used to produce an EPUB file from a parsed article. In addition
+    to the article it also requires a path to the appropriate image directory
+    which it will insert into the EPUB file, as well the output directory
+    location for the EPUB file.
 
-    impl = getDOMImplementation()
+    Parameters:
+      article
+          An Article object instance
+      output_directory
+          A directory path where the EPUB will be produced. The EPUB filename
+          itself will always be
+      input_path
+          The absolute path to the input XML
+      image_directory
+          An explicitly indicated image directory, if used it will override the
+          other image methods.
+      config_module=None
+          Allows for the injection of a modified or pre-loaded config module. If
+          not specified, make_EPUB will load the config file
+    """
+    #command_log.info('Creating {0}.epub'.format(output_directory))
+    if config_module is None:
+        config_module = openaccess_epub.utils.load_config_module()
+    #Copy over the files from the base_epub to the new output
+    if os.path.isdir(output_directory):
+        openaccess_epub.utils.dir_exists(output_directory)
 
-    mytype = impl.createDocumentType('article', _publicId, _systemId)
-    doc = impl.createDocument(None, 'root', mytype)
+    #Copy over the basic epub directory
+    base_epub = openaccess_epub.utils.base_epub_location()
+    if not os.path.isdir(base_epub):
+        openaccess_epub.utils.make_epub_base()
+    shutil.copytree(base_epub, output_directory)
 
-    root = doc.lastChild  # IGNORE:E1101
-    root.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml')
-    root.setAttribute('xml:lang', 'en-US')
+    DOI = parsed_article.doi
 
-    head = doc.createElement('head')
-    root.appendChild(head)
+    #Get the images, if possible, fail gracefully if not
+    success = openaccess_epub.utils.images.get_images(output_directory,
+                                                      image_directory,
+                                                      input_path,
+                                                      config_module,
+                                                      parsed_article)
+    if not success:
+        #command_log.critical('Images for the article were not located! Aborting!')
+        #I am not so bold as to call this without serious testing
+        print('Pretend I am deleting {0}'.format(output_directory))
+        #shutil.rmtree(output_directory)
 
-    title = doc.createElement('title')
-    title.appendChild(doc.createTextNode(titlestring))
+    epub_toc = openaccess_epub.ncx.NCX(openaccess_epub.__version__,
+                                       output_directory)
+    epub_opf = openaccess_epub.opf.OPF(output_directory,
+                                       collection_mode=False)
 
-    link = doc.createElement('link')
-    link.setAttribute('rel', 'stylesheet')
-    link.setAttribute('href', 'css/reference.css')
-    link.setAttribute('type', 'text/css')
+    epub_toc.take_article(parsed_article)
+    epub_opf.take_article(parsed_article)
 
-    meta = doc.createElement('meta')
-    meta.setAttribute('http-equiv', 'Content-Type')
-    meta.setAttribute('content', 'application/xhtml+xml')
-    meta.setAttribute('charset', 'utf-8')
+    #Split now based on the publisher for OPS processing
+    if DOI.split('/')[0] == '10.1371':  # PLoS
+        epub_ops = openaccess_epub.ops.OPSPLoS(parsed_article,
+                                               output_directory)
+    elif DOI.split('/')[0] == '10.3389':  # Frontiers
+        epub_ops = openaccess_epub.ops.OPSFrontiers(parsed_article,
+                                                    output_directory)
 
-    headlist = [title, link, meta]
-    for tag in headlist:
-        head.appendChild(tag)
-    root.appendChild(head)
+    #Now we do the additional file writing
+    epub_toc.write()
+    epub_opf.write()
 
-    body = doc.createElement('body')
-    root.appendChild(body)
-
-    return doc, body
+    #Zip the directory into EPUB
+    openaccess_epub.utils.epub_zip(output_directory)
 
 
 def scrapePLoSIssueCollection(issue_url):

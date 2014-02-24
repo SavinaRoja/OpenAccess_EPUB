@@ -10,7 +10,7 @@ def long_description():
     return(readme_text)
 
 setup(name='openaccess_epub',
-      version='0.4.3',
+      version='0.5.0',
       description='Converts OpenAccess Journal articles to ePub',
       long_description=long_description(),
       author='Paul Barton',
@@ -22,8 +22,7 @@ setup(name='openaccess_epub',
                 'openaccess_epub.ops', 'openaccess_epub.utils'],
       package_data={'openaccess_epub': ['data/dtds/*/*.*',
                                         'data/dtds/*/*/*.*']},
-      scripts=['scripts/oaepub', 'scripts/epubzip', 'scripts/oae-quickstart',
-               'scripts/dtdvalidate'],
+      scripts=['scripts/oaepub'],
       data_files=[('', ['README.md'])],
       classifiers=['Development Status :: 3 - Alpha',
                    'Environment :: Console',

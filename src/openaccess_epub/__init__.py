@@ -6,8 +6,13 @@ uilities that enable the conversion of xml files to epub for academic journals.
 
 import os
 
+from logging import getLogger
+
+log = getLogger('openaccess_epub')
+
 #Add references to data files
 _ROOT = os.path.abspath(os.path.dirname(__file__))
+
 
 def get_data(path):
     return os.path.join(_ROOT, 'data', path)
@@ -20,6 +25,4 @@ JPTS22_PATH = get_data('dtds/jpts22/journalpublishing.dtd')
 JPTS23_PATH = get_data('dtds/jpts23/journalpublishing.dtd')
 JPTS30_PATH = get_data('dtds/jpts30/journalpublishing3.dtd')
 
-
 from ._version import __version__
-from .main import OAEParser, main

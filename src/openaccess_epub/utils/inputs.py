@@ -48,39 +48,21 @@ def plos_doi_to_xmlurl(doi_string):
         return xml_url
 
 
-def get_file_root(full_path):
-    """
-    This method provides the standard mode of deriving the file root name from
-    a given path to the file; excludes the file extension and all parent
-    directories.
-    """
-    filename = os.path.split(full_path)[1]
-    return os.path.splitext(filename)[0]
-
-
-def local_input(xml_path, download=None):
-    """
-    This method accepts xml path data as an argument, instantiates the Article,
-    and returns the two.
-    """
-    log.info('Local Input - {0}'.format(xml_path))
-    return openaccess_epub.utils.file_root_name(xml_path)
-
-
 def doi_input(doi_string, download=True):
     """
     This method accepts a DOI string and attempts to download the appropriate
-    xml file. If successful, it returns a path to that file along with an
-    Article instance of that file. This works by requesting the correct page
-    from http://dx.doi.org/ and then using publisher conventions to identify
-    the article xml on that page.
+    xml file. If successful, it returns a path to that file. As with all URL
+    input types, the success of this method depends on supporting per-publisher
+    conventions and will fail on unsupported publishers
     """
-    log.info('DOI Input - {0}'.format(doi_string))
+    log.debug('DOI Input - {0}'.format(doi_string))
+    doi_string = doi_string[4:]
     if '10.1371' in doi_string:  # Corresponds to PLoS
+        log.debug('DOI string shows PLoS')
         xml_url = plos_doi_to_xmlurl(doi_string)
     else:
-        print('This publisher is not yet supported by OpenAccess_EPUB')
-        sys.exit(1)
+        log.critical('DOI input for this publisher is not supported')
+        sys.exit('This publisher is not yet supported by OpenAccess_EPUB')
     return url_input(xml_url, download)
 
 
@@ -89,7 +71,7 @@ def url_input(url_string, download=True):
     This method expects a direct URL link to an xml file. It will apply no
     modifications to the received URL string, so ensure good input.
     """
-    log.info('URL Input - {0}'.format(url_string))
+    log.debug('URL Input - {0}'.format(url_string))
     try:
         open_xml = urllib.request.urlopen(url_string)
     except urllib.error.URLError as err:
@@ -98,13 +80,12 @@ def url_input(url_string, download=True):
     else:
         #Employ a quick check on the mimetype of the link
         if not open_xml.headers['Content-Type'] == 'text/xml':
-            print('URL request does not appear to be XML')
-            sys.exit(1)  # Nonzero value for "abnormal" termination
+            sys.exit('URL request does not appear to be XML')
         filename = open_xml.headers['Content-Disposition'].split('\"')[1]
         if download:
             with open(filename, 'wb') as xml_file:
                 xml_file.write(open_xml.read())
-        return get_file_root(filename)
+        return openaccess_epub.utils.file_root_name(filename)
 
 
 def frontiersZipInput(zip_path, output_prefix, download=None):
@@ -137,9 +118,8 @@ def frontiersZipInput(zip_path, output_prefix, download=None):
         try:
             xml_zip.extract(xml)
         except KeyError:
-            log.error('There is no item {0} in the zipfile'.format(xml))
-            print('There is no item {0} in the zipfile'.format(xml))
-            sys.exit(1)
+            log.critical('There is no item {0} in the zipfile'.format(xml))
+            sys.exit('There is no item {0} in the zipfile'.format(xml))
         else:
             if not os.path.isdir(output_meta):
                 os.makedirs(output_meta)

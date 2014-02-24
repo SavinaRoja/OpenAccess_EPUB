@@ -19,6 +19,9 @@ _dc_subject :     returns list of string - ['']
 import openaccess_epub.utils.element_methods as element_methods
 from collections import namedtuple
 from lxml import etree
+import logging
+
+log = logging.getLogger('openaccess_epub.opf.publisher_metadata')
 
 identifier = namedtuple('Identifier', 'value, scheme')
 creator = namedtuple('Creator', 'name, role, file_as')
