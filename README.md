@@ -4,46 +4,37 @@ articles into the ePub format.
 OpenAccess_EPUB's development is focusing primarily on PLoS at the moment, but
 is being designed with extensibility for additional publishers in mind.
 
-Documentation for the project can be found at
-[Read the Docs](https://openaccess_epub.readthedocs.org/en/latest/)
-
 Getting Started
 ---------------
-To get started with OpenAccess_EPUB, one should download the source code and
-then navigate to the top-level directory in the source code. Then install the
-program with Python3 (the program's officially supported Python version). The
-command shown below may or may not work verbatim, replace "python3" with the
-appropriate link to the Python3 executable.
+You can install OpenAccess_EPUB from the source at the
+[project page](https://github.com/SavinaRoja/OpenAccess_EPUB).
 
-For Linux users:
+or you can install with pip.
 
-`sudo python3 setup.py install`
+`pip install openaccess_epub`
 
-For Mac and Windows, enter:
+OpenAccess_EPUB is only compatible with Python3, so make sure that you install
+it with the correct version if you have more than one Python version.
 
-`python3 setup.py install`
+Additional requirements are [docopt](https://github.com/docopt/docopt) and
+[lxml](http://lxml.de/), which pip will attempt to install for you.
 
-Windows systems may require additional configuration (see the wiki).
+Once you've successfully installed OpenAccess_EPUB and its dependencies,
+access the interface using
 
-The next step is to execute OpenAccess_EPUB's configuration script. This will
-allow one to define some helpful default behavior.
+`oaepub`
 
-`oae-quickstart`
+This can be followed by various subcommands and help
+regarding the usage can be retrieved by
 
-Using the configuration script with the "-d" flag will automatically generate
-the system configuration file with all default values. It should inform you of
-where the config file is located for inspection.
+`oaepub -h`
 
-Now you are prepared to use OpenAccess_EPUB's main script "oaepub". The
-following command would instruct OpenAccess_EPUB to convert the article.xml
-file into an ePub file.
+`oaepub convert -h`
+ 
+ etc.
 
-`oaepub -i my/article.xml`
-
-Many more options are available as command line flags, and you can learn more
-about them by executing:
-
-`oaepub --help`
+Use the `oaepub configure` command to set up some local OpenAccess_EPUB
+configuration interactiely before converting articles to EPUB. 
 
 How to Contribute
 -----------------
