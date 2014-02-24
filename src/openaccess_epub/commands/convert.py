@@ -31,8 +31,9 @@ Convert Specific Options:
                         to be converted to EPUB. If using this option with
                         multiple XML inputs, be sure to use wildcard filename
                         matching with a "*", which will expand to the filename
-                        For more information and default configuration see the
-                        config file ('oaepub configure where')
+                        without extension. For more information and default
+                        configuration see the config file
+                        ('oaepub configure where')
 
 Logging Options:
   --no-log-file         Disable logging to file
@@ -137,24 +138,26 @@ def main(argv=None):
         else:
             output_directory = openaccess_epub.utils.get_absolute_path(config.default_output)
 
+        #The root name must be added on for output
         output_directory = os.path.join(output_directory, root_name)
 
         #Make the call to make_EPUB
-        make_EPUB(parsed_article,
-                  output_directory,
-                  abs_input_path,
-                  args['--images'],
-                  config_module=config)
+        success = make_EPUB(parsed_article,
+                            output_directory,
+                            abs_input_path,
+                            args['--images'],
+                            config_module=config)
 
         #Cleanup removes the produced output directory, keeps the EPUB
         if not args['--no-cleanup']:
+            command_log.info('Removing {0}'.format(output_directory))
             shutil.rmtree(output_directory)
 
         #Running epubcheck on the output verifies the validity of the ePub,
         #requires a local installation of java and epubcheck.
-        if not args['--no-epubcheck']:
-            openaccess_epub.utils.epubcheck('{0}.epub'.format(output_directory),
-                                            config)
+        if not args['--no-epubcheck'] and success:
+            epub_name = '{0}.epub'.format(output_directory)
+            openaccess_epub.utils.epubcheck(epub_name, config)
 
 
 if __name__ == '__main__':
