@@ -22,7 +22,8 @@ def make_EPUB(parsed_article,
               output_directory,
               input_path,
               image_directory,
-              config_module=None):
+              config_module=None,
+              batch=False):
     """
     make_EPUB is used to produce an EPUB file from a parsed article. In addition
     to the article it also requires a path to the appropriate image directory
@@ -43,13 +44,20 @@ def make_EPUB(parsed_article,
       config_module=None
           Allows for the injection of a modified or pre-loaded config module. If
           not specified, make_EPUB will load the config file
+
+    Returns False in the case of a fatal error, True if successful.
     """
     #command_log.info('Creating {0}.epub'.format(output_directory))
     if config_module is None:
         config_module = openaccess_epub.utils.load_config_module()
-    #Copy over the files from the base_epub to the new output
+
+    #Handle directory output conflicts
     if os.path.isdir(output_directory):
-        openaccess_epub.utils.dir_exists(output_directory)
+        if batch:  # No user prompt, default to protect previous data
+            log.error('Directory conflict during batch conversion, skipping.')
+            return False
+        else:  # User prompting
+            openaccess_epub.utils.dir_exists(output_directory)
 
     #Copy over the basic epub directory
     base_epub = openaccess_epub.utils.base_epub_location()
@@ -67,9 +75,7 @@ def make_EPUB(parsed_article,
                                                       parsed_article)
     if not success:
         log.critical('Images for the article were not located! Aborting!')
-        #I am not so bold as to call this without serious testing
-        print('Pretend I am deleting {0}'.format(output_directory))
-        #shutil.rmtree(output_directory)
+        return False
 
     epub_toc = openaccess_epub.ncx.NCX(openaccess_epub.__version__,
                                        output_directory)
@@ -93,3 +99,5 @@ def make_EPUB(parsed_article,
 
     #Zip the directory into EPUB
     openaccess_epub.utils.epub_zip(output_directory)
+
+    return True
