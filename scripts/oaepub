@@ -37,12 +37,6 @@ from docopt import docopt
 
 #OpenAccess_EPUB modules
 from openaccess_epub._version import __version__
-import openaccess_epub.commands.batch as batch
-import openaccess_epub.commands.clearcache as clearcache
-import openaccess_epub.commands.collection as collection
-import openaccess_epub.commands.configure as configure
-import openaccess_epub.commands.convert as convert
-import openaccess_epub.commands.validate as validate
 
 
 if __name__ == '__main__':
@@ -70,6 +64,7 @@ if __name__ == '__main__':
 
     #Decide which subcommand to run based on args['COMMAND']
     if args['COMMAND'] == 'batch':
+        import openaccess_epub.commands.batch as batch
         main = batch.main
         printverbose(
 '''Running Batch command with the following options/arguments:
@@ -77,7 +72,9 @@ if __name__ == '__main__':
 
 Batch command script located at:
 {1}'''.format(str(argv), str(batch.__file__)))
+
     elif args['COMMAND'] == 'clearcache':
+        import openaccess_epub.commands.clearcache as clearcache
         main = clearcache.main
         printverbose(
 '''Running Clearcache command with the following options/arguments:
@@ -85,7 +82,9 @@ Batch command script located at:
 
 Clearcache command script located at:
 {1}'''.format(str(argv), str(clearcache.__file__)))
+
     elif args['COMMAND'] == 'collection':
+        import openaccess_epub.commands.collection as collection
         main = collection.main
         printverbose(
 '''Running Collection command with the following options/arguments:
@@ -93,7 +92,9 @@ Clearcache command script located at:
 
 Collection command script located at:
 {1}'''.format(str(argv), str(collection.__file__)))
+
     elif args['COMMAND'] == 'configure':
+        import openaccess_epub.commands.configure as configure
         main = configure.main
         printverbose(
 '''Running Configure command with the following options/arguments:
@@ -101,15 +102,19 @@ Collection command script located at:
 
 Configure command script located at:
 {1}'''.format(str(argv), str(configure.__file__)))
+
     elif args['COMMAND'] == 'convert':
+        import openaccess_epub.commands.convert as convert
         main = convert.main
         printverbose(
 '''Running Convert command with the following options/arguments:
 {0}
 
 Convert command script located at:
-{1}'''.format(str(argv), str(clearcache.__file__)))
+{1}'''.format(str(argv), str(convert.__file__)))
+
     elif args['COMMAND'] == 'validate':
+        import openaccess_epub.commands.validate as validate
         main = validate.main
         printverbose(
 '''Running Validate command with the following options/arguments:
@@ -117,19 +122,19 @@ Convert command script located at:
 
 Validate command script located at:
 {1}'''.format(str(argv), str(validate.__file__)))
+
     elif args['COMMAND'] == 'publishers':
-        print('''\
+        sys.exit('''\
 PLoS      - http://www.plos.org/
 Frontiers - http://www.frontiersin.org/''')
-        sys.exit()
+
     elif args['COMMAND'] == 'haiku':
-        print('''\
+        sys.exit('''
 A field of cotton--
 as if the moon
 had flowered.
 
 - Matsuo Bashō''')
-        sys.exit()
     else:
         print('Your command \'{0}\' was not recognized'.format(args['COMMAND']))
         sys.exit()
