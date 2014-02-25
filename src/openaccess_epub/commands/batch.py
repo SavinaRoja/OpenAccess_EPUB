@@ -109,13 +109,14 @@ def main(argv=None):
                 log_name = root_name + '.log'
                 log_path = os.path.join(os.path.dirname(abs_input_path),
                                         log_name)
-                #Now we move over to the new log file
-                shutil.move('temp.log', log_path)
-                #And re-base the log file to the new file location
+
+                #Re-base the log file to the new file location
                 oae_logging.replace_filehandler(logname='openaccess_epub',
                                                 new_file=log_path,
                                                 level=args['--log-level'],
                                                 frmt=oae_logging.STANDARD_FORMAT)
+                #Now we move over to the new log file
+                shutil.move('temp.log', log_path)
 
             #Parse the article now that logging is ready
             parsed_article = Article(abs_input_path,
