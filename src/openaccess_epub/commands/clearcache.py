@@ -13,9 +13,9 @@ Options:
   -v --version     show program version and exit
 
 Clearcache Specific Options:
-  -d --dry-run     Will print out what it would delete (like --verbose), but not
-                   delete anything. Good idea to try this once before you trust
-                   the command (because you are cautious and wise)
+  -d --dry-run     Will print out what it would delete, instead of actually
+                   deleting anything. Good idea to try this once before you
+                   trust the command (because you are cautious and wise)
 
 Recognized commands for oaepub clearcache are:
   all     Delete all cached data: images, logs
@@ -43,8 +43,6 @@ from docopt import docopt
 from openaccess_epub._version import __version__
 import openaccess_epub.utils
 
-config = openaccess_epub.utils.load_config_module()
-
 
 def empty_it(path, dry_run):
     if dry_run:
@@ -62,6 +60,8 @@ def main(argv=None):
                   argv=argv,
                   version='OpenAccess_EPUB v.' + __version__,
                   options_first=True)
+
+    config = openaccess_epub.utils.load_config_module()
 
     cache_loc = openaccess_epub.utils.cache_location()
 
