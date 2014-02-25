@@ -1,4 +1,4 @@
 # -*- coding: utf-8 -*-
 
 #If you change the version here, also change it in the setup.py file
-__version__ = '0.5.2'
+__version__ = '0.5.3'
