@@ -84,7 +84,7 @@ def main(argv=None):
         if args['--log-to']:
             log_path = args['--log-to']
         else:
-            logname = os.path.basename(directory) + '_validation.log'
+            logname = os.path.basename(dir_path) + '_validation.log'
             log_path = os.path.join(dir_path, logname)
 
         #Add the filehandler for the log if logging is enabled
