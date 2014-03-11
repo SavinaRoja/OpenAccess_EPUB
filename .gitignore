@@ -12,6 +12,7 @@
 # Sphinx #
 ##########
 .buildinfo
+docs/_build
 
 # Epubcheck #
 ############
