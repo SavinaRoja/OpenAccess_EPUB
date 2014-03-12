@@ -23,13 +23,58 @@ It should print the following to your console:
 .. I haven't figured out a better way of doing this yet
 
 .. literalinclude:: ../scripts/oaepub
-     :lines: 5-29
+     :lines: 5-27
+
+You should observe the command `configure` among the list of available commands, which will allow you to define configuration variables for
+your use of OpenAccess_EPUB
 
 .. _configuration:
 
 Configuration
 -------------
 
-An important first step after installing OpenAccess_EPUB is to run the configuration command
+Before the majority of OpenAccess_EPUB commands will work, you must set up some configuration options. Configuration may be done by
+interactive prompt using the command
 
-Run `oaepub configure`
+  ``oaepub configure``
+
+Or the configuration may be set to normal defaults using
+
+  ``oaepub configure --default``
+
+The information for your configuration will be stored in a Python file called `config.py`. It will be located in the base directory of your
+OpenAccess_EPUB cache, to find out where this is, use the command
+
+  ``oaepub configure where``
+
+At any point, you may re-run the `configure` command to change your settings or edit the `config.py` file. The ``oaepub clearcache manual``
+command will print out the location of the cache itself as well as *attempt* to launch a platform-appropriate file browser at that location.
+
+Interactive Configuration
++++++++++++++++++++++++++
+
+The command `oaepub configure` will launch an interactive script for setting you configuration. Each setting has a default value contained in
+square brackets "[]", if you do not wish to change the default setting you may simply press "Enter" to accept the default and move on. Each
+setting should provide plenty of explanation, but it is worthwhile to re-iterate some general concepts here.
+
+Some variable settings require
+path values that may be either absolute paths or relative paths; absolute paths will be treated the same in any context by OpenAccess_EPUB
+while relative paths will be treated as relative to a given input file. If you are on Windows, it should be okay for you to use "\\" or 
+the UNIX "/" in your paths without issues.
+
+For settings that allow multiple values, make sure that each individual value is separated by a comma ",".
+
+The wildcard expansion using the "*" character in some options will expand using the name of the input file. For "journal_article.xml" that
+name will be "journal_article". [#f1]_
+
+
+
+
+
+
+.. rubric:: Footnotes
+
+.. [#f1] The use of the star "*" is allowed in other contexts as well, such as ``oaepub convert --images``, but since it is a special character
+   in most shells, you may need to use the following syntax at the command line ``oaepub convert --images="spam-*" foo.xml``
+
+
