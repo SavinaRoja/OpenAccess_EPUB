@@ -46,7 +46,7 @@ Convert supports input of the following types:
   DOI - A DOI to be resolved for XML download, if publisher is supported
         (starts with 'doi:')
   URL - A URL link to the article for XML download, if publisher is supported
-        (starts with 'http:')
+        (starts with 'http:' or 'https:')
 
 Each individual input will receive its own log (replace '.xml' with '.log')
 unless '--log-to' is used to direct all logging information to a specific file
@@ -112,7 +112,7 @@ def main(argv=None):
         elif inpt.lower().startswith('doi:'):  # This is a DOI
             root_name = input_utils.doi_input(inpt)
             abs_input_path = os.path.join(current_dir, root_name + '.xml')
-        elif inpt.lower().startswith('http:'):  # This is a URL
+        elif any(inpt.lower().startswith(i) for i in ['http:', 'https:']):
             root_name = input_utils.url_input(inpt)
             abs_input_path = os.path.join(current_dir, root_name + '.xml')
         else:
