@@ -23,10 +23,8 @@ The available commands are:
 
 See 'oaepub COMMAND --help' for more information on a specific command.
 
-For more information, please visit the project's GitHub page at:
-https://github.com/SavinaRoja/OpenAccess_EPUB
-
-Feel free to bother the developer for issues/suggestions/help.
+For more help, visit the documentation:
+http://openaccess-epub.readthedocs.org
 """
 
 #Standard Library modules
