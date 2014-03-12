@@ -26,7 +26,7 @@ It should print the following to your console:
      :lines: 5-27
 
 You should observe the command `configure` among the list of available commands, which will allow you to define configuration variables for
-your use of OpenAccess_EPUB
+your use of OpenAccess_EPUB.
 
 .. _configuration:
 
@@ -47,8 +47,9 @@ OpenAccess_EPUB cache, to find out where this is, use the command
 
   ``oaepub configure where``
 
-At any point, you may re-run the `configure` command to change your settings or edit the `config.py` file. The ``oaepub clearcache manual``
-command will print out the location of the cache itself as well as *attempt* to launch a platform-appropriate file browser at that location.
+At any point, you may re-run the `configure` command to change your settings or edit the `config.py` file in a text editor. The
+``oaepub clearcache manual`` command will print out the location of the cache itself as well as *attempt* to launch a platform-appropriate
+file browser at that location.
 
 Interactive Configuration
 +++++++++++++++++++++++++
@@ -60,15 +61,68 @@ setting should provide plenty of explanation, but it is worthwhile to re-iterate
 Some variable settings require
 path values that may be either absolute paths or relative paths; absolute paths will be treated the same in any context by OpenAccess_EPUB
 while relative paths will be treated as relative to a given input file. If you are on Windows, it should be okay for you to use "\\" or 
-the UNIX "/" in your paths without issues.
+the unix-style "/" in your paths without issues.
 
 For settings that allow multiple values, make sure that each individual value is separated by a comma ",".
 
 The wildcard expansion using the "*" character in some options will expand using the name of the input file. For "journal_article.xml" that
 name will be "journal_article". [#f1]_
 
+.. conversion-overview
 
+Overview of Conversion Commands with Examples
+---------------------------------------------
 
+There are three commands for the purpose of converting OpenAccess journal articles to EPUB documents: `convert`, `batch`, and `collection`.
+
+* The `convert` command is a general tool for converting one to a few journal article input files into individual EPUB files.
+
+* The `batch` command is specialized for converting large quantities of journal article input files (contained within a directory) into EPUB
+  individual files.
+
+* The `collection` command is specialized to take advantage of a powerful feature of OpenAccess_EPUB; it can convert several journal article
+  input files into a single EPUB file representing a collection or omnibus.
+
+Speaking of input files...
+
+Input, what Input?
+++++++++++++++++++
+
+OpenAccess_EPUB always operates on a special XML (.xml extension) file produced by the journal publisher that contains all of the data and
+metadata for the article. These .xml files are constructed according to various versions of a standard called the
+`Journal Publishing Tag Set <http://dtd.nlm.nih.gov/publishing/>`_ . That said, the `convert` command will also work with the appropriate DOI
+or URL for a journal article if online-fetching support has been provided for the specific publisher. In this case, it will download the XML
+file automatically. If this fails, you will need to download the file manually.
+
+`convert`
++++++++++
+
+Let's suppose that we wish to convert the PLoS Computational Biology article located at this URL
+http://www.ploscompbiol.org/article/info%3Adoi%2F10.1371%2Fjournal.pcbi.1003450 to an EPUB file. We have the following three options for
+specifying this article to the `convert command`:
+
+  ``oaepub convert http://www.ploscompbiol.org/article/info%3Adoi%2F10.1371%2Fjournal.pcbi.1003450``
+
+  ``oaepub convert doi:10.1371/journal.pcbi.1003450``
+
+  ``oaepub convert path/to/journal.pcbi.1003450.xml``
+
+For the second option we find the DOI listed for the article on the web page. For the third option we download the XML file from the web
+page's sidebar to our hard drive, then provide the path to the file as the input argument. In the first two options, the command would
+download the XML file to the working directory in which the command was executed as the first step. We'll procede from the third example.
+
+Assuming default configuration, the output EPUB file would be located in the same directory as the input XML file as
+``path/to/journal.pcbi.1003450.epub``. If we wanted to place the output somewhere else, we could use the ``--output`` (``-o``) option like:
+
+  ``oaepub convert -o my/articles/folder path/to/journal.pcbi.1003450.xml``
+
+If we wanted to have no information printed out during conversion, we could use ``--silence`` (``-s``) like:
+
+  ``oaepub convert -s path/to/journal.pcbi.1003450.xml``
+
+Or we could have more information printed out using ``--verbosity`` (``-V``) like:
+
+  ``oaepub convert --verbosity DEBUG path/to/journal.pcbi.1003450.xml``
 
 
 
