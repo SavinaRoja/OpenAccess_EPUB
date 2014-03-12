@@ -3,17 +3,22 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to OpenAccess_EPUB's documentation!
-===========================================
+OpenAccess_EPUB's Documentation
+===============================
+
+Welcome. This is the documentation for OpenAccess_EPUB.
+
+The code for this project is hosted `here at GitHub <https://github.com/SavinaRoja/OpenAccess_EPUB>`_
 
 Contents:
 
 .. toctree::
    :maxdepth: 2
    
-   introduction
-   inputmodes
-   forthedevs
+   installation
+   usageguide
+   moduledocs
+   about
 
 Indices and tables
 ==================
