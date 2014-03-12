@@ -1,8 +1,8 @@
 OpenAccess_EPUB is a program for converting OpenAccess Academic Journal
 articles into the ePub format.
 
-OpenAccess_EPUB's development is focusing primarily on PLoS at the moment, but
-is being designed with extensibility for additional publishers in mind.
+Documentation for the project is hosted on 
+[Read the Docs](http://openaccess-epub.readthedocs.org/en/latest/)
 
 Getting Started
 ---------------
