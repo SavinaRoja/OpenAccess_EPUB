@@ -147,13 +147,34 @@ OpenAccess_EPUB can locate the images for an article on your local machine eithe
 is configurable see :ref:`configuration`). If we want to explicitly specify a pattern for finding images for an article based on "*"
 name matching, we could use the ``--images`` (``-i``) option like this for input-relative images:
 
-  ``oaepub batch -i ./images/*  articles_dir/``
+  ``oaepub batch --images ./images/*  articles_dir/``
 
 which would find image directories of with the path "articles_dir/images/{input-file-name}".
 
 The ``--recursive`` (``-r``) option will instruct the `batch` command to recursively traverse sub-directories of each listed directory
 input to convert their contained XML files as well.
 
+For more information and options with the `batch` command refer to ``oaepub batch --help``
+
+
+`collection`
+++++++++++++
+
+The `collection` command is similar to the `batch` command, however it expects a text file as its input. The name of the text file will
+become the name of the EPUB, as well as the name of the single log file (unless ``--log-to`` is employed). Each line of the file should
+contain a path to a local XML file; the order of the files listed will be the order of the articles in the EPUB document. An example
+collection text file could read like this (all lines are valid)::
+
+   ./first_article.xml
+   ../second_article.xml
+   nested/directory/third_article.xml
+   /absolute/path/to/fourth_article.xml
+
+If this file is named Reading_List_2014.txt, then the following command could be used to create the collection EPUB.
+
+  ``oaepub collection Reading_List_2014.txt``
+
+For more information and options with the `collection` command refer to ``oaepub collection --help``
 
 
 .. rubric:: Footnotes
