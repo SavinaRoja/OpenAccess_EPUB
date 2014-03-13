@@ -5,13 +5,14 @@ This is the setup file to install openaccess_epub.
 from distutils.core import setup
 #from setuptools import setup
 
+
 def long_description():
     with open('README.md', 'r') as readme:
         readme_text = readme.read()
     return(readme_text)
 
 setup(name='openaccess_epub',
-      version='0.5.3',
+      version='0.5.4',
       description='Converts OpenAccess Journal articles to ePub',
       long_description=long_description(),
       author='Paul Barton',
