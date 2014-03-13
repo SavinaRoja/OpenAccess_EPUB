@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-The openaccess_epub is the root package for OpenAccess_EPUB
+openaccess_epub is the root package for OpenAccess_EPUB
 
 The openaccess_epub package contains all of the packages and sub-modules for the
 OpenAccess_EPUB project, which provides tools for processing academic journal
