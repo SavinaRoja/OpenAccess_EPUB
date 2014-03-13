@@ -4,7 +4,7 @@ openaccess_epub is the root package for OpenAccess_EPUB
 
 The openaccess_epub package contains all of the packages and sub-modules for the
 OpenAccess_EPUB project, which provides tools for processing academic journal
-articles in the Jorunal Publishing Tag Set XML format as well as generating
+articles in the Journal Publishing Tag Set XML format as well as generating
 EPUB documents from the processed information. XML parsing and editing is
 performed using lxml.
 """
