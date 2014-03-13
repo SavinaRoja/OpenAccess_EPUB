@@ -9,7 +9,7 @@ I am a strong supporter of OpenAccess publishing and believe that the world can 
 this project contributes at least somewhat to this aim.
 
 OpenAccess_EPUB is a one-person show at the moment, but as always I would be more than happy to have help. If you would like to contribute
-your time, advice, or expertise to this project, please contact me GitHub.
+your time, advice, or expertise to this project, please contact `me on GitHub <https://github.com/SavinaRoja>`_.
 
 This software is licensed under the `GNU General Public License v3.0 <http://www.gnu.org/licenses/gpl-3.0.html>`_
 
