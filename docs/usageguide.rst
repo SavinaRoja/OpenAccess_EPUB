@@ -133,6 +133,7 @@ For more information and options with the `convert` command refer to ``oaepub co
 
 The `batch` command's job is to convert all articles in a directory (or multiple directories) to EPUB. This is somewhat like running 
 `convert` on each article (``oaepub convert ./*.xml`` *would work* ), but provides a few useful additional features for large batch jobs.
+It will not stop to ask about file or directory name conflicts, it will simply skip converting the article at issue.
 A simple example might be:
 
   ``oaepub batch articles_dir/``
