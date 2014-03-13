@@ -101,15 +101,17 @@ Let's suppose that we wish to convert the PLoS Computational Biology article loc
 http://www.ploscompbiol.org/article/info%3Adoi%2F10.1371%2Fjournal.pcbi.1003450 to an EPUB file. We have the following three options for
 specifying this article to the `convert command`:
 
-  ``oaepub convert http://www.ploscompbiol.org/article/info%3Adoi%2F10.1371%2Fjournal.pcbi.1003450``
+  ``oaepub convert "http://www.ploscompbiol.org/article/fetchObjectAttachment.action?uri=info%3Adoi%2F10.1371%2Fjournal.pcbi.1003450&representation=XML"``
 
   ``oaepub convert doi:10.1371/journal.pcbi.1003450``
 
   ``oaepub convert path/to/journal.pcbi.1003450.xml``
 
-For the second option we find the DOI listed for the article on the web page. For the third option we download the XML file from the web
-page's sidebar to our hard drive, then provide the path to the file as the input argument. In the first two options, the command would
-download the XML file to the working directory in which the command was executed as the first step. We'll procede from the third example.
+For the first option we copied and pasted the link to the XML file from the sidebar, and enclosed it in quotes to avoid issues with
+special characters. For the second option we simply find the DOI listed for the article on the web page. For the third option we download 
+the XML file from the web page's sidebar to our hard drive, then provide the path to the file as the input argument. In the first two 
+options, the command would download the XML file to the working directory in which the command was executed as the first step. We'll
+procede from the third example.
 
 Assuming default configuration, the output EPUB file would be located in the same directory as the input XML file as
 ``path/to/journal.pcbi.1003450.epub``. If we wanted to place the output somewhere else, we could use the ``--output`` (``-o``) option like:
@@ -124,11 +126,39 @@ Or we could have more information printed out using ``--verbosity`` (``-V``) lik
 
   ``oaepub convert --verbosity DEBUG path/to/journal.pcbi.1003450.xml``
 
+For more information and options with the `convert` command refer to ``oaepub convert --help``
+
+`batch`
++++++++
+
+The `batch` command's job is to convert all articles in a directory (or multiple directories) to EPUB. This is somewhat like running 
+`convert` on each article (``oaepub convert ./*.xml`` *would work* ), but provides a few useful additional features for large batch jobs.
+A simple example might be:
+
+  ``oaepub batch articles_dir/``
+
+where "articles" is a directory which contains XML files for journal articles. This example would create a log file for each article it
+processed to EPUB, what if we wanted to only log all errors into a single file for the whole batch? We might use the ``--log-to``
+(``-l``) and ``--log-level`` options like this:
+
+  ``oaepub batch --log-to batch_errors.log --log-level ERROR articles_dir/``
+
+OpenAccess_EPUB can locate the images for an article on your local machine either from the cache or relative to the input (this behavior
+is configurable see :ref:`configuration`). If we want to explicitly specify a pattern for finding images for an article based on "*"
+name matching, we could use the ``--images`` (``-i``) option like this for input-relative images:
+
+  ``oaepub batch -i ./images/*  articles_dir/``
+
+which would find image directories of with the path "articles_dir/images/{input-file-name}".
+
+The ``--recursive`` (``-r``) option will instruct the `batch` command to recursively traverse sub-directories of each listed directory
+input to convert their contained XML files as well.
+
 
 
 .. rubric:: Footnotes
 
-.. [#f1] The use of the star "*" is allowed in other contexts as well, such as ``oaepub convert --images``, but since it is a special character
-   in most shells, you may need to use the following syntax at the command line ``oaepub convert --images="spam-*" foo.xml``
-
+.. [#f1] The use of the star "*" for wildcard-expansion is usable in the config.py file and in certain command-line options (such as 
+   ``oaepub batch --images``). In many shells "*" is a special character so you may need to use the following syntax to avoid its
+   special treatment: ``oaepub batch --images="spam-*" articles_dir/``
 
