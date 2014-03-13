@@ -1,7 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-The openaccess_epub module provides a large suite of complementary tools and
-uilities that enable the conversion of xml files to epub for academic journals.
+The openaccess_epub is the root package for OpenAccess_EPUB
+
+
+The openaccess_epub package contains all of the packages and sub-modules for the
+OpenAccess_EPUB project, which provides tools for processing academic journal
+articles in the Jorunal Publishing Tag Set XML format as well as generating
+EPUB documents from the processed information. XML parsing and editing is
+performed using lxml.
 """
 
 import os
