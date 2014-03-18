@@ -4,7 +4,7 @@ Usage Guide
 Installing OpenAccess_EPUB will add the ``openaccess_epub`` module to your python libraries (see :doc:`installation` for installation
 instructions), along with a command-line user interface to access some built-in utilities for EPUB production. This Guide will focus on how to
 use the command interface; if you are a developer wishing to primarily make use of the ``openaccess_epub`` module or sub-modules, you may
-wish to skip directly to the :doc:`moduledocs`
+wish to skip directly to the :doc:`modules`
 
 
 `oaepub` Interface

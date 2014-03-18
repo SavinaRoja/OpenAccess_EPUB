@@ -17,7 +17,7 @@ Contents:
    
    installation
    usageguide
-   moduledocs
+   modules
    about
 
 Indices and tables
