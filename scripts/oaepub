@@ -38,9 +38,6 @@ from docopt import docopt
 #OpenAccess_EPUB modules
 from openaccess_epub._version import __version__
 
-VALID_COMMANDS = ['batch', 'clearcache', 'collection', 'configure', 'convert',
-                  'validate']
-
 
 if __name__ == '__main__':
     args = docopt(__doc__,
@@ -80,16 +77,17 @@ PLoS      - http://www.plos.org/
 Frontiers - http://www.frontiersin.org/''')
 
     #Decide which subcommand to run based on args['COMMAND']
-    if args['COMMAND'] not in VALID_COMMANDS:
-        sys.exit('Your command \'{0}\' was not recognized'.format(args['COMMAND']))
     else:
-        mod = import_module('openaccess_epub.commands.' + args['COMMAND'])
-        main = mod.main
-        printverbose('''\
+        try:
+            mod = import_module('openaccess_epub.commands.' + args['COMMAND'])
+        except ImportError:
+            sys.exit('Your command \'{0}\' was not recognized'.format(args['COMMAND']))
+        else:
+            main = mod.main
+            printverbose('''\
 Running {cmd} command with the following options/arguments:
 {args}
 
 {cmd} command script located at:
 {filename}'''.format(cmd=args['COMMAND'], args=str(argv), filename=mod.__file__))
-
-    main(argv=argv)
+            main(argv=argv)
