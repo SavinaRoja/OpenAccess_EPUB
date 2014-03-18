@@ -68,7 +68,7 @@ For settings that allow multiple values, make sure that each individual value is
 The wildcard expansion using the "*" character in some options will expand using the name of the input file. For "journal_article.xml" that
 name will be "journal_article". [#f1]_
 
-.. conversion-overview
+.. _conversion-overview:
 
 Overview of Conversion Commands with Examples
 ---------------------------------------------
