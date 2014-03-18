@@ -9,7 +9,7 @@ openaccess_epub.utils.css module
 
 .. automodule:: openaccess_epub.utils.css
     :members:
-..    :undoc-members:
+    :undoc-members:
     :show-inheritance:
 
 openaccess_epub.utils.element_methods module
@@ -17,7 +17,7 @@ openaccess_epub.utils.element_methods module
 
 .. automodule:: openaccess_epub.utils.element_methods
     :members:
-..    :undoc-members:
+    :undoc-members:
     :show-inheritance:
 
 openaccess_epub.utils.epub module
@@ -25,7 +25,7 @@ openaccess_epub.utils.epub module
 
 .. automodule:: openaccess_epub.utils.epub
     :members:
-..    :undoc-members:
+    :undoc-members:
     :show-inheritance:
 
 openaccess_epub.utils.images module
@@ -33,7 +33,7 @@ openaccess_epub.utils.images module
 
 .. automodule:: openaccess_epub.utils.images
     :members:
-..    :undoc-members:
+    :undoc-members:
     :show-inheritance:
 
 openaccess_epub.utils.inputs module
@@ -41,7 +41,7 @@ openaccess_epub.utils.inputs module
 
 .. automodule:: openaccess_epub.utils.inputs
     :members:
-..    :undoc-members:
+    :undoc-members:
     :show-inheritance:
 
 openaccess_epub.utils.logs module
@@ -49,7 +49,7 @@ openaccess_epub.utils.logs module
 
 .. automodule:: openaccess_epub.utils.logs
     :members:
-..    :undoc-members:
+    :undoc-members:
     :show-inheritance:
 
 
@@ -58,5 +58,5 @@ Module contents
 
 .. automodule:: openaccess_epub.utils
     :members:
-..    :undoc-members:
+    :undoc-members:
     :show-inheritance:

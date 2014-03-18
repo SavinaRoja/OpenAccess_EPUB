@@ -1,8 +1,7 @@
-Module Documentation for OpenAccess_EPUB
-========================================
+openaccess_epub
+===============
 
 .. toctree::
    :maxdepth: 4
 
    openaccess_epub
-
