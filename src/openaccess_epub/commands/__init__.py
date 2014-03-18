@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
 """
-openaccess_epub.commands defines usable commands through the oaepub interface.
+openaccess_epub.commands defines modules useful as scripts, available through
+oaepub interface.
 
 The commands in the openaccess.commands module can be run as standalones or
 through the `oaepub` interface installed with OpenAccess_EPUB. Each command's
