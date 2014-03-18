@@ -30,12 +30,16 @@ http://openaccess-epub.readthedocs.org
 #Standard Library modules
 import sys
 import logging
+from importlib import import_module
 
 #Non-Standard Library modules
 from docopt import docopt
 
 #OpenAccess_EPUB modules
 from openaccess_epub._version import __version__
+
+VALID_COMMANDS = ['batch', 'clearcache', 'collection', 'configure', 'convert',
+                  'validate']
 
 
 if __name__ == '__main__':
@@ -56,87 +60,36 @@ if __name__ == '__main__':
     #options are first, and like so:
     #if args['--verbose']:
     #    argv.append('--verbose')  # this would pass --verbose onward
-    #argv += ['--verbose'] if args['--verbose'] else argv  # Cute, one-liner
+    #argv += ['--verbose'] if args['--verbose'] else argv  # Concise, one-liner
 
     #Add on all of the ARGS ...  (mixture of options and args for sub-parsing)
     argv += args['ARGS']
 
-    #Decide which subcommand to run based on args['COMMAND']
-    if args['COMMAND'] == 'batch':
-        import openaccess_epub.commands.batch as batch
-        main = batch.main
-        printverbose(
-'''Running Batch command with the following options/arguments:
-{0}
+    #This is not just to be cute, it's also a test of terminal UTF-8
+    if args['COMMAND'] == 'haiku':
+        sys.exit('''
+A field of cotton--
+as if the moon
+had flowered.
 
-Batch command script located at:
-{1}'''.format(str(argv), str(batch.__file__)))
-
-    elif args['COMMAND'] == 'clearcache':
-        import openaccess_epub.commands.clearcache as clearcache
-        main = clearcache.main
-        printverbose(
-'''Running Clearcache command with the following options/arguments:
-{0}
-
-Clearcache command script located at:
-{1}'''.format(str(argv), str(clearcache.__file__)))
-
-    elif args['COMMAND'] == 'collection':
-        import openaccess_epub.commands.collection as collection
-        main = collection.main
-        printverbose(
-'''Running Collection command with the following options/arguments:
-{0}
-
-Collection command script located at:
-{1}'''.format(str(argv), str(collection.__file__)))
-
-    elif args['COMMAND'] == 'configure':
-        import openaccess_epub.commands.configure as configure
-        main = configure.main
-        printverbose(
-'''Running Configure command with the following options/arguments:
-{0}
-
-Configure command script located at:
-{1}'''.format(str(argv), str(configure.__file__)))
-
-    elif args['COMMAND'] == 'convert':
-        import openaccess_epub.commands.convert as convert
-        main = convert.main
-        printverbose(
-'''Running Convert command with the following options/arguments:
-{0}
-
-Convert command script located at:
-{1}'''.format(str(argv), str(convert.__file__)))
-
-    elif args['COMMAND'] == 'validate':
-        import openaccess_epub.commands.validate as validate
-        main = validate.main
-        printverbose(
-'''Running Validate command with the following options/arguments:
-{0}
-
-Validate command script located at:
-{1}'''.format(str(argv), str(validate.__file__)))
+- Matsuo Bashō (松尾 芭蕉)''')
 
     elif args['COMMAND'] == 'publishers':
         sys.exit('''\
 PLoS      - http://www.plos.org/
 Frontiers - http://www.frontiersin.org/''')
 
-    elif args['COMMAND'] == 'haiku':
-        sys.exit('''
-A field of cotton--
-as if the moon
-had flowered.
-
-- Matsuo Bashō''')
+    #Decide which subcommand to run based on args['COMMAND']
+    if args['COMMAND'] not in VALID_COMMANDS:
+        sys.exit('Your command \'{0}\' was not recognized'.format(args['COMMAND']))
     else:
-        print('Your command \'{0}\' was not recognized'.format(args['COMMAND']))
-        sys.exit()
+        mod = import_module('openaccess_epub.commands.' + args['COMMAND'])
+        main = mod.main
+        printverbose('''\
+Running {cmd} command with the following options/arguments:
+{args}
+
+{cmd} command script located at:
+{filename}'''.format(cmd=args['COMMAND'], args=str(argv), filename=mod.__file__))
 
     main(argv=argv)
-
