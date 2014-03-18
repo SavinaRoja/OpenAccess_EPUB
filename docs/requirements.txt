@@ -1,4 +1,4 @@
-sphinx
-sphinxcontrib-napoleon
 lxml
 docopt
+sphinx
+sphinxcontrib-napoleon
