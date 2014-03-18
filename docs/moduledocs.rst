@@ -5,6 +5,7 @@ Module Documentation for OpenAccess_EPUB
 ---------------------------
 
 .. automodule:: openaccess_epub
+   :members:
 
 ``openaccess_epub.article``
 ---------------------------
