@@ -48,11 +48,47 @@ dtds = {'-//NLM//DTD Journal Archiving and Interchange DTD v1.0 20021201//EN':
 
 class Article(object):
     """
-    At this stage, the journal article is parsed by lxml, validated against its
-    DTD version, and then will have its metadata elements parsed into a
-    hierarchical namedtuple structure. Additional metadata abstractions may
-    also be implemented. This class will be later passed to OPF and NCX for
-    structural/metadata translation and to OPS for content translation.
+    Abstract class for journal article; parses XML to data structure.
+
+    The Article class operates on an abstract level to execute some common
+    processing tasks for all journal articles. It first parses the journal
+    article XML to an lxml.etree structure, then inspects the file to discover
+    the appropriate DTD and version by which the article was published. It,
+    optionally, validates the article according to its DTD then proceeds (if
+    successful) to recursively parse all metadata into a tree data structure.
+    This facilitates easy accession of nested elements using the following
+    strategy: \"Article.metadata.front.journal_meta.publisher\"
+
+    Parameters
+    ----------
+    xml_file : str
+               Path to the xml file for parsing `xml_file`.
+    validation : bool, optional
+               DTD validation is used when this evaluates True, use is strongly
+               advised `validation`.
+
+    Attributes
+    ----------
+    doi : str
+          The full DOI string for the article `doi`.
+    dtd : lxml.etree.DTD object
+          The parsed DTD object used for validation and metadata parsing `dtd`.
+    dtd_name : str
+          The name of the DTD, such as \"JPTS\" `dtd_name`.
+    dtd_version : float
+          The version of the DTD, such as 3.0 `dtd_version`.
+    metadata : namedtuple object
+          The metadata attribute is a tree structure of nested namedtuples.
+          metadata itself holds two attributes, 'front' and 'back'. Each
+          namedtuple under metadata will possess: attributes for every allowed
+          child element defined by DTD, a dictionary of XML attributes held in
+          the 'attrs' attribute, and a 'node' attribute for the lxml.etree
+          Element itself. If any would-be attribute conflicts with a python
+          keyword, it will be prepended by 'l' `metadata`.
+    publisher : str
+          A standardized, concise name for the publisher of the article, such as
+          \"PLoS" or \"Frontiers" `publisher`.
+
     """
     def __init__(self, xml_file, validation=True):
         log.info('Parsing file: {0}'.format(xml_file))
@@ -62,24 +98,26 @@ class Article(object):
 
         #Find its public id so we can identify the appropriate DTD
         public_id = self.document.docinfo.public_id
+        log.debug('Doctype PUBLIC: ' + public_id)
 
         #Instantiate an lxml.etree.DTD class from the dtd files in our data
         try:
             dtd = dtds[public_id]
         except KeyError as err:
-            print('Document published according to unsupported specification. \
-Please contact the maintainers of OpenAccess_EPUB.')
+            log.exception()
+            log.error('Unkown DTD for value in Doctype PUBLIC: ' + public_id)
             raise err  # We can proceed no further without the DTD
         else:
             self.dtd = etree.DTD(dtd.path)
             self.dtd_name, self.dtd_version = dtd.name, dtd.version
+            log.debug('DTD: {0} {1}'.format(self.dtd_name, self.dtd_version))
 
         #If using a supported DTD type, execute validation
         if validation:
+            log.debug('DTD validation is in use')
             if not self.dtd.validate(self.document):
-                print('The document {0} did not pass validation according to \
-its DTD.'.format(xml_file))
-                print(self.dtd.error_log.filter_from_errors())
+                log.critical('The document did not pass validation:\n' +
+                             self.dtd.error_log.filter_from_errors())
                 sys.exit(1)
 
         #Get basic elements, per DTD (and version if necessary)
@@ -251,19 +289,21 @@ its DTD.'.format(xml_file))
             try:
                 publisher = publisher_dois[self.doi.split('/')[0]]
             except KeyError:
-                pass
+                log.info('publisher DOI not recognized:' + self.doi)
             else:
                 return publisher
         #If that fails, attempt to extract the publisher through inspection
         if self.dtd_name == 'JPTS':
             publisher_meta = self.metadata.front.journal_meta.publisher
-            if publisher_meta is not None:  #Optional element
-                print(publisher_meta.publisher_name.text, type(publisher_meta.publisher_name.text))
-                if publisher_meta.publisher_name.text == 'Public Library of Science':
+            if publisher_meta is not None:  # Optional element
+                log.debug('publisher element in journal-meta found')
+                name_text = publisher_meta.publishder_name.text
+                log.debug('publisher name: ' + publisher_name)
+                if name_text == 'Public Library of Science':
                     return 'PLoS'
-                elif publisher_meta.publisher_name.text == 'Frontiers Media S.A.':
+                elif name_text == 'Frontiers Media S.A.':
                     return 'Frontiers'
-        print('Warning! Unable to identify publisher for this article!')
+        log.warning('Unable to identify publisher for this article!')
         return None
 
     def get_DOI(self):
@@ -276,9 +316,9 @@ its DTD.'.format(xml_file))
             for art_id in art_ids:
                 if art_id.attrs['pub-id-type'] == 'doi':
                     return art_id.text
-            print('Warning! Unable to locate DOI string for this article!')
+            log.warning('Unable to locate DOI string for this article')
             return None
         else:
-            print('Warning! Unable to locate DOI string for this article!')
+            log.warning('Unable to locate DOI string for this article')
             return None
 
