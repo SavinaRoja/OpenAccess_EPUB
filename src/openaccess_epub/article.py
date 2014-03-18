@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 """
 openaccess_epub.article  defines abstract article representation
 

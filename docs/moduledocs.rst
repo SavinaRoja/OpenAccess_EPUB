@@ -11,6 +11,8 @@ Module Documentation for OpenAccess_EPUB
 
 .. automodule:: openaccess_epub.article
 
+.. autoclass:: openaccess_epub.article.Article
+
 ``openaccess_epub.commands``
 ----------------------------
 
