@@ -8,3 +8,7 @@ Module contents
     :members:
 ..    :undoc-members:
     :show-inheritance:
+
+..autoclass:: openaccess_epub.article.Article
+    :members:
+    :show-inheritance:
