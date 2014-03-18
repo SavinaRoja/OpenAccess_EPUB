@@ -6,5 +6,5 @@ Module contents
 
 .. automodule:: openaccess_epub.article
     :members:
-    :undoc-members:
+..    :undoc-members:
     :show-inheritance:

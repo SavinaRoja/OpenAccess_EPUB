@@ -62,33 +62,32 @@ class Article(object):
     Parameters
     ----------
     xml_file : str
-               Path to the xml file for parsing `xml_file`.
+        Path to the xml file for parsing `xml_file`.
     validation : bool, optional
-               DTD validation is used when this evaluates True, use is strongly
-               advised `validation`.
+        DTD validation is used when this evaluates True, use is strongly advised
+        `validation`.
 
     Attributes
     ----------
     doi : str
-          The full DOI string for the article `doi`.
+        The full DOI string for the article `doi`.
     dtd : lxml.etree.DTD object
-          The parsed DTD object used for validation and metadata parsing `dtd`.
+        The parsed DTD object used for validation and metadata parsing `dtd`.
     dtd_name : str
-          The name of the DTD, such as \"JPTS\" `dtd_name`.
+        The name of the DTD, such as \"JPTS\" `dtd_name`.
     dtd_version : float
-          The version of the DTD, such as 3.0 `dtd_version`.
+        The version of the DTD, such as 3.0 `dtd_version`.
     metadata : namedtuple object
-          The metadata attribute is a tree structure of nested namedtuples.
-          metadata itself holds two attributes, 'front' and 'back'. Each
-          namedtuple under metadata will possess: attributes for every allowed
-          child element defined by DTD, a dictionary of XML attributes held in
-          the 'attrs' attribute, and a 'node' attribute for the lxml.etree
-          Element itself. If any would-be attribute conflicts with a python
-          keyword, it will be prepended by 'l' `metadata`.
+        The metadata attribute is a tree structure of nested namedtuples. For
+        JPTS the metadata holds two attributes, 'front' and 'back'. Each
+        namedtuple under metadata will possess: attributes for every allowed
+        child element defined by DTD, a dictionary of XML attributes held in the
+        'attrs' attribute, and a 'node' attribute for the lxml.etree Element
+        itself. If any would-be attribute conflicts with a python keyword, it
+        will be prepended by 'l' `metadata`.
     publisher : str
-          A standardized, concise name for the publisher of the article, such as
-          \"PLoS" or \"Frontiers" `publisher`.
-
+        A standardized, concise name for the publisher of the article, such as
+        \"PLoS" or \"Frontiers" `publisher`.
     """
     def __init__(self, xml_file, validation=True):
         """
@@ -142,6 +141,24 @@ class Article(object):
         self.publisher = self.get_publisher()
 
     def get_metadata(self):
+        """
+        This method contains the logic responsible for parsing the metadata in
+        the article according to its DTD into a '.'-navigable python data
+        structure.
+
+        This code recursively traverses the metadata elements of the article
+        XML and extracts data according to DTD prescription. It is greedy and
+        will collect everything. This is time-consuming but it ensures general
+        usefulness in every situation.
+
+        Notes
+        -----
+        The code contained in this function is arcane, take extra care for
+        comprehension if you intend to make modifications. It is also one of the
+        most time-consuming steps in the processing of article  XML. Any
+        techniques that enhance the clarity or speed of this method are very
+        valuable.
+        """
 
         #Dictionary comprehension - element name : element definition
         dtd_dict = {i.name: i for i in self.dtd.elements()}
@@ -155,7 +172,7 @@ class Article(object):
         eltuple = namedtuple('ElTuple', 'tag, occurrence')
 
         def get_sub_elements(content, multiple=False, first=None):
-            sub_elements = []  #The final list of tuples to be returned
+            sub_elements = []  # The final list of tuples to be returned
 
             #The first level of recursion is special, and we need not be
             #concerned with inheriting plurality from an upper branch.
@@ -284,7 +301,19 @@ class Article(object):
 
     def get_publisher(self):
         """
-        This function will attempt to identify the publisher of the article.
+        This method defines how the Article tries to determine the publisher of
+        the article.
+
+        It first does this by inspecting the article's full DOI string, if
+        available, and compares the publisher segment to the list of known
+        publishers. If this fails then it attempts to detect the publisher by
+        DTD-appropriate inspection of the article's metadata.
+
+        Returns
+        -------
+        publisher : str or None
+            Standardized, concise name of the publisher. None if the publisher
+            could not be determined, this will also issue a warning.
         """
         publisher_dois = {'10.1371': 'PLoS', '10.3389': 'Frontiers'}
         #Try to look up the publisher by DOI
@@ -311,8 +340,16 @@ class Article(object):
 
     def get_DOI(self):
         """
-        This function will attempt to locate the DOI string associated with the
-        article.
+        This method defines how the Article tries to detect the DOI.
+
+        It attempts to determine the article DOI string by DTD-appropriate
+        inspection of the article metadata.
+
+        Returns
+        -------
+        doi : str or None
+            The full (publisher/article) DOI string for the article, or None on
+            failure.
         """
         if self.dtd_name == 'JPTS':
             art_ids = self.metadata.front.article_meta.article_id
