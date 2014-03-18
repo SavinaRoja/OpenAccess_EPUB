@@ -9,6 +9,6 @@ Module contents
 ..    :undoc-members:
     :show-inheritance:
 
-..autoclass:: openaccess_epub.article.Article
+.. autoclass:: openaccess_epub.article.Article
     :members:
     :show-inheritance:
