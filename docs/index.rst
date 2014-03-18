@@ -13,7 +13,7 @@ The code for this project is hosted `here at GitHub <https://github.com/SavinaRo
 Contents:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    
    installation
    usageguide
