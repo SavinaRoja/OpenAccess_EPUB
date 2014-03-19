@@ -123,7 +123,7 @@ def get_attribute(element, attribute):
         The string value of the attribute, None if it does not exist.
     """
     #return element.attrib.get(attribute)
-     try:
+    try:
         optional_attribute = element.attrib[attribute]
     except KeyError:
         return None
