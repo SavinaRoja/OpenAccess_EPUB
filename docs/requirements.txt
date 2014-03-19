@@ -1,4 +1,3 @@
-lxml
 docopt
 sphinx
 sphinxcontrib-napoleon
