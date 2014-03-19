@@ -16,6 +16,7 @@ import logging
 
 log = logging.getLogger('openaccess_epub.utils.element_methods')
 
+
 def append_new_text(destination, text, join_str=None):
     """
     This method provides the functionality of adding text appropriately
@@ -35,6 +36,7 @@ def append_new_text(destination, text, join_str=None):
             destination.text = text
         else:  # Destination has a text
             destination.text = join_str.join([destination.text, text])
+
 
 def append_all_below(destination, source, join_str=None):
     """
@@ -63,11 +65,12 @@ def append_all_below(destination, source, join_str=None):
     for each_child in source:
         destination.append(deepcopy(each_child))
 
+
 def all_text(element):
     """
     A method for extending lxml's functionality, this will find and concatenate
     all text data that exists one level immediately underneath the given
-    element. Unlike etree.tostring(element, method='text'), this will not 
+    element. Unlike etree.tostring(element, method='text'), this will not
     recursively walk the entire underlying tree. It merely combines the element
     text attribute with the tail attribute of each child.
     """
@@ -78,6 +81,7 @@ def all_text(element):
     tails = [child.tail for child in element if child.tail is not None]
     tails = [tail.strip() for tail in tails if tail.strip()]
     return ' '.join(text + tails)
+
 
 def remove_all_attributes(element, exclude=None):
     """
@@ -92,40 +96,40 @@ def remove_all_attributes(element, exclude=None):
         if k not in exclude:
             element.attrib.pop(k)
 
+
 def get_attribute(element, attribute):
     """
-    With lxml's built in methods, if you attempt to access an attribute
-    that does not exist, you will get a KeyError. To deal with attributes
-    that are optional, you would have to follow one of these patterns:
+    Gets the attribute value in a safe way, useful for optional attributes.
 
-      try:
-        optional_attr = some_element.attrib['optional']
-      except KeyError:
-        optional_attr = None
-      if optional_attr:  # Or this could be an else clause
-        do_stuff
+    .. note:: deprecated in OpenAccess_EPUB 0.5.5
+        get_attribute achieves the same functionality as dict.get on the attrib
+        dictionary of an Element. In the future, Element.attrib.get['foo']
+        should be used.
 
-      if 'optional' in some_element.attrib:
-        optional_attr = some_element.attrib['optional']
-      else:
-        optional_attr = None
-      if optional_attr:
-        do_stuff
+    lxml Elements possess a dictionary called 'attrib', but as many attributes
+    are optional, use of optional-safe attribute accession is needed as the key
+    may not always be present.
 
-    Doing this for such a common job may be an annoyance, so this method
-    encapsulates the first pattern above to make things cleaner. The new
-    pattern, using this method, is:
+    Parameters
+    ----------
+    element : lxml.etree.Element object
+        The `element` whose attribute value is being sought
+    attribute : str
+        The name of the attribute whose value is being sought
 
-      optional_attr = get_attribute(some_element, 'optional')
-      if optional_attr:
-        do_stuff
+    Returns
+    -------
+    attr_value : str or None
+        The string value of the attribute, None if it does not exist.
     """
-    try:
+    #return element.attrib.get(attribute)
+     try:
         optional_attribute = element.attrib[attribute]
     except KeyError:
         return None
     else:
         return optional_attribute
+
 
 def ns_format(element, namespaced_string):
     """
@@ -138,6 +142,7 @@ def ns_format(element, namespaced_string):
         return namespaced_string
     namespace, name = namespaced_string.split(':')
     return '{' + element.nsmap[namespace] + '}' + name
+
 
 def rename_attributes(element, attrs):
     """
@@ -217,7 +222,7 @@ def replace(old, new):
     """
     A simple way to replace one element node with another.
     """
-    parent  = old.getparent()
+    parent = old.getparent()
     parent.replace(old, new)
 
 
@@ -261,4 +266,3 @@ def uncomment(comment):
     else:
         parent.replaceChild(node, comment)
         return node
-
