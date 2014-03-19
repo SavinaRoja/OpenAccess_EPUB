@@ -1315,28 +1315,6 @@ class OPSFrontiers(OPSMeta):
         is recursive as the <list-item> elements may contain further <list> or
         <def-list> elements. Much of the potential complexity in dealing with
         lists comes from this recursion.
-
-        This element has the list-type attribute which has the following
-        suggested values:
-
-        order -  Ordered list. Prefix character is a number or a letter,
-            depending on style.
-        bullet - Unordered or bulleted list. Prefix character is a bullet,
-            dash, or other symbol.
-        alpha-lower - Ordered list. Prefix character is a lowercase
-            alphabetical character.
-        alpha-upper - Ordered list. Prefix character is an uppercase
-            alphabetical character.
-        roman-lower - Ordered list. Prefix character is a lowercase roman
-            numeral.
-        roman-upper - Ordered list. Prefix character is an uppercase roman
-            numeral.
-        simple - Simple or plain list (No prefix character before each item)
-
-        Prefix-words are not properly supported at this time due to the
-        impracticality in EPUB2. Perhaps in the future, or in EPUB3.
-        The code provides a notice of the improperly handled prefix-word, and
-        manual review should be employed.
         """
         #I have yet to gather many examples of this element, and may have to
         #write a recursive method for the processing of lists depending on how

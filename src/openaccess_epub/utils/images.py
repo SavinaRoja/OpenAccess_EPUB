@@ -87,49 +87,54 @@ def image_cache(article_cache, img_dir):
 
 def get_images(output_directory, explicit, input_path, config, parsed_article):
     """
-    Controlling logic for placement of the appropriate imager files into the
-    EPUB directory. This function operates using argument parameters as well as
-    values stored in the program's configuration file.
+    Main logic controller for the placement of images into the output directory
 
+    Controlling logic for placement of the appropriate imager files into the
+    EPUB directory. This function interacts with interface arguments as well as
+    the local installation config.py file. These may change behavior of this
+    function in terms of how it looks for images relative to the input, where it
+    finds explicit images, whether it will attempt to download images, and
+    whether successfully downloaded images will be stored in the cache.
+
+    Parameters
+    ----------
+    output_directory : str
+        The directory path where the EPUB is being constructed/output
+    explicit : str
+        A directory path to a user specified directory of images. Allows *
+        wildcard expansion.
+    input_path : str
+        The absolute path to the input XML file.
+    config : config module
+        The imported configuration module
+    parsed_article : openaccess_epub.article.Article object
+        The Article instance for the article being converted to EPUB
+
+    Notes
+    -----
     This function will attempt multiple strategies to locate and transfer the
     image files, and will return True whenever successful. This will return
     False if a technique fails and no other technique succeeds. These are the
     strategies in the order they are employed:
-      Explicit Images
-          An image directory was explicitly indicated by a user, if this is used
-          then no other image strategy will be employed. This technique allows
-          wildcard (*) expansion to match the image's rootname and is similar to
-          Input Relative Images, except in that it is rendered relative to the
-          current working directory of the command when issued.
-      Input Relative Images
-          If config.use_input_relative_images is set to True, then all of the
-          paths in config.input_relative_images will be rendered relative to
-          the input's path to look for locally stored, input-relative images.
-          This technique allows wildcard (*) expansion to match the image's
-          rootname.
-      Image Cache
-          If image caching is enabled, then this strategy will check the image
-          cache to see if the images for this article are already stored.
-      Download Images
-          If image fetching is enabled, then (only for supported publishers) the
-          program will attempt to download the images from the internet. This
-          may fail due to connection issues or various other reasons.
-
-    If config.use_image_cache is set to True, then successfully downloaded
-    images will be stored in the program's image cache.
-
-    Parameters:
-      output_directory
-          The directory where the EPUB is being constructed/output
-      explicit
-          The explicit directory, perhaps with wildcard expansion, to find the
-          article's images
-      input_path
-          The absolute path to the input XML file.
-      config
-          The imported configuration module
-      parsed_article
-          The openaccess_epub.article.Article instance created for the article
+    Explicit Images
+        An image directory was explicitly indicated by a user, if this is used
+        then no other image strategy will be employed. This technique allows
+        wildcard (*) expansion to match the image's rootname and is similar to
+        Input Relative Images, except in that it is rendered relative to the
+        current working directory of the command when issued.
+    Input Relative Images
+        If config.use_input_relative_images is set to True, then all of the
+        paths in config.input_relative_images will be rendered relative to
+        the input's path to look for locally stored, input-relative images.
+        This technique allows wildcard (*) expansion to match the image's
+        rootname.
+    Image Cache
+        If image caching is enabled, then this strategy will check the image
+        cache to see if the images for this article are already stored.
+    Download Images
+        If image fetching is enabled, then (only for supported publishers) the
+        program will attempt to download the images from the internet. This
+        may fail due to connection issues or various other reasons.
     """
     #Split the DOI
     journal_doi, article_doi = parsed_article.doi.split('/')
