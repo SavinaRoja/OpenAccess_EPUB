@@ -9,7 +9,6 @@ Subpackages
     openaccess_epub.article
     openaccess_epub.commands
     openaccess_epub.ncx
-    openaccess_epub.nlm_transform
     openaccess_epub.opf
     openaccess_epub.ops
     openaccess_epub.utils
