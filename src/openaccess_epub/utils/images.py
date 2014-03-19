@@ -109,32 +109,6 @@ def get_images(output_directory, explicit, input_path, config, parsed_article):
         The imported configuration module
     parsed_article : openaccess_epub.article.Article object
         The Article instance for the article being converted to EPUB
-
-    Notes
-    -----
-    This function will attempt multiple strategies to locate and transfer the
-    image files, and will return True whenever successful. This will return
-    False if a technique fails and no other technique succeeds. These are the
-    strategies in the order they are employed:
-    Explicit Images
-        An image directory was explicitly indicated by a user, if this is used
-        then no other image strategy will be employed. This technique allows
-        wildcard (*) expansion to match the image's rootname and is similar to
-        Input Relative Images, except in that it is rendered relative to the
-        current working directory of the command when issued.
-    Input Relative Images
-        If config.use_input_relative_images is set to True, then all of the
-        paths in config.input_relative_images will be rendered relative to
-        the input's path to look for locally stored, input-relative images.
-        This technique allows wildcard (*) expansion to match the image's
-        rootname.
-    Image Cache
-        If image caching is enabled, then this strategy will check the image
-        cache to see if the images for this article are already stored.
-    Download Images
-        If image fetching is enabled, then (only for supported publishers) the
-        program will attempt to download the images from the internet. This
-        may fail due to connection issues or various other reasons.
     """
     #Split the DOI
     journal_doi, article_doi = parsed_article.doi.split('/')
