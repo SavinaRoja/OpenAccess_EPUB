@@ -19,5 +19,4 @@ Module contents
 
 .. automodule:: openaccess_epub
     :members:
-    :undoc-members:
     :show-inheritance:
