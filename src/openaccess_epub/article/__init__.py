@@ -25,6 +25,7 @@ from lxml import etree
 from openaccess_epub import JPTS10_PATH, JPTS11_PATH, JPTS20_PATH,\
     JPTS21_PATH, JPTS22_PATH, JPTS23_PATH, JPTS30_PATH
 from openaccess_epub.utils import element_methods
+from openaccess_epub.publisher import PLoS, Frontiers
 
 log = logging.getLogger('openaccess_epub.article')
 
@@ -311,11 +312,10 @@ class Article(object):
 
         Returns
         -------
-        publisher : str or None
-            Standardized, concise name of the publisher. None if the publisher
-            could not be determined, this will also issue a warning.
+        publisher : Publisher instance or None
+
         """
-        publisher_dois = {'10.1371': 'PLoS', '10.3389': 'Frontiers'}
+        publisher_dois = {'10.1371': PLoS, '10.3389': Frontiers}
         #Try to look up the publisher by DOI
         if self.doi:
             try:
@@ -323,7 +323,7 @@ class Article(object):
             except KeyError:
                 log.info('publisher DOI not recognized:' + self.doi)
             else:
-                return publisher
+                return publisher()
         #If that fails, attempt to extract the publisher through inspection
         if self.dtd_name == 'JPTS':
             publisher_meta = self.metadata.front.journal_meta.publisher
@@ -332,9 +332,9 @@ class Article(object):
                 name_text = publisher_meta.publishder_name.text
                 log.debug('publisher name: ' + publisher_name)
                 if name_text == 'Public Library of Science':
-                    return 'PLoS'
+                    return PLoS()
                 elif name_text == 'Frontiers Media S.A.':
-                    return 'Frontiers'
+                    return Frontiers()
         log.warning('Unable to identify publisher for this article!')
         return None
 
