@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-openaccess_epub.article  defines abstract article representation
+openaccess_epub.article defines abstract article representation
 
 The openaccess_epub.article contains the :class:`Article` class which is
 instantiated per article XML file. Basic article structural elements are
