@@ -19,6 +19,7 @@ publisher-specific metadata methods required.
 #Standard Library modules
 from collections import namedtuple
 import logging
+import os
 
 #Non-Standard Library modules
 from lxml import etree
@@ -26,6 +27,7 @@ from lxml import etree
 #OpenAccess_EPUB modules
 from openaccess_epub.utils import OrderedSet
 import openaccess_epub.utils.element_methods as element_methods
+from openaccess_epub._version import __version__
 
 log = logging.getLogger('openaccess_epub.navigation')
 
@@ -42,8 +44,9 @@ class Navigation(object):
         self.figures_list = []
         self.tables_list = []
 
-        #all_articles is only used for collection mode
         self.article = None
+        self.article_doi = None
+        self.all_dois = []  # Used to create UID
 
         #These are the limited forms of metadata that might make it in to the
         #navigation document. Both are used for EPUB2, only the title is used
@@ -72,6 +75,7 @@ handles one article unless collection mode is set.')
 
         self.article = article
         self.article_doi = self.article.doi.split('/')[1]
+        self.all_dois.append(self.article.doi)
         if self.collection:
             self.title += ' ' + self.article.doi
         else:
@@ -180,7 +184,89 @@ handles one article unless collection mode is set.')
         return navpoints
 
     def render_EPUB2(self, location):
-        pass
+        """
+        Creates the NCX specified file for EPUB2
+        """
+
+        def make_navlabel(text):
+            """
+            Creates and returns a navLabel element with the supplied text.
+            """
+            navlabel = etree.Element('navLabel')
+            navlabel_text = etree.SubElement(navlabel, 'text')
+            navlabel_text.text = text
+            return navlabel
+
+        def make_navMap(nav=None):
+            if nav is None:
+                nav_element = etree.Element('navMap')
+                for nav_point in self.nav:
+                    nav_element.append(make_navMap(nav=nav_point))
+            else:
+                nav_element = etree.Element('navPoint')
+                nav_element.attrib['id'] = nav.id
+                nav_element.attrib['playOrder'] = nav.playOrder
+                nav_element.append(make_navlabel(nav.label))
+                content_element = etree.SubElement(nav_element, 'content')
+                content_element.attrib['src'] = nav.source
+                for child in nav.children:
+                    nav_element.append(make_navMap(nav=child))
+            return nav_element
+
+        root = etree.XML('''<?xml version="1.0"?>
+<!DOCTYPE ncx
+  PUBLIC '-//NISO//DTD ncx 2005-1//EN'
+  'http://www.daisy.org/z3986/2005/ncx-2005-1.dtd'>
+<ncx version="2005-1" xmlns="http://www.daisy.org/z3986/2005/ncx/">
+<head>
+<meta name="dtb:uid" content="{uid}"/>
+<meta name="dtb:depth" content="{depth}"/>
+<meta name="dtb:totalPageCount" content="0"/>
+<meta name="dtb:maxPageNumber" content="0"/>
+<meta name="dtb:generator" content="OpenAccess_EPUB {version}"/>
+</head>
+</ncx>'''.format(**{'uid': ','.join(self.all_dois),
+                    'depth': self.nav_depth,
+                    'version': __version__}))
+        document = etree.ElementTree(root)
+        ncx = document.getroot()
+
+        #Create the docTitle element
+        doctitle = etree.SubElement(ncx, 'docTitle')
+        doctitle_text = etree.SubElement(doctitle, 'text')
+        doctitle_text.text = self.title
+
+        #Create the docAuthor elements
+        for author in self.authors:
+            docauthor = etree.SubElement(ncx, 'docAuthor')
+            docauthor_text = etree.SubElement(docauthor, 'text')
+            docauthor_text.text = author.name
+
+        #Create the navMap element
+        ncx.append(make_navMap())
+
+        if self.figures_list:
+            navlist = etree.SubElement(ncx, 'navList')
+            navlist.append(make_navlabel('List of Figures'))
+            for nav_pt in self.figures_list:
+                navtarget = etree.SubElement(navlist, 'navTarget')
+                navtarget.attrib['id'] = nav_pt.id
+                navtarget.append(self.make_navlabel(nav_pt.label))
+                content = etree.SubElement(navtarget, 'content')
+                content.attrib['src'] = nav_pt.source
+
+        if self.tables_list:
+            navlist = etree.SubElement(ncx, 'navList')
+            navlist.append(make_navlabel('List of Tables'))
+            for nav_pt in self.figures_list:
+                navtarget = etree.SubElement(navlist, 'navTarget')
+                navtarget.attrib['id'] = nav_pt.id
+                navtarget.append(self.make_navlabel(nav_pt.label))
+                content = etree.SubElement(navtarget, 'content')
+                content.attrib['src'] = nav_pt.source
+
+        with open(os.path.join(location, 'OPS', 'toc.ncx'), 'wb') as output:
+            output.write(etree.tostring(document, encoding='utf-8'))
 
     def render_EPUB3(self, location, back_compat=False):
         pass
@@ -190,7 +276,7 @@ handles one article unless collection mode is set.')
     @property
     def play_order(self):
         self._play_order += 1
-        return self._play_order
+        return str(self._play_order)
 
     @property
     def auto_id(self):

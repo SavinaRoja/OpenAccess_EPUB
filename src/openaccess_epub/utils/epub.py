@@ -11,7 +11,8 @@ import shutil
 
 #OpenAccess_EPUB modules
 import openaccess_epub
-import openaccess_epub.ncx
+#import openaccess_epub.ncx
+from openaccess_epub.navigation import Navigation
 import openaccess_epub.opf
 import openaccess_epub.ops
 
@@ -83,12 +84,13 @@ def make_EPUB(parsed_article,
         log.critical('Images for the article were not located! Aborting!')
         return False
 
-    epub_toc = openaccess_epub.ncx.NCX(openaccess_epub.__version__,
-                                       output_directory)
+    epub_toc = Navigation()
+                          #openaccess_epub.__version__,
+                          #output_directory)
     epub_opf = openaccess_epub.opf.OPF(output_directory,
                                        collection_mode=False)
 
-    epub_toc.take_article(parsed_article)
+    epub_toc.process(parsed_article)
     epub_opf.take_article(parsed_article)
 
     #Split now based on the publisher for OPS processing
@@ -100,7 +102,7 @@ def make_EPUB(parsed_article,
                                                     output_directory)
 
     #Now we do the additional file writing
-    epub_toc.write()
+    epub_toc.render_EPUB2(location=output_directory)
     epub_opf.write()
 
     #Zip the directory into EPUB
