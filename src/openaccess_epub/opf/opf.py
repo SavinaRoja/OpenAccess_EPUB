@@ -273,7 +273,8 @@ xmlns:oebpackage="http://openebook.org/namespaces/oeb-package/1.0/">
         mimetypes = {'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 'xml':
                      'application/xhtml+xml', 'png': 'image/png', 'css':
                      'text/css', 'ncx': 'application/x-dtbncx+xml', 'gif':
-                     'image/gif', 'tif': 'image/tif', 'pdf': 'application/pdf'}
+                     'image/gif', 'tif': 'image/tif', 'pdf': 'application/pdf',
+                     'xhtml': 'application/xhtml+xml'}
         #Acquiring the current directory allows us to return there when complete
         #Thus avoiding problems relating call location, while allowing paths
         #to be relative to the
@@ -308,16 +309,16 @@ xmlns:oebpackage="http://openebook.org/namespaces/oeb-package/1.0/">
         """
         dashed_article_doi = self.article_doi.replace('.', '-')
         #Add main, which should not be optional
-        main_idref = 'main-{0}-xml'.format(dashed_article_doi)
+        main_idref = 'main-{0}-xhtml'.format(dashed_article_doi)
         self.spine.append(spine_itemref(main_idref, 'yes'))
         #Create biblio idref
-        biblio_idref = 'biblio-{0}-xml'.format(dashed_article_doi)
+        biblio_idref = 'biblio-{0}-xhtml'.format(dashed_article_doi)
         #Add biblio idref if there is a bibliography
         if self.article.back is not None:
             if self.article.back.findall('.//ref'):
                 self.spine.append(spine_itemref(biblio_idref, 'yes'))
         #Create tables idref
-        tables_idref = 'tables-{0}-xml'.format(dashed_article_doi)
+        tables_idref = 'tables-{0}-xhtml'.format(dashed_article_doi)
         #Add the tables if there should be a tables file
         tables = self.article.document.findall('.//table')
         if tables:

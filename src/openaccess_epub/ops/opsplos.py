@@ -269,9 +269,9 @@ class OPSPLoS(OPSMeta):
         """
         This will create useful fragment identifier strings.
         """
-        self.main_frag = 'main.{0}.xml'.format(self.doi_frag) + '#{0}'
-        self.bib_frag = 'biblio.{0}.xml'.format(self.doi_frag) + '#{0}'
-        self.tab_frag = 'tables.{0}.xml'.format(self.doi_frag) + '#{0}'
+        self.main_frag = 'main.{0}.xhtml'.format(self.doi_frag) + '#{0}'
+        self.bib_frag = 'biblio.{0}.xhtml'.format(self.doi_frag) + '#{0}'
+        self.tab_frag = 'tables.{0}.xhtml'.format(self.doi_frag) + '#{0}'
 
     def get_authors_list(self):
         """

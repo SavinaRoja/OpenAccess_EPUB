@@ -51,7 +51,7 @@ class Navigation(object):
         #These are the limited forms of metadata that might make it in to the
         #navigation document. Both are used for EPUB2, only the title is used
         #for EPUB3
-        self.title = 'Navigation Document for:'
+        self.title = 'Navigation Document for:'  # title for navigation doc
         self.authors = OrderedSet()
 
         #The nav structure is a list of navpoint trees. Each navpoint may have
@@ -79,7 +79,7 @@ handles one article unless collection mode is set.')
         if self.collection:
             self.title += ' ' + self.article.doi
         else:
-            self.title += self.article.publisher.nav_title(article)
+            self.title += ' ' + self.article.publisher.nav_title(article)
         for author in self.article.publisher.nav_creators(article):
             self.authors.add(author)
 
@@ -92,10 +92,11 @@ handles one article unless collection mode is set.')
         """
         #All articles should have titles
         title_id = 'titlepage-{0}'.format(self.article_doi)
-        title_label = 'This is a title'  # TODO: Make this real
+        title_label = self.article.publisher.nav_title(self.article)
         title_source = 'main.{0}.xhtml#title'.format(self.article_doi)
         title_navpoint = navpoint(title_id, title_label, self.play_order,
                                   title_source, [])
+        self.nav.append(title_navpoint)
         #When processing a collection of articles, we will want all subsequent
         #navpoints for this article to be located under the title
         if self.collection:
@@ -105,10 +106,6 @@ handles one article unless collection mode is set.')
 
         #If the article has a body, we'll need to parse it for navigation
         if self.article.body is not None:
-            #Pre-process the article to assign ids if missing
-            #for section in self.article.body.findall('.//sec'):
-                #if 'id' not in section.attrib:
-                    #section.attrib['id'] = self.auto_id()
             #Here is where we invoke the recursive parsing!
             for nav_pt in self.recursive_article_navmap(self.article.body):
                 nav_insertion.append(nav_pt)
@@ -266,7 +263,7 @@ handles one article unless collection mode is set.')
                 content.attrib['src'] = nav_pt.source
 
         with open(os.path.join(location, 'OPS', 'toc.ncx'), 'wb') as output:
-            output.write(etree.tostring(document, encoding='utf-8'))
+            output.write(etree.tostring(document, encoding='utf-8', pretty_print=True))
 
     def render_EPUB3(self, location, back_compat=False):
         pass
