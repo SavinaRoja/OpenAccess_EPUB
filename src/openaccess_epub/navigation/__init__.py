@@ -210,18 +210,19 @@ handles one article unless collection mode is set.')
                     nav_element.append(make_navMap(nav=child))
             return nav_element
 
-        root = etree.XML('''<?xml version="1.0"?>
-<!DOCTYPE ncx
-  PUBLIC '-//NISO//DTD ncx 2005-1//EN'
-  'http://www.daisy.org/z3986/2005/ncx-2005-1.dtd'>
-<ncx version="2005-1" xmlns="http://www.daisy.org/z3986/2005/ncx/">
-<head>
-<meta name="dtb:uid" content="{uid}"/>
-<meta name="dtb:depth" content="{depth}"/>
-<meta name="dtb:totalPageCount" content="0"/>
-<meta name="dtb:maxPageNumber" content="0"/>
-<meta name="dtb:generator" content="OpenAccess_EPUB {version}"/>
-</head>
+        root = etree.XML('''\
+<?xml version="1.0"?>\
+<!DOCTYPE ncx\
+  PUBLIC '-//NISO//DTD ncx 2005-1//EN'\
+  'http://www.daisy.org/z3986/2005/ncx-2005-1.dtd'>\
+<ncx version="2005-1" xmlns="http://www.daisy.org/z3986/2005/ncx/">\
+<head>\
+<meta name="dtb:uid" content="{uid}"/>\
+<meta name="dtb:depth" content="{depth}"/>\
+<meta name="dtb:totalPageCount" content="0"/>\
+<meta name="dtb:maxPageNumber" content="0"/>\
+<meta name="dtb:generator" content="OpenAccess_EPUB {version}"/>\
+</head>\
 </ncx>'''.format(**{'uid': ','.join(self.all_dois),
                     'depth': self.nav_depth,
                     'version': __version__}))
@@ -266,7 +267,51 @@ handles one article unless collection mode is set.')
             output.write(etree.tostring(document, encoding='utf-8', pretty_print=True))
 
     def render_EPUB3(self, location, back_compat=False):
-        pass
+        def make_nav(nav=None):
+            if nav is None:
+                nav_element = etree.Element('ol')
+                for nav_point in self.nav:
+                    nav_element.append(make_nav(nav=nav_point))
+            else:
+                nav_element = etree.Element('li')
+                a = etree.SubElement(nav_element, 'a')
+                a.attrib['href'] = nav.source
+                a.text = nav.label
+                if nav.children:
+                    ol = etree.SubElement(nav_element, 'ol')
+                    for child in nav.children:
+                        ol.append(make_nav(nav=child))
+            return nav_element
+
+        root = etree.XML('''\
+<?xml version="1.0"?>\
+<!DOCTYPE html>\
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops">\
+<head>\
+<title>{title}</title>\
+<link rel="stylesheet" type="text/css" href="css/article.css" />\
+</head>\
+</html>'''.format(**{'title': self.title}))
+
+        document = etree.ElementTree(root)
+        html = document.getroot()
+
+        body = etree.SubElement(html, 'body')  # Create the body element
+        #Create the prinary nav element
+        nav = etree.SubElement(body, 'nav')
+        nav.attrib['{http://www.idpf.org/2007/ops}type'] = 'toc'
+        nav.attrib['id'] = 'toc'
+
+        #Create the title
+        h2 = etree.SubElement(nav, 'h2')
+        h2.text = self.title
+
+        #Stuff
+        nav.append(make_nav())
+
+        with open(os.path.join(location, 'OPS', 'nav.xhtml'), 'wb') as output:
+            output.write(etree.tostring(document, encoding='utf-8', pretty_print=True))
+
         if back_compat:
             self.render_EPUB2(location)
 
