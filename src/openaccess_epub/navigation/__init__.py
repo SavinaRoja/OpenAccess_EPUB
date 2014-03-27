@@ -256,7 +256,7 @@ handles one article unless collection mode is set.')
         if self.tables_list:
             navlist = etree.SubElement(ncx, 'navList')
             navlist.append(make_navlabel('List of Tables'))
-            for nav_pt in self.figures_list:
+            for nav_pt in self.tables_list:
                 navtarget = etree.SubElement(navlist, 'navTarget')
                 navtarget.attrib['id'] = nav_pt.id
                 navtarget.append(self.make_navlabel(nav_pt.label))
@@ -308,6 +308,28 @@ handles one article unless collection mode is set.')
 
         #Stuff
         nav.append(make_nav())
+
+        if self.figures_list:
+            nav = etree.SubElement(body, 'nav')
+            h2 = etree.SubElement(nav, 'h2')
+            h2.text = 'List of Figures'
+            ol = etree.SubElement(nav, 'ol')
+            for nav_pt in self.figures_list:
+                li = etree.SubElement(ol, 'li')
+                a = etree.SubElement(li, 'a')
+                a.attrib['href'] = nav_pt.source
+                a.text = nav_pt.label
+
+        if self.tables_list:
+            nav = etree.SubElement(body, 'nav')
+            h2 = etree.SubElement(nav, 'h2')
+            h2.text = 'List of Tables'
+            ol = etree.SubElement(nav, 'ol')
+            for nav_pt in self.figures_list:
+                li = etree.SubElement(ol, 'li')
+                a = etree.SubElement(li, 'a')
+                a.attrib['href'] = nav_pt.source
+                a.text = nav_pt.label
 
         with open(os.path.join(location, 'OPS', 'nav.xhtml'), 'wb') as output:
             output.write(etree.tostring(document, encoding='utf-8', pretty_print=True))

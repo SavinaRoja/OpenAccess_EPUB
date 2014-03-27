@@ -24,6 +24,8 @@ def make_EPUB(parsed_article,
               input_path,
               image_directory,
               config_module=None,
+              epub2=False,
+              epub3=False,
               batch=False):
     """
     make_EPUB is used to produce an EPUB file from a parsed article. In addition
@@ -102,7 +104,13 @@ def make_EPUB(parsed_article,
                                                     output_directory)
 
     #Now we do the additional file writing
-    epub_toc.render_EPUB2(location=output_directory)
+    #This is just mockup for testing epub2 and 3 functionality in dev
+    if epub2:
+        epub_toc.render_EPUB2(location=output_directory)
+    elif epub3:
+        epub_toc.render_EPUB3(location=output_directory)
+    else:  # Do the publisher default or something
+        pass
     epub_opf.write()
 
     #Zip the directory into EPUB

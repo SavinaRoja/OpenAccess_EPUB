@@ -17,8 +17,8 @@ General Options:
                         "WARNING", "INFO", "DEBUG") [default: INFO]
 
 Convert Specific Options:
-  -2 --epub2            Convert to EPUB2 (not implemented)
-  -3 --epub3            Convert to EPUB3 (not implemented)
+  -2 --epub2            Convert to EPUB2
+  -3 --epub3            Convert to EPUB3
   --no-cleanup          The EPUB contents prior to .epub-packaging will not be
                         removed
   --no-epubcheck        Disable the use of epubcheck to validate EPUBs
@@ -152,7 +152,9 @@ def main(argv=None):
                             output_directory,
                             abs_input_path,
                             args['--images'],
-                            config_module=config)
+                            config_module=config,
+                            epub2=args['--epub2'],
+                            epub3=args['--epub3'])
 
         #Cleanup removes the produced output directory, keeps the EPUB
         if not args['--no-cleanup']:
