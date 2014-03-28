@@ -6,12 +6,13 @@ Utilities related to the making and managing of EPUB files
 import logging
 import os
 import shutil
+import zipfile
 
 #Non-Standard Library modules
 
 #OpenAccess_EPUB modules
 import openaccess_epub
-#import openaccess_epub.ncx
+from openaccess_epub.utils.css import DEFAULT_CSS
 from openaccess_epub.navigation import Navigation
 import openaccess_epub.opf
 import openaccess_epub.ops
@@ -117,3 +118,68 @@ def make_EPUB(parsed_article,
     openaccess_epub.utils.epub_zip(output_directory)
 
     return True
+
+
+def make_epub_base(location):
+    """
+    Creates the base structure for an EPUB file in a specified location.
+
+    This function creates constant components for the structure of the EPUB in
+    a specified directory location.
+
+    Parameters
+    ----------
+    location : str
+        A path string to a local directory in which the EPUB is to be built
+    """
+    log.info('Making EPUB base files in {0}'.format(location))
+    with open(os.path.join(location, 'mimetype'), 'w') as out:  # mimetype file
+        out.write('application/epub+zip')
+
+    #Create OPS and META-INF directorys
+    os.mkdir(os.path.join(location, 'META-INF'))
+    os.mkdir(os.path.join(location, 'EPUB'))
+    os.mkdir(os.path.join(location, 'EPUB', 'css'))
+
+    with open(os.path.join(location, 'META-INF', 'container.xml'), 'w') as out:
+        out.write('''\
+<?xml version="1.0" encoding="UTF-8" ?>
+<container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
+   <rootfiles>
+      <rootfile full-path="OPS/package.opf" media-type="application/oebps-package+xml"/>
+   </rootfiles>
+</container>''')
+
+    with open(os.path.join(location, 'EPUB', 'css', 'default.css') ,'wb') as out:
+        out.write(bytes(DEFAULT_CSS, 'UTF-8'))
+
+
+def epub_zip(outdirect):
+    """
+    Zips up the input file directory into an EPUB file.
+    """
+
+    def recursive_zip(zipf, directory, folder=None):
+        if folder is None:
+            folder = ''
+        for item in os.listdir(directory):
+            if os.path.isfile(os.path.join(directory, item)):
+                zipf.write(os.path.join(directory, item),
+                           os.path.join(directory, item))
+            elif os.path.isdir(os.path.join(directory, item)):
+                recursive_zip(zipf, os.path.join(directory, item),
+                              os.path.join(folder, item))
+
+    log.info('Zipping up the directory {0}'.format(outdirect))
+    epub_filename = outdirect + '.epub'
+    epub = zipfile.ZipFile(epub_filename, 'w')
+    current_dir = os.getcwd()
+    os.chdir(outdirect)
+    epub.write('mimetype')
+    log.info('Recursively zipping META-INF and OPS')
+    for item in os.listdir('.'):
+        if item == 'mimetype':
+            continue
+        recursive_zip(epub, item)
+    os.chdir(current_dir)
+    epub.close()

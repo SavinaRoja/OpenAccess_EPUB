@@ -12,12 +12,10 @@ import shutil
 import subprocess
 import sys
 import urllib
-import zipfile
 
 #Non-Standard Library modules
 
 #OpenAccess_EPUB modules
-from openaccess_epub.utils.css import DEFAULT_CSS
 from openaccess_epub.utils.inputs import doi_input, url_input
 
 log = logging.getLogger('openaccess_epub.utils')
@@ -303,51 +301,6 @@ def epubcheck(epubname, config=None):
     subprocess.call(['java', '-jar', config.epubcheck_jarfile, epubname])
 
 
-def make_epub_base():
-    """
-    Contains the  functionality to create the ePub directory hierarchy from
-    scratch. Typical practice will not require this method, but use this to
-    replace the default base ePub directory if it is not present. It may also
-    used as a primer on ePub directory construction:
-    base_epub/
-    base_epub/mimetype
-    base_epub/META-INF/
-    base_epub/META-INF/container.xml
-    base_epub/OPS/
-    base_epub/OPS/css
-    base_epub/OPS/css/article.css
-    """
-    location = os.path.join(cache_location(), 'base_epub')
-    if os.path.isdir(location):
-        return
-    log.info('Making the EPUB base files at {0}'.format(location))
-    mkdir_p(location)
-    #Create mimetype file in root directory
-    mime_path = os.path.join(location, 'mimetype')
-    with open(mime_path, 'w') as mimetype:
-        mimetype.write('application/epub+zip')
-    #Create OPS and META-INF directorys
-    os.mkdir(os.path.join(location, 'META-INF'))
-    os.mkdir(os.path.join(location, 'OPS'))
-    #Create container.xml file in META-INF
-    meta_path = os.path.join(location, 'META-INF', 'container.xml')
-    with open(meta_path, 'w') as container:
-        container.write('''<?xml version="1.0" encoding="UTF-8" ?>
-<container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
-   <rootfiles>
-      <rootfile full-path="OPS/content.opf" media-type="application/oebps-package+xml"/>
-   </rootfiles>
-</container>''')
-    #It is considered better practice to leave the instantiation of image
-    #directories up to other methods. Such directories are technically
-    #optional and may depend on content
-    #Create the css directory in OPS, then copy the file from resources
-    os.mkdir(os.path.join(location, 'OPS', 'css'))
-    css_path = os.path.join(location, 'OPS', 'css', 'article.css')
-    with open(css_path, 'wb') as css:
-        css.write(bytes(DEFAULT_CSS, 'UTF-8'))
-
-
 def dir_exists(directory):
     """
     If a directory already exists that will be overwritten by some action, this
@@ -367,36 +320,6 @@ Replace? [Y/n]'''.format(directory))
         sys.exit('Aborting process!')
 
 
-def epub_zip(outdirect):
-    """Zips up the input file directory into an ePub file."""
-    log.info('Zipping up the directory {0}'.format(outdirect))
-    epub_filename = outdirect + '.epub'
-    epub = zipfile.ZipFile(epub_filename, 'w')
-    current_dir = os.getcwd()
-    os.chdir(outdirect)
-    epub.write('mimetype')
-    log.info('Recursively zipping META-INF and OPS')
-    for item in os.listdir('.'):
-        if item == 'mimetype':
-            continue
-        recursive_zip(epub, item)
-    os.chdir(current_dir)
-    epub.close()
-
-
-def recursive_zip(zipf, directory, folder=None):
-    """Recursively traverses the output directory to construct the zipfile"""
-    if folder is None:
-        folder = ''
-    for item in os.listdir(directory):
-        if os.path.isfile(os.path.join(directory, item)):
-            zipf.write(os.path.join(directory, item), os.path.join(directory,
-                                                                   item))
-        elif os.path.isdir(os.path.join(directory, item)):
-            recursive_zip(zipf, os.path.join(directory, item),
-                          os.path.join(folder, item))
-
-
 suggested_article_types = ['abstract', 'addendum', 'announcement',
     'article-commentary', 'book-review', 'books-received', 'brief-report',
     'calendar', 'case-report', 'collection', 'correction', 'discussion',
@@ -405,83 +328,6 @@ suggested_article_types = ['abstract', 'addendum', 'announcement',
     'product-review', 'rapid-communication', 'rapid-communication', 'reply',
     'reprint', 'research-article', 'retraction', 'review-article',
     'translation']
-
-
-def make_EPUB(parsed_article,
-              output_directory,
-              input_path,
-              image_directory,
-              config_module=None):
-    """
-    make_EPUB is used to produce an EPUB file from a parsed article. In addition
-    to the article it also requires a path to the appropriate image directory
-    which it will insert into the EPUB file, as well the output directory
-    location for the EPUB file.
-
-    Parameters:
-      article
-          An Article object instance
-      output_directory
-          A directory path where the EPUB will be produced. The EPUB filename
-          itself will always be
-      input_path
-          The absolute path to the input XML
-      image_directory
-          An explicitly indicated image directory, if used it will override the
-          other image methods.
-      config_module=None
-          Allows for the injection of a modified or pre-loaded config module. If
-          not specified, make_EPUB will load the config file
-    """
-    #command_log.info('Creating {0}.epub'.format(output_directory))
-    if config_module is None:
-        config_module = openaccess_epub.utils.load_config_module()
-    #Copy over the files from the base_epub to the new output
-    if os.path.isdir(output_directory):
-        openaccess_epub.utils.dir_exists(output_directory)
-
-    #Copy over the basic epub directory
-    base_epub = openaccess_epub.utils.base_epub_location()
-    if not os.path.isdir(base_epub):
-        openaccess_epub.utils.make_epub_base()
-    shutil.copytree(base_epub, output_directory)
-
-    DOI = parsed_article.doi
-
-    #Get the images, if possible, fail gracefully if not
-    success = openaccess_epub.utils.images.get_images(output_directory,
-                                                      image_directory,
-                                                      input_path,
-                                                      config_module,
-                                                      parsed_article)
-    if not success:
-        #command_log.critical('Images for the article were not located! Aborting!')
-        #I am not so bold as to call this without serious testing
-        print('Pretend I am deleting {0}'.format(output_directory))
-        #shutil.rmtree(output_directory)
-
-    epub_toc = openaccess_epub.ncx.NCX(openaccess_epub.__version__,
-                                       output_directory)
-    epub_opf = openaccess_epub.opf.OPF(output_directory,
-                                       collection_mode=False)
-
-    epub_toc.take_article(parsed_article)
-    epub_opf.take_article(parsed_article)
-
-    #Split now based on the publisher for OPS processing
-    if DOI.split('/')[0] == '10.1371':  # PLoS
-        epub_ops = openaccess_epub.ops.OPSPLoS(parsed_article,
-                                               output_directory)
-    elif DOI.split('/')[0] == '10.3389':  # Frontiers
-        epub_ops = openaccess_epub.ops.OPSFrontiers(parsed_article,
-                                                    output_directory)
-
-    #Now we do the additional file writing
-    epub_toc.write()
-    epub_opf.write()
-
-    #Zip the directory into EPUB
-    openaccess_epub.utils.epub_zip(output_directory)
 
 
 def scrapePLoSIssueCollection(issue_url):
