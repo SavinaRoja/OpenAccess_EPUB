@@ -18,6 +18,7 @@ The available commands are:
   collection  Convert multiple articles into a single omnibus EPUB
   configure   Configure some settings for your OpenAccess_EPUB install
   convert     Convert explicit input(s) individually to EPUB
+  epubzip     Zip an unzipped EPUB file back into a valid EPUB
   publishers  Show which publishers are currently supported by OpenAccess_EPUB
   validate    Validate article XML files according to their specification
 
