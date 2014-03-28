@@ -5,7 +5,6 @@ Utilities related to the making and managing of EPUB files
 #Standard Library modules
 import logging
 import os
-import shutil
 import zipfile
 
 #Non-Standard Library modules
@@ -64,16 +63,13 @@ def make_EPUB(parsed_article,
             openaccess_epub.utils.dir_exists(output_directory)
     else:
         try:
-            os.makedirs(os.path.dirname(output_directory))
+            os.makedirs(output_directory)
         except OSError as err:
             if err.errno != 17:
                 log.exception('Unable to recursively create output directories')
 
     #Copy over the basic epub directory
-    base_epub = openaccess_epub.utils.base_epub_location()
-    if not os.path.isdir(base_epub):
-        openaccess_epub.utils.make_epub_base()
-    shutil.copytree(base_epub, output_directory)
+    make_epub_base(output_directory)
 
     DOI = parsed_article.doi
 
@@ -115,7 +111,7 @@ def make_EPUB(parsed_article,
     epub_opf.write()
 
     #Zip the directory into EPUB
-    openaccess_epub.utils.epub_zip(output_directory)
+    epub_zip(output_directory)
 
     return True
 
