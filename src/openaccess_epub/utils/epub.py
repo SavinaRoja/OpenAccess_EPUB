@@ -13,7 +13,7 @@ import zipfile
 import openaccess_epub
 from openaccess_epub.utils.css import DEFAULT_CSS
 from openaccess_epub.navigation import Navigation
-import openaccess_epub.opf
+from openaccess_epub.package import Package
 import openaccess_epub.ops
 
 log = logging.getLogger('openaccess_epub.utils.epub')
@@ -83,14 +83,11 @@ def make_EPUB(parsed_article,
         log.critical('Images for the article were not located! Aborting!')
         return False
 
-    epub_toc = Navigation()
-                          #openaccess_epub.__version__,
-                          #output_directory)
-    epub_opf = openaccess_epub.opf.OPF(output_directory,
-                                       collection_mode=False)
+    epub_nav = Navigation()
+    epub_package = Package()
 
-    epub_toc.process(parsed_article)
-    epub_opf.take_article(parsed_article)
+    epub_nav.process(parsed_article)
+    epub_package.process(parsed_article)
 
     #Split now based on the publisher for OPS processing
     if DOI.split('/')[0] == '10.1371':  # PLoS
@@ -103,12 +100,13 @@ def make_EPUB(parsed_article,
     #Now we do the additional file writing
     #This is just mockup for testing epub2 and 3 functionality in dev
     if epub2:
-        epub_toc.render_EPUB2(location=output_directory)
+        epub_nav.render_EPUB2(location=output_directory)
+        epub_package.render_EPUB2(location=output_directory)
     elif epub3:
-        epub_toc.render_EPUB3(location=output_directory)
+        epub_nav.render_EPUB3(location=output_directory)
+        epub_package.render_EPUB3(location=output_directory)
     else:  # Do the publisher default or something
         pass
-    epub_opf.write()
 
     #Zip the directory into EPUB
     epub_zip(output_directory)

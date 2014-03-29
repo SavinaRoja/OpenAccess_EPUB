@@ -120,7 +120,7 @@ def get_images(output_directory, explicit, input_path, config, parsed_article):
 
     #Specify where to place the images in the output
     img_dir = os.path.join(output_directory,
-                           'OPS',
+                           'EPUB',
                            'images-{0}'.format(article_doi))
     log.info('Using {0} as image directory target'.format(img_dir))
 

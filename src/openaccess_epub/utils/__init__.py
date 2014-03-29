@@ -315,6 +315,7 @@ It will be overwritten if the operation continues.
 Replace? [Y/n]'''.format(directory))
     if reply.lower() in ['y', 'yes', '']:
         shutil.rmtree(directory)
+        os.makedirs(directory)
     else:
         log.critical('Aborting process, user declined overwriting {0}'.format(directory))
         sys.exit('Aborting process!')
