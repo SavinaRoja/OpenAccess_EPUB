@@ -46,6 +46,25 @@ class Package(object):
         self.all_articles = []
 
     def process(self, article):
+        """
+        Ingests an article and processes it for metadata and elements to provide
+        proper references in the EPUB spine.
+
+        This method may only be called once unless the Package was instantiated
+        in collection mode using ``Package(collection=True)``. It places entries
+        in an internal spine list for the Main Content Document, the
+        Bibliographic Content Document (if there are ref elements in Back), and
+        the Tables Content Document (if there are table elements). It then
+        employs the publisher specific methods for extracting article metadata
+        using the article's publisher attribute (an instance of a Publisher
+        class).
+
+        Parameters
+        ----------
+        article : openaccess_epub.article.Article instance
+            An article to be included in the EPUB, to be processed for metadata
+            and appropriate content document references.
+        """
         if self.article is not None and not self.collection:
             log.warning('Could not process additional article. Package only \
 handles one article unless collection mode is set.')
@@ -173,7 +192,6 @@ handles one article unless collection mode is set.')
         spine = etree.SubElement(package, 'spine')
         spine.attrib['toc'] = 'ncx'
         self.spine_list = [spine_item('htmltoc', False)] + self.spine_list
-        self.spine_list = [spine_item('ncx', False)] + self.spine_list
         for item in self.spine_list:
             itemref = etree.SubElement(spine, 'itemref')
             itemref.attrib['idref'] = item.idref

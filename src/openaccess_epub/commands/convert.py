@@ -80,6 +80,13 @@ def main(argv=None):
                   version='OpenAccess_EPUB v.' + __version__,
                   options_first=True)
 
+    if args['--epub3']:
+        epub_version = 3
+    elif args['--epub2']:
+        epub_version = 2
+    else:
+        epub_version = None
+
     #Basic logging configuration
     oae_logging.config_logging(args['--no-log-file'],
                                args['--log-to'],
@@ -153,8 +160,7 @@ def main(argv=None):
                             abs_input_path,
                             args['--images'],
                             config_module=config,
-                            epub2=args['--epub2'],
-                            epub3=args['--epub3'])
+                            epub_version=epub_version)
 
         #Cleanup removes the produced output directory, keeps the EPUB
         if not args['--no-cleanup']:

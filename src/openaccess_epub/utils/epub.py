@@ -24,29 +24,45 @@ def make_EPUB(parsed_article,
               input_path,
               image_directory,
               config_module=None,
-              epub2=False,
-              epub3=False,
+              epub_version=None,
               batch=False):
     """
+    Standard workflow for creating an EPUB document.
+
     make_EPUB is used to produce an EPUB file from a parsed article. In addition
     to the article it also requires a path to the appropriate image directory
     which it will insert into the EPUB file, as well the output directory
     location for the EPUB file.
 
-    Parameters:
-      article
-          An Article object instance
-      output_directory
-          A directory path where the EPUB will be produced. The EPUB filename
-          itself will always be
-      input_path
-          The absolute path to the input XML
-      image_directory
-          An explicitly indicated image directory, if used it will override the
-          other image methods.
-      config_module=None
-          Allows for the injection of a modified or pre-loaded config module. If
-          not specified, make_EPUB will load the config file
+    Parameters
+    ----------
+    article : openaccess_epub.article.Article instance
+        `article` is an Article instance for the XML document to be converted to
+        EPUB.
+    output_directory : str
+        `output_directory` is a string path to the directory in which the EPUB
+        will be produced. The name of the directory will be used as the EPUB's
+        filename.
+    input_path : str
+        `input_path` is a string absolute path to the input XML file, used to
+        locate input-relative images.
+    image_directory : str
+        `image_directory` is a string path indicating an explicit image
+        directory. If supplied, other image input methods will not be used.
+    config_module : config module, optional
+        `config_module` is a pre-loaded config module for OpenAccess_EPUB; if
+        not used then this function will load the global config file. Might be
+        useful in certain cases to dynamically alter configuration.
+    epub_version : {None, 2, 3}
+        `epub_version` dictates which version of EPUB to be created. An error
+        will be raised if the specified version is not supported for the
+        publisher. If left to the default, the created version will defer to the
+        publisher default version.
+    batch : bool, optional
+        `batch` indicates that batch creation is being used (such as with the
+        `oaepub batch` command). In this case, directory conflicts will be
+        automatically resolved (in favor of keeping previous data, skipping
+        creation of EPUB).
 
     Returns False in the case of a fatal error, True if successful.
     """
@@ -99,14 +115,17 @@ def make_EPUB(parsed_article,
 
     #Now we do the additional file writing
     #This is just mockup for testing epub2 and 3 functionality in dev
-    if epub2:
+    if epub_version == 2:
         epub_nav.render_EPUB2(location=output_directory)
         epub_package.render_EPUB2(location=output_directory)
-    elif epub3:
+    elif epub_version == 3:
         epub_nav.render_EPUB3(location=output_directory, back_compat=True)
         epub_package.render_EPUB3(location=output_directory)
-    else:  # Do the publisher default or something
+    elif epub_version is None:  # Do the publisher default or something
         pass
+    else:
+        log.error('EPUB version not recognized: {0}'.format(epub_version))
+        raise ValueError('EPUB version not recognized, should be 2.0 or 3.0')
 
     #Zip the directory into EPUB
     epub_zip(output_directory)
@@ -137,7 +156,7 @@ def make_epub_base(location):
 
     with open(os.path.join(location, 'META-INF', 'container.xml'), 'w') as out:
         out.write('''\
-<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version="1.0" encoding="UTF-8"?>
 <container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
    <rootfiles>
       <rootfile full-path="EPUB/package.opf" media-type="application/oebps-package+xml"/>
