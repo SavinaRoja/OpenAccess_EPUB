@@ -13,9 +13,6 @@ very limited subset of) metadata , there will be some amount of
 publisher-specific metadata methods required.
 """
 
-#This module will be superceding the previouse ncx module. It will become more
-#general and capable of producing navigation for EPUB2, and EPUB3.
-
 #Standard Library modules
 from collections import namedtuple
 import logging
