@@ -15,6 +15,7 @@ document represents.
 #general and capable of producing package info for EPUB2, and EPUB3.
 
 #Standard Library modules
+from collections import namedtuple
 import logging
 import os
 
@@ -25,6 +26,8 @@ from lxml import etree
 from openaccess_epub._version import __version__
 
 log = logging.getLogger('openaccess_epub.package')
+
+spine_item = namedtuple('Spine_Item', 'idref, linear')
 
 
 class Package(object):
@@ -47,6 +50,53 @@ class Package(object):
             log.warning('Could not process additional article. Package only \
 handles one article unless collection mode is set.')
             return False
+
+        self.article = article
+        self.article_doi = self.article.doi.split('/')[1]
+        #self.all_dois.append(self.article.doi)
+        #if self.collection:
+            #self.title += ' ' + self.article.doi
+        #else:
+            #self.title += ' ' + self.article.publisher.nav_title(article)
+        #for author in self.article.publisher.nav_creators(article):
+            #self.authors.add(author)
+
+        #Analyze the article to add entries to the spine
+        dash_doi = self.article_doi.replace('.', '-')
+
+        #Entry for the main content document
+        main_idref = 'main-{0}-xhtml'.format(dash_doi)
+        self.spine.append(spine_item(main_idref, True))
+
+        #Entry for the biblio content document
+        biblio_idref = 'biblio-{0}-xhtml'.format(dash_doi)
+        if self.article.back is not None:
+            if self.article.back.findall('.//ref'):
+                self.spine.append(spine_item(biblio_idref,
+                                             True))
+
+    def add_article_to_spine(self):
+        """
+        Adds items to the self.spine list with the addition of a new article.
+        Later, make_spine_itemrefs will take these entries for the creation of
+        XML for the spine of the OPF file.
+        """
+        dashed_article_doi = self.article_doi.replace('.', '-')
+        #Add main, which should not be optional
+        main_idref = 'main-{0}-xhtml'.format(dashed_article_doi)
+        self.spine.append(spine_itemref(main_idref, 'yes'))
+        #Create biblio idref
+        biblio_idref = 'biblio-{0}-xhtml'.format(dashed_article_doi)
+        #Add biblio idref if there is a bibliography
+        if self.article.back is not None:
+            if self.article.back.findall('.//ref'):
+                self.spine.append(spine_itemref(biblio_idref, 'yes'))
+        #Create tables idref
+        tables_idref = 'tables-{0}-xhtml'.format(dashed_article_doi)
+        #Add the tables if there should be a tables file
+        tables = self.article.document.findall('.//table')
+        if tables:
+            self.spine.append(spine_itemref(tables_idref, 'no'))
 
     def file_manifest(self, location):
         """
@@ -93,9 +143,9 @@ handles one article unless collection mode is set.')
 
     def _init_package_doc(self, version):
         root = etree.XML('''\
-<?xml version="1.0" standalone="no"?>\
-<package xmlns="http://www.idpf.org/2007/opf" xmlns:dc="http://purl.org/dc/elements/1.1/"\
-   xmlns:dcterms="http://purl.org/dc/terms/" version="{0}"\
+<?xml version="1.0"?>
+<package xmlns="http://www.idpf.org/2007/opf" xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:dcterms="http://purl.org/dc/terms/" version="{0}"
    unique-identifier="pub-identifier">\
 </package>'''.format(version))
         document = etree.ElementTree(root)

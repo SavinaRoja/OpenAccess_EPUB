@@ -286,7 +286,7 @@ handles one article unless collection mode is set.')
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops">\
 <head>\
 <title>{title}</title>\
-<link rel="stylesheet" type="text/css" href="css/article.css" />\
+<link rel="stylesheet" type="text/css" href="css/default.css" />\
 </head>\
 </html>'''.format(**{'title': self.title}))
 
