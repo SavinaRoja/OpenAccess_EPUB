@@ -260,7 +260,7 @@ handles one article unless collection mode is set.')
                 content = etree.SubElement(navtarget, 'content')
                 content.attrib['src'] = nav_pt.source
 
-        with open(os.path.join(location, 'OPS', 'toc.ncx'), 'wb') as output:
+        with open(os.path.join(location, 'EPUB', 'toc.ncx'), 'wb') as output:
             output.write(etree.tostring(document, encoding='utf-8', pretty_print=True))
 
     def render_EPUB3(self, location, back_compat=False):
@@ -328,7 +328,7 @@ handles one article unless collection mode is set.')
                 a.attrib['href'] = nav_pt.source
                 a.text = nav_pt.label
 
-        with open(os.path.join(location, 'OPS', 'nav.xhtml'), 'wb') as output:
+        with open(os.path.join(location, 'EPUB', 'nav.xhtml'), 'wb') as output:
             output.write(etree.tostring(document, encoding='utf-8', pretty_print=True))
 
         if back_compat:

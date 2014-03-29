@@ -31,7 +31,7 @@ class OPSPLoS(OPSMeta):
         #From "10.1371/journal.pone.0035956" get "journal.pone.0335956"
         self.doi_frag = self.doi.split('10.1371/')[1]
         self.make_fragment_identifiers()
-        self.ops_dir = os.path.join(output_dir, 'OPS')
+        self.ops_dir = os.path.join(output_dir, 'EPUB')
         self.html_tables = []
         self.main_body = self.create_main()
         self.create_biblio()
