@@ -36,14 +36,14 @@ class Package(object):
     """
 
     def __init__(self, collection=False):
-        self.spine = []
         self.collection = collection
+        self.spine_list = []
+
         self.article = None
+        self.article_doi = None
+
+        self.all_dois = []  # Used to create UID
         self.all_articles = []
-        self.doi = ''
-        self.all_dois = []
-        self.article_doi = ''
-        self.journal_doi = ''
 
     def process(self, article):
         if self.article is not None and not self.collection:
@@ -53,50 +53,24 @@ handles one article unless collection mode is set.')
 
         self.article = article
         self.article_doi = self.article.doi.split('/')[1]
-        #self.all_dois.append(self.article.doi)
-        #if self.collection:
-            #self.title += ' ' + self.article.doi
-        #else:
-            #self.title += ' ' + self.article.publisher.nav_title(article)
-        #for author in self.article.publisher.nav_creators(article):
-            #self.authors.add(author)
 
         #Analyze the article to add entries to the spine
         dash_doi = self.article_doi.replace('.', '-')
 
         #Entry for the main content document
         main_idref = 'main-{0}-xhtml'.format(dash_doi)
-        self.spine.append(spine_item(main_idref, True))
+        self.spine_list.append(spine_item(main_idref, True))
 
         #Entry for the biblio content document
         biblio_idref = 'biblio-{0}-xhtml'.format(dash_doi)
         if self.article.back is not None:
             if self.article.back.findall('.//ref'):
-                self.spine.append(spine_item(biblio_idref,
-                                             True))
+                self.spine_list.append(spine_item(biblio_idref, True))
 
-    def add_article_to_spine(self):
-        """
-        Adds items to the self.spine list with the addition of a new article.
-        Later, make_spine_itemrefs will take these entries for the creation of
-        XML for the spine of the OPF file.
-        """
-        dashed_article_doi = self.article_doi.replace('.', '-')
-        #Add main, which should not be optional
-        main_idref = 'main-{0}-xhtml'.format(dashed_article_doi)
-        self.spine.append(spine_itemref(main_idref, 'yes'))
-        #Create biblio idref
-        biblio_idref = 'biblio-{0}-xhtml'.format(dashed_article_doi)
-        #Add biblio idref if there is a bibliography
-        if self.article.back is not None:
-            if self.article.back.findall('.//ref'):
-                self.spine.append(spine_itemref(biblio_idref, 'yes'))
-        #Create tables idref
-        tables_idref = 'tables-{0}-xhtml'.format(dashed_article_doi)
-        #Add the tables if there should be a tables file
-        tables = self.article.document.findall('.//table')
-        if tables:
-            self.spine.append(spine_itemref(tables_idref, 'no'))
+        #Entry for the tables content document
+        tables_idref = 'tables-{0}-xhtml'.format(dash_doi)
+        if self.article.document.findall('.//table'):
+            self.spine_list.append(spine_item(tables_idref, False))
 
     def file_manifest(self, location):
         """
@@ -156,11 +130,23 @@ handles one article unless collection mode is set.')
         document = self._init_package_doc(version='2.0')
         package = document.getroot()
 
+        #Make the Metadata
+        metadata = etree.SubElement(package, 'metadata')
+
+        #Make the Manifest
         manifest = etree.SubElement(package, 'manifest')
         for item in self.file_manifest(os.path.join(location, 'EPUB')):
             if item.attrib['id'] == 'toc-ncx':
                 item.attrib['id'] = 'ncx'  # Special id for toc.ncx
             manifest.append(item)
+
+        #Make the Spine
+        spine = etree.SubElement(package, 'spine')
+        spine.attrib['toc'] = 'ncx'
+        for item in self.spine_list:
+            itemref = etree.SubElement(spine, 'itemref')
+            itemref.attrib['idref'] = item.idref
+            itemref.attrib['linear'] = 'yes' if item.linear else 'no'
 
         with open(os.path.join(location, 'EPUB', 'package.opf'), 'wb') as output:
             output.write(etree.tostring(document, encoding='utf-8', pretty_print=True))
@@ -170,6 +156,10 @@ handles one article unless collection mode is set.')
         document = self._init_package_doc(version='3.0')
         package = document.getroot()
 
+        #Make the Metadata
+        metadata = etree.SubElement(package, 'metadata')
+
+        #Make the Manifest
         manifest = etree.SubElement(package, 'manifest')
         for item in self.file_manifest(os.path.join(location, 'EPUB')):
             if item.attrib['id'] == 'nav-xhtml':
@@ -178,6 +168,16 @@ handles one article unless collection mode is set.')
             if item.attrib['id'] == 'toc-ncx':
                 item.attrib['id'] = 'ncx'  # Special id for toc.ncx
             manifest.append(item)
+
+        #Make the Spine
+        spine = etree.SubElement(package, 'spine')
+        spine.attrib['toc'] = 'ncx'
+        self.spine_list = [spine_item('htmltoc', False)] + self.spine_list
+        self.spine_list = [spine_item('ncx', False)] + self.spine_list
+        for item in self.spine_list:
+            itemref = etree.SubElement(spine, 'itemref')
+            itemref.attrib['idref'] = item.idref
+            itemref.attrib['linear'] = 'yes' if item.linear else 'no'
 
         with open(os.path.join(location, 'EPUB', 'package.opf'), 'wb') as output:
             output.write(etree.tostring(document, encoding='utf-8', pretty_print=True))

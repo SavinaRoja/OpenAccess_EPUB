@@ -7,7 +7,6 @@ translator from any XML format to OPS XML for ePub; derived classes for each
 tag set and/or publisher must provide these functions.
 """
 
-import openaccess_epub.utils as utils
 import openaccess_epub.utils.element_methods as element_methods
 from lxml import etree
 import logging
@@ -39,7 +38,7 @@ class OPSMeta(object):
         head = etree.SubElement(html, 'head')
         title = etree.SubElement(head, 'title')
         title.text = titlestring
-        link = etree.SubElement(head, 'link', attrib={'href': 'css/article.css',
+        link = etree.SubElement(head, 'link', attrib={'href': 'css/default.css',
                                                       'rel': 'stylesheet',
                                                       'type': 'text/css'})
         meta = etree.SubElement(head, 'meta', attrib={'content': 'application/xhtml+xml',

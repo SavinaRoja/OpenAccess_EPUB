@@ -103,7 +103,7 @@ def make_EPUB(parsed_article,
         epub_nav.render_EPUB2(location=output_directory)
         epub_package.render_EPUB2(location=output_directory)
     elif epub3:
-        epub_nav.render_EPUB3(location=output_directory)
+        epub_nav.render_EPUB3(location=output_directory, back_compat=True)
         epub_package.render_EPUB3(location=output_directory)
     else:  # Do the publisher default or something
         pass
