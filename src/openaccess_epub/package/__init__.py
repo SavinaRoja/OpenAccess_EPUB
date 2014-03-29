@@ -24,6 +24,7 @@ from lxml import etree
 
 #OpenAccess_EPUB modules
 from openaccess_epub._version import __version__
+from openaccess_epub.utils import OrderedSet
 
 log = logging.getLogger('openaccess_epub.package')
 
@@ -90,6 +91,51 @@ handles one article unless collection mode is set.')
         tables_idref = 'tables-{0}-xhtml'.format(dash_doi)
         if self.article.document.findall('.//table'):
             self.spine_list.append(spine_item(tables_idref, False))
+
+        self.acquire_metadata()
+
+    def acquire_metadata(self):
+        """
+        Handles the acquisition of metadata for both collection mode and single
+        mode, uses the metadata methods belonging to the article's publisher
+        attribute.
+        """
+        if self.collection:  # collection mode metadata gathering
+            pass
+        else:  # single mode metadata gathering
+            pass
+
+        #Recall that metadata were reset in single mode during take_article
+        #self.set_publisher_metadata_methods()
+        #if self.collection_mode:  #Collection Mode Specific
+            #pass  # Nothing specific to Collection Mode only at this time
+        #else:  # Single Mode Specific
+            ##identifier is None or Identifier(value, scheme)
+            #id = self.get_article_identifier(self.article)
+            #if id:  # Only override default UUID if successful
+                #self.identifier = id
+            ##title is empty string or nonempty string
+            #self.title = self.get_article_title(self.article)
+            ##date is OrderedSet([Date(year, month, day, event)])
+            #for date in self.get_article_date(self.article):
+                #self.date.add(date)
+
+        ##These are no different between Single and Collection Modes
+        ##language is OrderedSet([strings])
+        #self.language.add(self.get_article_language(self.article))
+        ##creator is OrderedSet([Creator(name, role, file_as)])
+        #for creator in self.get_article_creator(self.article):
+            #self.creator.add(creator)
+        ##contributor is OrderedSet([Contributor(name, role, file_as)])
+        #for contributor in self.get_article_contributor(self.article):
+            #self.contributor.add(contributor)
+        ##publisher is OrderedSet([strings])
+        #self.publisher.add(self.get_article_publisher(self.article))
+        ##description is OrderedSet([strings])
+        #self.description.add(self.get_article_description(self.article))
+        ##subject is OrderedSet([strings])
+        #for subject in self.get_article_subject(self.article):
+            #self.subject.add(subject)
 
     def file_manifest(self, location):
         """
