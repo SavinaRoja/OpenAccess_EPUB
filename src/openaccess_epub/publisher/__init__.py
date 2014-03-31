@@ -13,13 +13,13 @@ import logging
 from lxml import etree
 
 #OpenAccess_EPUB modules
-from openaccess_epub.utils.element_methods import serialize
+from openaccess_epub.utils.element_methods import all_text, serialize
 
 log = logging.getLogger('openaccess_epub.publisher')
 
 creator = namedtuple('Creator', 'name, role, file_as')
 contributor = namedtuple('Contributor', 'name, role, file_as')
-date_tup = namedtuple('Date', 'year, month, day, event')
+date_tuple = namedtuple('Date', 'year, month, day, event')
 identifier = namedtuple('Identifier', 'value, scheme')
 
 
@@ -48,13 +48,13 @@ class Publisher(object):
         """
         Returns a list of contributors to the article.
 
-        This is is a metadata method that is only required to be defined for
+        This is a metadata method that is only required to be defined for
         EPUB2 creation, though the `package_contributors` counterpart should
         always be present. This method returns a list of special namedtuples
         with the following specification: Contributor(name, role, file_as).
         The 'name' should be a string representing a standard reading form of
         the contributor's name. The 'role' will indicate one of the following:
-        'author', 'editor', 'reviewer'. The 'file_as' will be a string
+        'author', 'editor', and 'reviewer'. The 'file_as' will be a string
         representing a name as it would be catalogued. This method may differ
         from `package_contributors` if one desires, but it covers extra details
         so that it they can easily be the same.
@@ -67,7 +67,7 @@ class Publisher(object):
         Returns
         -------
         list of Contributor namedtuples
-            A list of contributors, [Contributor(name, role, file_as)]
+            A list of contributors, [Contributor(name, role, file_as)].
 
         Notes
         -----
@@ -94,7 +94,7 @@ class Publisher(object):
 
         Returns
         -------
-        title : str
+        str
             The `title` of the article being parsed for metadata.
 
         Notes
@@ -103,6 +103,141 @@ class Publisher(object):
         `openaccess_epub.utils.element_methods` module.
         """
         raise NotImplementedError
+
+    def package_identifier(self, article):
+        """
+        Returns an identifier for the article.
+
+        This is a required metadata method used for representing a unique
+        identifier for the article. Typically this will simply be the article's
+        DOI. The namedtuple which this method returns is of the form
+        Identifier(value, scheme).
+
+        Parameters
+        ----------
+        article : openaccess_epub.article.Article instance
+            The `article` which is being parsed for metadata.
+
+        Returns
+        -------
+        Identifier namedtuple
+            A single Identifier(value, scheme).
+        """
+        raise NotImplementedError
+
+    def package_language(self, article):
+        """
+        Returns a list of language tags indicating languages used in the
+        article.
+
+        This is a required metadata method used to indicate the languages in
+        which the content of the article is written. This method returns a list
+        of string language codes (which must conform to
+        http://tools.ietf.org/html/rfc5646).
+
+        Parameters
+        ----------
+        article : openaccess_epub.article.Article instance
+            The `article` which is being parsed for metadata.
+
+        Returns
+        -------
+        list of str
+            A list of strings conforming to language codes.
+        """
+        raise NotImplementedError
+
+    def package_title(self, article):
+        """
+        Returns a string for the title of the article.
+
+        This is a required metadata method used for representing the article's
+        title in the Package Document of the EPUB. It simply returns a string
+        of the title's text. It may differ from `nav_title` but it is also
+        likely that these methods may be the same, in which case one may use a
+        strategy to ensure they return the same results.
+
+        Parameters
+        ----------
+        article : openaccess_epub.article.Article instance
+            The `article` which is being parsed for metadata.
+
+        Returns
+        -------
+        str
+            The `title` of the article being parsed for metadata.
+
+        Notes
+        -----
+        This method is likely to benefit from the `serialize` method in the
+        `openaccess_epub.utils.element_methods` module.
+        """
+        raise NotImplementedError
+
+    def package_contributors(self, article):
+        """
+        Returns a list of contributors to the article.
+
+        This method returns a list of special namedtuples representing
+        contributors to the article. These follow the follow specification:
+        Contributor(name, role, file_as). The 'name' should be a string
+        representing a standard reading form of the contributor's name. The
+        'role' will indicate one of the following: 'author', 'editor', and
+        'reviewer'. The 'file_as' will be a string representing a name as it
+        would be catalogued. This method may differ from `package_contributors`
+        if one desires, but it covers extra details so that it they can easily
+        be the same.
+
+        Parameters
+        ----------
+        article : openaccess_epub.article.Article instance
+            The `article` which is being parsed for metadata.
+
+        Returns
+        -------
+        list of Contributor namedtuples
+            A list of contributors, [Contributor(name, role, file_as)].
+
+        Notes
+        -----
+        Appropriate entries for authors and editors will be created in the
+        Packaging Document using the data returned by this method.
+        """
+        raise NotImplementedError
+
+    def package_subject(self, article):
+        """
+        Returns a list of strings representing keyword subjects relevant to the
+        article's content.
+
+        This is an optional metadata method
+
+        Parameters
+        ----------
+        article : openaccess_epub.article.Article instance
+            The `article` which is being parsed for metadata.
+
+        Returns
+        -------
+        list of str
+            List of keyword strings representing content subjects.
+        """
+        return []
+
+    def package_publisher(self, article):
+        """
+        """
+        return ''
+
+    def package_description(self, article):
+        """
+        """
+        return ''
+
+    def package_date(self, article):
+        """
+        """
+        return ''
 
 
 class PLoS(Publisher):
@@ -143,36 +278,23 @@ class PLoS(Publisher):
         return creator_list
 
     def nav_title(self, article):
-        """
-        Given an Article class instance, this will return a string representing
-        the title of the article. This is done for PloS by serializing the text
-        in the Article's
-        """
+        #Serializes the article-title element, since it is not just text
         article_title = article.metadata.front.article_meta.title_group.article_title.node
         return serialize(article_title)
 
     def package_identifier(self, article):
-        """
-        Given an Article class instance, this will return the DOI for the article.
-        It returns a namedtuple which holds the value and scheme.
-        """
-        doi = article.get_DOI()
-        if doi:
-            return identifier(doi, 'DOI')
-        else:
-            return None
+        #Returning the DOI
+        return identifier(article.doi, 'DOI')
 
     def package_language(self, article):
-        """
-        Given an Article class instance, this will return the language in which
-        that article was published. Since all PLoS articles are published in
-        english, this will return 'en'.
-        """
-        return 'en'
+        #All PLoS articles are published in English
+        return ['en']
 
     def package_title(self, article):
+        #Sends the same result as for the Navigation Document
         return self.nav_title(article)
 
+    #This will be collapsed into the contributor method
     def package_creator(self, article):
         """
         Given an Article class instance, this is responsible for returning the
@@ -212,13 +334,6 @@ class PLoS(Publisher):
         return creator_list
 
     def package_contributor(self, article):
-        """
-        Given an Article class instance, this is responsible for returning the
-        names for contributors to the article. For our purposes, it is sufficient
-        to list only the editors, returning their name, role=edt, and file-as name.
-
-        This returns a list of Contributor(name, role, file_as)
-        """
         contributor_list = []
         for contrib_group in article.metadata.front.article_meta.contrib_group:
             for contrib in contrib_group.contrib:
@@ -247,11 +362,6 @@ class PLoS(Publisher):
         return contributor_list
 
     def package_publisher(self, article):
-        """
-        Given an Article class instance, this is responsible for returning a string
-        for the name of the publisher. Since the publisher is already known, it
-        just returns a string regardless of article content.
-        """
         return 'Public Library of Science'
 
     def package_description(self, article):
@@ -271,14 +381,9 @@ class PLoS(Publisher):
             return ''
 
     def package_date(self, article):
-        """
-        Given an Article class instance, this provides the method for extracting
-        important dates in the history of the article. These are returned as a list
-        of Date(year, month, day, event). This method looks specifically to locate
-        the dates when PLoS accepted the article and when it was published online.
-        """
+        #This method looks specifically to locate the dates of PLoS acceptance
+        #and publishing online
         date_list = []
-
         #Creation is a Dublin Core event value: I interpret it as the date of acceptance
         history = article.metadata.front.article_meta.history
         #For some reason, the lxml dtd parser fails to recognize the content model of
@@ -292,39 +397,27 @@ class PLoS(Publisher):
                     year_el = date.find('year')
                     month_el = date.find('month')
                     day_el = date.find('day')
-                    if year_el is not None:
-                        year = element_methods.all_text(year_el)
-                    else:
-                        year = ''
-                    if month_el is not None:
-                        month = element_methods.all_text(month_el)
-                    else:
-                        month = ''
-                    if day_el is not None:
-                        day = element_methods.all_text(day_el)
-                    date_list.append(date_tup(year, month, day, 'creation'))
+                    year = all_text(year_el) if year_el is not None else ''
+                    month = all_text(month_el) if month_el is not None else ''
+                    day = all_text(day_el) if day_el is not None else ''
+                    date_list.append(date_tuple(year, month, day, 'creation'))
 
         #Publication is another Dublin Core event value: I use date of epub
         pub_dates = article.metadata.front.article_meta.pub_date
         for pub_date in pub_dates:
             if pub_date.attrs['pub-type'] == 'epub':
-                date_list.append(date_tup(pub_date.year.text, pub_date.month.text,
+                date_list.append(date_tuple(pub_date.year.text, pub_date.month.text,
                                           pub_date.day.text, 'publication'))
         return date_list
 
     def package_subject(self, article):
-        """
-        Given an Article class instance, this provides a way to extract keyword
-        values for use as Dublin Core Subject elements. These are returned as a
-        list of strings.
-        """
         #Concerned only with kwd elements, not compound-kwd elements
         #Basically just compiling a list of their serialized text
         subject_list = []
         kwd_groups = article.metadata.front.article_meta.kwd_group
         for kwd_group in kwd_groups:
             for kwd in kwd_group.kwd:
-                subject_list.append(etree.tostring(kwd.node, method='text', encoding='utf-8'))
+                subject_list.append(serialize(kwd.node))
         return subject_list
 
 
