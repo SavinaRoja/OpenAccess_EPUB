@@ -49,7 +49,7 @@ class Navigation(object):
         #navigation document. Both are used for EPUB2, only the title is used
         #for EPUB3
         self.title = 'Navigation Document for:'  # title for navigation doc
-        self.authors = OrderedSet()
+        self.contributors = OrderedSet()
 
         #The nav structure is a list of navpoint trees. Each navpoint may have
         #children navpoints. This structure will be converted to the appropriate
@@ -77,8 +77,8 @@ handles one article unless collection mode is set.')
             self.title += ' ' + self.article.doi
         else:
             self.title += ' ' + self.article.publisher.nav_title(article)
-        for author in self.article.publisher.nav_creators(article):
-            self.authors.add(author)
+        for author in self.article.publisher.nav_contributors(article):
+            self.contributors.add(author)
 
         #Analyze the structure of the article to create internal mapping
         self.map_navigation()
@@ -232,10 +232,11 @@ handles one article unless collection mode is set.')
         doctitle_text.text = self.title
 
         #Create the docAuthor elements
-        for author in self.authors:
-            docauthor = etree.SubElement(ncx, 'docAuthor')
-            docauthor_text = etree.SubElement(docauthor, 'text')
-            docauthor_text.text = author.name
+        for contributor in self.contributors:
+            if contributor.role == 'author':
+                docauthor = etree.SubElement(ncx, 'docAuthor')
+                docauthor_text = etree.SubElement(docauthor, 'text')
+                docauthor_text.text = contributor.name
 
         #Create the navMap element
         ncx.append(make_navMap())

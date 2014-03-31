@@ -46,6 +46,22 @@ class Package(object):
         self.all_dois = []  # Used to create UID
         self.all_articles = []
 
+        #Metadata elements
+        self.contributors = OrderedSet()      # 0+ Editors/Reviewers
+        self.coverage = OrderedSet()          # 0+ Not used yet
+        #self.creator = OrderedSet()          # 0+ Authors
+        self.dates = OrderedSet()             # 0+ Publication date (probably)
+        self.descriptions = OrderedSet()      # 0+ Long descriptions (abstracts)
+        self.format = 'application/epub+zip'  # 1  Always epub
+        self.language = OrderedSet()          # 1+ All languages present in doc
+        self.publishers = OrderedSet()        # 0+ All publishers of content
+        self.relation = OrderedSet()          # 0+ Not used yet
+        self.rights = ''                      # 1  License, details TBD
+        self.source = OrderedSet()            # 0+ Not used yet
+        self.subjects = OrderedSet()          # 0+ Subjects covered in doc
+        self.title = ''                       # 1  Title of publication
+        self.type = 'text'                    # 1  Always text
+
     def process(self, article):
         """
         Ingests an article and processes it for metadata and elements to provide
@@ -100,10 +116,33 @@ handles one article unless collection mode is set.')
         mode, uses the metadata methods belonging to the article's publisher
         attribute.
         """
+        publisher = self.article.publisher
         if self.collection:  # collection mode metadata gathering
             pass
         else:  # single mode metadata gathering
             pass
+
+        self.contributor = OrderedSet()       # 0+ Editors/Reviewers
+        self.creator = OrderedSet()           # 0+ Authors
+        self.date = OrderedSet()              # 0+ Publication date (probably)
+        self.description = OrderedSet()       # 0+ Long descriptions (abstracts)
+        self.language = OrderedSet()          # 1+ All languages present in doc
+        self.publisher = OrderedSet()         # 0+ All publishers of content
+        self.rights = ''                      # 1  License, details TBD
+        self.subject = OrderedSet()           # 0+ Subjects covered in doc
+        self.title = ''                       # 1  Title of publication
+
+        #Common metadata gathering
+        self.language.add(publisher.package_language())  # languages
+        for creator in publisher.package_creator():  # creators
+            self.creator.add(creator)
+        for contributor in publisher.package_contributor():  # contributors
+            self.contributor.add(contributor)
+        self.publisher.add(publisher.package_publisher())  # publisher names
+        self.description.add(publisher.package_description())  # descriptions
+        self.subject.add(publisher.package_subject())  # subjects
+
+        #Should creator and contributor even be separated?
 
         #Recall that metadata were reset in single mode during take_article
         #self.set_publisher_metadata_methods()
@@ -119,23 +158,6 @@ handles one article unless collection mode is set.')
             ##date is OrderedSet([Date(year, month, day, event)])
             #for date in self.get_article_date(self.article):
                 #self.date.add(date)
-
-        ##These are no different between Single and Collection Modes
-        ##language is OrderedSet([strings])
-        #self.language.add(self.get_article_language(self.article))
-        ##creator is OrderedSet([Creator(name, role, file_as)])
-        #for creator in self.get_article_creator(self.article):
-            #self.creator.add(creator)
-        ##contributor is OrderedSet([Contributor(name, role, file_as)])
-        #for contributor in self.get_article_contributor(self.article):
-            #self.contributor.add(contributor)
-        ##publisher is OrderedSet([strings])
-        #self.publisher.add(self.get_article_publisher(self.article))
-        ##description is OrderedSet([strings])
-        #self.description.add(self.get_article_description(self.article))
-        ##subject is OrderedSet([strings])
-        #for subject in self.get_article_subject(self.article):
-            #self.subject.add(subject)
 
     def file_manifest(self, location):
         """
