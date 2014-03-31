@@ -17,32 +17,68 @@ from openaccess_epub.utils.element_methods import all_text, serialize
 
 log = logging.getLogger('openaccess_epub.publisher')
 
-creator = namedtuple('Creator', 'name, role, file_as')
-contributor = namedtuple('Contributor', 'name, role, file_as')
+contributor_tuple = namedtuple('Contributor', 'name, role, file_as')
 date_tuple = namedtuple('Date', 'year, month, day, event')
-identifier = namedtuple('Identifier', 'value, scheme')
+identifier_tuple = namedtuple('Identifier', 'value, scheme')
+
+
+def func_registrar():
+    func_list = []
+
+    def register(func):
+        func_list.append(func)
+        return func
+    register.all = func_list
+    return register
 
 
 class Publisher(object):
     """
     Meta class for publishers, sub-class per publisher to add support
     """
+
+    #Maker methods are for generating content
+    maker2 = func_registrar()  # EPUB2 methods
+    maker3 = func_registrar()  # EPUB3 methods
+
+    #Special methods are for elegant pre-processing, prior to ignorant recursive
+    #iteration through the document tree to convert elements
+    special2 = func_registrar()  # EPUB2 methods
+    special3 = func_registrar()  # EPUB3 methods
+
     def __init__(self):
         """
         The initialization of the Publisher class.
         """
         self.epub2_support = False
         self.epub3_support = False
+        self.epub2_maker_methods = self.maker2.all
+        self.epub3_maker_methods = self.maker3.all
+        self.epub2_special_methods = self.special2.all
+        self.epub3_special_methods = self.special3.all
 
-    def pre_processing(self):
-        """
-        """
-        pass
-
-    def post_processing(self):
-        """
-        """
-        pass
+    def render_content(self, epub_version):
+        if int(epub_version) == 2:
+            if not self.epub2_support:
+                log.error('EPUB2 not supported by this publisher')
+                raise NotImplementedError('EPUB2 is not supported')
+            else:
+                for func in self.epub2_maker_methods:
+                    self.__getattribute__(func.__name__)()
+                for func in self.epub2_special_methods:
+                    self.__getattribute__(func.__name__)()
+        elif int(epub_version) == 3:
+            if not self.epub3_support:
+                log.error('EPUB3 not supported by this publisher')
+                raise NotImplementedError('EPUB3 is not supported')
+            else:
+                for func in self.epub3_maker_methods:
+                    self.__getattribute__(func.__name__)()
+                for func in self.epub3_special_methods:
+                    self.__getattribute__(func.__name__)()
+        else:
+            log.error('Improper EPUB version specified')
+            raise ValueError('epub_version should be 2 or 3')
 
     def nav_contributors(self):
         """
@@ -383,7 +419,7 @@ class PLoS(Publisher):
                     else:
                         auth = surname
                         file_as = auth
-                new_creator = creator(auth, 'aut', file_as)
+                new_creator = contributor(auth, 'aut', file_as)
                 creator_list.append(new_creator)
         return creator_list
 
