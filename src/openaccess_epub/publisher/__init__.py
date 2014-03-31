@@ -210,7 +210,9 @@ class Publisher(object):
         Returns a list of strings representing keyword subjects relevant to the
         article's content.
 
-        This is an optional metadata method
+        This is an optional metadata method representing keyword subjects
+        covered in the article's content. Each string returned in the list will
+        be added to the Package Document metadata as a keyword.
 
         Parameters
         ----------
@@ -226,18 +228,70 @@ class Publisher(object):
 
     def package_publisher(self, article):
         """
+        Returns the full name of the publsher as it should be written in the
+        Package Document metadata.
+
+        This is an optional metadata method for entering the publisher's name
+        in the Package Document metadata. This is super simple, just return a
+        string for your publisher name.
+
+        Parameters
+        ----------
+        article : openaccess_epub.article.Article instance
+            The `article` which is being parsed for metadata.
+
+        Returns
+        -------
+        str
+            Name of the publisher.
         """
         return ''
 
     def package_description(self, article):
         """
+        Returns a string description of the article. This may be the serialized
+        text of the abstract.
+
+        This is an optional metadata method for entering a description of the
+        article in the Package Document metadata. In many cases, the description
+        may be best provided by the article's abstract if it has one. This
+        returns a string of plain text, though the abstract may commonly include
+        nested XML elements; serializing the abstract should be employed.
+
+        Parameters
+        ----------
+        article : openaccess_epub.article.Article instance
+            The `article` which is being parsed for metadata.
+
+        Returns
+        -------
+        str
+            Description of the article.
         """
         return ''
 
     def package_date(self, article):
         """
+        Returns a list of important dates for the article.
+
+        This is an optional metadata method which may be used to make entries
+        for important dates in the Package Document metadata. This method
+        returns a list of special Date namedtuples which are of the form:
+        Date(year, month, day, event). The event attribute is critical for
+        creating sensible date distinctions (between acceptance and online
+        publication for instance).
+
+        Parameters
+        ----------
+        article : openaccess_epub.article.Article instance
+            The `article` which is being parsed for metadata.
+
+        Returns
+        -------
+        list of Date namedtuples
+            A list of dates, [Date(year, month, day, event)].
         """
-        return ''
+        return []
 
 
 class PLoS(Publisher):
@@ -371,14 +425,9 @@ class PLoS(Publisher):
         serializing the article's first abstract, if it has one. This results
         in 0 or 1 descriptions per article.
         """
-        abstract_text = ''
         abstract = article.metadata.front.article_meta.abstract
-        if abstract:
-            abstract_text = etree.tostring(abstract[0].node, method='text', encoding='utf-8').strip()
-        if abstract_text:
-            return str(abstract_text, encoding='utf-8')
-        else:
-            return ''
+        abst_text = serialize(abstract[0].node, strip=True) if abstract else ''
+        return abst_text
 
     def package_date(self, article):
         #This method looks specifically to locate the dates of PLoS acceptance
