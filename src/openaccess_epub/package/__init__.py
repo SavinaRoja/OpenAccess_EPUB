@@ -43,8 +43,8 @@ class Package(object):
         self.article = None
         self.article_doi = None
 
-        self.all_dois = []  # Used to create UID
-        self.all_articles = []
+        self.all_dois = []  # Used to create unique id and rights in collections
+        #self.all_articles = []
 
         #Metadata elements
         self.pub_id = None
@@ -56,7 +56,8 @@ class Package(object):
         self.languages = OrderedSet()         # 1+ All languages present in doc
         self.publishers = OrderedSet()        # 0+ All publishers of content
         self.relation = OrderedSet()          # 0+ Not used yet
-        self.rights = ''                      # 1  License, details TBD
+        self.rights = OrderedSet()            # 1  License, details TBD
+        self.rights_associations = {}         # Keeps track per-article
         self.source = OrderedSet()            # 0+ Not used yet
         self.subjects = OrderedSet()          # 0+ Subjects covered in doc
         self.title = None                     # 1  Title of publication
@@ -128,6 +129,8 @@ handles one article unless collection mode is set.')
         else:  # single mode metadata gathering
             self.pub_id = publisher.package_identifier(art)
             self.title = publisher.package_title(art)
+            for date in publisher.package_date(art):
+                self.dates.add(date)
 
         #Common metadata gathering
         for lang in publisher.package_language(art):
@@ -135,9 +138,18 @@ handles one article unless collection mode is set.')
         for contributor in publisher.package_contributor(art):  # contributors
             self.contributors.add(contributor)
         self.publishers.add(publisher.package_publisher(art))  # publisher names
-        self.descriptions.add(publisher.package_description(art))  # descriptions
+        desc = publisher.package_description(art)
+        if desc is not None:
+            self.descriptions.add(desc)
         for subj in publisher.package_subject(art):
             self.subjects.add(subj)  # subjects
+        #Rights
+        art_rights = publisher.package_rights(art)
+        self.rights.add(art_rights)
+        if art_rights not in self.rights_associations:
+            self.rights_associations[art_rights] = [art.doi]
+        else:
+            self.rights_associations[art_rights].append(art.doi)
 
     def file_manifest(self, location):
         """
@@ -185,6 +197,8 @@ handles one article unless collection mode is set.')
     def make_element(self, tagname, doc, attrs={}, text=''):
         new_element = etree.Element(self.ns_rectify(tagname, doc))
         for kwd, val in attrs.items():
+            if val is None:  # None values will not become attributes
+                continue
             new_element.attrib[self.ns_rectify(kwd, doc)] = val
         new_element.text = text
         return new_element
@@ -217,13 +231,14 @@ handles one article unless collection mode is set.')
 
         #Make the Metadata
         metadata = etree.SubElement(package, 'metadata')
+
+        #Metadata: Identifier
         if not self.collection:  # Identifier for single article
             ident = self.make_element('dc:identifier',
                                       document,
-                                      {'id': 'pub-identifier'},
+                                      {'id': 'pub-identifier',
+                                       'opf:scheme': self.pub_id.scheme},
                                       self.pub_id.value)
-            if self.pub_id.scheme is not None:
-                ident.attrib[self.ns_rectify('opf:scheme', document)] = self.pub_id.scheme
             metadata.append(ident)
         else:  # Identifier for collection
             ident = self.make_element('dc:identifier',
@@ -232,13 +247,94 @@ handles one article unless collection mode is set.')
                                        'opf:scheme': 'DOI'},
                                       ','.join(self.all_dois))
             metadata.append(ident)
+
+        #Metadata: Title
         #Divergence between single articles and collections for titles is
         #handled during initiation and selective metadata acquisition, not here
         title = self.make_element('dc:title', document, text=self.title)
         metadata.append(title)
+
+        #Metadata: Languages
         for lang in self.languages:
             lang_el = self.make_element('dc:language', document, text=lang)
             metadata.append(lang_el)
+        #So here's the deal about creators/contributors:
+        #The EPUB2 OPF spec indicates a distinction between primary authors
+        #(contained in dc:creator) and secondary authors (contained in
+        #dc:contributor, along with all the other options in
+        # http://www.idpf.org/epub/20/spec/OPF_2.0.1_draft.htm#TOC2.2.6). As far
+        #as I can think there is no real use case in academic articles for
+        #<dc:contributor role="aut">... We'll just make all contributors with
+        #the 'aut' role as <dc:creator>s
+        for contrib in self.contributors:
+            tag = 'dc:creator' if contrib.role == 'aut' else 'dc:contributor'
+            metadata.append(self.make_element(tag,
+                                              document,
+                                              {'opf:role': contrib.role,
+                                               'opf:file-as': contrib.file_as},
+                                              contrib.name))
+
+        #Metadata: Descriptions
+        for description in self.descriptions:
+            metadata.append(self.make_element('dc:description',
+                                               document,
+                                               text=description))
+
+        #Metadata: Subjects
+        for subject in self.subjects:
+            metadata.append(self.make_element('dc:subject',
+                                              document,
+                                              text=subject))
+
+        #Metadata: Format
+        metadata.append(self.make_element('dc:format',
+                                          document,
+                                          text=self.format))
+
+        #Metadata: Publishers
+        for publisher in self.publishers:
+            metadata.append(self.make_element('dc:publisher',
+                                              document,
+                                              text=publisher))
+
+        #Metadata: Dates
+        for date in self.dates:
+            #I use str coercion just to be safe, in case someone returns ints
+            date_text = str(date.year)
+            if date.month:
+                date_text = '-'.join([date_text, str(date.month)])
+                if date.day:
+                    date_text = '-'.join([date_text, str(date.day)])
+            metadata.append(self.make_element('dc:date',
+                                              document,
+                                              {'opf:event': date.event},
+                                              date_text))
+
+        #Metadata: Rights
+        if self.collection:
+            if len(self.rights) == 1:  # Only one license string present
+                rights_text = '''\
+All articles in this collection published according to the following license:
+'''
+                rights_text = ''.join([rights_text, self.rights[0]])
+            else:  # More than one, we need to refer to rights_associations
+                rights_text = '''\
+Articles in this collection were published according to different licenses. Each
+unique license will be listed below, preceded by every article DOI to which it
+applies.'''
+                for lic, doi_list in self.rights_associations.items():
+                    doi_line = ','.join(doi_list)
+                    rights_text = '\n'.join([rights_texts, doi_line, lic])
+                metadata.append('dc:rights',
+                                document,
+                                text=rights_text)
+
+        else:
+            metadata.append(self.make_element('dc:rights',
+                                              document,
+                                              text=self.rights.pop()))
+
+        #Not Implemented Metadata: Source, Type, Coverage, Relation
 
         #Make the Manifest
         manifest = etree.SubElement(package, 'manifest')
@@ -265,6 +361,120 @@ handles one article unless collection mode is set.')
 
         #Make the Metadata
         metadata = etree.SubElement(package, 'metadata')
+
+        #Metadata: Identifier
+        if not self.collection:  # Identifier for single article
+            ident = self.make_element('dc:identifier',
+                                      document,
+                                      {'id': 'pub-identifier'},
+                                      self.pub_id.value)
+            metadata.append(ident)
+        else:  # Identifier for collection
+            ident = self.make_element('dc:identifier',
+                                      document,
+                                      {'id': 'pub-identifier',},
+                                      ','.join(self.all_dois))
+            metadata.append(ident)
+        #Metadata: Identifier Refinement
+        meta = self.make_element('meta',
+                                 document,
+                                 {'refines': '#pub-identifier',
+                                  'property': 'identifier-type',
+                                  'scheme': 'onix:codelist5'})
+        if self.pub_id.scheme is not None:
+            if self.pub_id.scheme == 'DOI':
+                meta.text = '06'
+                metadata.append(meta)
+            else:
+                raise ValueError('Unhandled id scheme!')
+
+        #Metadata: Title
+        #Divergence between single articles and collections for titles is
+        #handled during initiation and selective metadata acquisition, not here
+        title = self.make_element('dc:title', document, text=self.title)
+        metadata.append(title)
+
+        #Metadata: Languages
+        for lang in self.languages:
+            lang_el = self.make_element('dc:language', document, text=lang)
+            metadata.append(lang_el)
+        #So here's the deal about creators/contributors:
+        #The EPUB2 OPF spec indicates a distinction between primary authors
+        #(contained in dc:creator) and secondary authors (contained in
+        #dc:contributor, along with all the other options in
+        # http://www.idpf.org/epub/20/spec/OPF_2.0.1_draft.htm#TOC2.2.6). As far
+        #as I can think there is no real use case in academic articles for
+        #<dc:contributor role="aut">... We'll just make all contributors with
+        #the 'aut' role as <dc:creator>s
+        for contrib in self.contributors:
+            tag = 'dc:creator' if contrib.role == 'aut' else 'dc:contributor'
+            metadata.append(self.make_element(tag,
+                                              document,
+                                              {'opf:role': contrib.role,
+                                               'opf:file-as': contrib.file_as},
+                                              contrib.name))
+
+        #Metadata: Descriptions
+        for description in self.descriptions:
+            metadata.append(self.make_element('dc:description',
+                                               document,
+                                               text=description))
+
+        #Metadata: Subjects
+        for subject in self.subjects:
+            metadata.append(self.make_element('dc:subject',
+                                              document,
+                                              text=subject))
+
+        #Metadata: Format
+        metadata.append(self.make_element('dc:format',
+                                          document,
+                                          text=self.format))
+
+        #Metadata: Publishers
+        for publisher in self.publishers:
+            metadata.append(self.make_element('dc:publisher',
+                                              document,
+                                              text=publisher))
+
+        #Metadata: Dates
+        for date in self.dates:
+            #I use str coercion just to be safe, in case someone returns ints
+            date_text = str(date.year)
+            if date.month:
+                date_text = '-'.join([date_text, str(date.month)])
+                if date.day:
+                    date_text = '-'.join([date_text, str(date.day)])
+            metadata.append(self.make_element('dc:date',
+                                              document,
+                                              {'opf:event': date.event},
+                                              date_text))
+
+        #Metadata: Rights
+        if self.collection:
+            if len(self.rights) == 1:  # Only one license string present
+                rights_text = '''\
+All articles in this collection published according to the following license:
+'''
+                rights_text = ''.join([rights_text, self.rights[0]])
+            else:  # More than one, we need to refer to rights_associations
+                rights_text = '''\
+Articles in this collection were published according to different licenses. Each
+unique license will be listed below, preceded by every article DOI to which it
+applies.'''
+                for lic, doi_list in self.rights_associations.items():
+                    doi_line = ','.join(doi_list)
+                    rights_text = '\n'.join([rights_texts, doi_line, lic])
+                metadata.append('dc:rights',
+                                document,
+                                text=rights_text)
+
+        else:
+            metadata.append(self.make_element('dc:rights',
+                                              document,
+                                              text=self.rights.pop()))
+
+        #Not Implemented Metadata: Source, Type, Coverage, Relation
 
         #Make the Manifest
         manifest = etree.SubElement(package, 'manifest')
