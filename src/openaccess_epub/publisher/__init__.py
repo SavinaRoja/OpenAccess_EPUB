@@ -301,10 +301,10 @@ class Publisher(object):
 
         Returns
         -------
-        str
-            Description of the article.
+        str or None
+            Description of the article. None if no description available.
         """
-        return ''
+        return None
 
     def package_date(self, article):
         """
@@ -328,6 +328,57 @@ class Publisher(object):
             A list of dates, [Date(year, month, day, event)].
         """
         return []
+
+    def package_rights(self, article):
+        """
+        Returns a string representing a copyright statement for the article.
+
+        This is a requied metadata method which will be used to provide an
+        appropriate statement of rights in the Package Document. This method
+        should return a string.
+
+        Parameters
+        ----------
+        article : openaccess_epub.article.Article instance
+            The `article` which is being parsed for metadata.
+
+        Returns
+        -------
+        str
+            A string for the copyright statement of the article.
+
+        Notes
+        -----
+        Elegantly handling rights from multiple works within the Package
+        Document may be a challenge but very important. Constructive feedback is
+        highly welcome at all times to attempt to follow best practices. I will
+        review aspects of this challenge, as well as summarize how the Package
+        Document handles it.
+
+        Most OA articles are published under a variant of the Creative Commons
+        license, and different versions of this license retain differ in terms
+        or rights and restrictions. Due to the fact that articles may be
+        published under different licenses, care should be taken to ensure that
+        clear notice is given to the licensing of individual articles and that
+        incompatible licenses are not mixed.
+
+        Creating an EPUB of an article (or compiling them in a collection) is
+        considered the creation of a derivative work; the EPUB should not be
+        considered a verbatim copy of the work. Licenses which do not allow
+        derivative works are not compatible with OpenAccess_EPUB. Likewise, the
+        use of OpenAccess_EPUB to create content for commercial purposes is
+        not compatible with licenses that prohibit commercial use. It is not the
+        responsibility of OpenAccess_EPUB (an open source, freely available and
+        modifiable software) to enforce conformance to licensing rules.
+
+        If all articles in a collection are published according to the same
+        license, a rights entry will be made in the Package Document displaying
+        that license along with a note that it pertains to all articles. If
+        there are multiple licenses in the collection, a rights entry will be
+        created which details each individual license, along with the distinct
+        articles to which they pertain.
+        """
+        return NotImplementedError
 
 
 class PLoS(Publisher):
@@ -370,7 +421,7 @@ class PLoS(Publisher):
     def nav_title(self, article):
         #Serializes the article-title element, since it is not just text
         article_title = article.metadata.front.article_meta.title_group.article_title.node
-        return serialize(article_title)
+        return serialize(article_title, strip=True)
 
     def package_identifier(self, article):
         #Returning the DOI
@@ -384,22 +435,13 @@ class PLoS(Publisher):
         #Sends the same result as for the Navigation Document
         return self.nav_title(article)
 
-    #This will be collapsed into the contributor method
-    def package_creator(self, article):
-        """
-        Given an Article class instance, this is responsible for returning the
-        names for creators of the article. For our purposes, it is sufficient to
-        list only the authors, returning their name, role=aut, and file-as name.
-
-        This returns a list of Creator(name, role, file_as)
-        """
-        creator_list = []
+    def package_contributor(self, article):
+        contributor_list = []
         for contrib_group in article.metadata.front.article_meta.contrib_group:
             for contrib in contrib_group.contrib:
-                if not contrib.attrs['contrib-type'] == 'author':
-                    continue
+                contrib_type = contrib.attrs['contrib-type']
                 if contrib.collab:
-                    auth = str(etree.tostring(contrib.collab[0].node, method='text', encoding='utf-8').strip(), encoding='utf-8')
+                    auth = serialize(contrib.collab[0].node)
                     file_as = auth
                 elif contrib.anonymous:
                     auth = 'Anonymous'
@@ -419,35 +461,13 @@ class PLoS(Publisher):
                     else:
                         auth = surname
                         file_as = auth
-                new_creator = contributor_tuple(auth, 'aut', file_as)
-                creator_list.append(new_creator)
-        return creator_list
-
-    def package_contributor(self, article):
-        contributor_list = []
-        for contrib_group in article.metadata.front.article_meta.contrib_group:
-            for contrib in contrib_group.contrib:
-                if not contrib.attrs['contrib-type'] == 'editor':
-                    continue
-                if contrib.collab:
-                    auth = etree.tostring(contrib.collab[0].node, method='text', encoding='utf-8')
-                    file_as = auth
+                if contrib_type == 'editor':
+                    role = 'edt'
+                elif contrib_type == 'author':
+                    role = 'aut'
                 else:
-                    name = contrib.name[0]  # Work with only first name listed
-                    surname = name.surname.text
-                    given = name.given_names
-                    if given:  # Given is optional
-                        if given.text:  # Odd instances of empty tags
-                            auth = ' '.join([surname, given.text])
-                            given_initial = given.text[0]
-                            file_as = ', '.join([surname, given_initial])
-                        else:
-                            auth = surname
-                            file_as = auth
-                    else:
-                        auth = surname
-                        file_as = auth
-                new_contributor = contributor_tuple(auth, 'edt', file_as)
+                    continue
+                new_contributor = contributor_tuple(auth, role, file_as)
                 contributor_list.append(new_contributor)
         return contributor_list
 
@@ -504,6 +524,12 @@ class PLoS(Publisher):
             for kwd in kwd_group.kwd:
                 subject_list.append(serialize(kwd.node))
         return subject_list
+
+    def package_rights(self, article):
+        #Perhaps we could just return a static string if everything in PLoS is
+        #published under the same license. But this inspects the file
+        rights = article.metadata.front.article_meta.permissions.license
+        return serialize(rights[0].node)
 
 
 class Frontiers(Publisher):
