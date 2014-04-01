@@ -36,7 +36,7 @@ class Package(object):
     The Package class
     """
 
-    def __init__(self, collection=False):
+    def __init__(self, collection=False, title=''):
         self.collection = collection
         self.spine_list = []
 
@@ -47,20 +47,23 @@ class Package(object):
         self.all_articles = []
 
         #Metadata elements
-        self.contributors = OrderedSet()      # 0+ Editors/Reviewers
+        self.pub_id = None
+        self.contributors = OrderedSet()      # 0+ Authors/Editors/Reviewers
         self.coverage = OrderedSet()          # 0+ Not used yet
-        #self.creator = OrderedSet()          # 0+ Authors
         self.dates = OrderedSet()             # 0+ Publication date (probably)
         self.descriptions = OrderedSet()      # 0+ Long descriptions (abstracts)
         self.format = 'application/epub+zip'  # 1  Always epub
-        self.language = OrderedSet()          # 1+ All languages present in doc
+        self.languages = OrderedSet()         # 1+ All languages present in doc
         self.publishers = OrderedSet()        # 0+ All publishers of content
         self.relation = OrderedSet()          # 0+ Not used yet
         self.rights = ''                      # 1  License, details TBD
         self.source = OrderedSet()            # 0+ Not used yet
         self.subjects = OrderedSet()          # 0+ Subjects covered in doc
-        self.title = ''                       # 1  Title of publication
+        self.title = None                     # 1  Title of publication
         self.type = 'text'                    # 1  Always text
+
+        if self.collection:  # Collections receive assigned titles
+            self.title = title
 
     def process(self, article):
         """
@@ -116,48 +119,25 @@ handles one article unless collection mode is set.')
         mode, uses the metadata methods belonging to the article's publisher
         attribute.
         """
+        #For space economy
         publisher = self.article.publisher
+        art = self.article
+
         if self.collection:  # collection mode metadata gathering
             pass
         else:  # single mode metadata gathering
-            pass
-
-        self.contributor = OrderedSet()       # 0+ Editors/Reviewers
-        self.creator = OrderedSet()           # 0+ Authors
-        self.date = OrderedSet()              # 0+ Publication date (probably)
-        self.description = OrderedSet()       # 0+ Long descriptions (abstracts)
-        self.language = OrderedSet()          # 1+ All languages present in doc
-        self.publisher = OrderedSet()         # 0+ All publishers of content
-        self.rights = ''                      # 1  License, details TBD
-        self.subject = OrderedSet()           # 0+ Subjects covered in doc
-        self.title = ''                       # 1  Title of publication
+            self.pub_id = publisher.package_identifier(art)
+            self.title = publisher.package_title(art)
 
         #Common metadata gathering
-        self.language.add(publisher.package_language())  # languages
-        for creator in publisher.package_creator():  # creators
-            self.creator.add(creator)
-        for contributor in publisher.package_contributor():  # contributors
-            self.contributor.add(contributor)
-        self.publisher.add(publisher.package_publisher())  # publisher names
-        self.description.add(publisher.package_description())  # descriptions
-        self.subject.add(publisher.package_subject())  # subjects
-
-        #Should creator and contributor even be separated?
-
-        #Recall that metadata were reset in single mode during take_article
-        #self.set_publisher_metadata_methods()
-        #if self.collection_mode:  #Collection Mode Specific
-            #pass  # Nothing specific to Collection Mode only at this time
-        #else:  # Single Mode Specific
-            ##identifier is None or Identifier(value, scheme)
-            #id = self.get_article_identifier(self.article)
-            #if id:  # Only override default UUID if successful
-                #self.identifier = id
-            ##title is empty string or nonempty string
-            #self.title = self.get_article_title(self.article)
-            ##date is OrderedSet([Date(year, month, day, event)])
-            #for date in self.get_article_date(self.article):
-                #self.date.add(date)
+        for lang in publisher.package_language(art):
+            self.languages.add(lang)  # languages
+        for contributor in publisher.package_contributor(art):  # contributors
+            self.contributors.add(contributor)
+        self.publishers.add(publisher.package_publisher(art))  # publisher names
+        self.descriptions.add(publisher.package_description(art))  # descriptions
+        for subj in publisher.package_subject(art):
+            self.subjects.add(subj)  # subjects
 
     def file_manifest(self, location):
         """
@@ -202,11 +182,29 @@ handles one article unless collection mode is set.')
                 yield item
         os.chdir(current_dir)
 
+    def make_element(self, tagname, doc, attrs={}, text=''):
+        new_element = etree.Element(self.ns_rectify(tagname, doc))
+        for kwd, val in attrs.items():
+            new_element.attrib[self.ns_rectify(kwd, doc)] = val
+        new_element.text = text
+        return new_element
+
+    def ns_rectify(self, tagname, document):
+        if ':' not in tagname:
+            return tagname
+        else:
+            ns, tag = tagname.split(':')
+            return '{' + document.getroot().nsmap[ns] + '}' + tag
+
     def _init_package_doc(self, version):
         root = etree.XML('''\
 <?xml version="1.0"?>
-<package xmlns="http://www.idpf.org/2007/opf" xmlns:dc="http://purl.org/dc/elements/1.1/"
-   xmlns:dcterms="http://purl.org/dc/terms/" version="{0}"
+<package
+   xmlns="http://www.idpf.org/2007/opf"
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:opf="http://www.idpf.org/2007/opf"
+   xmlns:dcterms="http://purl.org/dc/terms/"
+   version="{0}"
    unique-identifier="pub-identifier">\
 </package>'''.format(version))
         document = etree.ElementTree(root)
@@ -219,6 +217,28 @@ handles one article unless collection mode is set.')
 
         #Make the Metadata
         metadata = etree.SubElement(package, 'metadata')
+        if not self.collection:  # Identifier for single article
+            ident = self.make_element('dc:identifier',
+                                      document,
+                                      {'id': 'pub-identifier'},
+                                      self.pub_id.value)
+            if self.pub_id.scheme is not None:
+                ident.attrib[self.ns_rectify('opf:scheme', document)] = self.pub_id.scheme
+            metadata.append(ident)
+        else:  # Identifier for collection
+            ident = self.make_element('dc:identifier',
+                                      document,
+                                      {'id': 'pub-identifier',
+                                       'opf:scheme': 'DOI'},
+                                      ','.join(self.all_dois))
+            metadata.append(ident)
+        #Divergence between single articles and collections for titles is
+        #handled during initiation and selective metadata acquisition, not here
+        title = self.make_element('dc:title', document, text=self.title)
+        metadata.append(title)
+        for lang in self.languages:
+            lang_el = self.make_element('dc:language', document, text=lang)
+            metadata.append(lang_el)
 
         #Make the Manifest
         manifest = etree.SubElement(package, 'manifest')

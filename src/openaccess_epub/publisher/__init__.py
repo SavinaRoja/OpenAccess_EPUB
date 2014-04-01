@@ -337,7 +337,7 @@ class PLoS(Publisher):
         super(PLoS, self).__init__()
 
     def nav_contributors(self, article):
-        creator_list = []
+        contributor_list = []
         for contrib_group in article.metadata.front.article_meta.contrib_group:
             for contrib in contrib_group.contrib:
                 if not contrib.attrs['contrib-type'] == 'author':
@@ -363,9 +363,9 @@ class PLoS(Publisher):
                     else:
                         auth = surname
                         file_as = auth
-                new_creator = creator(auth, 'aut', file_as)
-                creator_list.append(new_creator)
-        return creator_list
+                new_contributor = contributor_tuple(auth, 'aut', file_as)
+                contributor_list.append(new_contributor)
+        return contributor_list
 
     def nav_title(self, article):
         #Serializes the article-title element, since it is not just text
@@ -374,7 +374,7 @@ class PLoS(Publisher):
 
     def package_identifier(self, article):
         #Returning the DOI
-        return identifier(article.doi, 'DOI')
+        return identifier_tuple(article.doi, 'DOI')
 
     def package_language(self, article):
         #All PLoS articles are published in English
@@ -419,7 +419,7 @@ class PLoS(Publisher):
                     else:
                         auth = surname
                         file_as = auth
-                new_creator = contributor(auth, 'aut', file_as)
+                new_creator = contributor_tuple(auth, 'aut', file_as)
                 creator_list.append(new_creator)
         return creator_list
 
@@ -447,7 +447,7 @@ class PLoS(Publisher):
                     else:
                         auth = surname
                         file_as = auth
-                new_contributor = contributor(auth, 'edt', file_as)
+                new_contributor = contributor_tuple(auth, 'edt', file_as)
                 contributor_list.append(new_contributor)
         return contributor_list
 
