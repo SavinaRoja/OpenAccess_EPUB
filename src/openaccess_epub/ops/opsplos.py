@@ -190,7 +190,7 @@ class OPSPLoS(OPSMeta):
         for ref in refs:
             ref_p = etree.SubElement(body, 'p')
             ref_p.attrib['id'] = ref.attrib['id']
-            ref_p.text = str(etree.tostring(ref, method='text', encoding='utf-8'), encoding='utf-8')
+            ref_p.text = element_methods.serialize(ref, strip=True)
 
         self.write_document(os.path.join(self.ops_dir, self.bib_frag[:-4]), self.document)
 

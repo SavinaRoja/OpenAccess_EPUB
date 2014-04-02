@@ -94,6 +94,7 @@ handles one article unless collection mode is set.')
 
         self.article = article
         self.article_doi = self.article.doi.split('/')[1]
+        self.all_dois.append(self.article.doi)
 
         #Analyze the article to add entries to the spine
         dash_doi = self.article_doi.replace('.', '-')
@@ -317,7 +318,7 @@ handles one article unless collection mode is set.')
                 rights_text = '''\
 All articles in this collection published according to the following license:
 '''
-                rights_text = ''.join([rights_text, self.rights[0]])
+                rights_text = ''.join([rights_text, self.rights.pop()])
             else:  # More than one, we need to refer to rights_associations
                 rights_text = '''\
 Articles in this collection were published according to different licenses. Each
@@ -326,9 +327,9 @@ applies.'''
                 for lic, doi_list in self.rights_associations.items():
                     doi_line = ','.join(doi_list)
                     rights_text = '\n'.join([rights_text, doi_line, lic])
-                metadata.append('dc:rights',
-                                document,
-                                text=rights_text)
+                metadata.append(self.make_element('dc:rights',
+                                                  document,
+                                                  text=rights_text))
 
         else:
             metadata.append(self.make_element('dc:rights',
@@ -364,8 +365,8 @@ applies.'''
         metadata = etree.SubElement(package, 'metadata')
 
         #Metadata: Identifier
+        today = datetime.date.today().strftime('%Y.%m.%d')
         if not self.collection:  # Identifier for single article
-            today = datetime.date.today().strftime('%Y.%m.%d')
             ident = self.make_element('dc:identifier',
                                       document,
                                       {'id': 'pub-identifier'},
@@ -383,12 +384,16 @@ applies.'''
                                  {'refines': '#pub-identifier',
                                   'property': 'identifier-type',
                                   'scheme': 'onix:codelist5'})
-        if self.pub_id.scheme is not None:
-            if self.pub_id.scheme == 'DOI':
-                meta.text = '06'
-                metadata.append(meta)
-            else:
-                raise ValueError('Unhandled id scheme!')
+        if self.collection:  # Collections are always DOIs currently
+            meta.text = '06'
+            metadata.append(meta)
+        else:
+            if self.pub_id.scheme is not None:
+                if self.pub_id.scheme == 'DOI':
+                    meta.text = '06'
+                    metadata.append(meta)
+                else:  # We could do an ONIXlist lookup map here
+                    raise ValueError('Unhandled id scheme!')
 
         #Metadata: Title
         #Divergence between single articles and collections for titles is
@@ -530,7 +535,7 @@ applies.'''
                 rights_text = '''\
 All articles in this collection published according to the following license:
 '''
-                rights_text = ''.join([rights_text, self.rights[0]])
+                rights_text = ''.join([rights_text, self.rights.pop()])
             else:  # More than one, we need to refer to rights_associations
                 rights_text = '''\
 Articles in this collection were published according to different licenses. Each
@@ -539,9 +544,9 @@ applies.'''
                 for lic, doi_list in self.rights_associations.items():
                     doi_line = ','.join(doi_list)
                     rights_text = '\n'.join([rights_text, doi_line, lic])
-                metadata.append('dc:rights',
-                                document,
-                                text=rights_text)
+            metadata.append(self.make_element('dc:rights',
+                                              document,
+                                              text=rights_text))
 
         else:
             metadata.append(self.make_element('dc:rights',
@@ -563,7 +568,6 @@ applies.'''
         #Make the Spine
         spine = etree.SubElement(package, 'spine')
         spine.attrib['toc'] = 'ncx'
-        self.spine_list = [spine_item('htmltoc', False)] + self.spine_list
         for item in self.spine_list:
             itemref = etree.SubElement(spine, 'itemref')
             itemref.attrib['idref'] = item.idref

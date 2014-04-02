@@ -33,7 +33,7 @@ navpoint = namedtuple('navpoint', 'id, label, playOrder, source, children')
 
 class Navigation(object):
 
-    def __init__(self, collection=False):
+    def __init__(self, collection=False, title=''):
         self.collection = collection
 
         #Special navigation structures: List of Equations/Figures/Tables
@@ -48,7 +48,7 @@ class Navigation(object):
         #These are the limited forms of metadata that might make it in to the
         #navigation document. Both are used for EPUB2, only the title is used
         #for EPUB3
-        self.title = 'Navigation Document for:'  # title for navigation doc
+        self.title = title
         self.contributors = OrderedSet()
 
         #The nav structure is a list of navpoint trees. Each navpoint may have
@@ -74,9 +74,9 @@ handles one article unless collection mode is set.')
         self.article_doi = self.article.doi.split('/')[1]
         self.all_dois.append(self.article.doi)
         if self.collection:
-            self.title += ' ' + self.article.doi
+            pass
         else:
-            self.title += ' ' + self.article.publisher.nav_title(article)
+            self.title = self.article.publisher.nav_title(article)
         for author in self.article.publisher.nav_contributors(article):
             self.contributors.add(author)
 
@@ -142,8 +142,10 @@ handles one article unless collection mode is set.')
             #If in collection mode, we'll prepend the article DOI to avoid
             #collisions
             if self.collection:
-                child.attrib['id'] = '-'.join(self.article_doi,
-                                              child.attrib['id'])
+                child_id = '-'.join([self.article_doi,
+                                     child.attrib['id']])
+            else:
+                child_id = child.attrib['id']
 
             #Attempt to infer the correct text as a label
             #Skip the element if we cannot
@@ -157,7 +159,7 @@ handles one article unless collection mode is set.')
                                                child.attrib['id'])
             if tagname == 'sec':
                 children = self.recursive_article_navmap(child, depth=depth + 1)
-                navpoints.append(navpoint(child.attrib['id'],
+                navpoints.append(navpoint(child_id,
                                           label,
                                           self.play_order,
                                           source,
@@ -206,12 +208,8 @@ handles one article unless collection mode is set.')
                 for child in nav.children:
                     nav_element.append(make_navMap(nav=child))
             return nav_element
-
         root = etree.XML('''\
 <?xml version="1.0"?>\
-<!DOCTYPE ncx\
-  PUBLIC '-//NISO//DTD ncx 2005-1//EN'\
-  'http://www.daisy.org/z3986/2005/ncx-2005-1.dtd'>\
 <ncx version="2005-1" xmlns="http://www.daisy.org/z3986/2005/ncx/">\
 <head>\
 <meta name="dtb:uid" content="{uid}"/>\
@@ -295,6 +293,8 @@ handles one article unless collection mode is set.')
         html = document.getroot()
 
         body = etree.SubElement(html, 'body')  # Create the body element
+        #h1 = etree.SubElement(body, 'h1')
+        #h1.text = self.title
         #Create the prinary nav element
         nav = etree.SubElement(body, 'nav')
         nav.attrib['{http://www.idpf.org/2007/ops}type'] = 'toc'
@@ -302,7 +302,7 @@ handles one article unless collection mode is set.')
 
         #Create the title
         h2 = etree.SubElement(nav, 'h2')
-        h2.text = self.title
+        h2.text = 'Table of Contents'
 
         #Stuff
         nav.append(make_nav())

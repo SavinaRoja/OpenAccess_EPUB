@@ -18,8 +18,8 @@ General Options:
                         "WARNING", "INFO", "DEBUG") [default: INFO]
 
 Collection Specific Options:
-  -2 --epub2            Convert to EPUB2 (not implemented)
-  -3 --epub3            Convert to EPUB3 (not implemented)
+  -2 --epub2            Convert to EPUB2
+  -3 --epub3            Convert to EPUB3
   --no-cleanup          The EPUB contents prior to .epub-packaging will not be
                         removed
   --no-epubcheck        Disable the use of epubcheck to validate EPUBs
@@ -64,10 +64,11 @@ from docopt import docopt
 
 #OpenAccess_EPUB modules
 from openaccess_epub._version import __version__
-import openaccess_epub.ncx as ncx
-import openaccess_epub.opf as opf
+from openaccess_epub.navigation import Navigation
+from openaccess_epub.package import Package
 import openaccess_epub.ops as ops
 import openaccess_epub.utils as utils
+from openaccess_epub.utils.epub import epub_zip, make_epub_base
 import openaccess_epub.utils.images
 import openaccess_epub.utils.logs as oae_logging
 from openaccess_epub.article import Article
@@ -125,28 +126,26 @@ def main(argv=None):
 
     if os.path.isdir(output_directory):
         utils.dir_exists(output_directory)
+    try:
+        os.makedirs(output_directory)
+    except OSError as err:
+        if err.errno != 17:
+            command_log.exception('Unable to recursively create output directories')
 
     #Instantiate collection NCX and OPF
-    toc = ncx.NCX(oae_version=__version__,
-                  location=output_directory,
-                  collection_mode=True)
-    myopf = opf.OPF(location=output_directory,
-                    collection_mode=True,
-                    title=c_file_root)
+    navigation = Navigation(collection=True)
+    package = Package(collection=True, title=c_file_root)
 
     #Copy over the basic epub directory
-    base_epub = openaccess_epub.utils.base_epub_location()
-    if not os.path.isdir(base_epub):
-        openaccess_epub.utils.make_epub_base()
-    shutil.copytree(base_epub, output_directory)
+    make_epub_base(output_directory)
 
     #Iterate over the inputs
     for xml_file in inputs:
         xml_path = utils.evaluate_relative_path(os.path.dirname(abs_input_path),
                                                 xml_file)
         parsed_article = Article(xml_path, validation=not args['--no-validate'])
-        toc.take_article(parsed_article)
-        myopf.take_article(parsed_article)
+        navigation.process(parsed_article)
+        package.process(parsed_article)
 
         #Get the Digital Object Identifier
         doi = parsed_article.get_DOI()
@@ -162,9 +161,15 @@ def main(argv=None):
         if journal_doi == '10.1371':  # PLoS's publisher DOI
             ops_doc = ops.OPSPLoS(parsed_article, output_directory)
 
-    toc.write()
-    myopf.write()
-    utils.epub_zip(output_directory)
+    if args['--epub2']:
+        navigation.render_EPUB2(output_directory)
+        package.render_EPUB2(output_directory)
+    elif args['--epub3']:
+        navigation.render_EPUB3(output_directory, back_compat=True)
+        package.render_EPUB3(output_directory)
+    else:
+        pass
+    epub_zip(output_directory)
 
     #Cleanup removes the produced output directory, keeps the EPUB
     if not args['--no-cleanup']:
