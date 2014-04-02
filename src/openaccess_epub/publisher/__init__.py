@@ -210,6 +210,7 @@ class Publisher(object):
         """
         raise NotImplementedError
 
+    #TODO: Implement alternate-language scripts for contributors
     def package_contributors(self, article):
         """
         Returns a list of contributors to the article.
@@ -218,11 +219,10 @@ class Publisher(object):
         contributors to the article. These follow the follow specification:
         Contributor(name, role, file_as). The 'name' should be a string
         representing a standard reading form of the contributor's name. The
-        'role' will indicate one of the following: 'author', 'editor', and
-        'reviewer'. The 'file_as' will be a string representing a name as it
-        would be catalogued. This method may differ from `package_contributors`
-        if one desires, but it covers extra details so that it they can easily
-        be the same.
+        'role' should be a MARC relator value (see References).
+        The 'file_as' will be a string representing a name as it
+        would be catalogued. This method may differ from `nav_contributors`
+        if one desires, but they generally overlap.
 
         Parameters
         ----------
@@ -238,6 +238,11 @@ class Publisher(object):
         -----
         Appropriate entries for authors and editors will be created in the
         Packaging Document using the data returned by this method.
+
+        References
+        ----------
+        http://www.loc.gov/marc/relators/relaterm.html
+        http://www.loc.gov/marc/relators/relacode.html
         """
         raise NotImplementedError
 
@@ -313,9 +318,8 @@ class Publisher(object):
         This is an optional metadata method which may be used to make entries
         for important dates in the Package Document metadata. This method
         returns a list of special Date namedtuples which are of the form:
-        Date(year, month, day, event). The event attribute is critical for
-        creating sensible date distinctions (between acceptance and online
-        publication for instance).
+        Date(year, month, day, event). The event value should be one of
+        'accepted', 'copyrighted', 'submitted', None if not used.
 
         Parameters
         ----------
@@ -498,21 +502,32 @@ class PLoS(Publisher):
             for date in history.node.findall('date'):
                 if not 'date-type' in date.attrib:
                     continue
-                if date.attrib['date-type'] == 'accepted':
+                if date.attrib['date-type'] in ['accepted', 'received']:
                     year_el = date.find('year')
                     month_el = date.find('month')
                     day_el = date.find('day')
                     year = all_text(year_el) if year_el is not None else ''
                     month = all_text(month_el) if month_el is not None else ''
                     day = all_text(day_el) if day_el is not None else ''
-                    date_list.append(date_tuple(year, month, day, 'creation'))
+                    if date.attrib['date-type'] == 'accepted':
+                        date_list.append(date_tuple(year,
+                                                    month,
+                                                    day,
+                                                    'accepted'))
+                    elif date.attrib['date-type'] == 'received':
+                        date_list.append(date_tuple(year,
+                                                    month,
+                                                    day,
+                                                    'submitted'))
 
         #Publication is another Dublin Core event value: I use date of epub
         pub_dates = article.metadata.front.article_meta.pub_date
         for pub_date in pub_dates:
             if pub_date.attrs['pub-type'] == 'epub':
-                date_list.append(date_tuple(pub_date.year.text, pub_date.month.text,
-                                          pub_date.day.text, 'publication'))
+                date_list.append(date_tuple(pub_date.year.text,
+                                            pub_date.month.text,
+                                            pub_date.day.text,
+                                            'copyrighted'))
         return date_list
 
     def package_subject(self, article):

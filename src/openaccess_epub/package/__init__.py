@@ -18,6 +18,7 @@ document represents.
 from collections import namedtuple
 import logging
 import os
+import datetime
 
 #Non-Standard Library modules
 from lxml import etree
@@ -324,7 +325,7 @@ unique license will be listed below, preceded by every article DOI to which it
 applies.'''
                 for lic, doi_list in self.rights_associations.items():
                     doi_line = ','.join(doi_list)
-                    rights_text = '\n'.join([rights_texts, doi_line, lic])
+                    rights_text = '\n'.join([rights_text, doi_line, lic])
                 metadata.append('dc:rights',
                                 document,
                                 text=rights_text)
@@ -364,16 +365,17 @@ applies.'''
 
         #Metadata: Identifier
         if not self.collection:  # Identifier for single article
+            today = datetime.date.today().strftime('%Y.%m.%d')
             ident = self.make_element('dc:identifier',
                                       document,
                                       {'id': 'pub-identifier'},
-                                      self.pub_id.value)
+                                      '.'.join([self.pub_id.value, today]))
             metadata.append(ident)
         else:  # Identifier for collection
             ident = self.make_element('dc:identifier',
                                       document,
-                                      {'id': 'pub-identifier',},
-                                      ','.join(self.all_dois))
+                                      {'id': 'pub-identifier'},
+                                      ','.join(self.all_dois) + '.' + today)
             metadata.append(ident)
         #Metadata: Identifier Refinement
         meta = self.make_element('meta',
@@ -391,13 +393,26 @@ applies.'''
         #Metadata: Title
         #Divergence between single articles and collections for titles is
         #handled during initiation and selective metadata acquisition, not here
-        title = self.make_element('dc:title', document, text=self.title)
+        title = self.make_element('dc:title',
+                                  document,
+                                  {'id': 'pub-title'},
+                                  text=self.title)
         metadata.append(title)
+
+        #Metadata: Title Refinement
+        meta = self.make_element('meta',
+                                 document,
+                                 {'refines': '#pub-title',
+                                  'property': 'title-type'},
+                                 'main')
+        metadata.append(meta)
 
         #Metadata: Languages
         for lang in self.languages:
             lang_el = self.make_element('dc:language', document, text=lang)
             metadata.append(lang_el)
+
+        #Metadata: Contributors/Creators
         #So here's the deal about creators/contributors:
         #The EPUB2 OPF spec indicates a distinction between primary authors
         #(contained in dc:creator) and secondary authors (contained in
@@ -406,13 +421,36 @@ applies.'''
         #as I can think there is no real use case in academic articles for
         #<dc:contributor role="aut">... We'll just make all contributors with
         #the 'aut' role as <dc:creator>s
+        contrib_count = 0
         for contrib in self.contributors:
             tag = 'dc:creator' if contrib.role == 'aut' else 'dc:contributor'
+            contrib_id = 'contrib{0}'.format(contrib_count)
             metadata.append(self.make_element(tag,
                                               document,
-                                              {'opf:role': contrib.role,
-                                               'opf:file-as': contrib.file_as},
-                                              contrib.name))
+                                              {'id': contrib_id},
+                                              text=contrib.name))
+
+            #Metadata: Contributors/Creators Refinement
+            #MARC Relators: http://www.loc.gov/marc/relators/relaterm.html
+            #MARC Relators: http://www.loc.gov/marc/relators/relacode.html
+            role_meta = self.make_element('meta',
+                                          document,
+                                          {'refines': '#' + contrib_id,
+                                           'property': 'role',
+                                           'scheme': 'marc:relators'})
+            if contrib.role is not None:
+                role_meta.text = contrib.role
+                metadata.append(role_meta)
+
+            file_as_meta = self.make_element('meta',
+                                             document,
+                                             {'refines': '#' + contrib_id,
+                                              'property': 'file-as'})
+
+            if contrib.file_as is not None:
+                file_as_meta.text = contrib.file_as
+                metadata.append(file_as_meta)
+            contrib_count += 1
 
         #Metadata: Descriptions
         for description in self.descriptions:
@@ -438,17 +476,53 @@ applies.'''
                                               text=publisher))
 
         #Metadata: Dates
-        for date in self.dates:
-            #I use str coercion just to be safe, in case someone returns ints
-            date_text = str(date.year)
+        #EPUB3 differs significantly from EPUB2, only one dc:date is allowed
+        #and it must be the date of EPUB publication
+        #Must also be of proper format: http://www.w3.org/TR/NOTE-datetime
+        simple_date = datetime.date.today().strftime('%Y-%m-%d')
+        metadata.append(self.make_element('dc:date',
+                                          document,
+                                          {'id': 'pub-date'},
+                                          simple_date))
+        #Must have meta with dcterms:modified
+        now = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
+        metadata.append(self.make_element('meta',
+                                          document,
+                                          {'property': 'dcterms:modified'},
+                                          now))
+        #Metadata: Dates Refinement
+        #values are dateAccepted, dateCopyrighted, dateSubmitted
+        accepted = self.make_element('meta',
+                                     document,
+                                     {'refines': '#pub-date',
+                                      'property': 'dcterms:dateAccepted'})
+        copyrighted = self.make_element('meta',
+                                        document,
+                                        {'refines': '#pub-date',
+                                         'property': 'dcterms:dateCopyrighted'})
+        submitted = self.make_element('meta',
+                                      document,
+                                      {'refines': '#pub-date',
+                                       'property': 'dcterms:dateSubmitted'})
+
+        def date_text(date):
+            text = str(date.year)
             if date.month:
-                date_text = '-'.join([date_text, str(date.month)])
+                text = '-'.join([text, str(date.month)])
                 if date.day:
-                    date_text = '-'.join([date_text, str(date.day)])
-            metadata.append(self.make_element('dc:date',
-                                              document,
-                                              {'opf:event': date.event},
-                                              date_text))
+                    text = '-'.join([text, str(date.day)])
+            return text
+
+        for date in self.dates:
+            if date.event == 'accepted':
+                accepted.text = date_text(date)
+                metadata.append(accepted)
+            elif date.event == 'copyrighted':
+                copyrighted.text = date_text(date)
+                metadata.append(copyrighted)
+            elif date.event == 'submitted':
+                submitted.text = date_text(date)
+                metadata.append(submitted)
 
         #Metadata: Rights
         if self.collection:
@@ -464,7 +538,7 @@ unique license will be listed below, preceded by every article DOI to which it
 applies.'''
                 for lic, doi_list in self.rights_associations.items():
                     doi_line = ','.join(doi_list)
-                    rights_text = '\n'.join([rights_texts, doi_line, lic])
+                    rights_text = '\n'.join([rights_text, doi_line, lic])
                 metadata.append('dc:rights',
                                 document,
                                 text=rights_text)
