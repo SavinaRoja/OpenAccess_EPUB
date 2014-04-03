@@ -6,20 +6,42 @@ conversion
 """
 
 #Standard Library modules
+import os
 from collections import namedtuple
 import logging
+import importlib
 
 #Non-Standard Library modules
 from lxml import etree
 
 #OpenAccess_EPUB modules
 from openaccess_epub.utils.element_methods import all_text, serialize
+from openaccess_epub.utils import publisher_plugin_location
 
 log = logging.getLogger('openaccess_epub.publisher')
 
 contributor_tuple = namedtuple('Contributor', 'name, role, file_as')
 date_tuple = namedtuple('Date', 'year, month, day, event')
 identifier_tuple = namedtuple('Identifier', 'value, scheme')
+
+
+#Dynamic extensibility through local module files and publisher_plugins folder
+plugin_dir = publisher_plugin_location()
+doi_map_file = os.path.join(plugin_dir, 'doi_map')
+
+doi_map = {'10.1371': 'plos'}
+
+if not os.path.isfile(doi_map_file):
+    with open(doi_map_file, 'a'):
+        os.utime(doi_map_file)
+
+with open(doi_map_file, 'r') as mapping:
+    for line in mapping:
+        key, val = line.split(':')
+        doi_map[key.strip()] = val.strip()
+
+def import_by_doi(doi):
+    #Fir
 
 
 def func_registrar():

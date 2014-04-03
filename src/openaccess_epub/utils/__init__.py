@@ -11,7 +11,6 @@ import platform
 import shutil
 import subprocess
 import sys
-import urllib
 
 #Non-Standard Library modules
 
@@ -122,6 +121,13 @@ def base_epub_location():
     Returns the expected location of the base_epub directory
     """
     return os.path.join(cache_location(), 'base_epub')
+
+
+def publisher_plugin_location():
+    """
+    Returns the expected location of the publisher_plugins directory.
+    """
+    return os.path.join(cache_location(), 'publisher_plugins')
 
 
 def load_config_module():

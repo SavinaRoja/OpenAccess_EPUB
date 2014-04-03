@@ -24,7 +24,7 @@ from lxml import etree
 #OpenAccess_EPUB modules
 from openaccess_epub import JPTS10_PATH, JPTS11_PATH, JPTS20_PATH,\
     JPTS21_PATH, JPTS22_PATH, JPTS23_PATH, JPTS30_PATH
-from openaccess_epub.utils import element_methods
+from openaccess_epub.utils import element_methods, publisher_plugin_location
 from openaccess_epub.publisher import PLoS, Frontiers
 
 log = logging.getLogger('openaccess_epub.article')
@@ -45,6 +45,12 @@ dtds = {'-//NLM//DTD Journal Archiving and Interchange DTD v1.0 20021201//EN':
         dtd_tuple(JPTS23_PATH, 'JPTS', 2.3),
         '-//NLM//DTD Journal Publishing DTD v3.0 20080202//EN':
         dtd_tuple(JPTS30_PATH, 'JPTS', 3.0)}
+
+
+publisher_doi_map = {'10.1371': 'plos',
+                     '10.3389': 'frontiers'}
+publisher_plugin_dir = publisher_plugin_location()
+
 
 
 class Article(object):

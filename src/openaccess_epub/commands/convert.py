@@ -167,7 +167,7 @@ def main(argv=None):
             command_log.info('Removing {0}'.format(output_directory))
             shutil.rmtree(output_directory)
 
-        #Running epubcheck on the output verifies the validity of the ePub,
+        #Running epubcheck on the output verifies the validity of the EPUB,
         #requires a local installation of java and epubcheck.
         if not args['--no-epubcheck'] and success:
             epub_name = '{0}.epub'.format(output_directory)

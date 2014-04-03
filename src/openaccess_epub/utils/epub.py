@@ -70,6 +70,10 @@ def make_EPUB(parsed_article,
     if config_module is None:
         config_module = openaccess_epub.utils.load_config_module()
 
+    if epub_version not in (None, 2, 3):
+        log.error('Invalid EPUB version: {0}'.format(epub_version))
+        raise ValueError('Invalid EPUB version. Should be 2 or 3')
+
     #Handle directory output conflicts
     if os.path.isdir(output_directory):
         if batch:  # No user prompt, default to protect previous data
@@ -99,33 +103,16 @@ def make_EPUB(parsed_article,
         log.critical('Images for the article were not located! Aborting!')
         return False
 
+    #Instantiate Navigation and Package
     epub_nav = Navigation()
     epub_package = Package()
 
+    #Process the article for navigation and package info
     epub_nav.process(parsed_article)
     epub_package.process(parsed_article)
 
-    #Split now based on the publisher for OPS processing
-    if DOI.split('/')[0] == '10.1371':  # PLoS
-        epub_ops = openaccess_epub.ops.OPSPLoS(parsed_article,
-                                               output_directory)
-    elif DOI.split('/')[0] == '10.3389':  # Frontiers
-        epub_ops = openaccess_epub.ops.OPSFrontiers(parsed_article,
-                                                    output_directory)
-
-    #Now we do the additional file writing
-    #This is just mockup for testing epub2 and 3 functionality in dev
-    if epub_version == 2:
-        epub_nav.render_EPUB2(location=output_directory)
-        epub_package.render_EPUB2(location=output_directory)
-    elif epub_version == 3:
-        epub_nav.render_EPUB3(location=output_directory, back_compat=True)
-        epub_package.render_EPUB3(location=output_directory)
-    elif epub_version is None:  # Do the publisher default or something
-        pass
-    else:
-        log.error('EPUB version not recognized: {0}'.format(epub_version))
-        raise ValueError('EPUB version not recognized, should be 2.0 or 3.0')
+    #Render the content using publisher-specific methods
+    parsed_article.publisher.render_content(epub_version, parsed_article)
 
     #Zip the directory into EPUB
     epub_zip(output_directory)
