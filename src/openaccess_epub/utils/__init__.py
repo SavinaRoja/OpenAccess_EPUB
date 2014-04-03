@@ -329,33 +329,3 @@ suggested_article_types = ['abstract', 'addendum', 'announcement',
     'product-review', 'rapid-communication', 'rapid-communication', 'reply',
     'reprint', 'research-article', 'retraction', 'review-article',
     'translation']
-
-
-def scrapePLoSIssueCollection(issue_url):
-    """
-    Uses Beautiful Soup to scrape the PLoS page of an issue. It is used
-    instead of xml.dom.minidom because of malformed html/xml
-    """
-    iu = urllib.urlopen(issue_url)
-    with open('temp', 'w') as temp:
-        temp.write(iu.read())
-    with open('temp', 'r') as temp:
-        soup = BeautifulStoneSoup(temp)
-    os.remove('temp')
-    #Map the journal urls to nice strings
-    jrns = {'plosgenetics': 'PLoS_Genetics', 'plosone': 'PLoS_ONE',
-            'plosntds': 'PLoS_Neglected_Tropical_Diseases', 'plosmedicine':
-            'PLoS_Medicine', 'plosbiology': 'PLoS_Biology', 'ploscompbiol':
-            'PLoS_Computational_Biology', 'plospathogens': 'PLoS_Pathogens'}
-    toc = soup.find('h1').string
-    date = toc.split('Table of Contents | ')[1].replace(' ', '_')
-    key = issue_url.split('http://www.')[1].split('.org')[0]
-    name = '{0}_{1}.txt'.format(jrns[key], date)
-    collection_name = os.path.join('collections', name)
-    with open(collection_name, 'w') as collection:
-        links = soup.findAll('a', attrs={'title': 'Read Open Access Article'})
-        for link in links:
-            href = link['href']
-            if href[:9] == '/article/':
-                id = href.split('10.1371%2F')[1].split(';')[0]
-                collection.write('doi:10.1371/{0}\n'.format(id))
