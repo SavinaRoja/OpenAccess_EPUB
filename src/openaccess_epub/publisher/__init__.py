@@ -9,7 +9,12 @@ conversion
 import os
 from collections import namedtuple
 import logging
-import importlib
+import sys
+try:
+    from importlib.abc import SourceLoader
+except ImportError:
+    from importlib.abc import PyLoader as SourceLoader
+from importlib import import_module
 
 #Non-Standard Library modules
 from lxml import etree
@@ -25,24 +30,76 @@ date_tuple = namedtuple('Date', 'year, month, day, event')
 identifier_tuple = namedtuple('Identifier', 'value, scheme')
 
 
-#Dynamic extensibility through local module files and publisher_plugins folder
+### Section Start - Dynamic Extension with publisher_plugins folder ############
+################################################################################
+#The code in this section is devoting to creating easy publisher-wise extension
+#for rapid testing and development without modifying installed source
 plugin_dir = publisher_plugin_location()
 doi_map_file = os.path.join(plugin_dir, 'doi_map')
 
-doi_map = {'10.1371': 'plos'}
+doi_map = {'10.1371': 'plos',
+           '10.3389': 'frontiers'}
+
+#By inserting at the beginning, the plugin directory will override the source
+#modules if they exist
+__path__.insert(0, publisher_plugin_location())
 
 if not os.path.isfile(doi_map_file):
+    os.makedirs(os.path.dirname(doi_map_file))
     with open(doi_map_file, 'a'):
-        os.utime(doi_map_file)
+        os.utime(doi_map_file, None)
 
 with open(doi_map_file, 'r') as mapping:
     for line in mapping:
         key, val = line.split(':')
         doi_map[key.strip()] = val.strip()
 
-def import_by_doi(doi):
-    #Fir
 
+class PublisherFinder(object):
+    prefix = 'openaccess_epub.publisher'
+
+    def __init__(self, path_entry):
+        if path_entry not in __path__:
+            raise ImportError
+        else:
+            self.path_entry = path_entry
+            return None
+
+    def find_module(self, fullname, path=None):
+        path = path or self.path_entry
+        name = fullname.split('.')[-1]
+        for fname in [os.path.join(i, name + '.py') for i in __path__]:
+            if os.path.isfile(fname):
+                return PublisherLoader(path)
+        return None
+
+
+class PublisherLoader(SourceLoader):
+
+    def __init__(self, path_entry):
+        self.path_entry = path_entry
+        return None
+
+    #This is poorly documented, the argument to get_data is implicitly supplied
+    #by a call to get_filename
+    def get_data(self, filepath):
+        with open(filepath, 'r') as source:
+            return bytes(source.read(), 'utf-8')
+
+    def get_filename(self, path):
+        name = path.split('.')[-1]
+        for fname in [os.path.join(i, name + '.py') for i in __path__]:
+            if os.path.isfile(fname):
+                return fname
+        return None
+
+sys.path_hooks.append(PublisherFinder)
+
+
+def import_by_doi(doi):
+    return import_module('.'.join([__name__, doi_map[doi]]))
+### Section End - Dynamic Extension with publisher_plugins folder ##############
+################################################################################
 
 def func_registrar():
     func_list = []
