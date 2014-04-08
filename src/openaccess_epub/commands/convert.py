@@ -135,11 +135,16 @@ def main(argv=None):
                                             level=args['--log-level'],
                                             frmt=oae_logging.STANDARD_FORMAT)
             #Now we move over to the new log file
-            shutil.move('temp.log', log_path)
+            shutil.copy2('temp.log', log_path)
+            os.remove('temp.log')
 
         #Now that we should be done configuring logging, let's parse the article
         parsed_article = Article(abs_input_path,
                                  validation=not args['--no-validate'])
+
+        if parsed_article.publisher is None:
+            command_log.critical('Publisher support was not established, aborting')
+            sys.exit(1)
 
         #Get the output directory
         if args['--output'] is not None:
