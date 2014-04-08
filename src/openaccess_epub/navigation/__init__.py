@@ -70,6 +70,10 @@ class Navigation(object):
 handles one article unless collection mode is set.')
             return False
 
+        if article.publisher is None:
+            log.error('''Navigation cannot be generated for an Article \
+without a publisher!''')
+            return
         self.article = article
         self.article_doi = self.article.doi.split('/')[1]
         self.all_dois.append(self.article.doi)

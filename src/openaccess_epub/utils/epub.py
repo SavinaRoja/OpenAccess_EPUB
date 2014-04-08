@@ -74,6 +74,9 @@ def make_EPUB(parsed_article,
         log.error('Invalid EPUB version: {0}'.format(epub_version))
         raise ValueError('Invalid EPUB version. Should be 2 or 3')
 
+    if epub_version is None:
+        epub_version = parsed_article.publisher.epub_default
+
     #Handle directory output conflicts
     if os.path.isdir(output_directory):
         if batch:  # No user prompt, default to protect previous data
@@ -90,8 +93,6 @@ def make_EPUB(parsed_article,
 
     #Copy over the basic epub directory
     make_epub_base(output_directory)
-
-    DOI = parsed_article.doi
 
     #Get the images, if possible, fail gracefully if not
     success = openaccess_epub.utils.images.get_images(output_directory,
@@ -112,7 +113,13 @@ def make_EPUB(parsed_article,
     epub_package.process(parsed_article)
 
     #Render the content using publisher-specific methods
-    parsed_article.publisher.render_content(epub_version, parsed_article)
+    parsed_article.publisher.render_content(output_directory, epub_version)
+    if epub_version == 2:
+        epub_nav.render_EPUB2(output_directory)
+        epub_package.render_EPUB2(output_directory)
+    elif epub_version == 3:
+        epub_nav.render_EPUB3(output_directory)
+        epub_package.render_EPUB3(output_directory)
 
     #Zip the directory into EPUB
     epub_zip(output_directory)

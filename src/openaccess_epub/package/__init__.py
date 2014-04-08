@@ -24,7 +24,7 @@ import datetime
 from lxml import etree
 
 #OpenAccess_EPUB modules
-from openaccess_epub._version import __version__
+#from openaccess_epub._version import __version__
 from openaccess_epub.utils import OrderedSet
 
 log = logging.getLogger('openaccess_epub.package')
@@ -92,6 +92,10 @@ class Package(object):
 handles one article unless collection mode is set.')
             return False
 
+        if article.publisher is None:
+            log.error('''Package cannot be generated for an Article \
+without a publisher!''')
+            return
         self.article = article
         self.article_doi = self.article.doi.split('/')[1]
         self.all_dois.append(self.article.doi)

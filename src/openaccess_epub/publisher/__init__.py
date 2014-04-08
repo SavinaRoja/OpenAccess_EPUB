@@ -12,7 +12,7 @@ import logging
 import sys
 try:
     from importlib.abc import SourceLoader
-except ImportError:
+except ImportError:  # Compatibility for Python 3.0 and 3.1
     from importlib.abc import PyLoader as SourceLoader
 from importlib import import_module
 
@@ -97,9 +97,15 @@ sys.path_hooks.append(PublisherFinder)
 
 
 def import_by_doi(doi):
-    return import_module('.'.join([__name__, doi_map[doi]]))
+    try:
+        mod_name = doi_map[doi]
+    except KeyError:  # Informative recasting of KeyError to ImportError
+        raise ImportError('DOI publisher prefix "{0}" not mapped to module name'.format(doi))
+    module = import_module('.'.join([__name__, mod_name]))
+    return module
 ### Section End - Dynamic Extension with publisher_plugins folder ##############
 ################################################################################
+
 
 def func_registrar():
     func_list = []
@@ -131,12 +137,15 @@ class Publisher(object):
         """
         self.epub2_support = False
         self.epub3_support = False
+        self.epub_default = 2
         self.epub2_maker_methods = self.maker2.all
         self.epub3_maker_methods = self.maker3.all
         self.epub2_special_methods = self.special2.all
         self.epub3_special_methods = self.special3.all
 
-    def render_content(self, epub_version):
+    def render_content(self, output_directory, epub_version=None):
+        if epub_version is None:
+            epub_version = self.epub_default
         if int(epub_version) == 2:
             if not self.epub2_support:
                 log.error('EPUB2 not supported by this publisher')

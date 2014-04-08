@@ -25,7 +25,7 @@ from lxml import etree
 from openaccess_epub import JPTS10_PATH, JPTS11_PATH, JPTS20_PATH,\
     JPTS21_PATH, JPTS22_PATH, JPTS23_PATH, JPTS30_PATH
 from openaccess_epub.utils import element_methods, publisher_plugin_location
-from openaccess_epub.publisher import PLoS, Frontiers
+import openaccess_epub.publisher
 
 log = logging.getLogger('openaccess_epub.article')
 
@@ -45,12 +45,6 @@ dtds = {'-//NLM//DTD Journal Archiving and Interchange DTD v1.0 20021201//EN':
         dtd_tuple(JPTS23_PATH, 'JPTS', 2.3),
         '-//NLM//DTD Journal Publishing DTD v3.0 20080202//EN':
         dtd_tuple(JPTS30_PATH, 'JPTS', 3.0)}
-
-
-publisher_doi_map = {'10.1371': 'plos',
-                     '10.3389': 'frontiers'}
-publisher_plugin_dir = publisher_plugin_location()
-
 
 
 class Article(object):
@@ -311,45 +305,46 @@ class Article(object):
         This method defines how the Article tries to determine the publisher of
         the article.
 
-        It first does this by inspecting the article's full DOI string, if
-        available, and compares the publisher segment to the list of known
-        publishers. If this fails then it attempts to detect the publisher by
-        DTD-appropriate inspection of the article's metadata.
+        This method relies on the success of the get_DOI method to fetch the
+        appropriate full DOI for the article. It then takes the DOI prefix
+        which corresponds to the publisher and then uses that to attempt to load
+        the correct publisher-specific code. This may fail; if the DOI is not
+        mapped to a code file, if the DOI is mapped but the code file could not
+        be located, or if the mapped code file is malformed then this method
+        will issue/log an informative error message and return None. This method
+        will not try to infer the publisher based on any metadata other than the
+        DOI of the article.
 
         Returns
         -------
         publisher : Publisher instance or None
-
         """
-        publisher_dois = {'10.1371': PLoS, '10.3389': Frontiers}
-        #Try to look up the publisher by DOI
-        if self.doi:
-            try:
-                publisher = publisher_dois[self.doi.split('/')[0]]
-            except KeyError:
-                log.info('publisher DOI not recognized:' + self.doi)
-            else:
-                return publisher()
-        #If that fails, attempt to extract the publisher through inspection
-        if self.dtd_name == 'JPTS':
-            publisher_meta = self.metadata.front.journal_meta.publisher
-            if publisher_meta is not None:  # Optional element
-                log.debug('publisher element in journal-meta found')
-                name_text = publisher_meta.publishder_name.text
-                log.debug('publisher name: ' + publisher_name)
-                if name_text == 'Public Library of Science':
-                    return PLoS()
-                elif name_text == 'Frontiers Media S.A.':
-                    return Frontiers()
-        log.warning('Unable to identify publisher for this article!')
-        return None
+        #For a detailed explanation of the DOI system, visit:
+        #http://www.doi.org/hb.html
+        #The basic syntax of a DOI is this <prefix>/<suffix>
+        #The <prefix> specifies a unique DOI registrant, in our case, this
+        #should correspond to the publisher. We use this information to register
+        #the correct Publisher class with this article
+        doi_prefix = self.doi.split('/')[0]
+        #The import_by_doi method should raise ImportError if a problem occurred
+        try:
+            publisher_mod = openaccess_epub.publisher.import_by_doi(doi_prefix)
+        except ImportError as e:
+            log.exception(e)
+            return None
+        #Each publisher module should define an attribute "pub_class" pointing
+        #to the publisher-specific class extending
+        #openaccess_epub.publisher.Publisher
+        return publisher_mod.pub_class()
 
     def get_DOI(self):
         """
         This method defines how the Article tries to detect the DOI.
 
         It attempts to determine the article DOI string by DTD-appropriate
-        inspection of the article metadata.
+        inspection of the article metadata. This method should be made as
+        flexible as necessary to properly collect the DOI for any XML
+        publishing specification.
 
         Returns
         -------
