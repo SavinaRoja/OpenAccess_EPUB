@@ -8,13 +8,15 @@ conversion
 #Standard Library modules
 import os
 from collections import namedtuple
+from copy import copy, deepcopy
+from importlib import import_module
 import logging
 import sys
 try:
     from importlib.abc import SourceLoader
 except ImportError:  # Compatibility for Python 3.0 and 3.1
     from importlib.abc import PyLoader as SourceLoader
-from importlib import import_module
+import weakref
 
 #Non-Standard Library modules
 from lxml import etree
@@ -131,10 +133,17 @@ class Publisher(object):
     special2 = func_registrar()  # EPUB2 methods
     special3 = func_registrar()  # EPUB3 methods
 
-    def __init__(self):
+    def __init__(self, article):
         """
         The initialization of the Publisher class.
         """
+        self.article = weakref.ref(article)
+        article_doi = '/'.join(self.article().doi.split('/')[1:])
+
+        self.main_fragment = 'main.{0}.xhtml'.format(article_doi) + '#{0}'
+        self.biblio_fragment = 'biblio.{0}.xhtml'.format(article_doi) + '#{0}'
+        self.tables_fragment = 'tables.{0}.xhtml'.format(article_doi) + '#{0}'
+
         self.epub2_support = False
         self.epub3_support = False
         self.epub_default = 2
@@ -143,9 +152,39 @@ class Publisher(object):
         self.epub2_special_methods = self.special2.all
         self.epub3_special_methods = self.special3.all
 
+    def make_document(self, titlestring):
+        """
+        This method may be used to create a new document for writing as xml
+        to the OPS subdirectory of the ePub structure.
+        """
+        #root = etree.XML('''<?xml version="1.0"?>\
+#<!DOCTYPE html  PUBLIC '-//W3C//DTD XHTML 1.1//EN'  'http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd'>\
+#<html xml:lang="en-US" xmlns="http://www.w3.org/1999/xhtml" xmlns:ops="http://www.idpf.org/2007/ops">\
+#</html>''')
+
+        root = etree.XML('''<?xml version="1.0"?>\
+<!DOCTYPE html>\
+<html xmlns="http://www.w3.org/1999/xhtml">\
+</html>''')
+
+        document = etree.ElementTree(root)
+        html = document.getroot()
+        head = etree.SubElement(html, 'head')
+        title = etree.SubElement(head, 'title')
+        title.text = titlestring
+        link = etree.SubElement(head, 'link', attrib={'href': 'css/default.css',
+                                                      'rel': 'stylesheet',
+                                                      'type': 'text/css'})
+        meta = etree.SubElement(head, 'meta', attrib={'content': 'application/xhtml+xml',
+                                                      'http-equiv': 'Content-Type'})
+        return document
+
     def render_content(self, output_directory, epub_version=None):
         if epub_version is None:
             epub_version = self.epub_default
+        self.main = self.make_document('main')
+        if self.article().body is not None:
+            self.main.getroot().append(deepcopy(self.article().body))
         if int(epub_version) == 2:
             if not self.epub2_support:
                 log.error('EPUB2 not supported by this publisher')
@@ -167,6 +206,26 @@ class Publisher(object):
         else:
             log.error('Improper EPUB version specified')
             raise ValueError('epub_version should be 2 or 3')
+
+        main_filename = os.path.join(output_directory,
+                                     'EPUB',
+                                     self.main_fragment[:-4])
+        biblio_filename = os.path.join(output_directory,
+                                       'EPUB',
+                                       self.biblio_fragment[:-4])
+        tables_filename = os.path.join(output_directory,
+                                       'EPUB',
+                                       self.tables_fragment[:-4])
+        self.write_document(main_filename, self.main)
+
+    def write_document(self, name, document):
+        """
+        This function will write a document to an XML file.
+        """
+        with open(name, 'wb') as out:
+            out.write(etree.tostring(document,
+                                     encoding='utf-8',
+                                     pretty_print=True))
 
     def nav_contributors(self):
         """

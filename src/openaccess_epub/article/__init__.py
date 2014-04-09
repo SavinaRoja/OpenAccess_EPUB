@@ -335,7 +335,7 @@ class Article(object):
         #Each publisher module should define an attribute "pub_class" pointing
         #to the publisher-specific class extending
         #openaccess_epub.publisher.Publisher
-        return publisher_mod.pub_class()
+        return publisher_mod.pub_class(self)
 
     def get_DOI(self):
         """

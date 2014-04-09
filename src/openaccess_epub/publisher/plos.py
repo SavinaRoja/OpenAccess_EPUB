@@ -1,23 +1,27 @@
+# -*- coding: utf-8 -*-
+
+"""
+"""
+
 #Standard Library modules
-import os
-from collections import namedtuple
 import logging
-import sys
 
 #Non-Standard Library modules
 from lxml import etree
 
 #OpenAccess_EPUB modules
-from openaccess_epub.publisher import Publisher
+from openaccess_epub.publisher import (
+    Publisher,
+    contributor_tuple,
+    date_tuple,
+    identifier_tuple
+)
 from openaccess_epub.utils.element_methods import all_text, serialize
 
-contributor_tuple = namedtuple('Contributor', 'name, role, file_as')
-date_tuple = namedtuple('Date', 'year, month, day, event')
-identifier_tuple = namedtuple('Identifier', 'value, scheme')
 
 class PLoS(Publisher):
-    def __init__(self):
-        super(PLoS, self).__init__()
+    def __init__(self, article):
+        super(PLoS, self).__init__(article)
         self.epub2_support = True
         self.epub3_support = True
 
@@ -175,5 +179,12 @@ class PLoS(Publisher):
         #published under the same license. But this inspects the file
         rights = article.metadata.front.article_meta.permissions.license
         return serialize(rights[0].node)
+
+    @Publisher.maker2
+    def make_heading(self):
+        body = self.main.getroot().find('body')
+        heading_div = etree.Element('div')
+        body.insert(0, heading_div)
+        heading_div.attrib['id'] = 'Heading'
 
 pub_class = PLoS
