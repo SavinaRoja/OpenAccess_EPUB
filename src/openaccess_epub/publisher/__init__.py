@@ -137,8 +137,9 @@ class Publisher(object):
         """
         The initialization of the Publisher class.
         """
-        self.article = weakref.ref(article)
-        article_doi = '/'.join(self.article().doi.split('/')[1:])
+        self.article = article
+
+        article_doi = '/'.join(self.article.doi.split('/')[1:])
 
         self.main_fragment = 'main.{0}.xhtml'.format(article_doi) + '#{0}'
         self.biblio_fragment = 'biblio.{0}.xhtml'.format(article_doi) + '#{0}'
@@ -151,6 +152,14 @@ class Publisher(object):
         self.epub3_maker_methods = self.maker3.all
         self.epub2_special_methods = self.special2.all
         self.epub3_special_methods = self.special3.all
+
+    @property
+    def article(self):
+        return self._article()
+
+    @article.setter
+    def article(self, article_instance):
+        self._article = weakref.ref(article_instance)
 
     def make_document(self, titlestring):
         """
@@ -183,8 +192,8 @@ class Publisher(object):
         if epub_version is None:
             epub_version = self.epub_default
         self.main = self.make_document('main')
-        if self.article().body is not None:
-            self.main.getroot().append(deepcopy(self.article().body))
+        if self.article.body is not None:
+            self.main.getroot().append(deepcopy(self.article.body))
         if int(epub_version) == 2:
             if not self.epub2_support:
                 log.error('EPUB2 not supported by this publisher')
