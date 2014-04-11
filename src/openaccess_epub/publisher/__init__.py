@@ -485,6 +485,25 @@ class Publisher(object):
         """
         return NotImplementedError
 
+    def format_date_string(self, date_tuple):
+        """
+        Receives a date_tuple object, defined in jptsmeta, and outputs a string
+        for placement in the article content.
+        """
+        months = ['', 'January', 'February', 'March', 'April', 'May', 'June',
+                  'July', 'August', 'September', 'October', 'November', 'December']
+        date_string = ''
+        if date_tuple.season:
+            return '{0}, {1}'.format(date_tuple.season.text, date_tuple.year.text)
+        else:
+            if not date_tuple.month and not date_tuple.day:
+                return '{0}'.format(date_tuple.year.text)
+            if date_tuple.month:
+                date_string += months[int(date_tuple.month.text)]
+            if date_tuple.day:
+                date_string += ' ' + date_tuple.day.text
+            return ', '.join([date_string, date_tuple.year.text])
+
 #class Frontiers(Publisher):
 
     #def __init__(self):
