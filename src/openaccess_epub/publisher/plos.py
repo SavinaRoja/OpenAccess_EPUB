@@ -17,7 +17,7 @@ from openaccess_epub.publisher import (
     date_tuple,
     identifier_tuple
 )
-from openaccess_epub.utils.element_methods import all_text, serialize
+from openaccess_epub.utils.element_methods import *
 
 
 class PLoS(Publisher):
@@ -182,6 +182,7 @@ class PLoS(Publisher):
         return serialize(rights[0].node)
 
     @Publisher.maker2
+    @Publisher.maker3
     def make_heading(self):
         body = self.main.getroot().find('body')
         heading_div = etree.Element('div')
@@ -189,12 +190,11 @@ class PLoS(Publisher):
         heading_div.attrib['id'] = 'Heading'
         #Creation of the title
         heading_div.append(self.heading_title())
-
         ##Creation of the Authors
-        #list_of_authors = self.get_authors_list()
-        #self.make_heading_authors(list_of_authors, heading_div)
+        list_of_authors = self.get_authors_list()
+        heading_div.append(self.make_heading_authors(list_of_authors))
         ##Creation of the Authors Affiliations text
-        #self.make_heading_affiliations(heading_div)
+        self.make_heading_affiliations(heading_div)
         ##Creation of the Abstract content for the Heading
         #self.make_heading_abstracts(heading_div)
 
@@ -210,12 +210,102 @@ class PLoS(Publisher):
         article_title.attrib['class'] = 'article-title'
         return article_title
 
+    def make_heading_authors(self, authors):
+        """
+        Constructs the Authors content for the Heading. This should display
+        directly after the Article Title.
+
+        Metadata element, content derived from FrontMatter
+        """
+        #Make and append a new element to the passed receiving_node
+        author_element = etree.Element('h3', {'class': 'authors'})
+        #Construct content for the author element
+        first = True
+        for author in authors:
+            if first:
+                first = False
+            else:
+                append_new_text(author_element, ',', join_str='')
+            if len(author.collab) > 0:  # If collab, just add rich content
+                #Assume only one collab
+                append_all_below(author_element, author.collab[0].node)
+            elif len(author.anonymous) > 0:  # If anonymous, just add "Anonymous"
+                append_new_text(author_element, 'Anonymous')
+            else:  # Author is neither Anonymous or a Collaboration
+                name = author.name[0]  # Work with only first name listed
+                surname = name.surname.text
+                if name.given_names is not None:
+                    name_text = ' '.join([name.given_names.text, surname])
+                else:
+                    name_text = surname
+                append_new_text(author_element, name_text)
+            #TODO: Handle author footnote references, also put footnotes in the ArticleInfo
+            #Example: journal.pbio.0040370.xml
+            first = True
+            for xref in author.xref:
+                if xref.attrs['ref-type'] in ['corresp', 'aff']:
+                    try:
+                        sup_element = xref.sup[0].node
+                    except IndexError:
+                        sup_text = ''
+                    else:
+                        sup_text = all_text(sup_element)
+                    new_sup = etree.SubElement(author_element, 'sup')
+                    sup_link = etree.SubElement(new_sup, 'a')
+                    sup_link.attrib['href'] = self.main_fragment.format(xref.attrs['rid'])
+                    sup_link.text = sup_text
+                    if first:
+                        first = False
+                    else:
+                        new_sup.text = ','
+        return author_element
+
+    def make_heading_affiliations(self, heading_div):
+        """
+        Makes the content for the Author Affiliations, displays after the
+        Authors segment in the Heading.
+
+        Metadata element, content derived from FrontMatter
+        """
+        #Get all of the aff element tuples from the metadata
+        affs = self.article.metadata.front.article_meta.aff
+        #Create a list of all those pertaining to the authors
+        author_affs = [i for i in affs if 'aff' in i.attrs['id']]
+        #Count them, used for formatting
+        if len(author_affs) == 0:
+            return None
+        else:
+            affs_list = etree.SubElement(heading_div,
+                                         'ul',
+                                         {'id': 'affiliations',
+                                          'class': 'simple'})
+
+        #A simple way that seems to work by PLoS convention, but does not treat
+        #the full scope of the <aff> element
+        for aff in author_affs:
+            #Expecting id to always be present
+            aff_id = aff.attrs['id']
+            #Create a span element to accept extracted content
+            aff_item = etree.SubElement(affs_list, 'li')
+            aff_item.attrib['id'] = aff_id
+            #Get the first label node and the first addr-line node
+            if len(aff.label) > 0:
+                label = aff.label[0].node
+                label_text = all_text(label)
+                bold = etree.SubElement(aff_item, 'b')
+                bold.text = label_text + ' '
+            if len(aff.addr_line) > 0:
+                addr_line = aff.addr_line[0].node
+                append_new_text(aff_item, all_text(addr_line))
+            else:
+                append_new_text(aff_item, all_text(aff))
+
     def get_authors_list(self):
         """
         Gets a list of all authors described in the metadata.
         """
         authors_list = []
-        for contrib_group in self.metadata.front.article_meta.contrib_group:
+        for contrib_group in self.article.metadata.front.article_meta.contrib_group:
             for contrib in contrib_group.contrib:
                 if contrib.attrs['contrib-type'] == 'author':
                     authors_list.append(contrib)
