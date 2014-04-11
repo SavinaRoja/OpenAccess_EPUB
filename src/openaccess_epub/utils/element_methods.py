@@ -14,6 +14,11 @@ import xml.parsers.expat
 import html.parser
 import logging
 
+__all__ = ['append_new_text', 'append_all_below', 'all_text', 'comment',
+           'elevate_element', 'get_attribute', 'insert_before', 'ns_format',
+           'remove', 'remove_all_attributes', 'rename_attributes', 'replace',
+           'serialize', 'uncomment']
+
 log = logging.getLogger('openaccess_epub.utils.element_methods')
 
 
