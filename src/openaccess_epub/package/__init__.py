@@ -128,34 +128,33 @@ without a publisher!''')
         """
         #For space economy
         publisher = self.article.publisher
-        art = self.article
 
         if self.collection:  # collection mode metadata gathering
             pass
         else:  # single mode metadata gathering
-            self.pub_id = publisher.package_identifier(art)
-            self.title = publisher.package_title(art)
-            for date in publisher.package_date(art):
+            self.pub_id = publisher.package_identifier()
+            self.title = publisher.package_title()
+            for date in publisher.package_date():
                 self.dates.add(date)
 
         #Common metadata gathering
-        for lang in publisher.package_language(art):
+        for lang in publisher.package_language():
             self.languages.add(lang)  # languages
-        for contributor in publisher.package_contributor(art):  # contributors
+        for contributor in publisher.package_contributor():  # contributors
             self.contributors.add(contributor)
-        self.publishers.add(publisher.package_publisher(art))  # publisher names
-        desc = publisher.package_description(art)
+        self.publishers.add(publisher.package_publisher())  # publisher names
+        desc = publisher.package_description()
         if desc is not None:
             self.descriptions.add(desc)
-        for subj in publisher.package_subject(art):
+        for subj in publisher.package_subject():
             self.subjects.add(subj)  # subjects
         #Rights
-        art_rights = publisher.package_rights(art)
+        art_rights = publisher.package_rights()
         self.rights.add(art_rights)
         if art_rights not in self.rights_associations:
-            self.rights_associations[art_rights] = [art.doi]
+            self.rights_associations[art_rights] = [self.article.doi]
         else:
-            self.rights_associations[art_rights].append(art.doi)
+            self.rights_associations[art_rights].append(self.article.doi)
 
     def file_manifest(self, location):
         """

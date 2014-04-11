@@ -251,11 +251,6 @@ class Publisher(object):
         from `package_contributors` if one desires, but it covers extra details
         so that it they can easily be the same.
 
-        Parameters
-        ----------
-        article : openaccess_epub.article.Article instance
-            The `article` which is being parsed for metadata.
-
         Returns
         -------
         list of Contributor namedtuples
@@ -269,7 +264,7 @@ class Publisher(object):
         """
         raise NotImplementedError
 
-    def nav_title(self, article):
+    def nav_title(self):
         """
         Returns a string for the title of the article.
 
@@ -278,11 +273,6 @@ class Publisher(object):
         of the title's text. It may differ from `package_title` but it is also
         likely that these methods may be the same, in which case one may use a
         strategy to ensure they return the same results.
-
-        Parameters
-        ----------
-        article : openaccess_epub.article.Article instance
-            The `article` which is being parsed for metadata.
 
         Returns
         -------
@@ -296,7 +286,7 @@ class Publisher(object):
         """
         raise NotImplementedError
 
-    def package_identifier(self, article):
+    def package_identifier(self):
         """
         Returns an identifier for the article.
 
@@ -305,11 +295,6 @@ class Publisher(object):
         DOI. The namedtuple which this method returns is of the form
         Identifier(value, scheme).
 
-        Parameters
-        ----------
-        article : openaccess_epub.article.Article instance
-            The `article` which is being parsed for metadata.
-
         Returns
         -------
         Identifier namedtuple
@@ -317,7 +302,7 @@ class Publisher(object):
         """
         raise NotImplementedError
 
-    def package_language(self, article):
+    def package_language(self):
         """
         Returns a list of language tags indicating languages used in the
         article.
@@ -327,11 +312,6 @@ class Publisher(object):
         of string language codes (which must conform to
         http://tools.ietf.org/html/rfc5646).
 
-        Parameters
-        ----------
-        article : openaccess_epub.article.Article instance
-            The `article` which is being parsed for metadata.
-
         Returns
         -------
         list of str
@@ -339,7 +319,7 @@ class Publisher(object):
         """
         raise NotImplementedError
 
-    def package_title(self, article):
+    def package_title(self):
         """
         Returns a string for the title of the article.
 
@@ -348,11 +328,6 @@ class Publisher(object):
         of the title's text. It may differ from `nav_title` but it is also
         likely that these methods may be the same, in which case one may use a
         strategy to ensure they return the same results.
-
-        Parameters
-        ----------
-        article : openaccess_epub.article.Article instance
-            The `article` which is being parsed for metadata.
 
         Returns
         -------
@@ -367,7 +342,7 @@ class Publisher(object):
         raise NotImplementedError
 
     #TODO: Implement alternate-language scripts for contributors
-    def package_contributors(self, article):
+    def package_contributors(self):
         """
         Returns a list of contributors to the article.
 
@@ -379,11 +354,6 @@ class Publisher(object):
         The 'file_as' will be a string representing a name as it
         would be catalogued. This method may differ from `nav_contributors`
         if one desires, but they generally overlap.
-
-        Parameters
-        ----------
-        article : openaccess_epub.article.Article instance
-            The `article` which is being parsed for metadata.
 
         Returns
         -------
@@ -402,7 +372,7 @@ class Publisher(object):
         """
         raise NotImplementedError
 
-    def package_subject(self, article):
+    def package_subject(self):
         """
         Returns a list of strings representing keyword subjects relevant to the
         article's content.
@@ -411,11 +381,6 @@ class Publisher(object):
         covered in the article's content. Each string returned in the list will
         be added to the Package Document metadata as a keyword.
 
-        Parameters
-        ----------
-        article : openaccess_epub.article.Article instance
-            The `article` which is being parsed for metadata.
-
         Returns
         -------
         list of str
@@ -423,7 +388,7 @@ class Publisher(object):
         """
         return []
 
-    def package_publisher(self, article):
+    def package_publisher(self):
         """
         Returns the full name of the publsher as it should be written in the
         Package Document metadata.
@@ -432,11 +397,6 @@ class Publisher(object):
         in the Package Document metadata. This is super simple, just return a
         string for your publisher name.
 
-        Parameters
-        ----------
-        article : openaccess_epub.article.Article instance
-            The `article` which is being parsed for metadata.
-
         Returns
         -------
         str
@@ -444,7 +404,7 @@ class Publisher(object):
         """
         return ''
 
-    def package_description(self, article):
+    def package_description(self):
         """
         Returns a string description of the article. This may be the serialized
         text of the abstract.
@@ -455,11 +415,6 @@ class Publisher(object):
         returns a string of plain text, though the abstract may commonly include
         nested XML elements; serializing the abstract should be employed.
 
-        Parameters
-        ----------
-        article : openaccess_epub.article.Article instance
-            The `article` which is being parsed for metadata.
-
         Returns
         -------
         str or None
@@ -467,7 +422,7 @@ class Publisher(object):
         """
         return None
 
-    def package_date(self, article):
+    def package_date(self):
         """
         Returns a list of important dates for the article.
 
@@ -477,11 +432,6 @@ class Publisher(object):
         Date(year, month, day, event). The event value should be one of
         'accepted', 'copyrighted', 'submitted', None if not used.
 
-        Parameters
-        ----------
-        article : openaccess_epub.article.Article instance
-            The `article` which is being parsed for metadata.
-
         Returns
         -------
         list of Date namedtuples
@@ -489,18 +439,13 @@ class Publisher(object):
         """
         return []
 
-    def package_rights(self, article):
+    def package_rights(self):
         """
         Returns a string representing a copyright statement for the article.
 
         This is a requied metadata method which will be used to provide an
         appropriate statement of rights in the Package Document. This method
         should return a string.
-
-        Parameters
-        ----------
-        article : openaccess_epub.article.Article instance
-            The `article` which is being parsed for metadata.
 
         Returns
         -------

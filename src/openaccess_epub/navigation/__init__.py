@@ -80,8 +80,8 @@ without a publisher!''')
         if self.collection:
             pass
         else:
-            self.title = self.article.publisher.nav_title(article)
-        for author in self.article.publisher.nav_contributors(article):
+            self.title = self.article.publisher.nav_title()
+        for author in self.article.publisher.nav_contributors():
             self.contributors.add(author)
 
         #Analyze the structure of the article to create internal mapping
@@ -93,7 +93,7 @@ without a publisher!''')
         """
         #All articles should have titles
         title_id = 'titlepage-{0}'.format(self.article_doi)
-        title_label = self.article.publisher.nav_title(self.article)
+        title_label = self.article.publisher.nav_title()
         title_source = 'main.{0}.xhtml#title'.format(self.article_doi)
         title_navpoint = navpoint(title_id, title_label, self.play_order,
                                   title_source, [])

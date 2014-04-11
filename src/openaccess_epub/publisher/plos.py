@@ -5,6 +5,7 @@
 
 #Standard Library modules
 import logging
+from copy import deepcopy
 
 #Non-Standard Library modules
 from lxml import etree
@@ -25,9 +26,9 @@ class PLoS(Publisher):
         self.epub2_support = True
         self.epub3_support = True
 
-    def nav_contributors(self, article):
+    def nav_contributors(self):
         contributor_list = []
-        for contrib_group in article.metadata.front.article_meta.contrib_group:
+        for contrib_group in self.article.metadata.front.article_meta.contrib_group:
             for contrib in contrib_group.contrib:
                 if not contrib.attrs['contrib-type'] == 'author':
                     continue
@@ -56,26 +57,26 @@ class PLoS(Publisher):
                 contributor_list.append(new_contributor)
         return contributor_list
 
-    def nav_title(self, article):
+    def nav_title(self):
         #Serializes the article-title element, since it is not just text
-        article_title = article.metadata.front.article_meta.title_group.article_title.node
+        article_title = self.article.metadata.front.article_meta.title_group.article_title.node
         return serialize(article_title, strip=True)
 
-    def package_identifier(self, article):
+    def package_identifier(self):
         #Returning the DOI
-        return identifier_tuple(article.doi, 'DOI')
+        return identifier_tuple(self.article.doi, 'DOI')
 
-    def package_language(self, article):
+    def package_language(self):
         #All PLoS articles are published in English
         return ['en']
 
-    def package_title(self, article):
+    def package_title(self):
         #Sends the same result as for the Navigation Document
-        return self.nav_title(article)
+        return self.nav_title()
 
-    def package_contributor(self, article):
+    def package_contributor(self):
         contributor_list = []
-        for contrib_group in article.metadata.front.article_meta.contrib_group:
+        for contrib_group in self.article.metadata.front.article_meta.contrib_group:
             for contrib in contrib_group.contrib:
                 contrib_type = contrib.attrs['contrib-type']
                 if contrib.collab:
@@ -109,26 +110,26 @@ class PLoS(Publisher):
                 contributor_list.append(new_contributor)
         return contributor_list
 
-    def package_publisher(self, article):
+    def package_publisher(self):
         return 'Public Library of Science'
 
-    def package_description(self, article):
+    def package_description(self):
         """
         Given an Article class instance, this is responsible for returning an
         article description. For this method I have taken the approach of
         serializing the article's first abstract, if it has one. This results
         in 0 or 1 descriptions per article.
         """
-        abstract = article.metadata.front.article_meta.abstract
+        abstract = self.article.metadata.front.article_meta.abstract
         abst_text = serialize(abstract[0].node, strip=True) if abstract else ''
         return abst_text
 
-    def package_date(self, article):
+    def package_date(self):
         #This method looks specifically to locate the dates of PLoS acceptance
         #and publishing online
         date_list = []
         #Creation is a Dublin Core event value: I interpret it as the date of acceptance
-        history = article.metadata.front.article_meta.history
+        history = self.article.metadata.front.article_meta.history
         #For some reason, the lxml dtd parser fails to recognize the content model of
         #history (something to do with expanded content model? I am not sure yet)
         #So for now, this will illustrate a work-around using lxml search
@@ -155,7 +156,7 @@ class PLoS(Publisher):
                                                     'submitted'))
 
         #Publication is another Dublin Core event value: I use date of epub
-        pub_dates = article.metadata.front.article_meta.pub_date
+        pub_dates = self.article.metadata.front.article_meta.pub_date
         for pub_date in pub_dates:
             if pub_date.attrs['pub-type'] == 'epub':
                 date_list.append(date_tuple(pub_date.year.text,
@@ -164,20 +165,20 @@ class PLoS(Publisher):
                                             'copyrighted'))
         return date_list
 
-    def package_subject(self, article):
+    def package_subject(self):
         #Concerned only with kwd elements, not compound-kwd elements
         #Basically just compiling a list of their serialized text
         subject_list = []
-        kwd_groups = article.metadata.front.article_meta.kwd_group
+        kwd_groups = self.article.metadata.front.article_meta.kwd_group
         for kwd_group in kwd_groups:
             for kwd in kwd_group.kwd:
                 subject_list.append(serialize(kwd.node))
         return subject_list
 
-    def package_rights(self, article):
+    def package_rights(self):
         #Perhaps we could just return a static string if everything in PLoS is
         #published under the same license. But this inspects the file
-        rights = article.metadata.front.article_meta.permissions.license
+        rights = self.article.metadata.front.article_meta.permissions.license
         return serialize(rights[0].node)
 
     @Publisher.maker2
@@ -186,5 +187,49 @@ class PLoS(Publisher):
         heading_div = etree.Element('div')
         body.insert(0, heading_div)
         heading_div.attrib['id'] = 'Heading'
+        #Creation of the title
+        heading_div.append(self.heading_title())
+
+        ##Creation of the Authors
+        #list_of_authors = self.get_authors_list()
+        #self.make_heading_authors(list_of_authors, heading_div)
+        ##Creation of the Authors Affiliations text
+        #self.make_heading_affiliations(heading_div)
+        ##Creation of the Abstract content for the Heading
+        #self.make_heading_abstracts(heading_div)
+
+    def heading_title(self):
+        """
+        Makes the Article Title for the Heading.
+
+        Metadata element, content derived from FrontMatter
+        """
+        article_title = deepcopy(self.article.metadata.front.article_meta.title_group.article_title.node)
+        article_title.tag = 'h1'
+        article_title.attrib['id'] = 'title'
+        article_title.attrib['class'] = 'article-title'
+        return article_title
+
+    def get_authors_list(self):
+        """
+        Gets a list of all authors described in the metadata.
+        """
+        authors_list = []
+        for contrib_group in self.metadata.front.article_meta.contrib_group:
+            for contrib in contrib_group.contrib:
+                if contrib.attrs['contrib-type'] == 'author':
+                    authors_list.append(contrib)
+        return authors_list
+
+    def get_editors_list(self):
+        """
+        Gets a list of all editors described in the metadata.
+        """
+        editors_list = []
+        for contrib_group in self.metadata.front.article_meta.contrib_group:
+            for contrib in contrib_group.contrib:
+                if contrib.attrs['contrib-type'] == 'editor':
+                    editors_list.append(contrib)
+        return editors_list
 
 pub_class = PLoS
