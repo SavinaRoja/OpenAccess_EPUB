@@ -849,7 +849,7 @@ class PLoS(Publisher):
 
     @Publisher.special2
     @Publisher.special3
-    def convert_disp_quote_elements(self, top):
+    def convert_disp_quote_elements(self):
         """
         Extract or extended quoted passage from another work, usually made
         typographically distinct from surrounding text
@@ -857,7 +857,8 @@ class PLoS(Publisher):
         <disp-quote> elements have a relatively complex content model, but PLoS
         appears to employ either <p>s or <list>s.
         """
-        for disp_quote in top.findall('.//disp-quote'):
+        body = self.main.getroot().find('body')
+        for disp_quote in body.findall('.//disp-quote'):
             if disp_quote.getparent().tag =='p':
                 element_methods.elevate_element(disp_quote)
             disp_quote.tag = 'div'

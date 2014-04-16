@@ -25,6 +25,9 @@ from lxml import etree
 from openaccess_epub.utils.element_methods import all_text, serialize
 from openaccess_epub.utils import publisher_plugin_location
 
+__all__ = ['contributor_tuple', 'date_tuple', 'identifier_tuple',
+           'import_by_doi', 'Publisher']
+
 log = logging.getLogger('openaccess_epub.publisher')
 
 contributor_tuple = namedtuple('Contributor', 'name, role, file_as')
@@ -145,6 +148,8 @@ class Publisher(object):
         self.biblio_fragment = 'biblio.{0}.xhtml'.format(article_doi) + '#{0}'
         self.tables_fragment = 'tables.{0}.xhtml'.format(article_doi) + '#{0}'
 
+        self.html_tables = []
+
         self.epub2_support = False
         self.epub3_support = False
         self.epub_default = 2
@@ -160,6 +165,21 @@ class Publisher(object):
     @article.setter
     def article(self, article_instance):
         self._article = weakref.ref(article_instance)
+
+    def post_process(self, document, epub_version):
+        def recursive_traverse(element):
+            if element is None:
+                return
+            tag_method = getattr(self,
+                                 'process_{0}_tag'.format(element.tag.replace('-', '_')),
+                                 None)
+            if tag_method is not None and callable(tag_method):
+                tag_method(element, epub_version)
+            for subel in element:
+                recursive_traverse(subel)
+
+        body = document.getroot().find('body')
+        recursive_traverse(body)
 
     def make_document(self, titlestring):
         """
@@ -192,6 +212,14 @@ class Publisher(object):
         if epub_version is None:
             epub_version = self.epub_default
         self.main = self.make_document('main')
+        #Create a biblio document if appropriate. This may be later changed to
+        #be per-publisher specified if necessary
+        self.biblio = None
+        if self.article.back is not None:
+            if len(self.article.metadata.back.node.findall('.//ref')) > 0:
+                self.biblio = self.make_document('biblio')
+
+        #Copy over the article's body
         if self.article.body is not None:
             self.main.getroot().append(deepcopy(self.article.body))
         if int(epub_version) == 2:
@@ -216,16 +244,29 @@ class Publisher(object):
             log.error('Improper EPUB version specified')
             raise ValueError('epub_version should be 2 or 3')
 
-        main_filename = os.path.join(output_directory,
-                                     'EPUB',
-                                     self.main_fragment[:-4])
-        biblio_filename = os.path.join(output_directory,
-                                       'EPUB',
-                                       self.biblio_fragment[:-4])
-        tables_filename = os.path.join(output_directory,
-                                       'EPUB',
-                                       self.tables_fragment[:-4])
-        self.write_document(main_filename, self.main)
+        #Create a tables document if appropriate. This may be later changed to
+        #be per-publisher specified if necessary
+        #The self.html_tables list attribute should be composed during main body
+        #processing
+        self.tables = self.make_document('tables') if self.html_tables else None
+
+        #Conduct post-processing on all documents and write them
+        for fn, doc in [(self.main_filename(output_directory), self.main),
+                        (self.biblio_filename(output_directory), self.biblio),
+                        (self.tables_filename(output_directory), self.tables)]:
+            if doc is None:
+                continue
+            self.post_process(doc, epub_version)
+            self.write_document(fn, doc)
+
+    def main_filename(self, output_directory):
+        return os.path.join(output_directory, 'EPUB', self.main_fragment[:-4])
+
+    def biblio_filename(self, output_directory):
+        return os.path.join(output_directory, 'EPUB', self.biblio_fragment[:-4])
+
+    def tables_filename(self, output_directory):
+        return os.path.join(output_directory, 'EPUB', self.tables_fragment[:-4])
 
     def write_document(self, name, document):
         """
@@ -503,6 +544,40 @@ class Publisher(object):
             if date_tuple.day:
                 date_string += ' ' + date_tuple.day.text
             return ', '.join([date_string, date_tuple.year.text])
+
+    def process_bold_tag(self, element, epub_version):
+        element.tag = 'b'
+
+    def process_italic_tag(self, element, epub_version):
+        element.tag = 'i'
+
+    def process_monospace_tag(self, element, epub_version):
+        if epub_version == 2:
+            element.tag = 'span'
+            element.attrib['style'] = 'font-family:monospace'
+        #This is here for demonstration, it may be discarded later
+        elif epub_version == 3:
+            element.tag = 'code'
+
+    def process_overline_tag(self, element, epub_version):
+        element.tag = 'span'
+        element.attrib['style'] = 'text-decoration:overline'
+
+    def process_sans_serif_tag(self, element, epub_version):
+        element.tag = 'span'
+        element.attrib['style'] = 'font-family:sans-serif'
+
+    def process_sc_tag(self, element, epub_version):
+        element.tag = 'span'
+        element.attrib['style'] = 'font-variant:small-caps'
+
+    def process_strike_tag(self, element, epub_version):
+        element.tag = 'span'
+        element.attrib['style'] = 'text-decoration:line-through'
+
+    def process_underline_tag(self, element, epub_version):
+        element.tag = 'span'
+        element.attrib['style'] = 'text-decoration:underline'
 
 #class Frontiers(Publisher):
 
