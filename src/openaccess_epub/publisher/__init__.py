@@ -545,6 +545,23 @@ class Publisher(object):
                 date_string += ' ' + date_tuple.day.text
             return ', '.join([date_string, date_tuple.year.text])
 
+    #These methods are recognized as Post Processing methods, as a final step in
+    #the rendering of documents, the tree is recursively traversed. During this
+    #traversal each element's tag is read, let's say some tag is 'X'. If there
+    #exists a method called 'process_X_tag', that method will be called before
+    #continuing the traversal; if the method does not exist, the traversal will
+    #simply continue. Tag names may contain hyphens, '-', while method names may
+    #not. These will be coerced to '_' for lookup (tag 'sans-serif' will match
+    #method 'process_sans_serif_tag').
+    #
+    #Post Processing methods *should not* modify other elements in the element
+    #tree, as this may perturb the traversal. These methods *may* remove the
+    #element on which they act from the tree.
+    #
+    #All Post Processing methods accept the arguments:
+    #(self, element, epub_version)
+    #epub_version is an integer, 2 or 3, and should be used to control
+    #unique behavior between versions.
     def process_bold_tag(self, element, epub_version):
         element.tag = 'b'
 
@@ -593,3 +610,31 @@ class Publisher(object):
             element.attrib['href'] = element_methods.all_text(element)
         else:
             element.attrib['href'] = xlink_href
+
+    def process_xref_tag(self, element, epub_version):
+        #TODO: Consider creating an xref_ref_type_map instance variable instead
+        #of defining it in this method. It might allow for useful customization
+        ref_map = {'bibr': self.biblio_fragment,
+                   'fig': self.main_fragment,
+                   'supplementary-material': self.main_fragment,
+                   'table': self.main_fragment,
+                   'aff': self.main_fragment,
+                   'sec': self.main_fragment,
+                   'table-fn': self.tables_fragment,
+                   'boxed-text': self.main_fragment,
+                   'other': self.main_fragment,
+                   'disp-formula': self.main_fragment,
+                   'fn': self.main_fragment,
+                   'app': self.main_fragment,
+                   None: self.main_fragment}
+
+        element.tag = 'a'
+        ref_type = element.attrib.get('ref-type')
+        rid = element.attrib['rid']  # What good is an xref without 'rid'
+        remove_all_attributes(element)
+        reference = ref_map[ref_type].format(rid)
+        element.attrib['href'] = reference
+
+    def process_sec_tag(self, element, epub_version):
+        element.tag = 'div'
+        rename_attributes(element, {'sec-type': 'class'})
