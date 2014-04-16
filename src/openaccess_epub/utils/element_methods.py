@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-This module defines a set of methods for XML document parsing and manipulation
-patterns beyond those which are provided by xml.dom.minidom.
-
-Incorporating these methods into the module provides a single definition point
-for the method that may be utilized in different sections.
+Advanced XML manipulation methods built on core lxml functionality.
 """
 
 from lxml import etree
