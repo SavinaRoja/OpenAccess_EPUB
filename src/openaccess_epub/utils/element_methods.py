@@ -10,6 +10,7 @@ import xml.parsers.expat
 import html.parser
 import logging
 
+#TODO: Remove get_attribute method, remove it's mention in __all__
 __all__ = ['append_new_text', 'append_all_below', 'all_text', 'comment',
            'elevate_element', 'get_attribute', 'insert_before', 'ns_format',
            'remove', 'remove_all_attributes', 'rename_attributes', 'replace',
@@ -107,6 +108,10 @@ def get_attribute(element, attribute):
         dictionary of an Element. In the future, Element.attrib.get['foo']
         should be used.
 
+    .. note:: OpenAccess_EPUB 0.6.0 replaces this precisely with
+        Element.attrib.get['foo'], further updates will remove this method
+        completely
+
     lxml Elements possess a dictionary called 'attrib', but as many attributes
     are optional, use of optional-safe attribute accession is needed as the key
     may not always be present.
@@ -123,13 +128,7 @@ def get_attribute(element, attribute):
     attr_value : str or None
         The string value of the attribute, None if it does not exist.
     """
-    #return element.attrib.get(attribute)
-    try:
-        optional_attribute = element.attrib[attribute]
-    except KeyError:
-        return None
-    else:
-        return optional_attribute
+    return element.attrib.get(attribute)
 
 
 def ns_format(element, namespaced_string):
