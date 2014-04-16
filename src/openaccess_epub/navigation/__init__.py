@@ -133,7 +133,7 @@ without a publisher!''')
         for child in src_element:
             try:
                 tagname = child.tag
-            except AttributeError:  # Text nodes have no attribute tagName
+            except AttributeError:
                 continue
             else:
                 if tagname not in tagnames:
