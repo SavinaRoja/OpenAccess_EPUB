@@ -22,7 +22,7 @@ import weakref
 from lxml import etree
 
 #OpenAccess_EPUB modules
-from openaccess_epub.utils.element_methods import all_text, serialize
+from openaccess_epub.utils.element_methods import *
 from openaccess_epub.utils import publisher_plugin_location
 
 __all__ = ['contributor_tuple', 'date_tuple', 'identifier_tuple',
@@ -578,6 +578,21 @@ class Publisher(object):
     def process_underline_tag(self, element, epub_version):
         element.tag = 'span'
         element.attrib['style'] = 'text-decoration:underline'
+
+    def process_email_tag(self, element, epub_version):
+        remove_all_attributes(element)
+        element.tag = 'a'
+        element.attrib['href'] = 'mailto:' + element.text
+
+    def process_ext_link_tag(self, element, epub_version):
+        element.tag = 'a'
+        xlink_href_name = ns_format(element, 'xlink:href')
+        xlink_href = element.attrib.get(xlink_href_name)
+        remove_all_attributes(element)
+        if xlink_href is None:
+            element.attrib['href'] = element_methods.all_text(element)
+        else:
+            element.attrib['href'] = xlink_href
 
 #class Frontiers(Publisher):
 
