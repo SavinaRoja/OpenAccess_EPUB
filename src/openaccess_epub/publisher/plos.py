@@ -849,6 +849,90 @@ class PLoS(Publisher):
 
     @Publisher.special2
     @Publisher.special3
+    def convert_disp_formula_elements(self):
+        """
+        <disp-formula> elements must be converted to OPS conforming elements
+        """
+        for disp in self.main.getroot().findall('.//disp-formula'):
+            #find label element
+            label_el = disp.find('label')
+            graphic_el = disp.find('graphic')
+            if graphic_el is None:  # No graphic, assume math as text instead
+                text_span = etree.Element('span', {'class': 'disp-formula'})
+                if 'id' in disp.attrib:
+                    text_span.attrib['id'] = disp.attrib['id']
+                append_all_below(text_span, disp)
+                #Insert the text span before the disp-formula
+                insert_before(disp, text_span)
+                #If a label exists, modify and insert before text_span
+                if label_el is not None:
+                    label_el.tag = 'b'
+                    insert_before(text_span, label_el)
+                #Remove the disp-formula
+                remove(disp)
+                #Skip the rest, which deals with the graphic element
+                continue
+            #The graphic element is present
+            #Create a file reference for the image
+            xlink_href = ns_format(graphic_el, 'xlink:href')
+            graphic_xlink_href = graphic_el.attrib[xlink_href]
+            file_name = graphic_xlink_href.split('.')[-1] + '.png'
+            img_dir = 'images-' + self.doi_frag
+            img_path = '/'.join([img_dir, file_name])
+
+            #Create OPS content, using image path, and label
+            #Create the img element
+            img_element = etree.Element('img', {'alt': 'A Display Formula',
+                                                'class': 'disp-formula',
+                                                'src': img_path})
+            #Transfer the id attribute
+            if 'id' in disp.attrib:
+                img_element.attrib['id'] = disp.attrib['id']
+            #Insert the img element
+            insert_before(disp, img_element)
+            #Create content for the label
+            if label_el is not None:
+                label_el.tag = 'b'
+                insert_before(img_element, label_el)
+            #Remove the old disp-formula element
+            remove(disp)
+
+    @Publisher.special2
+    @Publisher.special3
+    def convert_inline_formula_elements(self):
+        """
+        <inline-formula> elements must be converted to OPS conforming elements
+
+        These elements may contain <inline-graphic> elements, textual content,
+        or both.
+        """
+        for inline in self.main.getroot().findall('.//inline-formula'):
+            #inline-formula elements will be modified in situ
+            remove_all_attributes(inline)
+            inline.tag = 'span'
+            inline.attrib['class'] = 'inline-formula'
+            inline_graphic = inline.find('inline-graphic')
+            if inline_graphic is None:
+                # Do nothing more if there is no graphic
+                continue
+            #Need to conver the inline-graphic element to an img element
+            inline_graphic.tag = 'img'
+            #Get a copy of the attributes, then remove them
+            inline_graphic_attributes = copy(inline_graphic.attrib)
+            remove_all_attributes(inline_graphic)
+            #Create a file reference for the image
+            xlink_href = ns_format(inline_graphic, 'xlink:href')
+            graphic_xlink_href = inline_graphic_attributes[xlink_href]
+            file_name = graphic_xlink_href.split('.')[-1] + '.png'
+            img_dir = 'images-' + self.doi_suffix()
+            img_path = '/'.join([img_dir, file_name])
+            #Set the source to the image path
+            inline_graphic.attrib['src'] = img_path
+            inline_graphic.attrib['class'] = 'inline-formula'
+            inline_graphic.attrib['alt'] = 'An Inline Formula'
+
+    @Publisher.special2
+    @Publisher.special3
     def convert_disp_quote_elements(self):
         """
         Extract or extended quoted passage from another work, usually made
@@ -857,14 +941,15 @@ class PLoS(Publisher):
         <disp-quote> elements have a relatively complex content model, but PLoS
         appears to employ either <p>s or <list>s.
         """
-        body = self.main.getroot().find('body')
-        for disp_quote in body.findall('.//disp-quote'):
-            if disp_quote.getparent().tag =='p':
-                element_methods.elevate_element(disp_quote)
+        for disp_quote in self.main.getroot().findall('.//disp-quote'):
+            if disp_quote.getparent().tag == 'p':
+                elevate_element(disp_quote)
             disp_quote.tag = 'div'
             disp_quote.attrib['class'] = 'disp-quote'
 
-    def convert_boxed_text_elements(self, top):
+    @Publisher.special2
+    @Publisher.special3
+    def convert_boxed_text_elements(self):
         """
         Textual material that is part of the body of text but outside the
         flow of the narrative text, for example, a sidebar, marginalia, text
@@ -875,7 +960,7 @@ class PLoS(Publisher):
         This method will elevate the <sec> element, adding class information as
         well as processing the title.
         """
-        for boxed_text in top.findall('.//boxed-text'):
+        for boxed_text in self.main.getroot().findall('.//boxed-text'):
             sec_el = boxed_text.find('sec')
             if sec_el is not None:
                 sec_el.tag = 'div'
@@ -885,16 +970,17 @@ class PLoS(Publisher):
                 sec_el.attrib['class'] = 'boxed-text'
                 if 'id' in boxed_text.attrib:
                     sec_el.attrib['id'] = boxed_text.attrib['id']
-                element_methods.replace(boxed_text, sec_el)
-                continue
+                replace(boxed_text, sec_el)
             else:
                 div_el = etree.Element('div', {'class': 'boxed-text'})
                 if 'id' in boxed_text.attrib:
                     div_el.attrib['id'] = boxed_text.attrib['id']
-                element_methods.append_all_below(div_el, boxed_text)
-                element_methods.replace(boxed_text, div_el)
+                append_all_below(div_el, boxed_text)
+                replace(boxed_text, div_el)
 
-    def convert_supplementary_material_elements(self, top):
+    @Publisher.special2
+    @Publisher.special3
+    def convert_supplementary_material_elements(self):
         """
         Supplementary material are not, nor are they generally expected to be,
         packaged into the epub file. Though this is a technical possibility,
@@ -909,24 +995,23 @@ class PLoS(Publisher):
         contain 1 <label> element, followed by a <caption><title><p></caption>
         substructure.
         """
-        supplementary_materials = top.findall('.//supplementary-material')
-        for supplementary in supplementary_materials:
+        for supplementary in self.main.getroot().findall('.//supplementary-material'):
             #Create a div element to hold the supplementary content
             suppl_div = etree.Element('div')
             if 'id' in supplementary.attrib:
                 suppl_div.attrib['id'] = supplementary.attrib['id']
-            element_methods.insert_before(supplementary, suppl_div)
+            insert_before(supplementary, suppl_div)
             #Get the sub elements
             label = supplementary.find('label')
             caption = supplementary.find('caption')
             #Get the external resource URL for the supplementary information
-            ns_xlink_href = element_methods.ns_format(supplementary, 'xlink:href')
+            ns_xlink_href = ns_format(supplementary, 'xlink:href')
             xlink_href = supplementary.attrib[ns_xlink_href]
             resource_url = self.fetch_single_representation(xlink_href)
             if label is not None:
                 label.tag = 'a'
                 label.attrib['href'] = resource_url
-                element_methods.append_new_text(label, '. ', join_str='')
+                append_new_text(label, '. ', join_str='')
                 suppl_div.append(label)
             if caption is not None:
                 title = caption.find('title')
@@ -948,9 +1033,84 @@ class PLoS(Publisher):
             #articles.
             for paragraph in supplementary.findall('p'):
                 suppl_div.append(paragraph)
-            element_methods.remove(supplementary)
+            remove(supplementary)
 
-    def convert_verse_group_elements(self, top):
+    def fetch_single_representation(self, item_xlink_href):
+        """
+        This function will render a formatted URL for accessing the PLoS' server
+        SingleRepresentation of an object.
+        """
+        #A dict of URLs for PLoS subjournals
+        journal_urls = {'pgen': 'http://www.plosgenetics.org/article/{0}',
+                        'pcbi': 'http://www.ploscompbiol.org/article/{0}',
+                        'ppat': 'http://www.plospathogens.org/article/{0}',
+                        'pntd': 'http://www.plosntds.org/article/{0}',
+                        'pmed': 'http://www.plosmedicine.org/article/{0}',
+                        'pbio': 'http://www.plosbiology.org/article/{0}',
+                        'pone': 'http://www.plosone.org/article/{0}',
+                        'pctr': 'http://clinicaltrials.ploshubs.org/article/{0}'}
+        #Identify subjournal name for base URl
+        subjournal_name = self.article.doi.split('.')[2]
+        base_url = journal_urls[subjournal_name]
+        #Compose the address for fetchSingleRepresentation
+        resource = 'fetchSingleRepresentation.action?uri=' + item_xlink_href
+        return base_url.format(resource)
+
+    @Publisher.special2
+    @Publisher.special3
+    def convert_fig_elements(self):
+        """
+        Responsible for the correct conversion of JPTS 3.0 <fig> elements to
+        OPS xhtml. Aside from translating <fig> to <img>, the content model
+        must be edited.
+        """
+        for fig in self.main.getroot().findall('.//fig'):
+            if fig.getparent().tag == 'p':
+                elevate_element(fig)
+        for fig in self.main.getroot().findall('.//fig'):
+            #self.convert_fn_elements(fig)
+            #self.convert_disp_formula_elements(fig)
+            #Find label and caption
+            label_el = fig.find('label')
+            caption_el = fig.find('caption')
+            #Get the graphic node, this should be mandatory later on
+            graphic_el = fig.find('graphic')
+            #Create a file reference for the image
+            xlink_href = ns_format(graphic_el, 'xlink:href')
+            graphic_xlink_href = graphic_el.attrib[xlink_href]
+            file_name = graphic_xlink_href.split('.')[-1] + '.png'
+            img_dir = 'images-' + self.doi_suffix()
+            img_path = '/'.join([img_dir, file_name])
+
+            #Create the OPS content: using image path, label, and caption
+            img_el = etree.Element('img', {'alt': 'A Figure', 'src': img_path,
+                                           'class': 'figure'})
+            if 'id' in fig.attrib:
+                img_el.attrib['id'] = fig.attrib['id']
+            insert_before(fig, img_el)
+
+            #Create content for the label and caption
+            if caption_el is not None or label_el is not None:
+                img_caption_div = etree.Element('div', {'class': 'figure-caption'})
+                img_caption_div_b = etree.SubElement(img_caption_div, 'b')
+                if label_el is not None:
+                    append_all_below(img_caption_div_b, label_el)
+                    append_new_text(img_caption_div_b, '. ', join_str='')
+                if caption_el is not None:
+                    caption_title = caption_el.find('title')
+                    if caption_title is not None:
+                        append_all_below(img_caption_div_b, caption_title)
+                        append_new_text(img_caption_div_b, ' ', join_str='')
+                    for each_p in caption_el.findall('p'):
+                        append_all_below(img_caption_div, each_p)
+                insert_before(fig, img_caption_div)
+
+            #Remove the original <fig>
+            remove(fig)
+
+    @Publisher.special2
+    @Publisher.special3
+    def convert_verse_group_elements(self):
         """
         A song, poem, or verse
 
@@ -964,7 +1124,7 @@ class PLoS(Publisher):
         title, and subtitle elements correctly, while converting <verse-lines>
         to italicized lines.
         """
-        for verse_group in top.findall('.//verse-group'):
+        for verse_group in self.main.getroot().findall('.//verse-group'):
             #Find some possible sub elements for the heading
             label = verse_group.find('label')
             title = verse_group.find('title')
@@ -979,19 +1139,21 @@ class PLoS(Publisher):
                 verse_group.insert(0, new_verse_title)
                 #Induct the title elements into the new title
                 if label is not None:
-                    element_methods.append_all_below(new_verse_title, label)
-                    element_methods.remove(label)
+                    append_all_below(new_verse_title, label)
+                    remove(label)
                 if title is not None:
-                    element_methods.append_all_below(new_verse_title, title)
-                    element_methods.remove(title)
+                    append_all_below(new_verse_title, title)
+                    remove(title)
                 if subtitle is not None:
-                    element_methods.append_all_below(new_verse_title, subtitle)
-                    element_methods.remove(subtitle)
+                    append_all_below(new_verse_title, subtitle)
+                    remove(subtitle)
             for verse_line in verse_group.findall('verse-line'):
                 verse_line.tag = 'p'
                 verse_line.attrib['class'] = 'verse-line'
 
-    def convert_fn_elements(self, top):
+    @Publisher.special2
+    @Publisher.special3
+    def convert_fn_elements(self):
         """
         <fn> elements may be used in the main text body outside of tables and
         figures for purposes such as erratum notes. It appears that PLoS
@@ -1003,18 +1165,17 @@ class PLoS(Publisher):
         identified as an Erratum, in which case it will be removed in
         accordance with PLoS' apparent guidelines.
         """
-        footnotes = top.findall('.//fn')
-        for footnote in footnotes:
+        for footnote in self.main.getroot().findall('.//fn'):
             #Use only the first paragraph
             paragraph = footnote.find('p')
             #If no paragraph, move on
             if paragraph is None:
-                element_methods.remove(footnote)
+                remove(footnote)
                 continue
             #Simply remove corrected errata items
             paragraph_text = str(etree.tostring(paragraph, method='text', encoding='utf-8'), encoding='utf-8')
             if paragraph_text.startswith('Erratum') and 'Corrected' in paragraph_text:
-                element_methods.remove(footnote)
+                remove(footnote)
                 continue
             #Transfer some attribute information from the fn element to the paragraph
             if 'id' in footnote.attrib:
@@ -1024,9 +1185,11 @@ class PLoS(Publisher):
             else:
                 paragraph.attrib['class'] = 'fn'
                 #Replace the
-            element_methods.replace(footnote, paragraph)
+            replace(footnote, paragraph)
 
-    def convert_list_elements(self, top):
+    @Publisher.special2
+    @Publisher.special3
+    def convert_list_elements(self):
         """
         A sequence of two or more items, which may or may not be ordered.
 
@@ -1044,12 +1207,12 @@ class PLoS(Publisher):
         #edit the CSS to provide formatting support for arbitrary prefixes...
 
         #This is a block level element, so elevate it if found in p
-        for list_el in top.findall('.//list'):
+        for list_el in self.main.getroot().findall('.//list'):
             if list_el.getparent().tag == 'p':
-                element_methods.elevate_element(list_el)
+                elevate_element(list_el)
 
         #list_el is used instead of list (list is reserved)
-        for list_el in top.findall('.//list'):
+        for list_el in self.main.getroot().findall('.//list'):
             if 'list-type' not in list_el.attrib:
                 list_el_type = 'order'
             else:
@@ -1067,9 +1230,11 @@ class PLoS(Publisher):
             #Convert the list-item element tags to 'li'
             for list_item in list_el.findall('list-item'):
                 list_item.tag = 'li'
-            element_methods.remove_all_attributes(list_el, exclude=['id', 'class'])
+            remove_all_attributes(list_el, exclude=['id', 'class'])
 
-    def convert_def_list_elements(self, top):
+    @Publisher.special2
+    @Publisher.special3
+    def convert_def_list_elements(self):
         """
         A list in which each item consists of two parts: a word, phrase, term,
         graphic, chemical structure, or equation paired with one of more
@@ -1080,9 +1245,9 @@ class PLoS(Publisher):
         will convert the <def-list> to a classed <div> with a styled format
         for the terms and definitions.
         """
-        for def_list in top.findall('.//def-list'):
+        for def_list in self.main.getroot().findall('.//def-list'):
             #Remove the attributes, excepting id
-            element_methods.remove_all_attributes(def_list, exclude=['id'])
+            remove_all_attributes(def_list, exclude=['id'])
             #Modify the def-list element
             def_list.tag = 'div'
             def_list.attrib['class'] = 'def-list'
@@ -1092,21 +1257,23 @@ class PLoS(Publisher):
                 term.tag = 'p'
                 term.attrib['class']= 'def-item-term'
                 #Insert it before its parent def_item
-                element_methods.insert_before(def_item, term)
+                insert_before(def_item, term)
                 #Get the definition, handle missing with a warning
                 definition = def_item.find('def')
                 if definition is None:
                     log.warning('Missing def element in def-item')
-                    element_methods.remove(def_item)
+                    remove(def_item)
                     continue
                 #PLoS appears to consistently place all definition text in a
                 #paragraph subelement of the def element
                 def_para = definition.find('p')
                 def_para.attrib['class'] = 'def-item-def'
                 #Replace the def-item element with the p element
-                element_methods.replace(def_item, def_para)
+                replace(def_item, def_para)
 
-    def convert_ref_list_elements(self, top):
+    @Publisher.special2
+    @Publisher.special3
+    def convert_ref_list_elements(self):
         """
         List of references (citations) for an article, which is often called
         “References”, “Bibliography”, or “Additional Reading”.
@@ -1120,8 +1287,8 @@ class PLoS(Publisher):
         access to PLOS' algorithm for proper citation formatting.
         """
         #TODO: Handle nested ref-lists
-        for ref_list in top.findall('.//ref-list'):
-            element_methods.remove_all_attributes(ref_list)
+        for ref_list in self.main.getroot().findall('.//ref-list'):
+            remove_all_attributes(ref_list)
             ref_list.tag = 'div'
             ref_list.attrib['class'] = 'ref-list'
             label = ref_list.find('label')
@@ -1130,25 +1297,144 @@ class PLoS(Publisher):
             for ref in ref_list.findall('ref'):
                 ref_p = etree.Element('p')
                 ref_p.text = str(etree.tostring(ref, method='text', encoding='utf-8'), encoding='utf-8')
-                element_methods.replace(ref, ref_p)
+                replace(ref, ref_p)
 
-    def convert_graphic_elements(self, top):
+    @Publisher.special2
+    @Publisher.special3
+    def convert_graphic_elements(self):
         """
         This is a method for the odd special cases where <graphic> elements are
         standalone, or rather, not a part of a standard graphical element such
         as a figure or a table. This method should always be employed after the
         standard cases have already been handled.
         """
-        for graphic in top.findall('.//graphic'):
+        for graphic in self.main.getroot().findall('.//graphic'):
             graphic.tag = 'img'
             graphic.attrib['alt'] = 'unowned-graphic'
-            ns_xlink_href = element_methods.ns_format(graphic, 'xlink:href')
+            ns_xlink_href = ns_format(graphic, 'xlink:href')
             if ns_xlink_href in graphic.attrib:
                 xlink_href = graphic.attrib[ns_xlink_href]
                 file_name = xlink_href.split('.')[-1] + '.png'
-                img_dir = 'images-' + self.doi_frag
+                img_dir = 'images-' + self.doi_suffix()
                 img_path = '/'.join([img_dir, file_name])
                 graphic.attrib['src'] = img_path
-            element_methods.remove_all_attributes(graphic, exclude=['id', 'class', 'alt', 'src'])
+            remove_all_attributes(graphic, exclude=['id', 'class', 'alt', 'src'])
+
+    @Publisher.special2
+    @Publisher.special3
+    def convert_table_wrap_elements(self):
+        """
+        Responsible for the correct conversion of JPTS 3.0 <table-wrap>
+        elements to OPS content.
+
+        The 'id' attribute is treated as mandatory by this method.
+        """
+        for table_wrap in self.main.getroot().findall('.//table-wrap'):
+            #TODO: Address table uncommenting, for now this is not workable
+            #for child in tab.childNodes:
+            #    if child.nodeType == 8:
+            #        uncomment(child)
+
+            #Create a div for all of the table stuff
+            table_div = etree.Element('div')
+            table_div.attrib['id'] = table_wrap.attrib['id']
+
+            #Get the optional label and caption
+            label = table_wrap.find('label')
+            caption = table_wrap.find('caption')
+            #Check for the alternatives element
+            alternatives = table_wrap.find('alternatives')
+            #Look for the graphic node, under table-wrap and alternatives
+            graphic = table_wrap.find('graphic')
+            if graphic is None and alternatives is not None:
+                graphic = alternatives.find('graphic')
+            #Look for the table node, under table-wrap and alternatives
+            table = table_wrap.find('table')
+            if table is None and alternatives is not None:
+                table = alternatives.find('table')
+
+            #Handling the label and caption
+            if label is not None and caption is not None:
+                caption_div = etree.Element('div', {'class': 'table-caption'})
+                caption_div_b = etree.SubElement(caption_div, 'b')
+                if label is not None:
+                    append_all_below(caption_div_b, label)
+                if caption is not None:
+                    #Find, optional, title element and paragraph elements
+                    caption_title = caption.find('title')
+                    if caption_title is not None:
+                        append_all_below(caption_div_b, caption_title)
+                    caption_ps = caption.findall('p')
+                    #For title and each paragraph, give children to the div
+                    for caption_p in caption_ps:
+                        append_all_below(caption_div, caption_p)
+                #Add this to the table div
+                table_div.append(caption_div)
+
+            ### Practical Description ###
+            #A table may have both, one of, or neither of graphic and table
+            #The different combinations should be handled, but a table-wrap
+            #with neither should fail with an error
+            #
+            #If there is both an image and a table, the image should be placed
+            #in the text flow with a link to the html table
+            #
+            #If there is an image and no table, the image should be placed in
+            #the text flow without a link to an html table
+            #
+            #If there is a table with no image, then the table should be placed
+            #in the text flow.
+
+            if graphic is not None:
+                #Create the image path for the graphic
+                xlink_href = ns_format(graphic, 'xlink:href')
+                graphic_xlink_href = graphic.attrib[xlink_href]
+                file_name = graphic_xlink_href.split('.')[-1] + '.png'
+                img_dir = 'images-' + self.doi_frag
+                img_path = '/'.join([img_dir, file_name])
+                #Create the new img element
+                img_element = etree.Element('img', {'alt': 'A Table',
+                                                    'src': img_path,
+                                                    'class': 'table'})
+                #Add this to the table div
+                table_div.append(img_element)
+                #If table, add it to the list, and link to it
+                if table is not None:  # Both graphic and table
+                    #The label attribute is just a means of transmitting some
+                    #plaintext which will be used for the labeling in the html
+                    #tables file
+                    if label is not None:
+                        #Serialize the text, set as label attribute
+                        table.attrib['label'] = str(etree.tostring(label, method='text', encoding='utf-8'), encoding='utf-8')
+                    table.attrib['id'] = table_wrap.attrib['id']
+                    #Add the table to the tables list
+                    self.html_tables.append(table)
+                    #Also add the table's foot if it exists
+                    table_wrap_foot = table_wrap.find('table-wrap-foot')
+                    if table_wrap_foot is not None:
+                        self.html_tables.append(table_wrap_foot)
+                    #Create a link to the html version of the table
+                    html_table_link = etree.Element('a')
+                    html_table_link.attrib['href'] = self.tab_frag.format(table_wrap.attrib['id'])
+                    html_table_link.text = 'Go to HTML version of this table'
+                    #Add this to the table div
+                    table_div.append(html_table_link)
+
+            elif table is not None:  # Table only
+                #Simply append the table to the table div
+                table_div.append(table)
+            elif graphic is None and table is None:
+                print('Encountered table-wrap element with neither graphic nor table. Exiting.')
+                sys.exit(1)
+
+            #Replace the original table-wrap with the newly constructed div
+            replace(table_wrap, table_div)
+
+    def process_named_content_tag(self, element, epub_version, structural_depth):
+        element.tag = 'span'
+        content_type = element.attrib.get('content-type')
+        remove_all_attributes(element)
+        if content_type is not None:
+            element.attrib['class'] = content_type
 
 pub_class = PLoS
