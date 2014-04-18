@@ -110,12 +110,13 @@ without a publisher!''')
         #Entry for the biblio content document
         biblio_idref = 'biblio-{0}-xhtml'.format(dash_doi)
         if self.article.back is not None:
+            #TODO: May have to the same here as done for the tables
             if self.article.back.findall('.//ref'):
                 self.spine_list.append(spine_item(biblio_idref, True))
 
         #Entry for the tables content document
         tables_idref = 'tables-{0}-xhtml'.format(dash_doi)
-        if self.article.document.findall('.//table'):
+        if self.article.publisher.has_out_of_flow_tables():
             self.spine_list.append(spine_item(tables_idref, False))
 
         self.acquire_metadata()

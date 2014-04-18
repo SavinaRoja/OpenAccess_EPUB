@@ -1301,27 +1301,6 @@ class PLoS(Publisher):
 
     @Publisher.special2
     @Publisher.special3
-    def convert_graphic_elements(self):
-        """
-        This is a method for the odd special cases where <graphic> elements are
-        standalone, or rather, not a part of a standard graphical element such
-        as a figure or a table. This method should always be employed after the
-        standard cases have already been handled.
-        """
-        for graphic in self.main.getroot().findall('.//graphic'):
-            graphic.tag = 'img'
-            graphic.attrib['alt'] = 'unowned-graphic'
-            ns_xlink_href = ns_format(graphic, 'xlink:href')
-            if ns_xlink_href in graphic.attrib:
-                xlink_href = graphic.attrib[ns_xlink_href]
-                file_name = xlink_href.split('.')[-1] + '.png'
-                img_dir = 'images-' + self.doi_suffix()
-                img_path = '/'.join([img_dir, file_name])
-                graphic.attrib['src'] = img_path
-            remove_all_attributes(graphic, exclude=['id', 'class', 'alt', 'src'])
-
-    @Publisher.special2
-    @Publisher.special3
     def convert_table_wrap_elements(self):
         """
         Responsible for the correct conversion of JPTS 3.0 <table-wrap>
@@ -1330,28 +1309,20 @@ class PLoS(Publisher):
         The 'id' attribute is treated as mandatory by this method.
         """
         for table_wrap in self.main.getroot().findall('.//table-wrap'):
-            #TODO: Address table uncommenting, for now this is not workable
-            #for child in tab.childNodes:
-            #    if child.nodeType == 8:
-            #        uncomment(child)
 
-            #Create a div for all of the table stuff
-            table_div = etree.Element('div')
-            table_div.attrib['id'] = table_wrap.attrib['id']
+            table_div = etree.Element('div', {'id': table_wrap.attrib['id']})
 
-            #Get the optional label and caption
             label = table_wrap.find('label')
             caption = table_wrap.find('caption')
-            #Check for the alternatives element
             alternatives = table_wrap.find('alternatives')
-            #Look for the graphic node, under table-wrap and alternatives
             graphic = table_wrap.find('graphic')
-            if graphic is None and alternatives is not None:
-                graphic = alternatives.find('graphic')
-            #Look for the table node, under table-wrap and alternatives
             table = table_wrap.find('table')
-            if table is None and alternatives is not None:
-                table = alternatives.find('table')
+            if graphic is None:
+                if alternatives is not None:
+                    graphic = alternatives.find('graphic')
+            if table is None:
+                if alternatives is not None:
+                    table = alternatives.find('table')
 
             #Handling the label and caption
             if label is not None and caption is not None:
@@ -1390,7 +1361,7 @@ class PLoS(Publisher):
                 xlink_href = ns_format(graphic, 'xlink:href')
                 graphic_xlink_href = graphic.attrib[xlink_href]
                 file_name = graphic_xlink_href.split('.')[-1] + '.png'
-                img_dir = 'images-' + self.doi_frag
+                img_dir = 'images-' + self.doi_suffix()
                 img_path = '/'.join([img_dir, file_name])
                 #Create the new img element
                 img_element = etree.Element('img', {'alt': 'A Table',
@@ -1403,32 +1374,58 @@ class PLoS(Publisher):
                     #The label attribute is just a means of transmitting some
                     #plaintext which will be used for the labeling in the html
                     #tables file
+                    div = etree.SubElement(self.tables.find('body'),
+                                           'div',
+                                           {'id': table_wrap.attrib['id']})
+
                     if label is not None:
-                        #Serialize the text, set as label attribute
-                        table.attrib['label'] = str(etree.tostring(label, method='text', encoding='utf-8'), encoding='utf-8')
-                    table.attrib['id'] = table_wrap.attrib['id']
+                        bold_label = etree.SubElement(div, 'b')
+                        append_all_below(bold_label, label)
                     #Add the table to the tables list
-                    self.html_tables.append(table)
+                    div.append(deepcopy(table))
                     #Also add the table's foot if it exists
                     table_wrap_foot = table_wrap.find('table-wrap-foot')
                     if table_wrap_foot is not None:
-                        self.html_tables.append(table_wrap_foot)
+                        table_wrap_foot.tag = 'div'
+                        table_wrap_foot.attrib['class'] = 'table-wrap-foot'
+                        div.append(table_wrap_foot)
                     #Create a link to the html version of the table
                     html_table_link = etree.Element('a')
-                    html_table_link.attrib['href'] = self.tab_frag.format(table_wrap.attrib['id'])
+                    html_table_link.attrib['href'] = self.tables_fragment.format(table_wrap.attrib['id'])
                     html_table_link.text = 'Go to HTML version of this table'
                     #Add this to the table div
                     table_div.append(html_table_link)
+                    remove(table)
 
             elif table is not None:  # Table only
                 #Simply append the table to the table div
                 table_div.append(table)
             elif graphic is None and table is None:
-                print('Encountered table-wrap element with neither graphic nor table. Exiting.')
-                sys.exit(1)
+                sys.exit('Encountered table-wrap element with neither graphic nor table. Exiting.')
 
             #Replace the original table-wrap with the newly constructed div
             replace(table_wrap, table_div)
+
+    @Publisher.special2
+    @Publisher.special3
+    def convert_graphic_elements(self):
+        """
+        This is a method for the odd special cases where <graphic> elements are
+        standalone, or rather, not a part of a standard graphical element such
+        as a figure or a table. This method should always be employed after the
+        standard cases have already been handled.
+        """
+        for graphic in self.main.getroot().findall('.//graphic'):
+            graphic.tag = 'img'
+            graphic.attrib['alt'] = 'unowned-graphic'
+            ns_xlink_href = ns_format(graphic, 'xlink:href')
+            if ns_xlink_href in graphic.attrib:
+                xlink_href = graphic.attrib[ns_xlink_href]
+                file_name = xlink_href.split('.')[-1] + '.png'
+                img_dir = 'images-' + self.doi_suffix()
+                img_path = '/'.join([img_dir, file_name])
+                graphic.attrib['src'] = img_path
+            remove_all_attributes(graphic, exclude=['id', 'class', 'alt', 'src'])
 
     @Publisher.maker2
     @Publisher.maker3

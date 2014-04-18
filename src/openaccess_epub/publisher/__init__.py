@@ -148,8 +148,6 @@ class Publisher(object):
         self.biblio_fragment = 'biblio.{0}.xhtml'.format(article_doi) + '#{0}'
         self.tables_fragment = 'tables.{0}.xhtml'.format(article_doi) + '#{0}'
 
-        self.html_tables = []
-
         self.epub2_support = False
         self.epub3_support = False
         self.epub_default = 2
@@ -648,8 +646,8 @@ class Publisher(object):
 
         def recursive_traverse(element, depth=0):
             for div in element.findall('div'):
-                label = element.find('label')
-                title = element.find('title')
+                label = div.find('label')
+                title = div.find('title')
                 if label is not None:
                     #If there is a label, but it is empty
                     if len(label) == 0 and label.text is None:
@@ -675,5 +673,33 @@ class Publisher(object):
                 recursive_traverse(div, depth=depth + 1)
 
         body = document.getroot().find('body')
-        recursive_traverse(body)
+        recursive_traverse(body, depth=1)
+
+    def has_out_of_flow_tables(self):
+        """
+        Returns True if the article has out-of-flow tables, indicates separate
+        tables document.
+
+        This method is used to indicate whether rendering this article's content
+        will result in the creation of out-of-flow HTML tables. This method has
+        a base class implementation representing a common logic; if an article
+        has a graphic(image) representation of a table then the HTML
+        representation will be placed out-of-flow if it exists, if there is no
+        graphic(image) represenation then the HTML representation will be placed
+        in-flow.
+
+        Returns
+        -------
+        bool
+            True if there are out-of-flow HTML tables, False otherwise
+        """
+        if self.article.body is None:
+            return False
+        for table_wrap in self.article.body.findall('.//table-wrap'):
+            alternatives = table_wrap.find('alternatives')
+            graphic = table_wrap.find('graphic') or alternatives.find('graphic')
+            table = table_wrap.find('table') or alternatives.find('table')
+            if graphic is not None and table is not None:
+                return True
+        return False
 
