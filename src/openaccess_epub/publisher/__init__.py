@@ -204,14 +204,15 @@ class Publisher(object):
         document = etree.ElementTree(root)
         html = document.getroot()
         head = etree.SubElement(html, 'head')
-        body = etree.SubElement(html, 'body')
+        etree.SubElement(html, 'body')
         title = etree.SubElement(head, 'title')
         title.text = titlestring
-        link = etree.SubElement(head, 'link', attrib={'href': 'css/default.css',
-                                                      'rel': 'stylesheet',
-                                                      'type': 'text/css'})
-        meta = etree.SubElement(head, 'meta', attrib={'content': 'application/xhtml+xml',
-                                                      'http-equiv': 'Content-Type'})
+        #The href for the css stylesheet is a standin, can be overwritten
+        etree.SubElement(head,
+                         'link',
+                         {'href': 'css/default.css',
+                          'rel': 'stylesheet',
+                          'type': 'text/css'})
 
         return document
 

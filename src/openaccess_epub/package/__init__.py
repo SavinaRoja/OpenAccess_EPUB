@@ -571,7 +571,6 @@ applies.'''
 
         #Make the Spine
         spine = etree.SubElement(package, 'spine')
-        spine.attrib['toc'] = 'ncx'
         for item in self.spine_list:
             itemref = etree.SubElement(spine, 'itemref')
             itemref.attrib['idref'] = item.idref

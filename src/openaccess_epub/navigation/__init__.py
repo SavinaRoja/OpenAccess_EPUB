@@ -266,7 +266,7 @@ without a publisher!''')
         with open(os.path.join(location, 'EPUB', 'toc.ncx'), 'wb') as output:
             output.write(etree.tostring(document, encoding='utf-8', pretty_print=True))
 
-    def render_EPUB3(self, location, back_compat=False):
+    def render_EPUB3(self, location):
         def make_nav(nav=None):
             if nav is None:
                 nav_element = etree.Element('ol')
@@ -335,9 +335,6 @@ without a publisher!''')
 
         with open(os.path.join(location, 'EPUB', 'nav.xhtml'), 'wb') as output:
             output.write(etree.tostring(document, encoding='utf-8', pretty_print=True))
-
-        if back_compat:
-            self.render_EPUB2(location)
 
     @property
     def play_order(self):
