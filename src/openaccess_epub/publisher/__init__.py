@@ -149,7 +149,6 @@ class Publisher(object):
         self.tables_fragment = 'tables.{0}.xhtml'.format(article_doi) + '#{0}'
 
         self.html_tables = []
-        self.structural_tags = ['sec']
 
         self.epub2_support = False
         self.epub3_support = False
@@ -174,18 +173,17 @@ class Publisher(object):
         return self.article.doi.split('/', 1)[1]
 
     def post_process(self, document, epub_version):
-        def recursive_traverse(element, struct_depth=0):
+        def recursive_traverse(element):
             if element is None:
                 return
-            if element.tag in self.structural_tags:
-                struct_depth += 1
+
             tag_method = getattr(self,
                                  'process_{0}_tag'.format(element.tag.replace('-', '_')),
                                  None)
             if tag_method is not None and callable(tag_method):
-                tag_method(element, epub_version, struct_depth)
+                tag_method(element, epub_version)
             for subel in element:
-                recursive_traverse(subel, struct_depth)
+                recursive_traverse(subel)
 
         body = document.getroot().find('body')
         recursive_traverse(body)
@@ -208,6 +206,7 @@ class Publisher(object):
         document = etree.ElementTree(root)
         html = document.getroot()
         head = etree.SubElement(html, 'head')
+        body = etree.SubElement(html, 'body')
         title = etree.SubElement(head, 'title')
         title.text = titlestring
         link = etree.SubElement(head, 'link', attrib={'href': 'css/default.css',
@@ -215,24 +214,21 @@ class Publisher(object):
                                                       'type': 'text/css'})
         meta = etree.SubElement(head, 'meta', attrib={'content': 'application/xhtml+xml',
                                                       'http-equiv': 'Content-Type'})
+
         return document
 
     def render_content(self, output_directory, epub_version=None):
         if epub_version is None:
             epub_version = self.epub_default
         self.main = self.make_document('main')
-        #Create a biblio document if appropriate. This may be later changed to
-        #be per-publisher specified if necessary
-        self.biblio = None
-        if self.article.back is not None:
-            if len(self.article.metadata.back.node.findall('.//ref')) > 0:
-                self.biblio = self.make_document('biblio')
+        self.biblio = self.make_document('biblio')
+        self.tables = self.make_document('tables')
 
         #Copy over the article's body
         if self.article.body is not None:
-            self.main.getroot().append(deepcopy(self.article.body))
-        else:
-            self.main.getroot().append(etree.Element('body'))
+            replace(self.main.getroot().find('body'),
+                    deepcopy(self.article.body))
+
         if int(epub_version) == 2:
             if not self.epub2_support:
                 log.error('EPUB2 not supported by this publisher')
@@ -255,17 +251,14 @@ class Publisher(object):
             log.error('Improper EPUB version specified')
             raise ValueError('epub_version should be 2 or 3')
 
-        #Create a tables document if appropriate. This may be later changed to
-        #be per-publisher specified if necessary
-        #The self.html_tables list attribute should be composed during main body
-        #processing
-        self.tables = self.make_document('tables') if self.html_tables else None
-
         #Conduct post-processing on all documents and write them
-        for fn, doc in [(self.main_filename(output_directory), self.main),
-                        (self.biblio_filename(output_directory), self.biblio),
+        self.post_process(self.main, epub_version)
+        self.depth_headings(self.main)
+        self.write_document(self.main_filename(output_directory), self.main)
+
+        for fn, doc in [(self.biblio_filename(output_directory), self.biblio),
                         (self.tables_filename(output_directory), self.tables)]:
-            if doc is None:
+            if len(doc.getroot().find('body')) == 0:
                 continue
             self.post_process(doc, epub_version)
             self.write_document(fn, doc)
@@ -573,13 +566,13 @@ class Publisher(object):
     #(self, element, epub_version)
     #epub_version is an integer, 2 or 3, and should be used to control
     #unique behavior between versions.
-    def process_bold_tag(self, element, epub_version, structural_depth):
+    def process_bold_tag(self, element, epub_version):
         element.tag = 'b'
 
-    def process_italic_tag(self, element, epub_version, structural_depth):
+    def process_italic_tag(self, element, epub_version):
         element.tag = 'i'
 
-    def process_monospace_tag(self, element, epub_version, structural_depth):
+    def process_monospace_tag(self, element, epub_version):
         if epub_version == 2:
             element.tag = 'span'
             element.attrib['style'] = 'font-family:monospace'
@@ -587,32 +580,32 @@ class Publisher(object):
         elif epub_version == 3:
             element.tag = 'code'
 
-    def process_overline_tag(self, element, epub_version, structural_depth):
+    def process_overline_tag(self, element, epub_version):
         element.tag = 'span'
         element.attrib['style'] = 'text-decoration:overline'
 
-    def process_sans_serif_tag(self, element, epub_version, structural_depth):
+    def process_sans_serif_tag(self, element, epub_version):
         element.tag = 'span'
         element.attrib['style'] = 'font-family:sans-serif'
 
-    def process_sc_tag(self, element, epub_version, structural_depth):
+    def process_sc_tag(self, element, epub_version):
         element.tag = 'span'
         element.attrib['style'] = 'font-variant:small-caps'
 
-    def process_strike_tag(self, element, epub_version, structural_depth):
+    def process_strike_tag(self, element, epub_version):
         element.tag = 'span'
         element.attrib['style'] = 'text-decoration:line-through'
 
-    def process_underline_tag(self, element, epub_version, structural_depth):
+    def process_underline_tag(self, element, epub_version):
         element.tag = 'span'
         element.attrib['style'] = 'text-decoration:underline'
 
-    def process_email_tag(self, element, epub_version, structural_depth):
+    def process_email_tag(self, element, epub_version):
         remove_all_attributes(element)
         element.tag = 'a'
         element.attrib['href'] = 'mailto:' + element.text
 
-    def process_ext_link_tag(self, element, epub_version, structural_depth):
+    def process_ext_link_tag(self, element, epub_version):
         element.tag = 'a'
         xlink_href_name = ns_format(element, 'xlink:href')
         xlink_href = element.attrib.get(xlink_href_name)
@@ -622,7 +615,7 @@ class Publisher(object):
         else:
             element.attrib['href'] = xlink_href
 
-    def process_xref_tag(self, element, epub_version, structural_depth):
+    def process_xref_tag(self, element, epub_version):
         #TODO: Consider creating an xref_ref_type_map instance variable instead
         #of defining it in this method. It might allow for useful customization
         ref_map = {'bibr': self.biblio_fragment,
@@ -646,30 +639,41 @@ class Publisher(object):
         reference = ref_map[ref_type].format(rid)
         element.attrib['href'] = reference
 
-    def process_sec_tag(self, element, epub_version, structural_depth):
-        depth_tags = ['h2', 'h3', 'h4', 'h5', 'h6']
-
+    def process_sec_tag(self, element, epub_version):
         element.tag = 'div'
         rename_attributes(element, {'sec-type': 'class'})
-        label = element.find('label')
-        title = element.find('title')
-        if label is not None:
-            if len(label) == 0 and label.text is None:
-                remove(label)
-                label = None
-        if title is not None:
-            if len(title) == 0 and title.text is None:
-                remove(title)
-                title = None
-        if label is not None:
-            label.tag = 'b'
-        if title is not None:
-            if structural_depth < len(depth_tags):
-                title.tag = depth_tags[structural_depth]
-            else:
-                div_title = 'span'
-                div_title.attrib['class'] = 'extendedheader' + str(structural_depth)
-            if label is not None:
-                #If the label exists, prepend its text then remove it
-                title.text = ' '.join([label.text, title.text])
-                remove(label)
+
+    def depth_headings(self, document):
+        depth_tags = ['h2', 'h3', 'h4', 'h5', 'h6']
+
+        def recursive_traverse(element, depth=0):
+            for div in element.findall('div'):
+                label = element.find('label')
+                title = element.find('title')
+                if label is not None:
+                    #If there is a label, but it is empty
+                    if len(label) == 0 and label.text is None:
+                        remove(label)
+                        label = None
+                if title is not None:
+                    #If there is a title, but it is empty
+                    if len(title) == 0 and title.text is None:
+                        remove(title)
+                        title = None
+                if label is not None:
+                    label.tag = 'b'
+                if title is not None:
+                    if depth < len(depth_tags):
+                        title.tag = depth_tags[depth]
+                    else:
+                        title.tag = 'span'
+                        title.attrib['class'] = 'extendedheader' + str(depth)
+                    if label is not None:
+                        #If the label exists, prepend its text then remove it
+                        title.text = ' '.join([label.text, title.text])
+                        remove(label)
+                recursive_traverse(div, depth=depth + 1)
+
+        body = document.getroot().find('body')
+        recursive_traverse(body)
+

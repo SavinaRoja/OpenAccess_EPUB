@@ -1430,7 +1430,17 @@ class PLoS(Publisher):
             #Replace the original table-wrap with the newly constructed div
             replace(table_wrap, table_div)
 
-    def process_named_content_tag(self, element, epub_version, structural_depth):
+    @Publisher.maker2
+    @Publisher.maker3
+    def make_biblio(self):
+        body = self.biblio.find('body')
+        if self.article.metadata.back is None:
+            return
+        for ref in self.article.metadata.back.node.findall('.//ref'):
+            ref_para = etree.SubElement(body, 'p', {'id': ref.attrib['id']})
+            ref_para.text = serialize(ref, strip=True)
+
+    def process_named_content_tag(self, element, epub_version):
         element.tag = 'span'
         content_type = element.attrib.get('content-type')
         remove_all_attributes(element)

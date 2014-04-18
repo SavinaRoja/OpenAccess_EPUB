@@ -18,6 +18,8 @@ __all__ = ['append_new_text', 'append_all_below', 'all_text', 'comment',
 
 log = logging.getLogger('openaccess_epub.utils.element_methods')
 
+#TODO: I should add some handy recursive iteration extension methods
+
 
 def append_new_text(destination, text, join_str=None):
     """
