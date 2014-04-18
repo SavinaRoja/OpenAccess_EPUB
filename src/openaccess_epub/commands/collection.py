@@ -139,11 +139,20 @@ def main(argv=None):
     #Copy over the basic epub directory
     make_epub_base(output_directory)
 
+    epub_version = None
+
     #Iterate over the inputs
     for xml_file in inputs:
         xml_path = utils.evaluate_relative_path(os.path.dirname(abs_input_path),
                                                 xml_file)
         parsed_article = Article(xml_path, validation=not args['--no-validate'])
+        if epub_version is None:  # Only set this once, no mixing!
+            if args['--epub2']:
+                epub_version = 2
+            elif args['--epub3']:
+                epub_version = 3
+            else:
+                epub_version = parsed_article.publisher.epub_default
         navigation.process(parsed_article)
         package.process(parsed_article)
 
@@ -161,14 +170,12 @@ def main(argv=None):
         if journal_doi == '10.1371':  # PLoS's publisher DOI
             ops_doc = ops.OPSPLoS(parsed_article, output_directory)
 
-    if args['--epub2']:
+    if epub_version == 2:
         navigation.render_EPUB2(output_directory)
         package.render_EPUB2(output_directory)
-    elif args['--epub3']:
+    elif epub_version == 3:
         navigation.render_EPUB3(output_directory, back_compat=True)
         package.render_EPUB3(output_directory)
-    else:
-        pass
     epub_zip(output_directory)
 
     #Cleanup removes the produced output directory, keeps the EPUB
