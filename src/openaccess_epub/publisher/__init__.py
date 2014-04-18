@@ -231,6 +231,8 @@ class Publisher(object):
         #Copy over the article's body
         if self.article.body is not None:
             self.main.getroot().append(deepcopy(self.article.body))
+        else:
+            self.main.getroot().append(etree.Element('body'))
         if int(epub_version) == 2:
             if not self.epub2_support:
                 log.error('EPUB2 not supported by this publisher')
