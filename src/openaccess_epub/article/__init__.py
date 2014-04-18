@@ -97,7 +97,8 @@ class Article(object):
         log.info('Parsing file: {0}'.format(xml_file))
 
         #Parse the document
-        self.document = etree.parse(xml_file)
+        parser = etree.XMLParser(remove_blank_text=True)
+        self.document = etree.parse(xml_file, parser)
 
         #Find its public id so we can identify the appropriate DTD
         public_id = self.document.docinfo.public_id
