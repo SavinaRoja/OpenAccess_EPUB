@@ -121,7 +121,7 @@ class PLoS(Publisher):
         in 0 or 1 descriptions per article.
         """
         abstract = self.article.metadata.front.article_meta.abstract
-        abst_text = serialize(abstract[0].node, strip=True) if abstract else ''
+        abst_text = serialize(abstract[0].node, strip=True) if abstract else None
         return abst_text
 
     def package_date(self):
@@ -1407,6 +1407,23 @@ class PLoS(Publisher):
 
             #Replace the original table-wrap with the newly constructed div
             replace(table_wrap, table_div)
+
+    @Publisher.special3
+    def html5_table_modification(self):
+        invalid_attrs = ['align', 'bgcolor', 'border', 'cellpadding', 'char',
+                         'charoff', 'cellspacing', 'height', 'nowrap', 'rules',
+                         'valign', 'width']
+        for el in self.tables.xpath('//tr | //td | //th'):
+            for inv_attr in invalid_attrs:
+                if inv_attr in el.attrib:
+                    el.attrib.pop(inv_attr)
+        #TODO: Perhaps something more elaborate could be done here to translate
+        #the colgroup and cols to the new HTML5 spec, keep in mind that the col
+        #element "Must be used within a HTML colgroup element that doesn't have
+        #a span attribute."
+        #For now, I just yank em out
+        for colgroup in self.tables.findall('//colgroup'):
+            remove(colgroup)
 
     @Publisher.special2
     @Publisher.special3
