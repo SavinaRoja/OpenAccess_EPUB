@@ -5,7 +5,7 @@
 
 #Standard Library modules
 import logging
-from copy import deepcopy
+from copy import copy, deepcopy
 
 #Non-Standard Library modules
 from lxml import etree
@@ -729,7 +729,9 @@ class PLoS(Publisher):
         #The following things are ordered in such a way to adhere to what
         #appears to be a consistent presentation order for PLoS
         #Acknowledgments
-        body.append(self.make_back_acknowledgments())
+        back_ack = self.make_back_acknowledgments()
+        if back_ack is not None:
+            body.append(back_ack)
         #Author Contributions
         self.make_back_author_contributions(body)
         #Glossaries
@@ -877,7 +879,7 @@ class PLoS(Publisher):
             xlink_href = ns_format(graphic_el, 'xlink:href')
             graphic_xlink_href = graphic_el.attrib[xlink_href]
             file_name = graphic_xlink_href.split('.')[-1] + '.png'
-            img_dir = 'images-' + self.doi_frag
+            img_dir = 'images-' + self.doi_suffix()
             img_path = '/'.join([img_dir, file_name])
 
             #Create OPS content, using image path, and label
