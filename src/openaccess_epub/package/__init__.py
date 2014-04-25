@@ -141,7 +141,7 @@ without a publisher!''')
         #Common metadata gathering
         for lang in publisher.package_language():
             self.languages.add(lang)  # languages
-        for contributor in publisher.package_contributor():  # contributors
+        for contributor in publisher.package_contributors():  # contributors
             self.contributors.add(contributor)
         self.publishers.add(publisher.package_publisher())  # publisher names
         desc = publisher.package_description()

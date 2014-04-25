@@ -28,39 +28,41 @@ class PLoS(Publisher):
 
     def nav_contributors(self):
         contributor_list = []
-        for contrib_group in self.article.metadata.front.article_meta.contrib_group:
-            for contrib in contrib_group.contrib:
-                if not contrib.attrs['contrib-type'] == 'author':
-                    continue
-                if contrib.collab:
-                    auth = serialize(contrib.collab[0].node, strip=True)
-                    file_as = auth
-                elif contrib.anonymous:
-                    auth = 'Anonymous'
-                    file_as = auth
-                else:
-                    name = contrib.name[0]  # Work with only first name listed
-                    surname = name.surname.text
-                    given = name.given_names
-                    if given:  # Given is optional
-                        if given.text:  # Odd instances of empty tags
-                            auth = ' '.join([surname, given.text])
-                            given_initial = given.text[0]
-                            file_as = ', '.join([surname, given_initial])
-                        else:
-                            auth = surname
-                            file_as = auth
+        authors = self.article.front.xpath("./article-meta/contrib-group/contrib[@contrib-type='author']")
+        for author in authors:
+            collab = author.find('collab')
+            anon = author.find('anonymous')
+            if collab is not None:
+                author_name = serialize(collab, strip=True)
+                file_as_name = author_name
+            elif anon is not None:
+                author_name = 'Anonymous'
+                file_as_name = author_name
+            else:
+                name = author.find('name')
+                surname = name.find('surname').text
+                given = name.find('given-names')
+                if given is not None:
+                    if given.text:  # Sometimes these tags are empty
+                        author_name = ' '.join([surname, given.text])
+                        #File-as name is <surname>, <given-initial-char>
+                        file_as_name = ', '.join([surname, given.text[0]])
                     else:
-                        auth = surname
-                        file_as = auth
-                new_contributor = contributor_tuple(auth, 'aut', file_as)
-                contributor_list.append(new_contributor)
+                        author_name = surname
+                    file_as_name = author_name
+                else:
+                    author_name = surname
+                    file_as_name = author_name
+            contributor_list.append(contributor_tuple(author_name,
+                                                      'author',
+                                                      file_as_name))
         return contributor_list
+
 
     def nav_title(self):
         #Serializes the article-title element, since it is not just text
         #Why does this need the leading double slash?
-        title = self.article.front.xpath('//article-meta/title-group/article-title')
+        title = self.article.front.xpath('./article-meta/title-group/article-title')
         return serialize(title[0], strip=True)
 
     def package_identifier(self):
@@ -75,7 +77,7 @@ class PLoS(Publisher):
         #Sends the same result as for the Navigation Document
         return self.nav_title()
 
-    def package_contributor(self):
+    def package_contributors(self):
         contributor_list = []
         for contrib_group in self.article.metadata.front.article_meta.contrib_group:
             for contrib in contrib_group.contrib:
@@ -121,55 +123,35 @@ class PLoS(Publisher):
         serializing the article's first abstract, if it has one. This results
         in 0 or 1 descriptions per article.
         """
-        abstract = self.article.front.xpath('/article-meta/abstract')
+        abstract = self.article.front.xpath('./article-meta/abstract')
         return serialize(abstract[0], strip=True) if abstract else None
 
     def package_date(self):
-        #This method looks specifically to locate the dates of PLoS acceptance
-        #and publishing online
         date_list = []
-        #Creation is a Dublin Core event value: I interpret it as the date of acceptance
-        history = self.article.metadata.front.article_meta.history
-        #For some reason, the lxml dtd parser fails to recognize the content model of
-        #history (something to do with expanded content model? I am not sure yet)
-        #So for now, this will illustrate a work-around using lxml search
-        if history is not None:
-            for date in history.node.findall('date'):
-                if not 'date-type' in date.attrib:
-                    continue
-                if date.attrib['date-type'] in ['accepted', 'received']:
-                    year_el = date.find('year')
-                    month_el = date.find('month')
-                    day_el = date.find('day')
-                    year = all_text(year_el) if year_el is not None else ''
-                    month = all_text(month_el) if month_el is not None else ''
-                    day = all_text(day_el) if day_el is not None else ''
-                    if date.attrib['date-type'] == 'accepted':
-                        date_list.append(date_tuple(year,
-                                                    month,
-                                                    day,
-                                                    'accepted'))
-                    elif date.attrib['date-type'] == 'received':
-                        date_list.append(date_tuple(year,
-                                                    month,
-                                                    day,
-                                                    'submitted'))
-
-        #Publication is another Dublin Core event value: I use date of epub
-        pub_dates = self.article.metadata.front.article_meta.pub_date
-        for pub_date in pub_dates:
-            if pub_date.attrs['pub-type'] == 'epub':
-                date_list.append(date_tuple(pub_date.year.text,
-                                            pub_date.month.text,
-                                            pub_date.day.text,
-                                            'copyrighted'))
+        #These terms come from the EPUB/dublincore spec
+        accepted = self.article.front.xpath('./article-meta/history/date[@date-type=\'accepted\']')
+        submitted = self.article.front.xpath('./article-meta/history/date[@date-type=\'received\']')
+        copyrighted = self.article.front.xpath('./article-meta/pub-date[@pub-type=\'epub\']')
+        for name, el_list in (('accepted', accepted),
+                              ('submitted', submitted),
+                              ('copyrighted', copyrighted)):
+            if not el_list:
+                continue
+            el = el_list[0]
+            year = el.find('year')
+            month = el.find('month')
+            day = el.find('day')
+            year = year.text
+            month = month.text if month is not None else ''
+            day = day.text if day is not None else ''
+            date_list.append(date_tuple(year, month, day, name))
         return date_list
 
     def package_subject(self):
         #Concerned only with kwd elements, not compound-kwd elements
         #Basically just compiling a list of their serialized text
         subject_list = []
-        for kwd_grp in self.article.front.xpath('/article-meta/kwd-group'):
+        for kwd_grp in self.article.front.xpath('./article-meta/kwd-group'):
             for kwd in kwd_group.findall('kwd'):
                 subject_list.append(serialize(kwd))
         #kwd_groups = self.article.metadata.front.article_meta.kwd_group
@@ -181,7 +163,7 @@ class PLoS(Publisher):
     def package_rights(self):
         #Perhaps we could just return a static string if everything in PLoS is
         #published under the same license. But this inspects the file
-        rights = self.article.front.xpath('/article-meta/permissions/license')
+        rights = self.article.front.xpath('./article-meta/permissions/license')
         if rights:
             return serialize(rights[0])
         else:
