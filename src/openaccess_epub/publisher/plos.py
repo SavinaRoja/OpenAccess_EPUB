@@ -26,36 +26,48 @@ class PLoS(Publisher):
         self.epub2_support = True
         self.epub3_support = True
 
+    def get_contrib_names(self, contrib):
+        """
+        Returns an appropriate Name and File-As-Name for a contrib element.
+
+        This code was refactored out of nav_contributors and
+        package_contributors to provide a single definition point for a common
+        job. This is a useful utility that may be well-employed for other
+        publishers as well.
+        """
+        collab = contrib.find('collab')
+        anon = contrib.find('anonymous')
+        if collab is not None:
+            proper_name = serialize(collab, strip=True)
+            file_as_name = name
+        elif anon is not None:
+            proper_name = 'Anonymous'
+            file_as_name = name
+        else:
+            name = contrib.find('name')
+            surname = name.find('surname').text
+            given = name.find('given-names')
+            if given is not None:
+                if given.text:  # Sometimes these tags are empty
+                    proper_name = ' '.join([surname, given.text])
+                    #File-as name is <surname>, <given-initial-char>
+                    file_as_name = ', '.join([surname, given.text[0]])
+                else:
+                    proper_name = surname
+                    file_as_name = proper_name
+            else:
+                proper_name = surname
+                file_as_name = proper_name
+        return proper_name, file_as_name
+
     def nav_contributors(self):
         contributor_list = []
         authors = self.article.front.xpath("./article-meta/contrib-group/contrib[@contrib-type='author']")
         for author in authors:
-            collab = author.find('collab')
-            anon = author.find('anonymous')
-            if collab is not None:
-                author_name = serialize(collab, strip=True)
-                file_as_name = author_name
-            elif anon is not None:
-                author_name = 'Anonymous'
-                file_as_name = author_name
-            else:
-                name = author.find('name')
-                surname = name.find('surname').text
-                given = name.find('given-names')
-                if given is not None:
-                    if given.text:  # Sometimes these tags are empty
-                        author_name = ' '.join([surname, given.text])
-                        #File-as name is <surname>, <given-initial-char>
-                        file_as_name = ', '.join([surname, given.text[0]])
-                    else:
-                        author_name = surname
-                    file_as_name = author_name
-                else:
-                    author_name = surname
-                    file_as_name = author_name
+            author_name, author_file_as_name = self.get_contrib_names(author)
             contributor_list.append(contributor_tuple(author_name,
                                                       'author',
-                                                      file_as_name))
+                                                      author_file_as_name))
         return contributor_list
 
 
@@ -79,38 +91,18 @@ class PLoS(Publisher):
 
     def package_contributors(self):
         contributor_list = []
-        for contrib_group in self.article.metadata.front.article_meta.contrib_group:
-            for contrib in contrib_group.contrib:
-                contrib_type = contrib.attrs['contrib-type']
-                if contrib.collab:
-                    auth = serialize(contrib.collab[0].node)
-                    file_as = auth
-                elif contrib.anonymous:
-                    auth = 'Anonymous'
-                    file_as = auth
-                else:
-                    name = contrib.name[0]  # Work with only first name listed
-                    surname = name.surname.text
-                    given = name.given_names
-                    if given:  # Given is optional
-                        if given.text:  # Odd instances of empty tags
-                            auth = ' '.join([surname, given.text])
-                            given_initial = given.text[0]
-                            file_as = ', '.join([surname, given_initial])
-                        else:
-                            auth = surname
-                            file_as = auth
-                    else:
-                        auth = surname
-                        file_as = auth
-                if contrib_type == 'editor':
-                    role = 'edt'
-                elif contrib_type == 'author':
-                    role = 'aut'
-                else:
-                    continue
-                new_contributor = contributor_tuple(auth, role, file_as)
-                contributor_list.append(new_contributor)
+        authors = self.article.front.xpath("./article-meta/contrib-group/contrib[@contrib-type='author']")
+        editors = self.article.front.xpath("./article-meta/contrib-group/contrib[@contrib-type='editor']")
+        for author in authors:
+            author_name, author_file_as_name = self.get_contrib_names(author)
+            contributor_list.append(contributor_tuple(author_name,
+                                                      'aut',
+                                                      author_file_as_name))
+        for editor in editors:
+            editor_name, editor_file_as_name = self.get_contrib_names(author)
+            contributor_list.append(contributor_tuple(editor_name,
+                                                      'edt',
+                                                      editor_file_as_name))
         return contributor_list
 
     def package_publisher(self):
