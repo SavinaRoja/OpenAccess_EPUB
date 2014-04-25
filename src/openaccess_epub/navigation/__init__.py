@@ -112,14 +112,13 @@ without a publisher!''')
                 nav_insertion.append(nav_pt)
 
         #Add a navpoint to the references if appropriate
-        if self.article.back is not None:
-            if self.article.back.findall('ref'):
-                ref_id = 'references-{0}'.format(self.article_doi)
-                ref_label = 'References'
-                ref_source = 'biblio.{0}.xhtml#references'.format(self.article_doi)
-                ref_navpoint = navpoint(ref_id, ref_label, self.play_order,
-                                        ref_source, [])
-                nav_insertion.append(ref_navpoint)
+        if self.article.root.xpath('./back/ref'):
+            ref_id = 'references-{0}'.format(self.article_doi)
+            ref_label = 'References'
+            ref_source = 'biblio.{0}.xhtml#references'.format(self.article_doi)
+            ref_navpoint = navpoint(ref_id, ref_label, self.play_order,
+                                    ref_source, [])
+            nav_insertion.append(ref_navpoint)
 
     def recursive_article_navmap(self, src_element, depth=0, first=True):
         """

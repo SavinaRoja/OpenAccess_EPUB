@@ -124,13 +124,14 @@ class Article(object):
                              self.dtd.error_log.filter_from_errors())
                 sys.exit(1)
 
-        #Get basic elements, per DTD (and version if necessary)
-        if self.dtd_name == 'JPTS':
-            self.front = self.document.find('front')  # Element: mandatory
-            self.body = self.document.find('body')  # Element or None
-            self.back = self.document.find('back')  # Element or None
-            self.sub_article = self.document.findall('sub-article')  # 0 or more
-            self.response = self.document.findall('response')  # 0 or more
+        self.root = self.document.getroot()
+        self.body = self.root.find('body')
+        #if self.dtd_name == 'JPTS':
+            #self.front = self.document.find('front')  # Element: mandatory
+            #self.body = self.document.find('body')  # Element or None
+            #self.back = self.document.find('back')  # Element or None
+            #self.sub_article = self.document.findall('sub-article')  # 0 or more
+            #self.response = self.document.findall('response')  # 0 or more
 
         #At this point we have parsed the article, validated it, defined key
         #top-level elements in it, and now we must translate its metadata into
@@ -354,7 +355,7 @@ class Article(object):
             failure.
         """
         if self.dtd_name == 'JPTS':
-            doi = self.front.xpath("./article-meta/article-id[@pub-id-type='doi']")
+            doi = self.root.xpath("./front/article-meta/article-id[@pub-id-type='doi']")
             if doi:
                 return doi[0].text
             log.warning('Unable to locate DOI string for this article')

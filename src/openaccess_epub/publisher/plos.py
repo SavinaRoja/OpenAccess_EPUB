@@ -62,7 +62,7 @@ class PLoS(Publisher):
 
     def nav_contributors(self):
         contributor_list = []
-        authors = self.article.front.xpath("./article-meta/contrib-group/contrib[@contrib-type='author']")
+        authors = self.article.root.xpath("../front/article-meta/contrib-group/contrib[@contrib-type='author']")
         for author in authors:
             author_name, author_file_as_name = self.get_contrib_names(author)
             contributor_list.append(contributor_tuple(author_name,
@@ -74,7 +74,7 @@ class PLoS(Publisher):
     def nav_title(self):
         #Serializes the article-title element, since it is not just text
         #Why does this need the leading double slash?
-        title = self.article.front.xpath('./article-meta/title-group/article-title')
+        title = self.article.root.xpath('./front/article-meta/title-group/article-title')
         return serialize(title[0], strip=True)
 
     def package_identifier(self):
@@ -91,8 +91,8 @@ class PLoS(Publisher):
 
     def package_contributors(self):
         contributor_list = []
-        authors = self.article.front.xpath("./article-meta/contrib-group/contrib[@contrib-type='author']")
-        editors = self.article.front.xpath("./article-meta/contrib-group/contrib[@contrib-type='editor']")
+        authors = self.article.root.xpath("./front/article-meta/contrib-group/contrib[@contrib-type='author']")
+        editors = self.article.root.xpath("./front/article-meta/contrib-group/contrib[@contrib-type='editor']")
         for author in authors:
             author_name, author_file_as_name = self.get_contrib_names(author)
             contributor_list.append(contributor_tuple(author_name,
@@ -115,15 +115,15 @@ class PLoS(Publisher):
         serializing the article's first abstract, if it has one. This results
         in 0 or 1 descriptions per article.
         """
-        abstract = self.article.front.xpath('./article-meta/abstract')
+        abstract = self.article.root.xpath('./front/article-meta/abstract')
         return serialize(abstract[0], strip=True) if abstract else None
 
     def package_date(self):
         date_list = []
         #These terms come from the EPUB/dublincore spec
-        accepted = self.article.front.xpath('./article-meta/history/date[@date-type=\'accepted\']')
-        submitted = self.article.front.xpath('./article-meta/history/date[@date-type=\'received\']')
-        copyrighted = self.article.front.xpath('./article-meta/pub-date[@pub-type=\'epub\']')
+        accepted = self.article.root.xpath('./front/article-meta/history/date[@date-type=\'accepted\']')
+        submitted = self.article.root.xpath('./front/article-meta/history/date[@date-type=\'received\']')
+        copyrighted = self.article.root.xpath('./front/article-meta/pub-date[@pub-type=\'epub\']')
         for name, el_list in (('accepted', accepted),
                               ('submitted', submitted),
                               ('copyrighted', copyrighted)):
@@ -143,7 +143,7 @@ class PLoS(Publisher):
         #Concerned only with kwd elements, not compound-kwd elements
         #Basically just compiling a list of their serialized text
         subject_list = []
-        for kwd_grp in self.article.front.xpath('./article-meta/kwd-group'):
+        for kwd_grp in self.article.root.xpath('./front/article-meta/kwd-group'):
             for kwd in kwd_group.findall('kwd'):
                 subject_list.append(serialize(kwd))
         #kwd_groups = self.article.metadata.front.article_meta.kwd_group
@@ -155,7 +155,7 @@ class PLoS(Publisher):
     def package_rights(self):
         #Perhaps we could just return a static string if everything in PLoS is
         #published under the same license. But this inspects the file
-        rights = self.article.front.xpath('./article-meta/permissions/license')
+        rights = self.article.root.xpath('./front/article-meta/permissions/license')
         if rights:
             return serialize(rights[0])
         else:
@@ -171,8 +171,8 @@ class PLoS(Publisher):
         #Creation of the title
         heading_div.append(self.heading_title())
         #Creation of the Authors
-        list_of_authors = self.get_authors_list()
-        heading_div.append(self.make_heading_authors(list_of_authors))
+        authors = self.article.root.xpath("./front/article-meta/contrib-group/contrib[@contrib-type='author']")
+        heading_div.append(self.make_heading_authors(authors))
         #Creation of the Authors Affiliations text
         self.make_heading_affiliations(heading_div)
         #Creation of the Abstract content for the Heading
@@ -184,7 +184,8 @@ class PLoS(Publisher):
 
         Metadata element, content derived from FrontMatter
         """
-        article_title = deepcopy(self.article.metadata.front.article_meta.title_group.article_title.node)
+        art_title = self.article.root.xpath('./front/article-meta/title-group/article-title')[0]
+        article_title = deepcopy(art_title)
         article_title.tag = 'h1'
         article_title.attrib['id'] = 'title'
         article_title.attrib['class'] = 'article-title'
@@ -205,19 +206,15 @@ class PLoS(Publisher):
                 first = False
             else:
                 append_new_text(author_element, ',', join_str='')
-            if len(author.collab) > 0:  # If collab, just add rich content
-                #Assume only one collab
-                append_all_below(author_element, author.collab[0].node)
-            elif len(author.anonymous) > 0:  # If anonymous, just add "Anonymous"
+            collab = author.find('collab')
+            anon = author.find('anon')
+            if collab is not None:
+                append_all_below(author_element, collab)
+            elif anon is not None:  # If anonymous, just add "Anonymous"
                 append_new_text(author_element, 'Anonymous')
             else:  # Author is neither Anonymous or a Collaboration
-                name = author.name[0]  # Work with only first name listed
-                surname = name.surname.text
-                if name.given_names is not None:
-                    name_text = ' '.join([name.given_names.text, surname])
-                else:
-                    name_text = surname
-                append_new_text(author_element, name_text)
+                author_name, _ = self.get_contrib_names(author)
+                append_new_text(author_element, author_name)
             #TODO: Handle author footnote references, also put footnotes in the ArticleInfo
             #Example: journal.pbio.0040370.xml
             first = True
@@ -319,28 +316,6 @@ class PLoS(Publisher):
             heading_div.append(abstract_header)
             heading_div.append(abstract_copy)
 
-    def get_authors_list(self):
-        """
-        Gets a list of all authors described in the metadata.
-        """
-        authors_list = []
-        for contrib_group in self.article.metadata.front.article_meta.contrib_group:
-            for contrib in contrib_group.contrib:
-                if contrib.attrs['contrib-type'] == 'author':
-                    authors_list.append(contrib)
-        return authors_list
-
-    def get_editors_list(self):
-        """
-        Gets a list of all editors described in the metadata.
-        """
-        editors_list = []
-        for contrib_group in self.article.metadata.front.article_meta.contrib_group:
-            for contrib in contrib_group.contrib:
-                if contrib.attrs['contrib-type'] == 'editor':
-                    editors_list.append(contrib)
-        return editors_list
-
     @Publisher.maker2
     @Publisher.maker3
     def make_article_info(self):
@@ -362,8 +337,8 @@ class PLoS(Publisher):
         #Creation of the self Citation
         article_info_div.append(self.make_article_info_citation())
         #Creation of the Editors
-        list_of_editors = self.get_editors_list()
-        self.make_article_info_editors(list_of_editors, article_info_div)
+        editors = self.article.root.xpath("./front/article-meta/contrib-group/contrib[@contrib-type='editor']")
+        self.make_article_info_editors(editors, article_info_div)
         #Creation of the important Dates segment
         article_info_div.append(self.make_article_info_dates())
         #Creation of the Copyright statement
@@ -389,8 +364,8 @@ class PLoS(Publisher):
         b.text = 'Citation: '
 
         #Add author stuff to the citation
-        author_list = self.get_authors_list()
-        for author in author_list:
+        authors = self.article.root.xpath("./front/article-meta/contrib-group/contrib[@contrib-type='author']")
+        for author in authors:
             author_index = author_list.index(author)
             #At the 6th author, simply append an et al., then stop iterating
             if author_index == 5:
