@@ -135,7 +135,7 @@ class Article(object):
         #At this point we have parsed the article, validated it, defined key
         #top-level elements in it, and now we must translate its metadata into
         #a data structure.
-        self.metadata = self.get_metadata()
+        #self.metadata = self.get_metadata()
 
         #Attempt, as well as possible, to identify the publisher and doi for
         #the article.
@@ -354,10 +354,9 @@ class Article(object):
             failure.
         """
         if self.dtd_name == 'JPTS':
-            art_ids = self.metadata.front.article_meta.article_id
-            for art_id in art_ids:
-                if art_id.attrs['pub-id-type'] == 'doi':
-                    return art_id.text
+            doi = self.front.xpath("./article-meta/article-id[@pub-id-type='doi']")
+            if doi:
+                return doi[0].text
             log.warning('Unable to locate DOI string for this article')
             return None
         else:
