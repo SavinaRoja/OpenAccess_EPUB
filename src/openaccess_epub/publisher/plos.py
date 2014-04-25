@@ -59,8 +59,9 @@ class PLoS(Publisher):
 
     def nav_title(self):
         #Serializes the article-title element, since it is not just text
-        article_title = self.article.metadata.front.article_meta.title_group.article_title.node
-        return serialize(article_title, strip=True)
+        #Why does this need the leading double slash?
+        title = self.article.front.xpath('//article-meta/title-group/article-title')
+        return serialize(title[0], strip=True)
 
     def package_identifier(self):
         #Returning the DOI
@@ -120,9 +121,8 @@ class PLoS(Publisher):
         serializing the article's first abstract, if it has one. This results
         in 0 or 1 descriptions per article.
         """
-        abstract = self.article.metadata.front.article_meta.abstract
-        abst_text = serialize(abstract[0].node, strip=True) if abstract else None
-        return abst_text
+        abstract = self.article.front.xpath('/article-meta/abstract')
+        return serialize(abstract[0], strip=True) if abstract else None
 
     def package_date(self):
         #This method looks specifically to locate the dates of PLoS acceptance
@@ -169,17 +169,23 @@ class PLoS(Publisher):
         #Concerned only with kwd elements, not compound-kwd elements
         #Basically just compiling a list of their serialized text
         subject_list = []
-        kwd_groups = self.article.metadata.front.article_meta.kwd_group
-        for kwd_group in kwd_groups:
-            for kwd in kwd_group.kwd:
-                subject_list.append(serialize(kwd.node))
+        for kwd_grp in self.article.front.xpath('/article-meta/kwd-group'):
+            for kwd in kwd_group.findall('kwd'):
+                subject_list.append(serialize(kwd))
+        #kwd_groups = self.article.metadata.front.article_meta.kwd_group
+        #for kwd_group in kwd_groups:
+            #for kwd in kwd_group.kwd:
+                #subject_list.append(serialize(kwd.node))
         return subject_list
 
     def package_rights(self):
         #Perhaps we could just return a static string if everything in PLoS is
         #published under the same license. But this inspects the file
-        rights = self.article.metadata.front.article_meta.permissions.license
-        return serialize(rights[0].node)
+        rights = self.article.front.xpath('/article-meta/permissions/license')
+        if rights:
+            return serialize(rights[0])
+        else:
+            return None
 
     @Publisher.maker2
     @Publisher.maker3
