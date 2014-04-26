@@ -287,13 +287,14 @@ without a publisher!''')
 <!DOCTYPE html>\
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops">\
 <head>\
-<title>{title}</title>\
 <link rel="stylesheet" type="text/css" href="css/default.css" />\
 </head>\
-</html>'''.format(**{'title': self.title}))
+</html>''')
 
         document = etree.ElementTree(root)
         html = document.getroot()
+        title = etree.SubElement(html[0], 'title')
+        title.text = self.title
 
         body = etree.SubElement(html, 'body')  # Create the body element
         #h1 = etree.SubElement(body, 'h1')
