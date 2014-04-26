@@ -21,6 +21,7 @@ from openaccess_epub.utils.element_methods import *
 
 log = logging.getLogger('openaccess_epub.publisher.plos')
 
+
 class PLoS(Publisher):
     def __init__(self, article):
         super(PLoS, self).__init__(article)
@@ -70,7 +71,6 @@ class PLoS(Publisher):
                                                       'author',
                                                       author_file_as_name))
         return contributor_list
-
 
     def nav_title(self):
         #Serializes the article-title element, since it is not just text
@@ -605,9 +605,8 @@ class PLoS(Publisher):
         b = etree.SubElement(conflict_div, 'b')
         b.text = 'Competing Interests: '
         fn_p = conflict[0].find('p')
-        append_all_below(conflict_div, fn_p)
         if fn_p is not None:
-            append_all_below(conflict_div, conflict[0])
+            append_all_below(conflict_div, fn_p)
 
     def make_article_info_correspondences(self, article_info_div):
         """
