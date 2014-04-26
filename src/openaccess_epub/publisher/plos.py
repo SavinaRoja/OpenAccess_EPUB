@@ -40,10 +40,10 @@ class PLoS(Publisher):
         anon = contrib.find('anonymous')
         if collab is not None:
             proper_name = serialize(collab, strip=True)
-            file_as_name = name
+            file_as_name = proper_name
         elif anon is not None:
             proper_name = 'Anonymous'
-            file_as_name = name
+            file_as_name = proper_name
         else:
             name = contrib.find('name')
             surname = name.find('surname').text
@@ -681,7 +681,7 @@ class PLoS(Publisher):
             return
         boxed_texts = back.xpath('//boxed-text')
         for boxed_text in boxed_texts:
-            body.append(deepcopy(back_boxed_text))
+            body.append(deepcopy(boxed_text))
 
     def make_back_acknowledgments(self):
         """
@@ -738,7 +738,7 @@ class PLoS(Publisher):
             gloss_copy = deepcopy(glossary)
             gloss_copy.tag = 'div'
             gloss_copy.attrib['class'] = 'back-glossary'
-            body.append(glossary_copy)
+            body.append(gloss_copy)
 
     def make_back_notes(self, body):
         """
