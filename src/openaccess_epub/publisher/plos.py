@@ -1395,6 +1395,8 @@ nlm-citation/person-group/etal')
             if year:
                 year[0].text = '({0})'.format(year[0].text)
             for name in ref_copy.iter(tag='name'):
+                if name.getnext() is None:
+                    continue  # This way we don't put a comma on the last name
                 append_new_text(name, ',', join_str='')
             if etal:
                 prev = etal[0].getprevious()
@@ -1405,6 +1407,21 @@ nlm-citation/person-group/etal')
             if fpage and lpage:
                 fpage[0].text = '-'.join([fpage[0].text, lpage[0].text])
                 remove(lpage[0])
+
+            #last_name = ref_copy.xpath('./element-citation/person-group/name[last()] | ./nlm-citation/person-group/name[last()]')
+
+            if title:
+                title_text = title[0].text
+                pmed_href = 'http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=PubMed&cmd=Search&doptcmdl=Citation&defaultField=Title+Word&term='
+                pmed_href = pmed_href + title_text.replace(' ', '+')
+                pmed = etree.SubElement(links_p, 'a', {'href': pmed_href})
+                pmed.text = 'PubMed/NCBI'
+                pmed.tail = ' • '
+                schol_href = 'http://scholar.google.com/scholar?hl=en&safe=off&q=%22{0}%22'
+                schol_href = schol_href.format(title_text.replace(' ', '+'))
+                schol = etree.SubElement(links_p, 'a', {'href': schol_href})
+                schol.text = 'Google Scholar'
+
             for el in ref_copy.iter():
                 append_new_text(el, ' ', join_str='')
             ref_text = serialize(ref_copy)
@@ -1413,16 +1430,7 @@ nlm-citation/person-group/etal')
             if not ref_text.endswith('.'):
                 ref_text = ref_text + '.'
 
-            if title:
-                title_text = title[0].text
-                pmed_href = 'http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=PubMed&cmd=Search&doptcmdl=Citation&defaultField=Title+Word&term='
-                pmed_href = pmed_href + title_text.replace(' ', '+')
-                pmed = etree.SubElement(links_p, 'a', {'href': pmed_href})
-                pmed.text = 'PubMed/NCBI'
-                schol_href = 'http://scholar.google.com/scholar?hl=en&safe=off&q=%22{0}%22'
-                schol_href = schol_href.format(title_text.replace(' ', '+'))
-                schol = etree.SubElement(links_p, 'a', {'href': schol_href})
-                schol.text = 'Google Scholar'
+
 
 #http://dx.doi.org/10.1016/s1534-5807(03)00055-8
 #http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=PubMed&cmd=Search&doptcmdl=Citation&defaultField=Title+Word&term=Wnt3a+plays+a+major+role+in+the+segmentation+clock+controlling+somitogenesis.
