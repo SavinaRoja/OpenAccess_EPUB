@@ -697,10 +697,8 @@ class Publisher(object):
         if self.article.body is None:
             return False
         for table_wrap in self.article.body.findall('.//table-wrap'):
-            alternatives = table_wrap.find('alternatives')
-            graphic = table_wrap.find('graphic') or alternatives.find('graphic')
-            table = table_wrap.find('table') or alternatives.find('table')
-            if graphic is not None and table is not None:
+            graphic = table_wrap.xpath('./graphic | ./alternatives/graphic')
+            table = table_wrap.xpath('./table | ./alternatives/table')
+            if graphic and table:
                 return True
         return False
-
