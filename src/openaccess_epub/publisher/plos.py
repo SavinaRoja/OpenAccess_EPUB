@@ -1411,7 +1411,7 @@ nlm-citation/person-group/etal')
             #last_name = ref_copy.xpath('./element-citation/person-group/name[last()] | ./nlm-citation/person-group/name[last()]')
 
             if title:
-                title_text = title[0].text
+                title_text = serialize(title[0])
                 pmed_href = 'http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=PubMed&cmd=Search&doptcmdl=Citation&defaultField=Title+Word&term='
                 pmed_href = pmed_href + title_text.replace(' ', '+')
                 pmed = etree.SubElement(links_p, 'a', {'href': pmed_href})
