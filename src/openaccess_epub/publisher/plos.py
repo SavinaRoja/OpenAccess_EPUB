@@ -322,6 +322,9 @@ class PLoS(Publisher):
             elif abstract_type == 'editors-summary':
                 abstract_header.text = 'Editors\' Summary'
                 abstract_copy.attrib['id'] = 'editor-summary'
+            elif abstract_type == 'synopsis':
+                abstract_header.text = 'Synopsis'
+                abstract_copy.attrib['id'] = 'synopsis'
             elif abstract_type is None:
                 abstract_header.text = 'Abstract'
                 abstract_copy.attrib['id'] = 'abstract'
