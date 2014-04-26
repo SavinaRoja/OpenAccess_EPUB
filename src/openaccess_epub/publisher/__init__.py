@@ -172,12 +172,19 @@ class Publisher(object):
 
     def post_process(self, document, epub_version):
         def recursive_traverse(element):
-            if element is None:
-                return
 
-            tag_method = getattr(self,
-                                 'process_{0}_tag'.format(element.tag.replace('-', '_')),
-                                 None)
+            try:
+                tag_method = getattr(self,
+                                     'process_{0}_tag'.format(element.tag.replace('-', '_')),
+                                     None)
+            except AttributeError:
+                if element is None:
+                    return
+                if isinstance(element, etree._Comment):
+                    log.warning('''Comment encountered during recursive \
+post-processing, removing it''')
+                    remove(element)
+                    return
             if tag_method is not None and callable(tag_method):
                 tag_method(element, epub_version)
             for subel in element:
