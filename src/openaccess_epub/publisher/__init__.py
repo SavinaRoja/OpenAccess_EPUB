@@ -31,7 +31,7 @@ __all__ = ['contributor_tuple', 'date_tuple', 'identifier_tuple',
 log = logging.getLogger('openaccess_epub.publisher')
 
 contributor_tuple = namedtuple('Contributor', 'name, role, file_as')
-date_tuple = namedtuple('Date', 'year, month, day, event')
+date_tuple = namedtuple('Date', 'year, month, day, season, event')
 identifier_tuple = namedtuple('Identifier', 'value, scheme')
 
 
@@ -531,22 +531,22 @@ class Publisher(object):
 
     def format_date_string(self, date_tuple):
         """
-        Receives a date_tuple object, defined in jptsmeta, and outputs a string
+        Receives a date_tuple object, and outputs a string
         for placement in the article content.
         """
         months = ['', 'January', 'February', 'March', 'April', 'May', 'June',
                   'July', 'August', 'September', 'October', 'November', 'December']
         date_string = ''
         if date_tuple.season:
-            return '{0}, {1}'.format(date_tuple.season.text, date_tuple.year.text)
+            return '{0}, {1}'.format(date_tuple.season, date_tuple.year)
         else:
             if not date_tuple.month and not date_tuple.day:
-                return '{0}'.format(date_tuple.year.text)
+                return '{0}'.format(date_tuple.year)
             if date_tuple.month:
-                date_string += months[int(date_tuple.month.text)]
+                date_string += months[int(date_tuple.month)]
             if date_tuple.day:
-                date_string += ' ' + date_tuple.day.text
-            return ', '.join([date_string, date_tuple.year.text])
+                date_string += ' ' + date_tuple.day
+            return ', '.join([date_string, date_tuple.year])
 
     #These methods are recognized as Post Processing methods, as a final step in
     #the rendering of documents, the tree is recursively traversed. During this

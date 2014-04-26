@@ -19,6 +19,7 @@ from openaccess_epub.publisher import (
 )
 from openaccess_epub.utils.element_methods import *
 
+log = logging.getLogger('openaccess_epub.publisher.plos')
 
 class PLoS(Publisher):
     def __init__(self, article):
@@ -124,19 +125,23 @@ class PLoS(Publisher):
         accepted = self.article.root.xpath('./front/article-meta/history/date[@date-type=\'accepted\']')
         submitted = self.article.root.xpath('./front/article-meta/history/date[@date-type=\'received\']')
         copyrighted = self.article.root.xpath('./front/article-meta/pub-date[@pub-type=\'epub\']')
-        for name, el_list in (('accepted', accepted),
+        for event, el_list in (('accepted', accepted),
                               ('submitted', submitted),
                               ('copyrighted', copyrighted)):
             if not el_list:
                 continue
-            el = el_list[0]
-            year = el.find('year')
-            month = el.find('month')
-            day = el.find('day')
-            year = year.text
-            month = month.text if month is not None else ''
-            day = day.text if day is not None else ''
-            date_list.append(date_tuple(year, month, day, name))
+            dt = self.date_tuple_from_date(el_list[0], event)
+            date_list.append(dt)
+            #el = el_list[0]
+            #year = el.find('year')
+            #month = el.find('month')
+            #day = el.find('day')
+            #season = el.find('season')
+            #year = year.text
+            #month = month.text if month is not None else ''
+            #day = day.text if day is not None else ''
+            #season = season.text if season is not None else ''
+            #date_list.append(date_tuple(year, month, day, season, event))
         return date_list
 
     def package_subject(self):
@@ -146,10 +151,6 @@ class PLoS(Publisher):
         for kwd_grp in self.article.root.xpath('./front/article-meta/kwd-group'):
             for kwd in kwd_group.findall('kwd'):
                 subject_list.append(serialize(kwd))
-        #kwd_groups = self.article.metadata.front.article_meta.kwd_group
-        #for kwd_group in kwd_groups:
-            #for kwd in kwd_group.kwd:
-                #subject_list.append(serialize(kwd.node))
         return subject_list
 
     def package_rights(self):
@@ -218,22 +219,35 @@ class PLoS(Publisher):
             #TODO: Handle author footnote references, also put footnotes in the ArticleInfo
             #Example: journal.pbio.0040370.xml
             first = True
-            for xref in author.xref:
-                if xref.attrs['ref-type'] in ['corresp', 'aff']:
-                    try:
-                        sup_element = xref.sup[0].node
-                    except IndexError:
-                        sup_text = ''
-                    else:
-                        sup_text = all_text(sup_element)
-                    new_sup = etree.SubElement(author_element, 'sup')
-                    sup_link = etree.SubElement(new_sup, 'a')
-                    sup_link.attrib['href'] = self.main_fragment.format(xref.attrs['rid'])
-                    sup_link.text = sup_text
-                    if first:
-                        first = False
-                    else:
-                        new_sup.text = ','
+            for xref in author.xpath("./xref[@ref-type='corresp' or @ref-type='aff']"):
+                _sup = xref.find('sup')
+                sup_text = all_text(_sup) if _sup is not None else ''
+                auth_sup = etree.SubElement(author_element, 'sup')
+                sup_link = etree.SubElement(auth_sup,
+                                            'a',
+                                            {'href': self.main_fragment.format(xref.attrib['rid'])})
+                sup_link.text = sup_text
+                if first:
+                    first = False
+                else:
+                    append_new_text(auth_sup, ', ', join_str='')
+            #for xref in author.findall('xref'):
+                #if xref.attrs['ref-type'] in ['corresp', 'aff']:
+
+                    #try:
+                        #sup_element = xref.sup[0].node
+                    #except IndexError:
+                        #sup_text = ''
+                    #else:
+                        #sup_text = all_text(sup_element)
+                    #new_sup = etree.SubElement(author_element, 'sup')
+                    #sup_link = etree.SubElement(new_sup, 'a')
+                    #sup_link.attrib['href'] = self.main_fragment.format(xref.attrs['rid'])
+                    #sup_link.text = sup_text
+                    #if first:
+                        #first = False
+                    #else:
+                        #new_sup.text = ','
         return author_element
 
     def make_heading_affiliations(self, heading_div):
@@ -244,9 +258,9 @@ class PLoS(Publisher):
         Metadata element, content derived from FrontMatter
         """
         #Get all of the aff element tuples from the metadata
-        affs = self.article.metadata.front.article_meta.aff
+        affs = self.article.root.xpath('./front/article-meta/aff')
         #Create a list of all those pertaining to the authors
-        author_affs = [i for i in affs if 'aff' in i.attrs['id']]
+        author_affs = [i for i in affs if 'aff' in i.attrib['id']]
         #Count them, used for formatting
         if len(author_affs) == 0:
             return None
@@ -256,25 +270,30 @@ class PLoS(Publisher):
                                          {'id': 'affiliations',
                                           'class': 'simple'})
 
-        #A simple way that seems to work by PLoS convention, but does not treat
-        #the full scope of the <aff> element
         for aff in author_affs:
-            #Expecting id to always be present
-            aff_id = aff.attrs['id']
             #Create a span element to accept extracted content
             aff_item = etree.SubElement(affs_list, 'li')
-            aff_item.attrib['id'] = aff_id
+            aff_item.attrib['id'] = aff.attrib['id']
             #Get the first label node and the first addr-line node
-            if len(aff.label) > 0:
-                label = aff.label[0].node
-                label_text = all_text(label)
+            label = aff.find('label')
+            addr_line = aff.find('addr-line')
+            if label is not None:
                 bold = etree.SubElement(aff_item, 'b')
-                bold.text = label_text + ' '
-            if len(aff.addr_line) > 0:
-                addr_line = aff.addr_line[0].node
+                bold.text = all_text(label) + ' '
+            if addr_line is not None:
                 append_new_text(aff_item, all_text(addr_line))
             else:
                 append_new_text(aff_item, all_text(aff))
+            #if len(aff.label) > 0:
+                #label = aff.label[0].node
+                #label_text = all_text(label)
+                #bold = etree.SubElement(aff_item, 'b')
+                #bold.text = label_text + ' '
+            #if len(aff.addr_line) > 0:
+                #addr_line = aff.addr_line[0].node
+                #append_new_text(aff_item, all_text(addr_line))
+            #else:
+                #append_new_text(aff_item, all_text(aff))
 
     def make_heading_abstracts(self, heading_div):
         """
@@ -284,35 +303,35 @@ class PLoS(Publisher):
 
         Metadata element, content derived from FrontMatter
         """
-        for abstract in self.article.metadata.front.article_meta.abstract:
+        for abstract in self.article.root.xpath('./front/article-meta/abstract'):
             #Make a copy of the abstract
-            abstract_copy = deepcopy(abstract.node)
+            abstract_copy = deepcopy(abstract)
+            abstract_copy.tag = 'div'
             #Remove title elements in the abstracts
             #TODO: Fix this removal, this is not always appropriate
             for title in abstract_copy.findall('.//title'):
-                title.getparent().remove(title)
+                remove(title)
             #Create a header for the abstract
             abstract_header = etree.Element('h2')
-            #Rename the abstract tag
-            abstract_copy.tag = 'div'
-            #Remove all of the attributes from the abstract copy top element
             remove_all_attributes(abstract_copy)
             #Set the header text and abstract id according to abstract type
-            abstract_type = abstract.attrs['abstract-type']
-            if abstract_type == 'summary':  # Should be an Author Summary
+            abstract_type = abstract.attrib.get('abstract-type')
+            if abstract_type == 'summary':
                 abstract_header.text = 'Author Summary'
                 abstract_copy.attrib['id'] = 'author-summary'
-            elif abstract_type == 'editors-summary': # Should be an Editor Summary
+            elif abstract_type == 'editors-summary':
                 abstract_header.text = 'Editors\' Summary'
                 abstract_copy.attrib['id'] = 'editor-summary'
-            elif abstract_type is None:  # The attribute was missing, implying main
+            elif abstract_type is None:
                 abstract_header.text = 'Abstract'
                 abstract_copy.attrib['id'] = 'abstract'
-            elif abstract_type == 'toc':
+            elif abstract_type == 'toc':  # We don't include these
                 continue
-            else:
-                abstract_header.text = 'Unhandled value for abstract-type {0}'.format(abstract_type)
-                abstract_copy.attrib['id'] = abstract_type
+            else:  # Warn about these, then skip
+                log.warning('Unhandled value for abstract-type {0}'.format(abstract_type))
+                continue
+                #abstract_header.text = abstract_type
+                #abstract_copy.attrib['id'] = abstract_type
             heading_div.append(abstract_header)
             heading_div.append(abstract_copy)
 
@@ -366,42 +385,41 @@ class PLoS(Publisher):
         #Add author stuff to the citation
         authors = self.article.root.xpath("./front/article-meta/contrib-group/contrib[@contrib-type='author']")
         for author in authors:
-            author_index = author_list.index(author)
+            author_index = authors.index(author)
             #At the 6th author, simply append an et al., then stop iterating
             if author_index == 5:
                 append_new_text(citation_div, 'et al.', join_str='')
                 break
             else:
                 #Check if the author contrib has a collab
-                #This will signify unique behavior
-                if len(author.collab) > 0:  #Author element is a collab
-                    #As best as I can tell from PLoS' reference implementation
-                    #The thing to do is append all below, but remove any child
-                    #contrib-group elements
-                    collab = deepcopy(author.collab[0])
-                    for contrib_group in collab.contrib_group:
+                collab = author.find('collab')
+                if collab is not None:
+                    collab_copy = deepcopy(collab)
+                    for contrib_group in collab_copy.findall('contrib_group'):
                         remove(contrib_group)
-                    append_all_below(citation_div, collab.node, join_str='')
-                #If the author is not a collab, do this instead
+                    append_all_below(citation_div, collab, join_str='')
                 else:  # Author element is not a collab
-                    name = author.name[0]
+                    name = author.find('name')
                     #Note that this does not support eastern names
                     #Grab the surname information
-                    append_new_text(citation_div, name.surname.text, join_str='')
+                    surname = name.find('surname')
+                    given_names = name.find('given-names')
+                    suffix = name.find('suffix')
+                    append_new_text(citation_div, surname.text, join_str='')
                     #Make initials from the given-name information
-                    if name.given_names is not None:
+                    if given_names is not None:
                         #Add a space
                         append_new_text(citation_div, ' ', join_str='')
                         #Split by whitespace and take first character
-                        given_initials = [i[0] for i in name.given_names.text.split() if i]
+                        given_initials = [i[0] for i in given_names.text.split() if i]
                         for initial in given_initials:
                             append_new_text(citation_div, initial, join_str='')
                     #If there is a suffix, add its text, but don't include the
                     #trailing period if there is one
-                    if name.suffix is not None:
+                    if suffix is not None:
                         #Add a space
                         append_new_text(citation_div, ' ', join_str='')
-                        suffix_text = name.suffix.text
+                        suffix_text = suffix.text
                         #Check for the trailing period
                         if suffix_text[-1] == '.':
                             suffix_text = suffix_text[:-1]
@@ -413,40 +431,34 @@ class PLoS(Publisher):
                     append_new_text(citation_div, ', ', join_str='')
         #Add Publication Year to the citation
         #Find pub-date elements, use pub-type=collection, or else pub-type=ppub
-        for pub_date in self.article.metadata.front.article_meta.pub_date:
-            #pub_year = '1337'
-            if 'pub-type' not in pub_date.attrs:
-                continue
-            elif pub_date.attrs['pub-type'] == 'collection':
-                pub_year = pub_date.year.text
-                break
-            elif pub_date.attrs['pub-type'] == 'ppub':
-                pub_year = pub_date.year.text
+        d = './front/article-meta/pub-date'
+        coll = self.article.root.xpath(d + "[@pub-type='collection']")
+        ppub = self.article.root.xpath(d + "[@pub-type='ppub']")
+        if coll:
+            pub_year = coll[0].find('year').text
+        elif ppub:
+            pub_year = ppub[0].find('year').text
         append_new_text(citation_div, ' ({0}) '.format(pub_year), join_str='')
         #Add the Article Title to the Citation
         #As best as I can tell from the reference implementation, they
         #serialize the article title to text-only, and expunge redundant spaces
         #This might need later review
-        article_title = self.article.metadata.front.article_meta.title_group.article_title.node
-        article_title_text = str(etree.tostring(article_title, method='text', encoding='utf-8'), encoding='utf-8')
+        article_title = self.article.root.xpath('./front/article-meta/title-group/article-title')[0]
+        article_title_text = serialize(article_title)
         normalized = ' '.join(article_title_text.split())  # Remove redundant whitespace
         #Add a period unless there is some other valid punctuation
         if normalized[-1] not in '.?!':
             normalized += '.'
         append_new_text(citation_div, normalized + ' ', join_str='')
         #Add the article's journal name using the journal-id of type "nlm-ta"
-        for journal_id in self.article.metadata.front.journal_meta.journal_id:
-            if 'journal-id-type' not in journal_id.attrs:
-                continue
-            elif journal_id.attrs['journal-id-type'] == 'nlm-ta':
-                journal = journal_id.text
-        append_new_text(citation_div, journal + ' ', join_str='')
+        journal = self.article.root.xpath("./front/journal-meta/journal-id[@journal-id-type='nlm-ta']")
+        append_new_text(citation_div, journal[0].text + ' ', join_str='')
         #Add the article's volume, issue, and elocation_id  values
-        volume = self.article.metadata.front.article_meta.volume.text
-        issue = self.article.metadata.front.article_meta.issue.text
-        elocation_id = self.article.metadata.front.article_meta.elocation_id.text
-        stuff = '{0}({1}): {2}. '.format(volume, issue, elocation_id)
-        append_new_text(citation_div, stuff, join_str='')
+        volume = self.article.root.xpath('./front/article-meta/volume')[0].text
+        issue = self.article.root.xpath('./front/article-meta/issue')[0].text
+        elocation_id = self.article.root.xpath('./front/article-meta/elocation-id')[0].text
+        form = '{0}({1}): {2}. '.format(volume, issue, elocation_id)
+        append_new_text(citation_div, form, join_str='')
         append_new_text(citation_div, 'doi:{0}'.format(self.article.doi), join_str='')
 
         return citation_div
@@ -463,36 +475,39 @@ class PLoS(Publisher):
             editor_bold.text = 'Editor: '
         first = True
         for editor in editors:
+            name, _ = self.get_contrib_names(editor)
             if first:
                 first = False
             else:
                 append_new_text(editors_div, '; ', join_str='')
 
-            if len(editor.anonymous) > 0:
-                append_new_text(editors_div, 'Anonymous', join_str='')
-            elif len(editor.collab) > 0:
-                append_all_below(editors_div, editor.collab[0].node)
+            collab = editor.find('collab')
+            if collab:
+                append_all_below(editors_div, collab[0])
             else:
-                name = editor.name[0]  # Work with only first name listed
-                surname = name.surname.text
-                if name.given_names is not None:
-                    name_text = ' '.join([name.given_names.text, surname])
-                else:
-                    name_text = surname
-                append_new_text(editors_div, name_text)
+                append_new_text(editors_div, name)
 
-            for xref in editor.xref:
-                if xref.attrs['ref-type'] == 'aff':
-                    ref_id = xref.attrs['rid']
-                    for aff in self.article.metadata.front.article_meta.aff:
-                        if aff.attrs['id'] == ref_id:
-                            if len(aff.addr_line) > 0:
-                                addr = aff.addr_line[0].node
-                                append_new_text(editors_div, ', ')
-                                append_all_below(editors_div, addr)
-                            else:
-                                append_new_text(editors_div, ', ')
-                                append_all_below(editors_div, aff.node)
+            for affref in editor.xpath("./xref[@ref-type='aff']"):
+                for aff in self.article.root.xpath('./front/article-meta/aff'):
+                    if aff.attrib['id'] == affref.attrib['rid']:
+                        addr_line = aff.find('addr-line')
+                        if addr_line is not None:
+                            append_new_text(editors_div, ', ')
+                            append_all_below(editors_div, addr_line)
+                        else:
+                            append_new_text(editors_div, ', ')
+                            append_all_below(editors_div, aff)
+
+    def date_tuple_from_date(self, date_el, event):
+        year = date_el.find('year')
+        month = date_el.find('month')
+        day = date_el.find('day')
+        season = date_el.find('season')
+        year = year.text
+        month = month.text if month is not None else ''
+        day = day.text if day is not None else ''
+        season = season.text if season is not None else ''
+        return date_tuple(year, month, day, season, event)
 
     def make_article_info_dates(self):
         """
@@ -501,39 +516,28 @@ class PLoS(Publisher):
         """
         dates_div = etree.Element('div', {'id': 'article-dates'})
 
-        if self.article.metadata.front.article_meta.history is not None:
-            dates = self.article.metadata.front.article_meta.history.date
-        else:
-            dates = []
-        received = None
-        accepted = None
-        for date in dates:
-            if date.attrs['date-type'] is None:
-                continue
-            elif date.attrs['date-type'] == 'received':
-                received = date
-            elif date.attrs['date-type'] == 'accepted':
-                accepted = date
-            else:
-                pass
-        if received is not None:  # Optional
+        d = './front/article-meta/history/date'
+        received = self.article.root.xpath(d + "[@date-type='received']")
+        accepted = self.article.root.xpath(d + "[@date-type='accepted']")
+        if received:
             b = etree.SubElement(dates_div, 'b')
             b.text = 'Received: '
-            formatted_date_string = self.format_date_string(received)
-            append_new_text(dates_div, formatted_date_string+'; ')
-        if accepted is not None:  # Optional
+            dt = self.date_tuple_from_date(received[0], 'Received')
+            formatted_date_string = self.format_date_string(dt)
+            append_new_text(dates_div, formatted_date_string + '; ')
+        if accepted:
             b = etree.SubElement(dates_div, 'b')
             b.text = 'Accepted: '
-            formatted_date_string = self.format_date_string(accepted)
-            append_new_text(dates_div, formatted_date_string+'; ')
+            dt = self.date_tuple_from_date(accepted[0], 'Accepted')
+            formatted_date_string = self.format_date_string(dt)
+            append_new_text(dates_div, formatted_date_string + '; ')
         #Published date is required
-        for pub_date in self.article.metadata.front.article_meta.pub_date:
-            if pub_date.attrs['pub-type'] == 'epub':
-                b = etree.SubElement(dates_div, 'b')
-                b.text = 'Published: '
-                formatted_date_string = self.format_date_string(pub_date)
-                append_new_text(dates_div, formatted_date_string)
-                break
+        pub_date = self.article.root.xpath("./front/article-meta/pub-date[@pub-type='epub']")[0]
+        b = etree.SubElement(dates_div, 'b')
+        b.text = 'Published: '
+        dt = self.date_tuple_from_date(pub_date, 'Published')
+        formatted_date_string = self.format_date_string(dt)
+        append_new_text(dates_div, formatted_date_string)
 
         return dates_div
 
@@ -543,37 +547,35 @@ class PLoS(Publisher):
         handling the information contained in the metadata <permissions>
         element.
         """
-        permissions = self.article.metadata.front.article_meta.permissions
-        if permissions is None:  # Article contains no permissions element
+        perm = self.article.root.xpath('./front/article-meta/permissions')
+        if not perm:
             return
         copyright_div = etree.SubElement(article_info_div, 'div', {'id': 'copyright'})
         cp_bold = etree.SubElement(copyright_div, 'b')
         cp_bold.text = 'Copyright: '
         copyright_string = '\u00A9 '
-        if len(permissions.copyright_holder) > 0:
-            copyright_string += all_text(permissions.copyright_holder[0].node)
-            copyright_string += '. '
-        if len(permissions.license) > 0:  # I'm assuming only one license
-            #Taking only the first license_p element
-            license_p = permissions.license[0].license_p[0]
-            #I expect to see only text in the
-            copyright_string += all_text(license_p.node)
+        copyright_holder = perm[0].find('copyright-holder')
+        if copyright_holder is not None:
+            copyright_string += all_text(copyright_holder) + '. '
+        lic = perm[0].find('license')
+        if lic is not None:
+            copyright_string += all_text(lic.find('license-p'))
         append_new_text(copyright_div, copyright_string)
 
     def make_article_info_funding(self, article_info_div):
         """
         Creates the element for declaring Funding in the article info.
         """
-        funding_group = self.article.metadata.front.article_meta.funding_group
-        if len(funding_group) == 0:
-            return
-        funding_div = etree.SubElement(article_info_div, 'div')
-        funding_div.attrib['id'] = 'funding'
-        funding_b = etree.SubElement(funding_div, 'b')
-        funding_b.text = 'Funding: '
-        #As far as I can tell, PLoS only uses one funding-statement
-        funding_statement = funding_group[0].funding_statement[0]
-        append_all_below(funding_div, funding_statement.node)
+        funding_group = self.article.root.xpath('./front/article-meta/funding-group')
+        if funding_group:
+            funding_div = etree.SubElement(article_info_div,
+                                           'div',
+                                           {'id': 'funding'})
+            funding_b = etree.SubElement(funding_div, 'b')
+            funding_b.text = 'Funding: '
+            #As far as I can tell, PLoS only uses one funding-statement
+            funding_statement = funding_group[0].find('funding-statement')
+            append_all_below(funding_div, funding_statement)
 
     def make_article_info_competing_interests(self, article_info_div):
         """
@@ -581,78 +583,49 @@ class PLoS(Publisher):
         info.
         """
         #Check for author-notes
-        author_notes = self.article.metadata.front.article_meta.author_notes
-        if author_notes is None:  # skip if not found
+        con_expr = "./front/article-meta/author-notes/fn[@fn-type='conflict']"
+        conflict = self.article.root.xpath(con_expr)
+        if not conflict:
             return
-        #Check each of the fn elements to see if they are a conflict of
-        #interest statement
-        conflict = None
-        for fn in author_notes.fn:
-            #This is a workaround, using lxml search, because of an odd issue
-            #with the loading of the prescription of fn in the DTD
-            fn_node = fn.node
-            if 'fn-type' in fn_node.attrib:
-                if fn_node.attrib['fn-type'] == 'conflict':
-                    conflict = fn
-                    break
-        if conflict is None:  # Return since no conflict found
-            return
-        #Create the content
-        conflict_div = etree.SubElement(article_info_div, 'div')
-        conflict_div.attrib['id'] = 'conflict'
-        conflict_b = etree.SubElement(conflict_div, 'b')
-        conflict_b.text = 'Competing Interests: '
-        #Grab the first paragraph in the fn element
-        fn_p = conflict.node.find('p')
+        conflict_div = etree.SubElement(article_info_div,
+                                        'div',
+                                        {'id': 'conflict'})
+        b = etree.SubElement(conflict_div, 'b')
+        b.text = 'Competing Interests: '
+        fn_p = conflict[0].find('p')
+        append_all_below(conflict_div, fn_p)
         if fn_p is not None:
-            #Add all of its children to the conflict div
-            append_all_below(conflict_div, fn_p)
+            append_all_below(conflict_div, conflict[0])
 
     def make_article_info_correspondences(self, article_info_div):
         """
         Articles generally provide a first contact, typically an email address
         for one of the authors. This will supply that content.
         """
-        #Check for author-notes
-        author_notes = self.article.metadata.front.article_meta.author_notes
-        if author_notes is None:  # skip if not found
-            return
-        #Check for correspondences
-        correspondence = author_notes.corresp
-        if len(correspondence) == 0:  # Return since no correspondence found
-            return
-        corresp_div = etree.SubElement(article_info_div, 'div', {'id': 'correspondence'})
-        for corresp in correspondence:
-            corresp_sub_div = etree.SubElement(corresp_div, 'div')
-            corresp_sub_div.attrib['id'] = corresp.node.attrib['id']
-            append_all_below(corresp_sub_div, corresp.node)
+        corresps = self.article.root.xpath('./front/article-meta/author-notes/corresp')
+        if corresps:
+            corresp_div = etree.SubElement(article_info_div,
+                                           'div',
+                                           {'id': 'correspondence'})
+        for corresp in corresps:
+            sub_div = etree.SubElement(corresp_div,
+                                       'div',
+                                       {'id': corresp.attrib['id']})
+            append_all_below(sub_div, corresp)
 
     def make_article_info_footnotes_other(self, article_info_div):
         """
         This will catch all of the footnotes of type 'other' in the <fn-group>
         of the <back> element.
         """
-        #Check for back, skip if it doesn't exist
-        if self.article.metadata.back is None:
-            return
-        #Check for back fn-groups, skip if empty
-        fn_groups = self.article.metadata.back.fn_group
-        if len(fn_groups) == 0:
-            return
-        #Look for fn nodes of fn-type 'other'
-        other_fns = []
-        for fn_group in fn_groups:
-            for fn in fn_group.fn:
-                if not 'fn-type' in fn.node.attrib:
-                    continue
-                elif fn.node.attrib['fn-type'] == 'other':
-                    other_fns.append(fn)
+        other_fn_expr = "./back/fn-group/fn[@fn-type='other']"
+        other_fns = self.article.root.xpath(other_fn_expr)
         if other_fns:
             other_fn_div = etree.SubElement(article_info_div,
                                             'div',
                                             {'class': 'back-fn-other'})
         for other_fn in other_fns:
-            append_all_below(other_fn_div, other_fn.node)
+            append_all_below(other_fn_div, other_fn)
 
     @Publisher.maker2
     @Publisher.maker3
@@ -677,9 +650,8 @@ class PLoS(Publisher):
 
         #Back is technically metadata content that needs to be interpreted to
         #presentable content
-
         body = self.main.getroot().find('body')
-        if self.article.metadata.back is None:
+        if self.article.root.find('back') is None:
             return
         #The following things are ordered in such a way to adhere to what
         #appears to be a consistent presentation order for PLoS
@@ -704,13 +676,12 @@ class PLoS(Publisher):
         the main body.
         """
         body = self.main.getroot().find('body')
-        if self.article.metadata.back is None:
+        back = self.article.root.find('back')
+        if back is None:
             return
-        back_boxed_texts = self.article.metadata.back.node.findall('.//boxed-text')
-        if len(back_boxed_texts) == 0:
-            return
-        for back_boxed_text in back_boxed_texts:
-            body.append(back_boxed_text)
+        boxed_texts = back.xpath('//boxed-text')
+        for boxed_text in boxed_texts:
+            body.append(deepcopy(back_boxed_text))
 
     def make_back_acknowledgments(self):
         """
@@ -720,10 +691,10 @@ class PLoS(Publisher):
         This element should only occur once, optionally, for PLoS, if a need
         becomes known, then multiple instances may be supported.
         """
-        if len(self.article.metadata.back.ack) == 0:
+        acks = self.article.root.xpath('./back/ack')
+        if not acks:
             return
-        #Take a copy of the first ack element, using its xml form
-        ack = deepcopy(self.article.metadata.back.ack[0].node)
+        ack = deepcopy(acks[0])
         #Modify the tag to div
         ack.tag = 'div'
         #Give it an id
@@ -743,33 +714,18 @@ class PLoS(Publisher):
         I don't expect to see more than one of these. Compare this method to
         make_article_info_competing_interests()
         """
-        #Check for author-notes
-        author_notes = self.article.metadata.front.article_meta.author_notes
-        if author_notes is None:  # skip if not found
-            return
-        #Check for contributions statement
-        contribution = None
-        #Grab the fn element for the contribution statement
-        for fn in author_notes.fn:
-            if 'fn-type' not in fn.node.attrib:
-                continue
-            elif fn.node.attrib['fn-type'] == 'con':
-                contribution = fn
-                break
-        if not contribution:
-            return
-        #Create a deepcopy of the fn to modify and add to the receiving_el
-        author_contrib = deepcopy(contribution.node)
-        remove_all_attributes(author_contrib)
-        author_contrib.tag = 'div'
-        author_contrib.attrib['id'] = 'author-contributions'
-        #Give it a title element--this is not an OPS element but doing so will
-        #allow it to later be depth-formatted by self.convert_div_titles()
-        contributions_title = etree.Element('title')
-        contributions_title.text = 'Author Contributions'
-        author_contrib.insert(0, contributions_title)
-        #Append the modified copy of the author contribution fn to receiving_el
-        body.append(author_contrib)
+        cont_expr = "./front/article-meta/author-notes/fn[@fn-type='con']"
+        contribution = self.article.root.xpath(cont_expr)
+        if contribution:
+            author_contrib = deepcopy(contribution[0])
+            remove_all_attributes(author_contrib)
+            author_contrib.tag = 'div'
+            author_contrib.attrib['id'] = 'author-contributions'
+            #This title element will be parsed later
+            title = etree.Element('title')
+            title.text = 'Author Contributions'
+            author_contrib.insert(0, title)
+            body.append(author_contrib)
 
     def make_back_glossary(self, body):
         """
@@ -778,14 +734,10 @@ class PLoS(Publisher):
         formats. They are included in the ePub output however because they are
         helpful and because we can.
         """
-        #Check if self.back exists
-        glossaries = self.article.metadata.back.glossary
-        if len(glossaries) == 0:
-            return
-        for glossary in glossaries:
-            glossary_copy = deepcopy(glossary.node)
-            glossary_copy.tag = 'div'
-            glossary_copy.attrib['class'] = 'back-glossary'
+        for glossary in self.article.root.xpath('./back/glossary'):
+            gloss_copy = deepcopy(glossary)
+            gloss_copy.tag = 'div'
+            gloss_copy.attrib['class'] = 'back-glossary'
             body.append(glossary_copy)
 
     def make_back_notes(self, body):
@@ -795,11 +747,8 @@ class PLoS(Publisher):
         diverse content model, but PLoS practice appears to be fairly
         consistent: a single <sec> containing a <title> and a <p>
         """
-        all_notes = self.article.metadata.back.notes
-        if len(all_notes) == 0:
-            return
-        for notes in all_notes:
-            notes_sec = deepcopy(notes.sec[0].node)
+        for notes in self.article.root.xpath('./back/notes'):
+            notes_sec = deepcopy(notes.find('sec'))
             notes_sec.tag = 'div'
             notes_sec.attrib['class'] = 'back-notes'
             body.append(notes_sec)
@@ -1405,9 +1354,7 @@ class PLoS(Publisher):
     @Publisher.maker3
     def make_biblio(self):
         body = self.biblio.find('body')
-        if self.article.metadata.back is None:
-            return
-        for ref in self.article.metadata.back.node.findall('.//ref'):
+        for ref in self.article.root.xpath('./back/ref-list/ref'):
             ref_para = etree.SubElement(body, 'p', {'id': ref.attrib['id']})
             ref_para.text = serialize(ref, strip=True)
 

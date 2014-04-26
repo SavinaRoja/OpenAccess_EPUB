@@ -109,7 +109,7 @@ without a publisher!''')
 
         #Entry for the biblio content document
         biblio_idref = 'biblio-{0}-xhtml'.format(dash_doi)
-        if self.article.root.xpath('./back/ref'):
+        if self.article.root.xpath('./back/ref-list/ref'):
                 self.spine_list.append(spine_item(biblio_idref, True))
 
         #Entry for the tables content document
