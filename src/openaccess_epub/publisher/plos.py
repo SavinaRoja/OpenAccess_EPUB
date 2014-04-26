@@ -1365,9 +1365,70 @@ class PLoS(Publisher):
     @Publisher.maker3
     def make_biblio(self):
         body = self.biblio.find('body')
-        for ref in self.article.root.xpath('./back/ref-list/ref'):
-            ref_para = etree.SubElement(body, 'p', {'id': ref.attrib['id']})
-            ref_para.text = serialize(ref, strip=True)
+        refs = self.article.root.xpath('./back/ref-list/ref')
+        if refs:
+            etree.SubElement(body, 'h2', {'id': 'references'})
+        for ref in refs:
+            #Time for a little XML butchery/cookery
+            ref_copy = deepcopy(ref)
+
+            label = ref_copy.find('label')
+            year = ref_copy.xpath('./element-citation/year | nlm-citation/year')
+            etal = ref_copy.xpath('./element-citation/person-group/etal | \
+nlm-citation/person-group/etal')
+            volume = ref_copy.xpath('./element-citation/volume | nlm-citation/volume')
+            fpage = ref_copy.xpath('./element-citation/fpage | nlm-citation/fpage')
+            lpage = ref_copy.xpath('./element-citation/lpage | nlm-citation/lpage')
+            title = ref_copy.xpath('./element-citation/article-title | nlm-citation/article-title')
+
+            ref_div = etree.SubElement(body, 'div', {'id': ref.attrib['id']})
+            ref_p = etree.SubElement(ref_div, 'p')
+            links_p = etree.SubElement(ref_div, 'p')
+
+            if label is not None:
+                b = etree.SubElement(ref_p, 'b')
+                b.text = label.text
+                b.tail = ' '
+                if not b.text.endswith('.'):
+                    b.text = b.text + '.'
+                remove(label)
+            if year:
+                year[0].text = '({0})'.format(year[0].text)
+            for name in ref_copy.iter(tag='name'):
+                append_new_text(name, ',', join_str='')
+            if etal:
+                prev = etal[0].getprevious()
+                if prev is not None:
+                    prev.tail = 'et al.'
+            if volume:
+                volume[0].text = volume[0].text + ':'
+            if fpage and lpage:
+                fpage[0].text = '-'.join([fpage[0].text, lpage[0].text])
+                remove(lpage[0])
+            for el in ref_copy.iter():
+                append_new_text(el, ' ', join_str='')
+            ref_text = serialize(ref_copy)
+            while ref_text.endswith(' '):
+                ref_text = ref_text[:-1]
+            if not ref_text.endswith('.'):
+                ref_text = ref_text + '.'
+
+            if title:
+                title_text = title[0].text
+                pmed_href = 'http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=PubMed&cmd=Search&doptcmdl=Citation&defaultField=Title+Word&term='
+                pmed_href = pmed_href + title_text.replace(' ', '+')
+                pmed = etree.SubElement(links_p, 'a', {'href': pmed_href})
+                pmed.text = 'PubMed/NCBI'
+                schol_href = 'http://scholar.google.com/scholar?hl=en&safe=off&q=%22{0}%22'
+                schol_href = schol_href.format(title_text.replace(' ', '+'))
+                schol = etree.SubElement(links_p, 'a', {'href': schol_href})
+                schol.text = 'Google Scholar'
+
+#http://dx.doi.org/10.1016/s1534-5807(03)00055-8
+#http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=PubMed&cmd=Search&doptcmdl=Citation&defaultField=Title+Word&term=Wnt3a+plays+a+major+role+in+the+segmentation+clock+controlling+somitogenesis.
+#http://scholar.google.com/scholar?hl=en&safe=off&q=%22Wnt3a+plays+a+major+role+in+the+segmentation+clock+controlling+somitogenesis.%22
+
+            append_new_text(ref_p, ref_text)
 
     def process_named_content_tag(self, element, epub_version):
         element.tag = 'span'
