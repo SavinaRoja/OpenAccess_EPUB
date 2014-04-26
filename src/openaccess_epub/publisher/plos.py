@@ -679,7 +679,7 @@ class PLoS(Publisher):
         back = self.article.root.find('back')
         if back is None:
             return
-        boxed_texts = back.xpath('//boxed-text')
+        boxed_texts = back.xpath('.//boxed-text')
         for boxed_text in boxed_texts:
             body.append(deepcopy(boxed_text))
 
