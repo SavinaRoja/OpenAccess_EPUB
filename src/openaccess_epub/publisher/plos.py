@@ -710,7 +710,7 @@ class PLoS(Publisher):
         ack.tag = 'div'
         #Give it an id
         ack.attrib['id'] = 'acknowledgments'
-        #Give it a title element--this is not an OPS element but doing so will
+        #Give it a title element--this is not an EPUB element but doing so will
         #allow it to later be depth-formatted by self.convert_div_titles()
         ack_title = etree.Element('title')
         ack_title.text = 'Acknowledgments'
@@ -768,7 +768,7 @@ class PLoS(Publisher):
     @Publisher.special3
     def convert_disp_formula_elements(self):
         """
-        <disp-formula> elements must be converted to OPS conforming elements
+        <disp-formula> elements must be converted to conforming elements
         """
         for disp in self.main.getroot().findall('.//disp-formula'):
             #find label element
@@ -797,7 +797,6 @@ class PLoS(Publisher):
             img_dir = 'images-' + self.doi_suffix()
             img_path = '/'.join([img_dir, file_name])
 
-            #Create OPS content, using image path, and label
             #Create the img element
             img_element = etree.Element('img', {'alt': 'A Display Formula',
                                                 'class': 'disp-formula',
@@ -818,7 +817,7 @@ class PLoS(Publisher):
     @Publisher.special3
     def convert_inline_formula_elements(self):
         """
-        <inline-formula> elements must be converted to OPS conforming elements
+        <inline-formula> elements must be converted to be conforming
 
         These elements may contain <inline-graphic> elements, textual content,
         or both.
@@ -978,7 +977,7 @@ class PLoS(Publisher):
     def convert_fig_elements(self):
         """
         Responsible for the correct conversion of JPTS 3.0 <fig> elements to
-        OPS xhtml. Aside from translating <fig> to <img>, the content model
+        EPUB xhtml. Aside from translating <fig> to <img>, the content model
         must be edited.
         """
         for fig in self.main.getroot().findall('.//fig'):
@@ -999,7 +998,7 @@ class PLoS(Publisher):
             img_dir = 'images-' + self.doi_suffix()
             img_path = '/'.join([img_dir, file_name])
 
-            #Create the OPS content: using image path, label, and caption
+            #Create the content: using image path, label, and caption
             img_el = etree.Element('img', {'alt': 'A Figure', 'src': img_path,
                                            'class': 'figure'})
             if 'id' in fig.attrib:
@@ -1221,7 +1220,7 @@ class PLoS(Publisher):
     def convert_table_wrap_elements(self):
         """
         Responsible for the correct conversion of JPTS 3.0 <table-wrap>
-        elements to OPS content.
+        elements to EPUB content.
 
         The 'id' attribute is treated as mandatory by this method.
         """

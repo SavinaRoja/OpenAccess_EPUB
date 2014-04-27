@@ -66,7 +66,6 @@ from docopt import docopt
 from openaccess_epub._version import __version__
 from openaccess_epub.navigation import Navigation
 from openaccess_epub.package import Package
-import openaccess_epub.ops as ops
 import openaccess_epub.utils as utils
 from openaccess_epub.utils.epub import epub_zip, make_epub_base
 import openaccess_epub.utils.images
@@ -168,7 +167,7 @@ def main(argv=None):
                                                 parsed_article)
 
         if journal_doi == '10.1371':  # PLoS's publisher DOI
-            ops_doc = ops.OPSPLoS(parsed_article, output_directory)
+            #ops_doc = ops.OPSPLoS(parsed_article, output_directory)
 
     if epub_version == 2:
         navigation.render_EPUB2(output_directory)

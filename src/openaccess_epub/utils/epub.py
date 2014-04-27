@@ -14,7 +14,6 @@ import openaccess_epub
 from openaccess_epub.utils.css import DEFAULT_CSS
 from openaccess_epub.navigation import Navigation
 from openaccess_epub.package import Package
-import openaccess_epub.ops
 
 log = logging.getLogger('openaccess_epub.utils.epub')
 
@@ -143,7 +142,7 @@ def make_epub_base(location):
     with open(os.path.join(location, 'mimetype'), 'w') as out:  # mimetype file
         out.write('application/epub+zip')
 
-    #Create OPS and META-INF directorys
+    #Create EPUB and META-INF directorys
     os.mkdir(os.path.join(location, 'META-INF'))
     os.mkdir(os.path.join(location, 'EPUB'))
     os.mkdir(os.path.join(location, 'EPUB', 'css'))
@@ -183,7 +182,7 @@ def epub_zip(outdirect):
     current_dir = os.getcwd()
     os.chdir(outdirect)
     epub.write('mimetype')
-    log.info('Recursively zipping META-INF and OPS')
+    log.info('Recursively zipping META-INF and EPUB')
     for item in os.listdir('.'):
         if item == 'mimetype':
             continue

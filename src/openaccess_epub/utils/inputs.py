@@ -111,7 +111,7 @@ def frontiersZipInput(zip_path, output_prefix, download=None):
     if os.path.isdir(output):
         shutil.rmtree(output)  # Delete previous output
     output_meta = os.path.join(output, 'META-INF')
-    images_output = os.path.join(output, 'OPS', 'images')
+    images_output = os.path.join(output, 'EPUB', 'images')
     with zipfile.ZipFile(os.path.join(path, zipname1), 'r') as xml_zip:
         zip_dir = '{0}-r1'.format(file_root)
         xml = '/'.join([zip_dir, '{0}.xml'.format(file_root)])
