@@ -12,7 +12,7 @@ def long_description():
     return(readme_text)
 
 setup(name='openaccess_epub',
-      version='0.6.0',
+      version='0.6.1',
       description='Converts OpenAccess Journal articles to EPUB',
       long_description=long_description(),
       author='Paul Barton',
