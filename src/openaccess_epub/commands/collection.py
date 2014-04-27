@@ -152,6 +152,7 @@ def main(argv=None):
                 epub_version = 3
             else:
                 epub_version = parsed_article.publisher.epub_default
+
         navigation.process(parsed_article)
         package.process(parsed_article)
 
@@ -166,14 +167,13 @@ def main(argv=None):
                                                 config,
                                                 parsed_article)
 
-        if journal_doi == '10.1371':  # PLoS's publisher DOI
-            #ops_doc = ops.OPSPLoS(parsed_article, output_directory)
+        parsed_article.publisher.render_content(output_directory, epub_version)
 
     if epub_version == 2:
         navigation.render_EPUB2(output_directory)
         package.render_EPUB2(output_directory)
     elif epub_version == 3:
-        navigation.render_EPUB3(output_directory, back_compat=True)
+        navigation.render_EPUB3(output_directory)
         package.render_EPUB3(output_directory)
     epub_zip(output_directory)
 
